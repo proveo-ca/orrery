@@ -1,0 +1,23 @@
+@startuml
+' Product: Typeface
+' URL: https://www.typeface.ai/
+
+package "Typeface Architecture" {
+    [Adaptive UI\n(Templates/Sliders)] as UI
+    [Brand Guard\n(Tone/Style Check)] as GUARD
+    [Asset Manager\n(DAM Integration)] as ASSETS
+    [Multimodal Flow\n(Text + Image Gen)] as FLOW
+    [Generative Models] as GEN
+}
+
+UI -> FLOW : "Campaign Intent"
+FLOW -> ASSETS : "Fetch Brand Assets"
+FLOW -> GEN : "Generate Content"
+GEN -> GUARD : "Safety Check"
+GUARD -> UI : "Draft Content"
+
+note right of GUARD
+  Eval: Ensures output matches
+  corporate brand voice.
+end note
+@enduml

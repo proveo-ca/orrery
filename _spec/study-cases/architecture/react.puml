@@ -1,0 +1,20 @@
+@startuml
+title ReAct Architecture (Reason + Act)
+
+start
+:Input Task;
+
+repeat
+  :LLM: "Thought" (Reasoning);
+  :LLM: "Action" (Tool Call);
+  if (Tool Call?) then (yes)
+    :Tool: Execute Action;
+    :Tool: "Observation" (Output);
+  else (no)
+    :LLM: Final Answer;
+    stop
+  endif
+repeat while (Task not done?)
+
+stop
+@enduml

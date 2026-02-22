@@ -1,0 +1,20 @@
+@startuml
+title Chain of Thought (CoT)
+
+start
+:Input Question;
+
+:LLM: Start Generation;
+note right
+  Model produces intermediate
+  reasoning steps before answer.
+end note
+
+:Step 1: Reasoning;
+:Step 2: Reasoning;
+:Step 3: Reasoning;
+
+:LLM: Final Answer;
+
+stop
+@enduml

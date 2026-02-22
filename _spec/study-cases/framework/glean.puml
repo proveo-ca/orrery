@@ -1,0 +1,25 @@
+@startuml
+' Product: Glean
+' URL: https://www.glean.com/
+
+package "Glean Architecture" {
+    [Unified Search UI\n(Chat + Search)] as UI
+    [Knowledge Graph\n(People/Docs/Tickets)] as KG
+    [Connectors\n(Jira, Slack, GDrive)] as CONN
+    [RAG Engine\n(Deep Learning Search)] as RAG
+    [Citation Check\n(Eval)] as EVAL
+    [LLM Service] as LLM
+}
+
+UI -> RAG : "Query"
+RAG -> KG : "Semantic Search"
+KG <.. CONN : "Ingest & Index"
+RAG -> LLM : "Summarize Context"
+LLM -> EVAL : "Verify Claims"
+EVAL -> UI : "Verified Answer + Links"
+
+note right of CONN
+  Connects 100+ SaaS apps
+  with strict permission sync.
+end note
+@enduml

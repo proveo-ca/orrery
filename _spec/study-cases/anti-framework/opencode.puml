@@ -1,4 +1,7 @@
 @startuml
+' Product: OpenCodeInterpreter
+' URL: https://github.com/OpenCodeInterpreter/OpenCodeInterpreter
+
 package "OpenCode Architecture" {
     [Agent Loop\n(src/session)] as LOOP
     [Context Compactor\n(Sliding Window)] as COMP
@@ -12,9 +15,10 @@ LOOP --> COMP : "Compact History"
 LOOP --> PROV : "Normalize API"
 LOOP --> TOOLS : "Exec (Real Shell)"
 
-note right of TOOLS
+note bottom of TOOLS
   Uses PTY to run real
   shell commands, not sim.
+  Streams output as "Thought".
 end note
 
 note bottom of PROV

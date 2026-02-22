@@ -1,14 +1,20 @@
 @startuml
+' Product: Sweep
+' URL: https://sweep.dev/
+
 package "Sweep (Async Worker)" {
     [GitHub Webhook Handler] as HOOK
     [Search Engine\n(Vector + Lexical)] as SEARCH
     [Planner] as PLAN
     [Pull Request Generator] as PR
+    [CI/CD\n(GitHub Actions)] as EVAL
 }
 
 HOOK --> SEARCH : "Issue -> Code Search"
 SEARCH --> PLAN : "Relevant Files"
 PLAN --> PR : "Generate Code & PR"
+PR --> EVAL : "Run Tests"
+EVAL --> PLAN : "Fix Failures"
 
 note right of HOOK
   Stateless between events.

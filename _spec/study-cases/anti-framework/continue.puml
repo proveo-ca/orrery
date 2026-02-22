@@ -1,4 +1,7 @@
 @startuml
+' Product: Continue
+' URL: https://www.continue.dev/
+
 package "Continue (IDE Extension)" {
     [Core Logic\n(Harness)] as CORE
     [IDE State\n(VSCode/JetBrains)] as GUI

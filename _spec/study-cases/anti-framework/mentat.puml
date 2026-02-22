@@ -1,4 +1,7 @@
 @startuml
+' Product: Mentat
+' URL: https://www.mentat.ai/
+
 package "Mentat Architecture" {
     [Conversation Manager] as MGR
     [Code Context] as CTX

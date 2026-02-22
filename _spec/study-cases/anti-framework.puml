@@ -1,0 +1,28 @@
+@startuml
+package "The Anti-Framework Harness" {
+    [Orchestrator\n(The Infinite Loop)] as ORCH
+    [Context Manager\n(Tree-sitter/Ranking)] as CTX
+    [IO Layer\n(FS/Shell/Git Wrapper)] as IO
+    [Model Layer\n(Unified API + Token Count)] as MDL
+    [State/Scratchpad\n(Active Files/Plan)] as STATE
+}
+
+USER -> ORCH : "Chat / Intent"
+ORCH --> STATE : "Read/Write State"
+ORCH --> CTX : "Fetch Relevant Context"
+ORCH --> MDL : "Send Prompt"
+MDL --> ORCH : "Stream Thoughts/Calls"
+ORCH --> IO : "Execute Tools"
+IO --> ORCH : "Tool Output"
+ORCH --> USER : "Stream Response"
+
+note right of ORCH
+  A simple while loop.
+  Not a complex graph.
+end note
+
+note bottom of IO
+  Standard OS ops wrapped
+  in safe JSON/XML API.
+end note
+@enduml

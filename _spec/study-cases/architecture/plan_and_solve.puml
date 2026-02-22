@@ -1,0 +1,27 @@
+@startuml
+title Plan-and-Solve (Planner-Executor)
+
+actor User
+participant "Planner Agent" as PLAN
+participant "Executor Agent" as EXEC
+participant "Tool Set" as TOOLS
+
+User -> PLAN : Input Task
+activate PLAN
+
+PLAN -> PLAN : Break down task\n(Generate Step 1, 2, 3...)
+PLAN -> EXEC : Submit Plan (List of Steps)
+deactivate PLAN
+activate EXEC
+
+loop Execution Loop
+    EXEC -> TOOLS : Execute Step N
+    activate TOOLS
+    TOOLS --> EXEC : Result
+    deactivate TOOLS
+end
+
+EXEC -> User : Final Result
+deactivate EXEC
+
+@enduml
