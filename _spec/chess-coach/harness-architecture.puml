@@ -1,0 +1,62 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+skinparam componentStyle rectangle
+
+actor User
+
+package "Docker Container (Harness: Chess Coach)" {
+    
+    package "Web UI" {
+        [SolidJS Chessboard] as SolidJS
+    }
+
+    package "Ktor Backend Bridge" {
+        [Ktor REST API] as Ktor
+    }
+
+    [Bash Orchestrator] as Bash
+
+    package "LLM Sub-Agents (Qwen 2.5)" {
+        actor "State Analyzer" as Analyzer
+        actor "Strategy Agent" as Strategy
+        actor "Dialogue Agent" as Dialogue
+    }
+
+    package "Kotlin CLI Tools" {
+        [Move Validator] as Validator
+        [Engine Bridge] as Bridge
+    }
+
+    package "External Binaries" {
+        [Stockfish Engine] as Stockfish
+    }
+
+    database "State Storage" as State {
+        [game_state.fen] as FEN
+        [game_history.pgn] as PGN
+    }
+}
+
+User <---> SolidJS : User Actions / Board render
+SolidJS <-> Ktor : HTTP Requests
+Ktor ..> Bridge : (If Hint) Request Top 3 Moves
+Ktor ..> State : (If History) Read past FEN states
+
+Ktor <--> Bash : Subprocess (bash orchestrator.sh) moves bridge
+
+Bash ---> Analyzer : Triggers Analysis
+Analyzer ---> State : Reads State
+Analyzer --> Bridge : Requests Evaluation
+Bridge --> Stockfish : UCI Protocol
+Analyzer -> Strategy : Passes Analysis
+Strategy --> Validator : Proposes SAN move
+Validator --> Bridge : Checks Legality
+Strategy --> Bash : Returns Valid Move
+
+Bash ------> State : Updates State
+Bash ----> Dialogue : Requests \nCoaching Commentary
+Dialogue .up..> User : Outputs Coaching Advice
+
+User -[hidden]-> SolidJS
+
+@enduml

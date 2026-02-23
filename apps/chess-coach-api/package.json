@@ -1,0 +1,10 @@
+{
+  "name": "harness-01-chess-coach-api",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "echo 'Starting Ktor API...'",
+    "build": "echo 'Building Ktor API...'",
+    "start": "echo 'Running Ktor API...'"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "harness-01-chess-coach-harness",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "echo 'Harness loop ready (executed via API)'",
+    "build": "echo 'Compiling Kotlin CLI tools...'"
+  }
+}

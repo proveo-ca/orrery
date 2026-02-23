@@ -1,0 +1,72 @@
+@startuml
+!theme plain
+actor User
+participant "SolidJS UI" as SolidJS
+participant "Ktor Server" as Ktor
+participant "Bash Orchestrator" as Bash
+participant "State Analyzer" as Analyzer
+participant "Strategy Agent" as Strategy
+participant "Dialogue Agent" as Dialogue
+participant "Kotlin Tools (Validator/Bridge)" as Tools
+participant "Stockfish" as Stockfish
+
+== Hint Request Flow ==
+User -> SolidJS: Clicks "Get Hint"
+SolidJS -> Ktor: GET /api/hint
+Ktor -> Tools: Get Top 3 Moves (FEN, MultiPV=3)
+Tools -> Stockfish: position fen ... \n go depth 15
+Stockfish --> Tools: info ... pv e4 ... \n info ... pv d4 ... \n info ... pv Nf3 ...
+Tools --> Ktor: [ "e4 (+0.5)", "d4 (+0.4)", "Nf3 (+0.3)" ]
+Ktor --> SolidJS: Returns hints
+SolidJS -> User: Displays Top 3 lines
+
+== Replayability Flow ==
+User -> SolidJS: Clicks "Previous Move"
+SolidJS -> Ktor: GET /api/history?move=-1
+Ktor -> Ktor: Read PGN, calculate past FEN
+Ktor --> SolidJS: Return historical FEN
+SolidJS -> User: Renders past state
+
+== Standard Move Flow (Coach Response) ==
+User -> SolidJS: Drags Piece (e2 to e4)
+SolidJS -> Ktor: POST /api/move { "move": "e4" }
+Ktor -> Bash: ProcessBuilder("bash", "orchestrator.sh", "e4").start()
+
+note over Bash, Stockfish: Bash Orchestration Loop Starts
+
+Bash -> Tools: Validate Human Move ("e4")
+Tools -> Stockfish: Verify Legality
+Stockfish --> Tools: Valid
+Tools --> Bash: Move Valid
+Bash -> Bash: Update FEN & PGN
+
+note over Bash, Stockfish: LLM Coaching Turn Begins
+
+Bash -> Analyzer: Analyze Current FEN
+Analyzer -> Tools: Get Evaluation (FEN)
+Tools -> Stockfish: eval
+Stockfish --> Tools: score cp 45
+Tools --> Analyzer: Evaluation (+0.45)
+Analyzer -> Strategy: Context: "Solid opening by user, slight edge."
+
+Strategy -> Strategy: Generate Candidate Coach Moves (SAN)
+Strategy -> Tools: Validate Candidates
+Tools -> Stockfish: check legality
+Stockfish --> Tools: Valid
+Tools --> Strategy: Valid
+
+Strategy -> Bash: Selects Move (e.g. "e5")
+
+Bash -> Dialogue: Generate Advice (User="e4", Opponent="e5", Eval="+0.45")
+Dialogue --> Bash: "Good center control. I'll play e5 to challenge it."
+
+Bash -> Bash: Update FEN & PGN
+
+note over Bash, Stockfish: Bash Orchestration Loop Ends
+
+Bash --> Ktor: Process Exits (Code 0)
+Ktor -> Ktor: Read updated game_state.fen
+Ktor --> SolidJS: HTTP 200 OK { fen: "rnbqk...", dialog: "Good center control..." }
+SolidJS -> User: Renders Board & Coach Advice
+
+@enduml
