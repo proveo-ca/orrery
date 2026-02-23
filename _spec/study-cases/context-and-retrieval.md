@@ -32,3 +32,9 @@ Strategies for domains where hallucinations are unacceptable and retrieval needs
 *   **Chain-of-Verification (CoVe): Reducing Hallucination in Large Language Models**
     *   *Abstract:* A prompting pattern where the model generates a plan to verify its own answers against retrieved context.
     *   *URL:* https://arxiv.org/abs/2309.11495
+*   **Self-RAG: Learning to Retrieve, Generate, and Critique through Self-Reflection** (Oct 2023)
+    *   *Abstract:* A framework where the model learns to output special tokens to critique its own retrieval quality and generation accuracy during inference.
+    *   *URL:* https://arxiv.org/abs/2310.11511
+*   **Corrective RAG (CRAG): Enhancing Retrieval-Augmented Generation** (Jan 2024)
+    *   *Abstract:* Introduces a lightweight "retrieval evaluator" to assess the quality of retrieved documents. If quality is low, it falls back to a web search to correct the context.
+    *   *URL:* https://arxiv.org/abs/2401.15884
