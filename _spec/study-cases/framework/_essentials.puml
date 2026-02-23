@@ -4,18 +4,20 @@ package "The Framework-Based Harness" {
     [Orchestrator / Engine\n(RAG/Semantic Kernel)] as ORCH
     [Integration Layer\n(Connectors/Graph)] as INTEG
     [Compliance / Safety\n(Trust Boundary / Eval)] as SAFE
-    [Enterprise Data\n(SaaS/Docs/DBs)] as DATA
+    [Fact Data\n(SaaS/Docs/DBs)] as FACTS
+    [Rule Data\n(Policies/Regulations)] as RULES
     [Model Gateway] as LLM
 }
 
 UI --> ORCH : "User Intent"
-ORCH --> INTEG : "Retrieve Context"
-INTEG <.. DATA : "Sync/Index"
+ORCH --> INTEG : "Retrieve Context (Dual-Channel)"
+INTEG <.. FACTS : "Sync Facts"
+INTEG <.. RULES : "Sync Rules"
 ORCH --> SAFE : "Pre-flight Check"
 SAFE --> LLM : "Prompt"
 LLM --> SAFE : "Content Filter / Eval"
 SAFE --> ORCH : "Validated Response"
-ORCH --> UI : "Display w/ Citations"
+ORCH --> UI : "Proposal Artifact (Draft-and-Diff)"
 
 note right of SAFE
   Critical layer for

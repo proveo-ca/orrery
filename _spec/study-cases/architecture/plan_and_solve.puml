@@ -16,8 +16,8 @@ PLAN -> EXEC : Submit Plan (List of Steps)
 deactivate PLAN
 activate EXEC
 
-loop Execution Loop
-    EXEC -> TOOLS : Execute Step N
+loop Execution Loop (or Dry-Run)
+    EXEC -> TOOLS : Execute Step N (or Verify State Transition)
     activate TOOLS
     TOOLS --> EXEC : Result
     deactivate TOOLS

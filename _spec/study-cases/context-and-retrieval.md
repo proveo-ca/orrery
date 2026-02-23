@@ -20,6 +20,9 @@ Strategies for dealing with massive context limits (100k - 1M+ tokens) and the "
 
 Strategies for domains where hallucinations are unacceptable and retrieval needs to be atomic.
 
+*   **Dual-Channel Retrieval (Fact vs. Rule RAG):**
+    *   *Concept:* Maintains two distinct context pipelines: Pipeline A retrieves factual state (e.g., client financial history), while Pipeline B retrieves systemic constraints (e.g., SEC regulations or legal statutes).
+    *   *Implementation:* Constraints from Pipeline B are injected into the system prompt as absolute, overriding directives (hard prompt guardrails) rather than appended as standard conversational context, enforcing compliance during generation.
 *   **Dense X Retrieval: What Retrieval Granularity Should We Use?**
     *   *Abstract:* Argues for "Proposition Retrieval" (atomic facts) over document/paragraph retrieval to minimize noise and improve accuracy.
     *   *URL:* https://arxiv.org/abs/2312.06648
@@ -41,3 +44,10 @@ Strategies for domains where hallucinations are unacceptable and retrieval needs
 *   **Localizing and Correcting Errors for LLM-based Planners (L-ICL)** (Feb 2026)
     *   *Abstract:* Proposes iteratively augmenting instructions with targeted corrections for specific failing steps (minimal input-output examples) rather than full trajectories. Shows that localized corrections are more effective and sample-efficient than retrieval-based ICL for planning tasks.
     *   *URL:* https://arxiv.org/abs/2602.00276
+
+*   **ChatEval: Towards Better LLM-based Evaluators through Multi-Agent Debate** (Aug 2023)
+    *   *Abstract:* Explores using multiple LLM instances (a "Drafter" and a "Red-Team Judge") to debate a response, significantly improving evaluation quality and bridging the gap to human-level evaluation without real-world execution.
+    *   *URL:* https://arxiv.org/abs/2308.07201
+*   **On the Limit of Language Models as Planning Formalizers** (Dec 2024)
+    *   *Abstract:* Demonstrates that LLMs struggle to create executable plans autonomously, but excel at generating formal representations (e.g., PDDL) that can be deterministically solved to verify correctness in non-executable environments.
+    *   *URL:* https://arxiv.org/abs/2412.09879

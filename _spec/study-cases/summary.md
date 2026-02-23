@@ -53,13 +53,17 @@ For domains requiring 100% accuracy, standard chunking fails.
 
 Trust is the currency of agents. Whether controlling a character in a game or making a business decision, harnesses must implement "Run-Time Evals" to measure confidence before acting.
 
+*   **Evaluation Without Execution (Dry-Run Verification):** When the agent cannot test its plan against a real-world environment (e.g., executing a trade or signing a contract).
 ### Verification Strategies
+    *   **LLMs as Formalizers:** Constrain the LLM to output a formal, machine-readable representation of its plan (e.g., PDDL, JSON schema).
+    *   **Deterministic Solvers:** Pass the formal representation to traditional constraint solvers or rule engines to verify the state transitions do not violate business logic, guaranteeing correctness before reaching the user.
 *   **Deterministic vs. Probabilistic:**
     *   **Anti-Framework (Deterministic):** "Did the test pass?" The harness checks the exit code. This is why coding agents are more autonomous; they have a ground-truth signal.
     *   **Framework (Probabilistic):** "Is this answer polite?" The harness must use a secondary LLM (Evaluator) or human feedback to judge quality, which is slower and less reliable.
 *   **Run-Time Confidence:**
     *   **Logprobs/Entropy:** Monitoring the raw probability of the model's choices. High entropy (uncertainty) during a critical decision (e.g., "Attack" vs "Defend") should trigger a fallback or user confirmation.
     *   **Self-Critique:** A secondary loop where the model asks, "Does this action align with my current goal/persona?" (See *Reflexion*).
+    *   **Multi-Agent Debate (MAD):** For high-stakes environments, a single model self-critiquing risks confirmation bias. An adversarial architecture uses specialized agents (e.g., a "Drafter" and a "Red-Team Judge") debating the plan to surface loopholes and reduce hallucinations without execution.
 *   **Verified Sources (Grounding):**
     *   **Framework Approach:** Systems enforce "Citation". Every claim or decision must link back to a retrieved fact or rule. If the similarity score is low, the harness flags the action as "Low Confidence".
     *   **Simulation/Prediction:** In decision-making or games, the harness can simulate the outcome (e.g., "If I move here, will I die?") before committing the action.
@@ -73,9 +77,11 @@ Trust is the currency of agents. Whether controlling a character in a game or ma
 An agent is not a "fire and forget" missile; it is a collaborator. The harness must support patterns that allow humans to steer, interrupt, and approve actions.
 
 ### Human-in-the-Loop Strategies
-*   **Permission Gates:**
-    *   **Crucial for Safety:** High-risk tools (e.g., `delete_file`, `deploy_prod`) should be flagged as "RequiresApproval". The harness pauses the loop and waits for a user `y/n` signal before executing.
-    *   **Silent vs. Loud:** Read-only tools (search, grep) run silently. Write tools run loudly.
+*   **Permission Gates & The "Proposal" Pattern:**
+    *   **Binary Gates:** High-risk tools (`delete_file`, `deploy_prod`) flagged as "RequiresApproval" pause the loop for a `y/n` signal.
+    *   **Draft-and-Diff (Beyond y/n):** In complex domains (legal, finance), binary gates fail. The harness must yield a "Proposal Artifact" (a JSON patch, diff, or inline-commented document).
+    *   **Node-Level Editability:** The gate allows the human to edit the proposed plan at the node level. The harness then resumes, treating the human-edited plan as the new ground truth.
+    *   **Silent vs. Loud:** Read-only tools (search, grep) run silently. Write/Proposal tools run loudly.
 *   **Interruptibility:**
     *   **The "Stop" Button:** Users must be able to halt a runaway loop or infinite reasoning chain immediately.
     *   **Injection:** Users should be able to inject new context mid-task ("Wait, I forgot to mention, use the V2 API") without restarting the entire session.
