@@ -11,6 +11,7 @@ Modern AI agents generally fall into one of two architectural patterns, dependin
     *   **Direct IO:** Uses raw PTY/Shell/File access rather than generic "Tools".
     *   **Stateful Memory:** Maintains strict objects for "Active Files" or "Current Plan".
     *   **Loop Control:** Hard-coded logic for token limits and iteration counts.
+    *   **Easy Evals:** Leverages deterministic feedback (exit codes, linter errors) for reliable self-correction.
 
 ### The Framework-Based Harness (Horizontal Integration)
 *   **Best For:** Enterprise operations, compliance, and multi-modal workflows (Microsoft Copilot, Glean).
@@ -48,6 +49,9 @@ Managing the Context Window is the hardest engineering challenge. It is not just
 Trust is the currency of agents. Whether controlling a character in a game or making a business decision, harnesses must implement "Run-Time Evals" to measure confidence before acting.
 
 ### Verification Strategies
+*   **Deterministic vs. Probabilistic:**
+    *   **Anti-Framework (Deterministic):** "Did the test pass?" The harness checks the exit code. This is why coding agents are more autonomous; they have a ground-truth signal.
+    *   **Framework (Probabilistic):** "Is this answer polite?" The harness must use a secondary LLM (Evaluator) or human feedback to judge quality, which is slower and less reliable.
 *   **Run-Time Confidence:**
     *   **Logprobs/Entropy:** Monitoring the raw probability of the model's choices. High entropy (uncertainty) during a critical decision (e.g., "Attack" vs "Defend") should trigger a fallback or user confirmation.
     *   **Self-Critique:** A secondary loop where the model asks, "Does this action align with my current goal/persona?" (See *Reflexion*).
