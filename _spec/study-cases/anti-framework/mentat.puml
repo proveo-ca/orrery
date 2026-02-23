@@ -11,7 +11,7 @@ package "Mentat Architecture" {
 }
 
 MGR --> CTX : "Prune Context (Token Limit)"
-MGR --> API : "Stream Response"
+MGR ---> API : "Stream Response"
 MGR --> GIT : "Apply Changes"
 CTX --> DIFF : "Parse/Rank Files"
 

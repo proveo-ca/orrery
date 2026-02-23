@@ -10,11 +10,11 @@ package "Cohere Coral" {
     [Command Model\n(Instruction Tuned)] as MDL
 }
 
-UI -> ORCH : "Question"
-ORCH -> RET : "Search"
-RET -> KB : "Fetch Chunks"
-ORCH -> MDL : "Generate w/ Citations"
-MDL -> UI : "Answer + Links"
+UI --> ORCH : "Question"
+ORCH --> RET : "Search"
+RET --> KB : "Fetch Chunks"
+ORCH --> MDL : "Generate w/ Citations"
+MDL --> UI : "Answer + Links"
 
 note right of UI
   UI emphasizes citations

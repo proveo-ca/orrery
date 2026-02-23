@@ -11,9 +11,9 @@ package "Aider Architecture" {
     [Linter/Test\n(Verification)] as EVAL
 }
 
-CODER --> MEM : "Track Edited Files"
+CODER -> MEM : "Track Edited Files"
 CODER --> MAP : "Get Repo Context"
-CODER --> MODELS : "Chat Completion"
+CODER ---> MODELS : "Chat Completion"
 CODER --> GIT : "Read/Write/Commit"
 GIT --> EVAL : "Verify Edit"
 EVAL --> CODER : "Pass/Fail Feedback"

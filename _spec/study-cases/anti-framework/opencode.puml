@@ -10,7 +10,7 @@ package "OpenCode Architecture" {
     [Session DB\n(SQLite)] as DB
 }
 
-LOOP --> DB : "Persist State"
+LOOP -> DB : "Persist State"
 LOOP --> COMP : "Compact History"
 LOOP --> PROV : "Normalize API"
 LOOP --> TOOLS : "Exec (Real Shell)"

@@ -3,20 +3,20 @@ package "The Anti-Framework Harness" {
     [Orchestrator\n(The Infinite Loop)] as ORCH
     [Context Manager\n(Tree-sitter/Ranking)] as CTX
     [IO Layer\n(FS/Shell/Git Wrapper)] as IO
-    [Eval/Gate\n(Lint/User/Test)] as EVAL
+    [Eval/Gate\n(Compliance, Permissions, Test)] as EVAL
     [Model Layer\n(Unified API + Token Count)] as MDL
     [State/Scratchpad\n(Active Files/Plan)] as STATE
 }
 
-USER ---> ORCH : "Chat / Intent"
+USER -> ORCH : "Chat / Intent"
 ORCH --> STATE : "Read/Write State"
-ORCH --> CTX : "Fetch Relevant Context"
+ORCH -> CTX : "Fetch Relevant Context"
 ORCH --> MDL : "Send Prompt"
-MDL --> ORCH : "Stream Thoughts/Calls"
+MDL ---> ORCH : "Stream Thoughts/Calls"
 ORCH --> EVAL : "Check Safety/Conf"
 EVAL --> IO : "Execute (if Safe)"
 IO --> ORCH : "Tool Output"
-ORCH --> USER : "Stream Response"
+ORCH -> USER : "Stream Response"
 
 note top of ORCH
   A simple while loop.

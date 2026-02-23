@@ -11,10 +11,10 @@ package "Dust Platform" {
 }
 
 UI -> REG : "Select Assistant"
-REG -> ORCH : "Load Config"
-ORCH -> DATA : "Retrieve Context"
-ORCH -> MODELS : "Execute Logic"
-MODELS -> UI : "Stream Result"
+REG --> ORCH : "Load Config"
+ORCH --> DATA : "Retrieve Context"
+ORCH --> MODELS : "Execute Logic"
+MODELS --> UI : "Stream Result"
 
 note right of REG
   Users define custom assistants

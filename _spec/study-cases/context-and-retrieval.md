@@ -38,3 +38,6 @@ Strategies for domains where hallucinations are unacceptable and retrieval needs
 *   **Corrective RAG (CRAG): Enhancing Retrieval-Augmented Generation** (Jan 2024)
     *   *Abstract:* Introduces a lightweight "retrieval evaluator" to assess the quality of retrieved documents. If quality is low, it falls back to a web search to correct the context.
     *   *URL:* https://arxiv.org/abs/2401.15884
+*   **Localizing and Correcting Errors for LLM-based Planners (L-ICL)** (Feb 2026)
+    *   *Abstract:* Proposes iteratively augmenting instructions with targeted corrections for specific failing steps (minimal input-output examples) rather than full trajectories. Shows that localized corrections are more effective and sample-efficient than retrieval-based ICL for planning tasks.
+    *   *URL:* https://arxiv.org/abs/2602.00276
