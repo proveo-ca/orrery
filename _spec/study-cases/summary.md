@@ -97,6 +97,8 @@ An agent is not a "fire and forget" missile; it is a collaborator. The harness m
 
 ## 7. Conclusion: The Modern Stack
 
-The future likely isn't "Framework vs Anti-Framework", but a hybrid:
-1.  **Core Logic:** Uses an **Anti-Framework** loop for maximum speed and agency on the specific task.
-2.  **Wrapper:** Encased in a **Framework** layer (like LangGraph) only to handle the boring enterprise requirements (Auth, Logging, Compliance).
+The future likely isn't "Framework vs Anti-Framework", but a hybrid structure:
+
+1.  **Inner Loop (The Agent):** Uses an **Anti-Framework** architecture (ReAct/While Loop) for maximum vertical performance, deterministic evals, and tool mastery.
+2.  **Outer Scope (The Environment):** Encased in a **Framework** layer (LangGraph/Semantic Kernel) to handle horizontal concerns like RBAC, Auth, and Compliance.
+3.  **The Interface (The Gate):** Controlled by a **Tight User Gate** (App-Host/Confirmation) to ensure that the autonomous inner loop doesn't violate the safety constraints of the outer scope.
