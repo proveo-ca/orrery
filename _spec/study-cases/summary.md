@@ -44,6 +44,11 @@ Managing the Context Window is the hardest engineering challenge. It is not just
     *   **Active Set:** Explicitly track which files/docs are "Open" and prune everything else.
     *   **Relevance Ranking:** Use PageRank (graph analysis) to determine which files are actually important to the current problem, discarding 90% of the codebase to focus on the critical 10%.
 
+### High-Precision Context (Finance/Legal)
+For domains requiring 100% accuracy, standard chunking fails.
+*   **Proposition Retrieval:** Instead of retrieving paragraphs, retrieve atomic "facts" (propositions). See *Dense X Retrieval* (https://arxiv.org/abs/2312.06648).
+*   **Chain-of-Verification (CoVe):** The model must generate a verification plan against the context before answering. See *CoVe* (https://arxiv.org/abs/2309.11495).
+
 ## 4. Evaluation & Verification (The Guardrails)
 
 Trust is the currency of agents. Whether controlling a character in a game or making a business decision, harnesses must implement "Run-Time Evals" to measure confidence before acting.
