@@ -1,5 +1,7 @@
 @startuml
 title Plan-and-Solve (Planner-Executor)
+' Paper: Plan-and-Solve Prompting: Improving Zero-Shot Chain-of-Thought Reasoning by Large Language Models
+' URL: https://arxiv.org/abs/2305.04091
 
 actor User
 participant "Planner Agent" as PLAN
