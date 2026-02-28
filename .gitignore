@@ -1,36 +1,57 @@
-.pki
-.cache
-dist/
-build/
-.idea
-reading/
+# ==========================================
+# Environment & Secrets
+# ==========================================
 .env
 
-#logging
+# ==========================================
+# Kotlin / Java / Build Outputs
+# ==========================================
+build/
+dist/
+.cache/
+.pki/
 
-logs
+# ==========================================
+# IDEs & Editors
+# ==========================================
+.idea/
+
+# ==========================================
+# Logging
+# ==========================================
+logs/
 *.log
 .pnpm-debug.log*
 
-#node
-node_modules
-.npm
+# ==========================================
+# Node.js & Frontend
+# ==========================================
+node_modules/
+.npm/
 
-#harness
+# ==========================================
+# Python
+# ==========================================
+.venv/
+__pycache__/
+.pytest_cache/
+
+# ==========================================
+# Harness & AI Tools
+# ==========================================
 .aider/
 .aider*
 
-# python
-.venv/
-__pycache__
-.cache/
-.pytest_cache
-
-
-
+# ==========================================
+# Nx Workspace & Tooling
+# ==========================================
 .nx/cache
 .nx/workspace-data
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
+
+# ==========================================
+# Vite / Vitest
+# ==========================================
 vite.config.*.timestamp*
 vitest.config.*.timestamp*
