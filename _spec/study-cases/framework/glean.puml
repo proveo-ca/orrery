@@ -1,4 +1,5 @@
 @startuml
+!includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
 ' Product: Glean
 ' URL: https://www.glean.com/
 
@@ -12,13 +13,13 @@ package "Glean Architecture" {
 }
 
 UI -> RAG : "Query"
-RAG -> KG : "Semantic Search"
+RAG --> KG : "Semantic Search"
 KG <.. CONN : "Ingest & Index"
-RAG -> LLM : "Summarize Context"
-LLM -> EVAL : "Verify Claims"
-EVAL -> UI : "Verified Answer + Links"
+RAG --> LLM : "Summarize Context"
+LLM --> EVAL : "Verify Claims"
+EVAL ----> UI : "Verified Answer + Links"
 
-note right of CONN
+note bottom of CONN
   Connects 100+ SaaS apps
   with strict permission sync.
 end note

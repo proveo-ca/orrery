@@ -1,4 +1,5 @@
 @startuml
+!includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
 ' Product: Aider
 ' URL: https://aider.chat/
 

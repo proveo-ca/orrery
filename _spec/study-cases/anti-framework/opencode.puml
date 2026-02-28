@@ -1,4 +1,5 @@
 @startuml
+!includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
 ' Product: OpenCodeInterpreter
 ' URL: https://github.com/OpenCodeInterpreter/OpenCodeInterpreter
 

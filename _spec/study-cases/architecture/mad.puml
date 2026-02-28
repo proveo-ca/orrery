@@ -1,4 +1,5 @@
 @startuml
+!includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
 title Multi-Agent Debate (MAD)
 ' Concept: Reducing Hallucinations via Adversarial Debate without Execution
 ' Context: ChatEval and High-Precision Domains

@@ -1,0 +1,36 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+' Product: OpenClaw
+' URL: https://openclaw.ai/
+
+package "OpenClaw Architecture (Hands Approach)" {
+    [Chat Interface\n(Slack/Gmail/Browser/HuggingFace)] as UI
+    [OpenClaw Core\n(Persistent Memory & Loop)] as CORE
+    [LLM Provider\n(Anthropic/OpenAI/Local)] as LLM
+    [Skills & Plugins\n(Hackable/Self-Writing)] as SKILLS
+    [System Access\n(Bash/Files/Browser)] as IO
+}
+
+actor User
+
+User <--> UI : "Natural Language Command"
+UI <--> CORE : "Message Stream"
+
+CORE <--> LLM : "Reasoning & Tool Selection"
+CORE <--> SKILLS : "Load/Generate Skills"
+
+CORE --> IO : "Direct Environment Manipulation"
+note bottom of IO
+  "Eyes and hands at a desk."
+  Executes real commands on the
+  host machine (Mac/Win/Linux).
+end note
+
+IO --> CORE : "Observation / Result"
+
+note right of CORE
+  Runs locally.
+  Maintains 24/7 context.
+end note
+
+@enduml

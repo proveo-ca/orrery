@@ -57,6 +57,16 @@ Trust is the currency of agents. Whether controlling a character in a game or ma
 ### Verification Strategies
     *   **LLMs as Formalizers:** Constrain the LLM to output a formal, machine-readable representation of its plan (e.g., PDDL, JSON schema).
     *   **Deterministic Solvers:** Pass the formal representation to traditional constraint solvers or rule engines to verify the state transitions do not violate business logic, guaranteeing correctness before reaching the user.
+
+### Handling Non-Deterministic Scenarios (Probabilistic Risk)
+Pure LLM frameworks (LangChain, CrewAI, OpenClaw) cannot natively assert probabilistic risks or calculate true mathematical confidence levels because LLMs are text predictors, not statistical engines. To handle non-deterministic scenarios (e.g., supply chain disruptions, complex physics):
+*   **The Solution:** Integrate the agent harness with a **Probabilistic Programming Language (PPL)** or statistical simulation engine (e.g., **PyMC, Stan, Pyro, or Monte Carlo simulators**).
+*   **The Workflow:**
+    1.  **The Formalizer:** The LLM does *not* guess the answer. It writes a Python script (e.g., using PyMC) that models the scenario, defines knowns, and exposes unknown variables as probability distributions.
+    2.  **The Hands (Harness):** The harness executes the script locally.
+    3.  **The Result:** The PPL engine runs the simulation and outputs hard math (e.g., *"Most probable scenario: Outcome A. Confidence level: 89.4%."*).
+    4.  **The Response:** The harness feeds this mathematical truth back to the LLM to summarize for the user.
+
 *   **Deterministic vs. Probabilistic:**
     *   **Anti-Framework (Deterministic):** "Did the test pass?" The harness checks the exit code. This is why coding agents are more autonomous; they have a ground-truth signal.
     *   **Framework (Probabilistic):** "Is this answer polite?" The harness must use a secondary LLM (Evaluator) or human feedback to judge quality, which is slower and less reliable.
@@ -97,6 +107,9 @@ An agent is not a "fire and forget" missile; it is a collaborator. The harness m
 *   **Sweep (Async):**
     *   *Eval:* **CI/CD.** Relies on external GitHub Actions to verify correctness.
     *   *Interaction:* **Comment-Driven.** Uses issue comments for feedback loops.
+*   **"Hands" Approach (ZeroClaw, OpenClaw, OpenFang):**
+    *   *Eval:* **Deterministic Handoff.** Relies on executing generated formal representations (e.g., math/physics simulations) in deterministic engines to verify confidence in non-deterministic scenarios.
+    *   *Interaction:* **Direct I/O.** Prioritizes raw tool execution and direct environment manipulation over complex graph orchestration.
 
 ### Framework Implementations
 *   **Microsoft Copilot:**

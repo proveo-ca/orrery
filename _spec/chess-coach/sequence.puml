@@ -1,5 +1,5 @@
 @startuml
-!theme plain
+!includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
 actor User
 participant "SolidJS UI" as SolidJS
 participant "Ktor Server" as Ktor

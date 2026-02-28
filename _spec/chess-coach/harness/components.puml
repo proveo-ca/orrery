@@ -1,0 +1,77 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+skinparam componentStyle rectangle
+
+title Chess Coach Harness: Component Architecture
+
+package "Kotlin Backend (Anti-Framework Harness)" {
+    
+    [Ktor REST API] as API
+    
+    package "Core Orchestration" {
+        [Kotlin Orchestrator\n(The Execution Loop)] as ORCH
+        [State Manager\n(FEN/PGN I/O)] as STATE
+        [LLM Client\n(Raw HTTP/JSON)] as LLM_CLIENT
+    }
+
+    package "Deterministic Handoff Engines" {
+        [Move Validator\n(SAN -> FEN Logic)] as VALIDATOR
+        [Engine Bridge\n(UCI Wrapper)] as BRIDGE
+    }
+}
+
+package "External Processes" {
+    [Stockfish Binary\n(The Engine)] as STOCKFISH
+    [Qwen 2.5 API\n(The Formalizer)] as QWEN
+}
+
+database "File System" as FS {
+    [game_state.fen]
+    [game_history.pgn]
+}
+
+' --- Relationships ---
+
+API --> ORCH : "1. POST /move (SAN)"
+
+ORCH --> STATE : "2. Read Current State"
+STATE --> FS : "Read FEN/PGN"
+
+ORCH --> BRIDGE : "3. Get Board Eval"
+BRIDGE --> STOCKFISH : "UCI: position fen... go depth 15"
+STOCKFISH --> BRIDGE : "score cp 45"
+
+ORCH --> LLM_CLIENT : "4. Prompt: Eval + State"
+LLM_CLIENT --> QWEN : "Generate Candidate Move"
+QWEN --> LLM_CLIENT : "Candidate SAN (e.g., 'Nf3')"
+
+ORCH --> VALIDATOR : "5. Deterministic Handoff\nVerify Candidate SAN"
+VALIDATOR --> BRIDGE : "Check Legality"
+BRIDGE --> STOCKFISH : "UCI Legality Check"
+
+note right of VALIDATOR
+  **Deterministic Handoff:**
+  The LLM guesses a move. The Validator
+  proves it mathematically. If illegal,
+  the Orchestrator loops back to the LLM
+  for a retry (Reflexion).
+end note
+
+ORCH --> STATE : "6. Commit Valid Move"
+STATE --> FS : "Write updated FEN/PGN"
+
+ORCH --> LLM_CLIENT : "7. Prompt: Generate Dialogue"
+LLM_CLIENT --> QWEN : "Draft Coaching Advice"
+QWEN --> LLM_CLIENT : "Advice String"
+
+ORCH --> API : "8. Return 200 OK (FEN + Advice)"
+
+note top of ORCH
+  **Anti-Framework Loop:**
+  A pure Kotlin `while` loop.
+  No LangChain, no hidden graphs.
+  Direct control over JSON parsing
+  and retry logic.
+end note
+
+@enduml

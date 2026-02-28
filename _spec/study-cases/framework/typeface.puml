@@ -1,4 +1,5 @@
 @startuml
+!includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
 ' Product: Typeface
 ' URL: https://www.typeface.ai/
 
@@ -11,10 +12,10 @@ package "Typeface Architecture" {
 }
 
 UI -> FLOW : "Campaign Intent"
-FLOW -> ASSETS : "Fetch Brand Assets"
-FLOW -> GEN : "Generate Content"
-GEN -> GUARD : "Safety Check"
-GUARD -> UI : "Draft Content"
+FLOW --> ASSETS : "Fetch Brand Assets"
+FLOW --> GEN : "Generate Content"
+GEN --> GUARD : "Safety Check"
+GUARD ----> UI : "Draft Content"
 
 note right of GUARD
   Eval: Ensures output matches

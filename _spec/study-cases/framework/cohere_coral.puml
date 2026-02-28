@@ -1,4 +1,5 @@
 @startuml
+!includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
 ' Product: Cohere Coral / Command
 ' URL: https://cohere.com/coral
 

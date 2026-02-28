@@ -1,4 +1,5 @@
 @startuml
+!includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
 package "The Framework-Based Harness" {
     [Adaptive UI\n(Chat/Search/Templates)] as UI
     [Orchestrator / Engine\n(RAG/Semantic Kernel)] as ORCH

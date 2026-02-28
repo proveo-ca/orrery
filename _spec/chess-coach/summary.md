@@ -50,5 +50,5 @@ To provide a smooth, visual experience while keeping the backend "anti-framework
 
 ## Diagrams
 Please see the accompanying PlantUML diagrams for visual representations of the architecture and workflow:
-- `harness-01-architecture.puml`: Component and agent architecture.
-- `harness-01-sequence.puml`: Execution flow for a single turn and hinting.
+- `architecture.puml`: Component and agent architecture.
+- `sequence.puml`: Execution flow for a single turn and hinting.
