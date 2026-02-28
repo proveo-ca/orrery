@@ -1,0 +1,62 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+skinparam maxMessageSize 150
+
+title Chess Coach Harness: Execution Lifecycle
+
+participant "Ktor API" as API
+participant "Kotlin Orchestrator" as ORCH
+participant "State Manager" as STATE
+participant "Engine Bridge" as BRIDGE
+participant "Stockfish" as STOCKFISH
+participant "LLM Client" as LLM
+participant "Ollama (Qwen 2.5 7B)" as OLLAMA
+participant "Move Validator" as VALIDATOR
+
+API -> ORCH : POST /move (Human SAN)
+activate ORCH
+
+ORCH -> STATE : Read Current State
+STATE --> ORCH : FEN & PGN History
+
+ORCH -> BRIDGE : Get Board Evaluation (FEN)
+BRIDGE -> STOCKFISH : UCI: position fen... \ngo depth 15
+STOCKFISH --> BRIDGE : score cp 45
+BRIDGE --> ORCH : Eval (+0.45)
+
+loop Reflexion Loop (Anti-Framework)
+    ORCH -> LLM : Build JSON Prompt\n(State + Eval + History)
+    LLM -> OLLAMA : POST /v1/chat/completions\n(OpenAI Format)
+    OLLAMA --> LLM : JSON Response
+    LLM --> ORCH : Candidate Move (SAN)
+
+    ORCH -> VALIDATOR : Verify Candidate SAN
+    VALIDATOR -> BRIDGE : Check Legality
+    BRIDGE -> STOCKFISH : UCI Legality Check
+    STOCKFISH --> BRIDGE : Valid / Invalid
+    BRIDGE --> VALIDATOR : Result
+    VALIDATOR --> ORCH : Boolean (Is Legal?)
+
+    alt Move is Invalid
+        note over ORCH, OLLAMA
+            **Deterministic Handoff Failed:**
+            Append error to context ("Move illegal, try again")
+            and repeat loop.
+        end note
+    else Move is Valid
+        break
+    end
+end
+
+ORCH -> STATE : Commit Valid Move
+STATE --> ORCH : Updated FEN/PGN
+
+ORCH -> LLM : Build JSON Prompt\n(Request Coaching Advice)
+LLM -> OLLAMA : POST /v1/chat/completions
+OLLAMA --> LLM : JSON Response
+LLM --> ORCH : Advice String
+
+ORCH --> API : 200 OK\n{ fen: "...", advice: "..." }
+deactivate ORCH
+
+@enduml
