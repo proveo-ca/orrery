@@ -44,7 +44,7 @@ export const BoardWrapper: Component = () => {
                 return (
                   <ChessSquare
                     square={square}
-                    piece={piece()}
+                    piece={piece() ?? null}
                     isLight={(rIndex() + fIndex()) % 2 === 0}
                     isSelected={board.selectedSquare() === square}
                     isHovered={board.hoveredSquare() === square}
