@@ -9,7 +9,8 @@ class HarnessInvoker(private val harnessCommand: String = "./harness/bin/chess-c
     suspend fun executeMove(move: String, fen: String): String = withContext(Dispatchers.IO) {
         println("Invoking harness for move: $move")
         
-        val process = ProcessBuilder(harnessCommand, "move", move, fen)
+        val commandList = harnessCommand.split(Regex("\\s+")) + listOf("move", move, fen)
+        val process = ProcessBuilder(commandList)
             .redirectError(ProcessBuilder.Redirect.INHERIT)
             .start()
         
@@ -23,10 +24,26 @@ class HarnessInvoker(private val harnessCommand: String = "./harness/bin/chess-c
         output.trim()
     }
 
+    suspend fun executeAdvice(humanMove: String, aiMove: String, fen: String): String = withContext(Dispatchers.IO) {
+        println("Invoking harness for advice")
+        
+        val commandList = harnessCommand.split(Regex("\\s+")) + listOf("advice", humanMove, aiMove, fen)
+        val process = ProcessBuilder(commandList)
+            .redirectError(ProcessBuilder.Redirect.INHERIT)
+            .start()
+        
+        val output = process.inputStream.bufferedReader().readText()
+        process.waitFor()
+        
+        println("Harness advice execution finished with exit code: ${process.exitValue()}")
+        output.trim()
+    }
+
     suspend fun executeHint(): List<String> = withContext(Dispatchers.IO) {
         println("Invoking harness for hints")
         
-        val process = ProcessBuilder(harnessCommand, "hint")
+        val commandList = harnessCommand.split(Regex("\\s+")) + listOf("hint")
+        val process = ProcessBuilder(commandList)
             .redirectError(ProcessBuilder.Redirect.INHERIT)
             .start()
         

@@ -202,10 +202,10 @@
 
 /* IDLE: Default animations only run when idle */
 .cat.idle .eye::after {
-  animation: blink 4s infinite ease-in;
+  animation: blink 6s infinite ease-in;
 }
 .cat.idle .eye-pupil {
-  animation: look-around 4s infinite;
+  animation: look-around 6s infinite;
 }
 
 /* WATCHING: Player is hovering over the board */

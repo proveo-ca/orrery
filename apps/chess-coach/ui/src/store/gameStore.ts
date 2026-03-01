@@ -3,15 +3,39 @@ import { createSignal } from 'solid-js';
 const STARTING_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 
 export type CoachEmotion = 'idle' | 'watching' | 'thinking' | 'happy' | 'shocked';
+export type PlayerColorPref = 'w' | 'b' | 'random';
 
 export const [fenHistory, setFenHistory] = createSignal<string[]>([STARTING_FEN]);
 export const [currentIndex, setCurrentIndex] = createSignal<number>(0);
 export const [advice, setAdvice] = createSignal<string>("Welcome! Make a move to get started.");
-export const [isCoachMode, setIsCoachMode] = createSignal<boolean>(true);
-export const [coachEmotion, setCoachEmotion] = createSignal<CoachEmotion>('idle');
-
-// NEW: Track squares hovered in the advice panel
 export const [adviceHoveredSquares, setAdviceHoveredSquares] = createSignal<string[]>([]);
+
+// Custom Coach Emotion State with Auto-Reset
+const [_coachEmotion, _setCoachEmotion] = createSignal<CoachEmotion>('idle');
+export const coachEmotion = _coachEmotion;
+
+let emotionTimeout: number | undefined;
+
+export const setCoachEmotion = (emotion: CoachEmotion, autoResetMs?: number) => {
+  _setCoachEmotion(emotion);
+  
+  if (emotionTimeout) {
+    clearTimeout(emotionTimeout);
+    emotionTimeout = undefined;
+  }
+  
+  if (autoResetMs) {
+    emotionTimeout = window.setTimeout(() => {
+      if (_coachEmotion() === emotion) {
+        _setCoachEmotion('idle');
+      }
+    }, autoResetMs);
+  }
+};
+
+// Color Selection State
+export const [colorPref, setColorPref] = createSignal<PlayerColorPref>('w');
+export const [activePlayerColor, setActivePlayerColor] = createSignal<'w' | 'b'>('w');
 
 export const currentFen = () => fenHistory()[currentIndex()];
 
@@ -32,14 +56,21 @@ export const goForward = () => {
 export const resetGame = (fen: string = STARTING_FEN) => {
   setFenHistory([fen]);
   setCurrentIndex(0);
-  setAdvice(isCoachMode() ? "New game started. Your move!" : "Solo mode. Play both sides!");
-  setCoachEmotion('happy');
-  setTimeout(() => setCoachEmotion('idle'), 2000);
-};
-
-export const toggleMode = () => {
-  setIsCoachMode(!isCoachMode());
-  setAdvice(isCoachMode() ? "Switched to Coach Mode. I will play Black." : "Switched to Solo Mode. You control both sides.");
-  setCoachEmotion('shocked');
-  setTimeout(() => setCoachEmotion('idle'), 2000);
+  
+  // Resolve random color
+  let nextColor: 'w' | 'b' = 'w';
+  if (colorPref() === 'random') {
+    nextColor = Math.random() > 0.5 ? 'w' : 'b';
+  } else {
+    nextColor = colorPref() as 'w' | 'b';
+  }
+  setActivePlayerColor(nextColor);
+  
+  if (nextColor === 'w') {
+    setAdvice("New game started. You play White. Your move!");
+  } else {
+    setAdvice("New game started. You play Black. I'm thinking...");
+  }
+  
+  setCoachEmotion('happy', 2000);
 };

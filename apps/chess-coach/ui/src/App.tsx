@@ -3,7 +3,7 @@ import type { Component } from 'solid-js';
 import { BoardWrapper } from './components/ChessBoard';
 import { Avatar } from './components/Avatar';
 import { CoachAdvice } from './components/CoachAdvice';
-import { Controls } from './components/Controls';
+import { NewGamePanel, BoardActions } from './components/Controls';
 import { DebugControls } from './components/DebugControls';
 import { initGlobalLogging, logger } from './utils/logger';
 import './App.css';
@@ -25,11 +25,13 @@ const App: Component = () => {
         </div>
       </div>
 
-      <BoardWrapper />
+      <div class="board-area" style={{ display: 'flex', "flex-direction": 'column', "align-items": 'center' }}>
+        <BoardActions />
+        <BoardWrapper />
+      </div>
 
       <div class="footer">
-        <h1>Selena Chess</h1>
-        <Controls />
+        <NewGamePanel />
       </div>
 
       <DebugControls />

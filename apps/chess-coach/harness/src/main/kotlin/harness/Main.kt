@@ -28,8 +28,16 @@ fun main(args: Array<String>) = runBlocking {
 
                 val result = orchestrator.executeTurn(humanMove)
                 
-                // Print ONLY the advice to stdout so the API can capture it cleanly
-                println(result.advice)
+                // Print ONLY the move to stdout so the API can capture it cleanly
+                println(result.move)
+            }
+            "advice" -> {
+                val humanMove = args.getOrNull(1) ?: ""
+                val aiMove = args.getOrNull(2) ?: ""
+                val currentFen = args.getOrNull(3) ?: stateManager.readFen()
+                
+                val advice = orchestrator.generateAdvice(humanMove, aiMove, currentFen)
+                println(advice)
             }
             "hint" -> {
                 println("e4 (+0.5)")

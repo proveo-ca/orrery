@@ -10,7 +10,13 @@ import kotlinx.serialization.Serializable
 data class MoveRequest(val move: String, val fen: String)
 
 @Serializable
-data class MoveResponse(val fen: String, val advice: String)
+data class MoveResponse(val fen: String, val move: String)
+
+@Serializable
+data class AdviceRequest(val humanMove: String, val aiMove: String, val fen: String)
+
+@Serializable
+data class AdviceResponse(val advice: String)
 
 @Serializable
 data class HintResponse(val hints: List<String>)
@@ -24,12 +30,21 @@ fun Application.configureRouting(invoker: HarnessInvoker, stateReader: StateRead
             val request = call.receive<MoveRequest>()
             
             // Block and wait for the harness to complete the turn
-            val advice = invoker.executeMove(request.move, request.fen)
+            val aiMove = invoker.executeMove(request.move, request.fen)
             
             // Read the updated state from the file system
             val fen = stateReader.readFen()
             
-            call.respond(MoveResponse(fen = fen, advice = advice))
+            call.respond(MoveResponse(fen = fen, move = aiMove))
+        }
+        
+        post("/advice") {
+            val request = call.receive<AdviceRequest>()
+            
+            // Block and wait for the harness to generate advice
+            val advice = invoker.executeAdvice(request.humanMove, request.aiMove, request.fen)
+            
+            call.respond(AdviceResponse(advice = advice))
         }
         
         get("/hint") {

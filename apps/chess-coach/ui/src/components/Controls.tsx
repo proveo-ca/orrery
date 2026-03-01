@@ -1,17 +1,34 @@
 import type { Component } from 'solid-js';
-import { goBack, goForward, resetGame, isCoachMode, toggleMode } from '../store/gameStore';
-import { Toggle } from './common/Toggle';
+import { goBack, goForward, resetGame, colorPref, setColorPref, activePlayerColor, setCoachEmotion, setAdvice, addMoveToHistory } from '../store/gameStore';
+import { ColorSelector } from './common/ColorSelector';
 import './Controls.css';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
 
-export const Controls: Component = () => {
+export const NewGamePanel: Component = () => {
   const handleNewGame = async () => {
     try {
       const res = await fetch(`${API_URL}/new`, { method: 'POST' });
       if (res.ok) {
         const data = await res.json();
         resetGame(data.fen);
+        
+        // If player is Black, trigger the AI to make the first move
+        if (activePlayerColor() === 'b') {
+          setCoachEmotion('thinking');
+          const moveRes = await fetch(`${API_URL}/move`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ move: "", fen: data.fen })
+          });
+          
+          if (moveRes.ok) {
+            const moveData = await moveRes.json();
+            addMoveToHistory(moveData.fen);
+            setAdvice(moveData.advice);
+            setCoachEmotion('happy', 3000);
+          }
+        }
       }
     } catch (e) {
       console.error("Failed to start new game", e);
@@ -19,6 +36,15 @@ export const Controls: Component = () => {
     }
   };
 
+  return (
+    <div class="new-game-panel" style={{ border: '2px solid #444', padding: '1rem', "border-radius": '8px', display: 'flex', gap: '1rem', "align-items": 'center', "justify-content": 'center' }}>
+      <ColorSelector value={colorPref()} onChange={setColorPref} />
+      <button onClick={handleNewGame}>New Game</button>
+    </div>
+  );
+};
+
+export const BoardActions: Component = () => {
   const handleHint = async () => {
     try {
       const res = await fetch(`${API_URL}/hint`);
@@ -32,19 +58,10 @@ export const Controls: Component = () => {
   };
 
   return (
-    <div class="controls">
-      <Toggle 
-        checked={isCoachMode()} 
-        onChange={toggleMode} 
-        label={isCoachMode() ? '🐈‍⬛ Coach Mode' : '👤 Solo Mode'} 
-      />
-      
-      <div class="action-buttons">
-        <button onClick={handleNewGame}>New Game</button>
-        <button onClick={goBack}>&larr; Back</button>
-        <button onClick={goForward}>Forward &rarr;</button>
-        <button onClick={handleHint}>Get Hint</button>
-      </div>
+    <div class="board-actions" style={{ display: 'flex', gap: '0.5rem', "margin-bottom": '1rem', "justify-content": 'center' }}>
+      <button onClick={goBack}>&larr; Back</button>
+      <button onClick={goForward}>Forward &rarr;</button>
+      <button onClick={handleHint}>Get Hint</button>
     </div>
   );
 };
