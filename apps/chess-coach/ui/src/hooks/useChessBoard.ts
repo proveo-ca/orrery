@@ -35,10 +35,16 @@ export function useChessBoard() {
         }
 
         let isBlunder = false;
+        const sideToMove = lastHoverEval?.fen.split(' ')[1] || game().fen().split(' ')[1] || 'w';
+        const humanColor = activePlayerColor();
+        const scoreMultiplier = sideToMove === humanColor ? 1 : -1;
+
         if (match) {
-          if (parseInt(match[1], 10) <= -200) isBlunder = true;
+          const cp = parseInt(match[1], 10) * scoreMultiplier;
+          if (cp <= -200) isBlunder = true;
         } else if (mateMatch) {
-          if (parseInt(mateMatch[1], 10) < 0) isBlunder = true;
+          const mate = parseInt(mateMatch[1], 10) * scoreMultiplier;
+          if (mate < 0) isBlunder = true;
         }
 
         if (isBlunder) {
