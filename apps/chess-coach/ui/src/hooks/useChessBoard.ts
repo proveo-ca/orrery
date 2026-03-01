@@ -16,6 +16,7 @@ export function useChessBoard() {
   
   let evalTimeout: number | undefined;
   let adviceAbortController: AbortController | null = null;
+  let lastHoverEval: { from: Square; to: Square; fen: string } | null = null;
 
   onMount(() => {
     const sfWorker = new Worker('/stockfish-18-lite.js');
@@ -29,6 +30,10 @@ export function useChessBoard() {
       const mateMatch = line.match(/score mate (-?\d+)/);
       
       if (hoveredSquare() && selectedSquare()) {
+        if (line.startsWith('info ') || line.startsWith('bestmove')) {
+          logger.action('Stockfish Hover Eval', { line, lastHoverEval });
+        }
+
         let isBlunder = false;
         if (match) {
           if (parseInt(match[1], 10) > 200) isBlunder = true;
@@ -84,6 +89,9 @@ export function useChessBoard() {
           gameCopy.move({ from: selected, to: square, promotion: 'q' });
           const sf = stockfish();
           if (sf) {
+            lastHoverEval = { from: selected, to: square, fen: gameCopy.fen() };
+            logger.action('Stockfish Hover Eval Request', lastHoverEval);
+
             sf.postMessage('stop');
             sf.postMessage(`position fen ${gameCopy.fen()}`);
             sf.postMessage('go depth 6');
