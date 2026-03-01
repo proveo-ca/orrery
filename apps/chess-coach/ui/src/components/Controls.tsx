@@ -53,7 +53,7 @@ export const BoardActions: Component = () => {
   const turnLabel = () => {
     const parts = currentFen().split(' ');
     const activeColor = parts[1] || 'w';
-    const fullmove = Number(parts[5] || '1');
+    const fullmove = Number(parts[5] || '?');
     return `Move ${fullmove}${activeColor === 'b' ? '...' : '.'}`;
   };
 
@@ -80,7 +80,7 @@ export const BoardActions: Component = () => {
         <div class="turn-label">{turnLabel()}</div>
       )}
 
-      <button onClick={handleHint}>Get Hint</button>
+      {!isReplaying() && <button onClick={handleHint}>Get Hint</button>}
     </div>
   );
 };
