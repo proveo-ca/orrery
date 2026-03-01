@@ -37,7 +37,7 @@ export const NewGamePanel: Component = () => {
   };
 
   return (
-    <div class="new-game-panel" style={{ border: '2px solid #444', padding: '0.5rem 1rem', "border-radius": '8px', display: 'flex', gap: '1rem', "align-items": 'center', "justify-content": 'center' }}>
+    <div class="new-game-panel">
       <ColorSelector value={colorPref()} onChange={setColorPref} />
       <button onClick={handleNewGame}>New Game</button>
     </div>
@@ -58,7 +58,7 @@ export const BoardActions: Component = () => {
   };
 
   return (
-    <div class="board-actions" style={{ display: 'flex', gap: '0.5rem', "margin-bottom": '1rem', "justify-content": 'center' }}>
+    <div class="board-actions">
       <button onClick={goBack}>&larr; Back</button>
       <button onClick={goForward}>Forward &rarr;</button>
       <button onClick={handleHint}>Get Hint</button>

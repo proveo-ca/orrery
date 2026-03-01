@@ -6,6 +6,7 @@ import { CoachAdvice } from './components/CoachAdvice';
 import { NewGamePanel, BoardActions } from './components/Controls';
 import { DebugControls } from './components/DebugControls';
 import { initGlobalLogging, logger } from './utils/logger';
+import './theme.css';
 import './App.css';
 
 const App: Component = () => {
@@ -25,7 +26,7 @@ const App: Component = () => {
         </div>
       </div>
 
-      <div class="board-area" style={{ display: 'flex', "flex-direction": 'column', "align-items": 'center' }}>
+      <div class="board-area">
         <BoardActions />
         <BoardWrapper />
       </div>
