@@ -1,0 +1,53 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+skinparam componentStyle rectangle
+
+title Chess Coach UI: Component Architecture (SolidJS)
+
+actor User
+
+package "SolidJS Frontend (chess-coach-ui)" {
+    
+    package "UI Components" {
+        [Chessboard Wrapper\n(e.g., solid-chess / chessground)] as BOARD
+        [Control Menu\n(New Game, Back, Forward, Hint)] as MENU
+        [Coach Panel\n(Displays LLM Advice)] as COACH_PANEL
+    }
+
+    package "State Management (Signals)" {
+        [Game Store\n(FEN History Array, Current Index)] as STORE
+    }
+
+    package "Network Layer" {
+        [API Client\n(fetch)] as API_CLIENT
+    }
+}
+
+package "Backend" {
+    [Ktor API\n(chess-coach-api)] as KTOR
+}
+
+' --- Relationships ---
+
+User -> BOARD : "Drags Piece (Human Move)"
+User --> MENU : "Clicks Controls"
+
+BOARD --> STORE : "Dispatch Move"
+MENU --> STORE : "Undo/Redo (Change Index)\nRequest Hint\nNew Game"
+
+STORE --> BOARD : "Reactive FEN Update"
+STORE --> COACH_PANEL : "Reactive Advice Update"
+
+STORE --> API_CLIENT : "Trigger API Calls"
+API_CLIENT --> KTOR : "POST /move\nGET /hint\nPOST /new"
+KTOR --> API_CLIENT : "JSON Response\n(FEN, Advice, Hints)"
+API_CLIENT --> STORE : "Update History & Advice"
+
+note right of STORE
+  **Local Cache:**
+  Maintains an array of FENs.
+  Back/Forward simply changes the
+  active index without hitting the API.
+end note
+
+@enduml

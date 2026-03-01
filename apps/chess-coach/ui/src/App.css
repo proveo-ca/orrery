@@ -1,0 +1,49 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.app-container {
+  display: grid;
+  grid-template-rows: auto auto auto;
+  gap: 2rem;
+  justify-items: center;
+  max-width: 520px; /* Slightly wider than the 480px board to allow padding */
+  margin: 0 auto;
+}
+
+/* Grid layout for the header */
+.coach-header {
+  display: grid;
+  grid-template-columns: 1fr 3fr; /* Avatar takes 1/4, Advice takes 3/4 */
+  gap: 1.5rem;
+  align-items: center;
+  width: 100%;
+  height: 8rem; /* FIX: Fixed height prevents the avatar and board from shifting */
+}
+
+.avatar-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.advice-container {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+h1 {
+  margin: 0;
+  font-size: 2.5rem;
+  color: #e0e0e0;
+}

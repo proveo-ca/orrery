@@ -1,0 +1,137 @@
+.chessboard-container {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.chessboard {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  width: 480px;
+  height: 480px;
+  border: 4px solid #2c2c2c;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.square {
+  width: 60px;
+  height: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  position: relative;
+}
+
+.square.light { background-color: #f0d9b5; }
+.square.dark { background-color: #b58863; }
+
+/* =========================================
+   Coordinates (Ranks & Files)
+   ========================================= */
+.coordinate {
+  position: absolute;
+  font-size: 12px;
+  font-weight: bold;
+  user-select: none;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.rank-label {
+  top: 2px;
+  left: 4px;
+}
+
+.file-label {
+  bottom: 0px;
+  right: 4px;
+}
+
+/* Contrast colors based on square background */
+.square.light .coordinate { color: #b58863; }
+.square.dark .coordinate { color: #f0d9b5; }
+
+/* =========================================
+   Overlays (::before)
+   ========================================= */
+.square::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  transition: background-color 0.15s ease;
+}
+
+/* Selected Piece */
+.square.selected::before {
+  background-color: rgba(20, 85, 30, 0.5);
+}
+
+/* Valid Hover */
+.square.hovered::before {
+  background-color: rgba(255, 255, 255, 0.25);
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  box-sizing: border-box;
+}
+
+/* Invalid Hover / Click */
+.square.invalid::before {
+  background-color: rgba(220, 50, 50, 0.4);
+}
+.square.invalid {
+  cursor: not-allowed;
+}
+
+/* =========================================
+   Move Indicators (::after)
+   ========================================= */
+.square::after {
+  position: absolute;
+  pointer-events: none;
+  z-index: 2;
+  transition: all 0.2s ease;
+}
+
+/* Dot for empty valid move */
+.square.valid-move::after {
+  content: '';
+  width: 18px;
+  height: 18px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 50%;
+}
+
+/* Red ring for capture (kill) */
+.square.capture::after {
+  content: '';
+  width: 50px;
+  height: 50px;
+  background-color: transparent;
+  border: 5px solid rgba(220, 50, 50, 0.7);
+  border-radius: 50%;
+}
+
+/* Blue ring for advice highlight */
+.square.advice-highlight::after {
+  content: '';
+  width: 50px;
+  height: 50px;
+  background-color: transparent;
+  border: 5px solid #76b3e1;
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(118, 179, 225, 0.5);
+}
+
+/* =========================================
+   Pieces
+   ========================================= */
+.piece {
+  width: 90%;
+  height: 90%;
+  user-select: none;
+  z-index: 10;
+  pointer-events: none; /* Let clicks pass through to the square */
+}

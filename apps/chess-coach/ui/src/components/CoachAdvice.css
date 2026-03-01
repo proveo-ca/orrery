@@ -1,0 +1,44 @@
+.coach-panel {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: left;
+  height: 100%;
+  max-height: 16rem;
+  box-sizing: border-box;
+}
+
+.coach-panel h3 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  color: #76b3e1;
+  font-size: 1.1rem;
+  flex-shrink: 0; /* Prevent the title from shrinking */
+}
+
+.coach-panel p {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+/* Highlighted chess notation */
+.move-highlight {
+  color: #76b3e1;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: color 0.2s ease, background-color 0.2s ease;
+  padding: 0 2px;
+  border-radius: 3px;
+}
+
+.move-highlight:hover {
+  color: #fff;
+  background-color: rgba(118, 179, 225, 0.3);
+}

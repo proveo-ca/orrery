@@ -1,0 +1,264 @@
+/* =========================================
+   Selena The Cat
+   ========================================= */
+
+.cat {
+  position: relative;
+  height: 6rem;
+  width: 6.78rem; /* 6rem * 1.13 to maintain aspect ratio */
+  margin: 0 auto;
+  z-index: 1;
+}
+
+.ear {
+  position: absolute;
+  top: -30%;
+  height: 60%;
+  width: 25%;
+  background: #fff;
+  transition: transform 0.3s ease, top 0.3s ease; /* Smooth ear movements */
+}
+
+.ear::before,
+.ear::after {
+  content: '';
+  position: absolute;
+  bottom: 24%;
+  height: 10%;
+  width: 5%;
+  border-radius: 50%;
+  background: #161616;
+}
+
+.ear::after {
+  transform-origin: 50% 100%;
+}
+
+.ear--left {
+  left: -7%;
+  border-radius: 70% 30% 0% 0% / 100% 100% 0% 0%;
+  transform: rotate(-15deg);
+}
+
+.ear--left::before,
+.ear--left::after {
+  right: 10%;
+}
+
+.ear--left::after {
+  transform: rotate(-45deg);
+}
+
+.ear--right {
+  right: -7%;
+  border-radius: 30% 70% 0% 0% / 100% 100% 0% 0%;
+  transform: rotate(15deg);
+}
+
+.ear--right::before,
+.ear--right::after {
+  left: 10%;
+}
+
+.ear--right::after {
+  transform: rotate(45deg);
+}
+
+.face {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  background: #161616;
+  border-radius: 50%;
+}
+
+.eye {
+  position: absolute;
+  top: 35%;
+  height: 30%;
+  width: 31%;
+  background: #fff;
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  transition: height 0.2s ease, top 0.2s ease, border-radius 0.2s ease, background-color 0.2s ease;
+  box-sizing: border-box;
+}
+
+/* Base Eyelid (No animation by default) */
+.eye::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 0;
+  width: 100%;
+  border-radius: 0 0 50% 50% / 0 0 40% 40%;
+  background: #161616;
+}
+
+.eye::before {
+  content: '';
+  position: absolute;
+  top: 60%;
+  height: 10%;
+  width: 15%;
+  background: #fff;
+  border-radius: 50%;
+}
+
+.eye--left {
+  overflow: hidden;
+  left: 0;
+}
+
+.eye--left::before {
+  right: -5%;
+}
+
+.eye--right {
+  overflow: hidden;
+  right: 0;
+}
+
+.eye--right::before {
+  left: -5%;
+}
+
+/* Base Pupil & Iris (No animation by default) */
+.eye-pupil {
+  position: absolute;
+  top: 15%;
+  height: 60%;
+  width: 25%;
+  background: #161616; /* Black slit pupil */
+  border: 3px solid #b3e79f; /* Green Iris */
+  border-radius: 50%;
+  transform: translate(0, 0);
+  transition: transform 0.2s ease, width 0.2s ease, height 0.2s ease, border-width 0.2s ease;
+  box-sizing: content-box;
+}
+
+.eye--left .eye-pupil {
+  right: 25%;
+}
+
+.eye--right .eye-pupil {
+  left: 25%;
+}
+
+/* Glare */
+.eye-pupil::after {
+  content: '';
+  position: absolute;
+  top: 10%;
+  right: -4px;
+  height: 6px;
+  width: 6px;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.muzzle {
+  position: absolute;
+  top: 60%;
+  left: 50%;
+  height: 6%;
+  width: 10%;
+  background: #fff;
+  transform: translateX(-50%);
+  border-radius: 50% 50% 50% 50% / 30% 30% 70% 70%;
+}
+
+/* =========================================
+   Keyframes
+   ========================================= */
+@keyframes blink {
+  0% { height: 0; }
+  90% { height: 0; }
+  92.5% { height: 100%; }
+  95% { height: 0; }
+  97.5% { height: 100%; }
+  100% { height: 0; }
+}
+
+@keyframes look-around {
+  0% { transform: translate(0); }
+  5% { transform: translate(50%, -10%); }
+  10% { transform: translate(50%, -10%); }
+  15% { transform: translate(-80%, -10%); }
+  20% { transform: translate(-70%, -10%); }
+  25% { transform: translate(0, 0); }
+  100% { transform: translate(0, 0); }
+}
+
+@keyframes think-look {
+  0%, 100% { transform: translate(0, 30%); }
+  25% { transform: translate(-40%, 30%); }
+  75% { transform: translate(40%, 30%); }
+}
+
+/* =========================================
+   Emotions & States (Cascading)
+   ========================================= */
+
+/* IDLE: Default animations only run when idle */
+.cat.idle .eye::after {
+  animation: blink 4s infinite ease-in;
+}
+.cat.idle .eye-pupil {
+  animation: look-around 4s infinite;
+}
+
+/* WATCHING: Player is hovering over the board */
+.cat.watching .eye::after {
+  animation: blink 4s infinite ease-in; /* Keep blinking while watching */
+}
+.cat.watching .eye-pupil {
+  width: 36%;
+  transform: translate(0, 25%); /* Look further down at the board */
+}
+
+/* THINKING: API is loading */
+.cat.thinking .eye-pupil {
+  animation: think-look 1.2s infinite ease-in-out;
+}
+.cat.thinking .ear--left {
+  transform: rotate(-25deg);
+}
+.cat.thinking .ear--right {
+  transform: rotate(5deg);
+}
+
+/* HAPPY: Good move or new game (Classic ^^ eyes) */
+.cat.happy .eye {
+  height: 36%;
+  top: 36%;
+  background-color: transparent;
+  border: solid #fff;
+  border-width: 6px 0 0 0;
+  border-radius: 50% 50% 0 0;
+}
+.cat.happy .eye::before {
+  display: none; /* Hide the eye tip */
+}
+.cat.happy .eye::after {
+  display: none; /* Stop blinking */
+}
+.cat.happy .eye-pupil {
+  display: none; /* Hide pupils */
+}
+
+/* SHOCKED: Blunder or invalid move */
+.cat.shocked .eye-pupil {
+  width: 40%;
+  height: 75%; /* Dilated black pupils */
+  border-width: 2px; /* Thin green iris rim */
+  transform: translate(0, 0);
+}
+.cat.shocked .ear--left {
+  transform: rotate(-45deg);
+  top: -20%; /* Ears flat back */
+}
+.cat.shocked .ear--right {
+  transform: rotate(45deg);
+  top: -20%;
+}

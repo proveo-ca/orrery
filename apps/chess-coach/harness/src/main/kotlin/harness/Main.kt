@@ -1,0 +1,44 @@
+package harness
+
+import kotlinx.coroutines.runBlocking
+
+fun main(args: Array<String>) = runBlocking {
+    if (args.isEmpty()) {
+        System.err.println("Usage: harness <command> [arguments]")
+        return@runBlocking
+    }
+
+    val command = args[0]
+    val stateManager = StateManager()
+    val engineBridge = EngineBridge()
+    val llmClient = LlmClient()
+    val orchestrator = Orchestrator(stateManager, engineBridge, llmClient)
+
+    try {
+        engineBridge.start()
+
+        when (command) {
+            "move" -> {
+                val humanMove = args.getOrNull(1) ?: ""
+                val humanFen = args.getOrNull(2) ?: ""
+                
+                // Save the human's state before asking the LLM to play
+                if (humanFen.isNotEmpty()) stateManager.writeFen(humanFen)
+                if (humanMove.isNotEmpty()) stateManager.appendMoveToPgn(humanMove)
+
+                val result = orchestrator.executeTurn(humanMove)
+                
+                // Print ONLY the advice to stdout so the API can capture it cleanly
+                println(result.advice)
+            }
+            "hint" -> {
+                println("e4 (+0.5)")
+                println("d4 (+0.4)")
+            }
+            else -> System.err.println("Unknown command: $command")
+        }
+    } finally {
+        engineBridge.stop()
+        llmClient.close()
+    }
+}

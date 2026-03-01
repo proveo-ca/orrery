@@ -1,0 +1,34 @@
+services:
+  llm:
+    image: ollama/ollama:latest
+    container_name: qwen_llm
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["ollama serve & sleep 5 && ollama pull qwen2.5:7b && wait"]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "ollama list | grep -q 'qwen2.5:7b' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 15s
+
+  app:
+    build:
+      context: ../apps/chess-coach
+      dockerfile: Dockerfile
+    container_name: selena_chess_app
+    ports:
+      - "8080:8080"
+    environment:
+      - OLLAMA_BASE_URL=http://qwen_llm:11434/v1
+    depends_on:
+      llm:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  ollama_data:

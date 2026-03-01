@@ -1,0 +1,60 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+skinparam componentStyle rectangle
+
+title Chess Coach API: Component Architecture
+
+actor "SolidJS UI" as UI
+
+package "Ktor Backend Bridge (chess-coach-api)" {
+    
+    [HTTP Server\n(Netty/CIO)] as SERVER
+    
+    package "Routing Layer" {
+        [POST /move\n{ "move": "e4" }] as EP_MOVE
+        [GET /hint\n(Returns Top 3)] as EP_HINT
+    }
+
+    package "Process Management" {
+        [Harness Invoker\n(ProcessBuilder)] as INVOKER
+        [State Reader\n(File I/O)] as READER
+    }
+}
+
+package "External Systems" {
+    [Chess Coach Harness\n(CLI Executable)] as HARNESS
+    database "File System" as FS {
+        [game_state.fen]
+        [game_history.pgn]
+    }
+}
+
+' --- Relationships ---
+
+UI -> SERVER : "HTTP Requests"
+SERVER --> EP_MOVE
+SERVER --> EP_HINT
+
+EP_MOVE --> INVOKER : "Trigger Turn"
+INVOKER --> HARNESS : "Exec: java -jar harness.jar move e4"
+note right of INVOKER
+  API acts as a process manager.
+  It blocks until the Harness
+  completes its execution loop.
+end note
+
+HARNESS --> FS : "Updates State"
+
+INVOKER --> READER : "On Success"
+READER --> FS : "Read updated FEN/PGN"
+READER --> EP_MOVE : "Return State + Advice"
+
+EP_HINT --> HARNESS : "Exec: java -jar harness.jar hint"
+HARNESS --> EP_HINT : "Stdout: Top 3 Moves"
+
+note top of SERVER
+  Back/Forward history traversal
+  is handled client-side by the UI.
+end note
+
+@enduml
