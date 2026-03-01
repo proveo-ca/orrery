@@ -1,6 +1,6 @@
 import { createSignal, createEffect, onMount, onCleanup } from 'solid-js';
 import { Chess, type Square } from 'chess.js';
-import { currentFen, addMoveToHistory, setAdvice, activePlayerColor, coachEmotion, setCoachEmotion } from '../store/gameStore';
+import { currentFen, addMoveToHistory, setAdvice, activePlayerColor, coachEmotion, setCoachEmotion, currentIndex, fenHistory } from '../store/gameStore';
 import { logger } from '../utils/logger';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
@@ -11,6 +11,8 @@ export function useChessBoard() {
   const [hoveredSquare, setHoveredSquare] = createSignal<Square | null>(null);
   const [validMoves, setValidMoves] = createSignal<string[]>([]);
   const [stockfish, setStockfish] = createSignal<Worker | null>(null);
+
+  const isReplaying = () => currentIndex() < fenHistory().length - 1;
   
   let evalTimeout: number | undefined;
   let adviceAbortController: AbortController | null = null;
@@ -52,20 +54,25 @@ export function useChessBoard() {
   createEffect(() => {
     setGame(new Chess(currentFen()));
     setSelectedSquare(null);
+    setHoveredSquare(null);
     setValidMoves([]);
   });
 
   const handleBoardMouseEnter = () => {
+    if (isReplaying()) return;
     if (coachEmotion() === 'idle') setCoachEmotion('watching');
   };
 
   const handleBoardMouseLeave = () => {
+    if (isReplaying()) return;
     setHoveredSquare(null);
     if (coachEmotion() === 'watching' || coachEmotion() === 'shocked') setCoachEmotion('idle');
     stockfish()?.postMessage('stop');
   };
 
   const handleSquareHover = (square: Square) => {
+    if (isReplaying()) return;
+
     setHoveredSquare(square);
     const selected = selectedSquare();
     
@@ -90,6 +97,8 @@ export function useChessBoard() {
   };
 
   const handleSquareClick = async (square: Square) => {
+    if (isReplaying()) return;
+
     const g = game();
     const selected = selectedSquare();
     const pieceOnSquare = g.get(square);
