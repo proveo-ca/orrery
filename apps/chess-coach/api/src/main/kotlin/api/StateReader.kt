@@ -3,8 +3,8 @@ package api
 import java.io.File
 
 class StateReader(
-    private val fenFilePath: String = "game_state.fen",
-    private val pgnFilePath: String = "game_history.pgn"
+    private val fenFilePath: String = resolveStatePath("game_state.fen"),
+    private val pgnFilePath: String = resolveStatePath("game_history.pgn")
 ) {
     private val startingFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
@@ -27,7 +27,16 @@ class StateReader(
     }
 
     fun resetGame() {
+        File(fenFilePath).parentFile?.mkdirs()
+        File(pgnFilePath).parentFile?.mkdirs()
         File(fenFilePath).writeText(startingFen)
         File(pgnFilePath).writeText("")
+    }
+
+    private companion object {
+        fun resolveStatePath(fileName: String): String {
+            val dir = System.getenv("CHESS_STATE_DIR")?.trim().orEmpty()
+            return if (dir.isEmpty()) fileName else "$dir/$fileName"
+        }
     }
 }

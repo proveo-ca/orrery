@@ -2,7 +2,6 @@ package api
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.io.File
 
 class HarnessInvoker(private val harnessCommand: String = "./harness/bin/chess-coach-harness") {
     
