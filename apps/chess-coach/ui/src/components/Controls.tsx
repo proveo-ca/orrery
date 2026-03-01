@@ -71,12 +71,15 @@ export const BoardActions: Component = () => {
 
   return (
     <div class="board-actions">
-      <button onClick={goBack} disabled={atStart()}>&larr; Back</button>
-      <button onClick={goForward} disabled={atLatest()}>Forward &rarr;</button>
-      <span class="turn-label">
-        {turnLabel()}
-        {isReplaying() ? ' • Replaying' : ''}
-      </span>
+      <div class="nav-row">
+        <button onClick={goBack} disabled={atStart()}>&larr; Back</button>
+        <button onClick={goForward} disabled={atLatest()}>Forward &rarr;</button>
+      </div>
+
+      {isReplaying() && (
+        <div class="turn-label">{turnLabel()}</div>
+      )}
+
       <button onClick={handleHint}>Get Hint</button>
     </div>
   );
