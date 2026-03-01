@@ -36,9 +36,9 @@ export function useChessBoard() {
 
         let isBlunder = false;
         if (match) {
-          if (parseInt(match[1], 10) > 200) isBlunder = true;
+          if (parseInt(match[1], 10) <= -200) isBlunder = true;
         } else if (mateMatch) {
-          if (parseInt(mateMatch[1], 10) > 0) isBlunder = true;
+          if (parseInt(mateMatch[1], 10) < 0) isBlunder = true;
         }
 
         if (isBlunder) {
