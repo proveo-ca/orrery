@@ -37,7 +37,7 @@ export const NewGamePanel: Component = () => {
   };
 
   return (
-    <div class="new-game-panel" style={{ border: '2px solid #444', padding: '1rem', "border-radius": '8px', display: 'flex', gap: '1rem', "align-items": 'center', "justify-content": 'center' }}>
+    <div class="new-game-panel" style={{ border: '2px solid #444', padding: '0.5rem 1rem', "border-radius": '8px', display: 'flex', gap: '1rem', "align-items": 'center', "justify-content": 'center' }}>
       <ColorSelector value={colorPref()} onChange={setColorPref} />
       <button onClick={handleNewGame}>New Game</button>
     </div>

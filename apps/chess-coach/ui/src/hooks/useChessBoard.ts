@@ -13,6 +13,7 @@ export function useChessBoard() {
   const [stockfish, setStockfish] = createSignal<Worker | null>(null);
   
   let evalTimeout: number | undefined;
+  let adviceAbortController: AbortController | null = null;
 
   onMount(() => {
     const sfWorker = new Worker('/stockfish-18-lite.js');
@@ -43,7 +44,10 @@ export function useChessBoard() {
     setStockfish(sfWorker);
   });
 
-  onCleanup(() => stockfish()?.terminate());
+  onCleanup(() => {
+    stockfish()?.terminate();
+    adviceAbortController?.abort();
+  });
 
   createEffect(() => {
     setGame(new Chess(currentFen()));
@@ -107,6 +111,11 @@ export function useChessBoard() {
           const result = gameCopy.move({ from: selected, to: square, promotion: 'q' });
 
           if (result) {
+            if (adviceAbortController) {
+              adviceAbortController.abort();
+              adviceAbortController = null;
+            }
+
             const humanMoveSan = result.san;
             const fenAfterHuman = gameCopy.fen();
             
@@ -130,24 +139,36 @@ export function useChessBoard() {
               addMoveToHistory(moveData.fen);
               setAdvice("Move played! Let me think about some advice...");
               
-              const adviceResponse = await fetch(`${API_URL}/advice`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ humanMove: humanMoveSan, aiMove: moveData.move, fen: moveData.fen })
-              });
+              adviceAbortController = new AbortController();
 
-              if (adviceResponse.ok) {
-                const adviceData = await adviceResponse.json();
-                setAdvice(adviceData.advice);
-                const adviceLower = adviceData.advice.toLowerCase();
-                if (adviceLower.includes('blunder') || adviceLower.includes('mistake')) {
-                  setCoachEmotion('shocked', 3000);
+              try {
+                const adviceResponse = await fetch(`${API_URL}/advice`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ humanMove: humanMoveSan, aiMove: moveData.move, fen: moveData.fen }),
+                  signal: adviceAbortController.signal
+                });
+
+                if (adviceResponse.ok) {
+                  const adviceData = await adviceResponse.json();
+                  setAdvice(adviceData.advice);
+                  const adviceLower = adviceData.advice.toLowerCase();
+                  if (adviceLower.includes('blunder') || adviceLower.includes('mistake')) {
+                    setCoachEmotion('shocked', 3000);
+                  } else {
+                    setCoachEmotion('happy', 3000);
+                  }
                 } else {
-                  setCoachEmotion('happy', 3000);
+                  setAdvice("Error getting advice.");
+                  setCoachEmotion('shocked', 2000);
                 }
-              } else {
-                setAdvice("Error getting advice.");
-                setCoachEmotion('shocked', 2000);
+              } catch (err: any) {
+                if (err.name === 'AbortError') {
+                  logger.action("Advice request aborted due to new move.");
+                } else {
+                  setAdvice("Error getting advice.");
+                  setCoachEmotion('shocked', 2000);
+                }
               }
             } else {
               setAdvice("Error communicating with the coach.");

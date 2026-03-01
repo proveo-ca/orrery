@@ -8,7 +8,7 @@
 .app-container {
   display: grid;
   grid-template-rows: auto auto auto;
-  gap: 2rem;
+  gap: 1rem;
   justify-items: center;
   max-width: 520px; /* Slightly wider than the 480px board to allow padding */
   margin: 0 auto;
