@@ -1,7 +1,7 @@
 import { For } from 'solid-js';
 import type { Component } from 'solid-js';
 import type { Square } from 'chess.js';
-import { activePlayerColor, adviceHoveredSquares } from '../store/gameStore';
+import { activePlayerColor, adviceHoveredSquares, currentIndex, fenHistory } from '../store/gameStore';
 import { useChessBoard } from '../hooks/useChessBoard';
 import { ChessSquare } from './ChessSquare';
 import './ChessBoard.css';
@@ -15,9 +15,12 @@ export const BoardWrapper: Component = () => {
   const displayRanks = () => activePlayerColor() === 'w' ? RANKS : [...RANKS].reverse();
   const displayFiles = () => activePlayerColor() === 'w' ? FILES : [...FILES].reverse();
 
+  const isReplaying = () => currentIndex() < fenHistory().length - 1;
+
   return (
     <div 
-      class="chessboard-container" 
+      class="chessboard-container"
+      classList={{ 'replay-mode': isReplaying() }}
       onMouseEnter={board.handleBoardMouseEnter}
       onMouseLeave={board.handleBoardMouseLeave}
     >

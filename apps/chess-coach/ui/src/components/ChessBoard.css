@@ -14,6 +14,10 @@
   box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 
+.chessboard-container.replay-mode {
+  filter: grayscale(1) contrast(1.35) brightness(0.85);
+}
+
 .square {
   width: 60px;
   height: 60px;

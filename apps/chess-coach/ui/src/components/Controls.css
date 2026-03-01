@@ -28,3 +28,14 @@
   margin-bottom: var(--spacing-md);
   justify-content: center;
 }
+
+.board-actions button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.turn-label {
+  opacity: 0.8;
+  font-size: 0.9rem;
+  user-select: none;
+}

@@ -1,5 +1,5 @@
 import type { Component } from 'solid-js';
-import { goBack, goForward, resetGame, colorPref, setColorPref, activePlayerColor, setCoachEmotion, setAdvice, addMoveToHistory } from '../store/gameStore';
+import { goBack, goForward, resetGame, colorPref, setColorPref, activePlayerColor, setCoachEmotion, setAdvice, addMoveToHistory, currentFen, currentIndex, fenHistory } from '../store/gameStore';
 import { ColorSelector } from './common/ColorSelector';
 import './Controls.css';
 
@@ -45,6 +45,18 @@ export const NewGamePanel: Component = () => {
 };
 
 export const BoardActions: Component = () => {
+  const atStart = () => currentIndex() === 0;
+  const atLatest = () => currentIndex() === fenHistory().length - 1;
+
+  const isReplaying = () => currentIndex() < fenHistory().length - 1;
+
+  const turnLabel = () => {
+    const parts = currentFen().split(' ');
+    const activeColor = parts[1] || 'w';
+    const fullmove = Number(parts[5] || '1');
+    return `Move ${fullmove}${activeColor === 'b' ? '...' : '.'}`;
+  };
+
   const handleHint = async () => {
     try {
       const res = await fetch(`${API_URL}/hint`);
@@ -59,8 +71,12 @@ export const BoardActions: Component = () => {
 
   return (
     <div class="board-actions">
-      <button onClick={goBack}>&larr; Back</button>
-      <button onClick={goForward}>Forward &rarr;</button>
+      <button onClick={goBack} disabled={atStart()}>&larr; Back</button>
+      <button onClick={goForward} disabled={atLatest()}>Forward &rarr;</button>
+      <span class="turn-label">
+        {turnLabel()}
+        {isReplaying() ? ' • Replaying' : ''}
+      </span>
       <button onClick={handleHint}>Get Hint</button>
     </div>
   );
