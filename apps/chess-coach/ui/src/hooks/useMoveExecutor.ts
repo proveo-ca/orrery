@@ -39,6 +39,7 @@ export function useMoveExecutor(apiUrl: string, stopStockfish: () => void) {
       addMoveToHistory(fenAfterHuman);
       stopStockfish();
       setCoachEmotion('thinking')
+      setAdvice('')
       let moveData: { fen: string; move: string };
       try {
         moveData = await postMove(apiUrl, { move: humanMoveSan, fen: fenAfterHuman });
@@ -47,7 +48,7 @@ export function useMoveExecutor(apiUrl: string, stopStockfish: () => void) {
         setCoachEmotion('shocked', 2000);
         return { fenAfterHuman };
       }
-
+      setCoachEmotion('idle')
       addMoveToHistory(moveData.fen);
 
       const controller = new AbortController();

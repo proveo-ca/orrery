@@ -1,6 +1,6 @@
 import { createSignal, createEffect, onCleanup } from 'solid-js';
 import { Chess, type Square } from 'chess.js';
-import { currentFen, activePlayerColor, coachEmotion, setCoachEmotion, currentIndex, fenHistory } from '../store/gameStore';
+import { currentFen, activePlayerColor, coachEmotion, setCoachEmotion, currentIndex, fenHistory, advice, setAdvice } from '../store/gameStore';
 import { logger } from '../utils/logger';
 import { useStockfishWorker } from './useStockfishWorker';
 import { useMoveExecutor } from './useMoveExecutor';
@@ -19,6 +19,9 @@ export function useChessBoard() {
   
   let evalTimeout: number | undefined;
   let lastHoverEval: { from: Square; to: Square; fen: string } | null = null;
+
+  let savedAdviceBeforeHover: string | null = null;
+  let hoverBlunderShown = false;
 
   createEffect(() => {
     if (!(hoveredSquare() && selectedSquare())) return;
@@ -49,9 +52,19 @@ export function useChessBoard() {
 
       if (isBlunder) {
         logger.action('Stockfish Hover Blunder Detected', { msg, lastHoverEval });
+
+        if (!hoverBlunderShown) {
+          savedAdviceBeforeHover = advice();
+          hoverBlunderShown = true;
+
+          const piece = game().get((lastHoverEval?.from ?? selectedSquare()) as Square);
+          const pieceName = piece ? `${piece.color}${piece.type}` : 'piece';
+          const location = lastHoverEval?.to ?? hoveredSquare();
+
+          setAdvice(`Moving the ${pieceName} to ${location} is a blunder`);
+        }
+
         setCoachEmotion('shocked');
-      } else if (coachEmotion() === 'shocked') {
-        setCoachEmotion('watching');
       }
     }
   });
@@ -75,6 +88,13 @@ export function useChessBoard() {
   const handleBoardMouseLeave = () => {
     if (isReplaying()) return;
     setHoveredSquare(null);
+
+    if (hoverBlunderShown) {
+      setAdvice(savedAdviceBeforeHover ?? advice());
+      savedAdviceBeforeHover = null;
+      hoverBlunderShown = false;
+    }
+
     if (coachEmotion() === 'watching' || coachEmotion() === 'shocked') setCoachEmotion('idle');
     send('stop');
   };
@@ -100,6 +120,12 @@ export function useChessBoard() {
         } catch (e) {}
       }, 150);
     } else {
+      if (hoverBlunderShown) {
+        setAdvice(savedAdviceBeforeHover ?? advice());
+        savedAdviceBeforeHover = null;
+        hoverBlunderShown = false;
+      }
+
       if (coachEmotion() === 'shocked') setCoachEmotion('watching');
       send('stop');
     }
