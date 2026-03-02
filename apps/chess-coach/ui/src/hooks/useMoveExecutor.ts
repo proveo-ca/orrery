@@ -37,7 +37,7 @@ export function useMoveExecutor(apiUrl: string, stopStockfish: () => void) {
 
       addMoveToHistory(fenAfterHuman);
       stopStockfish();
-
+      setCoachEmotion('thinking')
       const moveResponse = await fetch(`${apiUrl}/move`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -47,7 +47,6 @@ export function useMoveExecutor(apiUrl: string, stopStockfish: () => void) {
       if (moveResponse.ok) {
         const moveData = await moveResponse.json();
         addMoveToHistory(moveData.fen);
-        setAdvice('Move played! Let me think about some advice...');
 
         const controller = new AbortController();
         setAdviceAbortController(controller);
