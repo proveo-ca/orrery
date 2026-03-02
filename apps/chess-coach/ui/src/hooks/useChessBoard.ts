@@ -1,7 +1,8 @@
-import { createSignal, createEffect, onMount, onCleanup } from 'solid-js';
+import { createSignal, createEffect, onCleanup } from 'solid-js';
 import { Chess, type Square } from 'chess.js';
 import { currentFen, addMoveToHistory, setAdvice, activePlayerColor, coachEmotion, setCoachEmotion, currentIndex, fenHistory } from '../store/gameStore';
 import { logger } from '../utils/logger';
+import { useStockfishWorker } from './useStockfishWorker';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
 
@@ -10,7 +11,7 @@ export function useChessBoard() {
   const [selectedSquare, setSelectedSquare] = createSignal<Square | null>(null);
   const [hoveredSquare, setHoveredSquare] = createSignal<Square | null>(null);
   const [validMoves, setValidMoves] = createSignal<string[]>([]);
-  const [stockfish, setStockfish] = createSignal<Worker | null>(null);
+  const { send, analysis } = useStockfishWorker('/stockfish-18-lite.js');
 
   const isReplaying = () => currentIndex() < fenHistory().length - 1;
   
@@ -18,49 +19,40 @@ export function useChessBoard() {
   let adviceAbortController: AbortController | null = null;
   let lastHoverEval: { from: Square; to: Square; fen: string } | null = null;
 
-  onMount(() => {
-    const sfWorker = new Worker('/stockfish-18-lite.js');
-    sfWorker.postMessage('uci');
-    
-    sfWorker.onmessage = (event) => {
-      const line = event.data;
-      if (typeof line !== 'string') return;
-      
-      const match = line.match(/score cp (-?\d+)/);
-      const mateMatch = line.match(/score mate (-?\d+)/);
-      
-      if (hoveredSquare() && selectedSquare()) {
-        if (line.startsWith('info ') || line.startsWith('bestmove')) {
-        }
+  createEffect(() => {
+    if (!(hoveredSquare() && selectedSquare())) return;
 
-        let isBlunder = false;
-        const sideToMove = lastHoverEval?.fen.split(' ')[1] || game().fen().split(' ')[1] || 'w';
-        logger.action('Stockfish Hover Eval', { line, lastHoverEval, sideToMove });
+    const msg = analysis().last;
+    if (!msg) return;
 
-        const humanColor = activePlayerColor();
-        const scoreMultiplier = sideToMove === humanColor ? 1 : -1;
+    if (msg.type === 'info' || msg.type === 'bestmove') {
+      const sideToMove = lastHoverEval?.fen.split(' ')[1] || game().fen().split(' ')[1] || 'w';
+      logger.action('Stockfish Hover Eval', { msg, lastHoverEval, sideToMove });
 
-        if (match) {
-          const cp = parseInt(match[1], 10) * scoreMultiplier;
+      let isBlunder = false;
+      const humanColor = activePlayerColor();
+      const scoreMultiplier = sideToMove === humanColor ? 1 : -1;
+
+      if (msg.type === 'info' && msg.score) {
+        if (msg.score.kind === 'cp') {
+          const cp = msg.score.value * scoreMultiplier;
           if (cp > 150) isBlunder = true;
-        } else if (mateMatch) {
-          const mate = parseInt(mateMatch[1], 10) * scoreMultiplier;
+        } else if (msg.score.kind === 'mate') {
+          const mate = msg.score.value * scoreMultiplier;
           if (mate < 0) isBlunder = true;
         }
-
-        if (isBlunder) {
-          logger.action('Stockfish Hover Blunder Detected', { line, lastHoverEval });
-          setCoachEmotion('shocked');
-        } else if (coachEmotion() === 'shocked') {
-          setCoachEmotion('watching');
-        }
       }
-    };
-    setStockfish(sfWorker);
+
+      if (isBlunder) {
+        logger.action('Stockfish Hover Blunder Detected', { msg, lastHoverEval });
+        setCoachEmotion('shocked');
+      } else if (coachEmotion() === 'shocked') {
+        setCoachEmotion('watching');
+      }
+    }
   });
 
   onCleanup(() => {
-    stockfish()?.terminate();
     adviceAbortController?.abort();
   });
 
@@ -80,7 +72,7 @@ export function useChessBoard() {
     if (isReplaying()) return;
     setHoveredSquare(null);
     if (coachEmotion() === 'watching' || coachEmotion() === 'shocked') setCoachEmotion('idle');
-    stockfish()?.postMessage('stop');
+    send('stop');
   };
 
   const handleSquareHover = (square: Square) => {
@@ -95,20 +87,17 @@ export function useChessBoard() {
         const gameCopy = new Chess(game().fen());
         try {
           gameCopy.move({ from: selected, to: square, promotion: 'q' });
-          const sf = stockfish();
-          if (sf) {
-            lastHoverEval = { from: selected, to: square, fen: gameCopy.fen() };
-            logger.action('Stockfish Hover Eval Request', lastHoverEval);
+          lastHoverEval = { from: selected, to: square, fen: gameCopy.fen() };
+          logger.action('Stockfish Hover Eval Request', lastHoverEval);
 
-            sf.postMessage('stop');
-            sf.postMessage(`position fen ${gameCopy.fen()}`);
-            sf.postMessage('go depth 6');
-          }
+          send('stop');
+          send(`position fen ${gameCopy.fen()}`);
+          send('go depth 6');
         } catch (e) {}
       }, 150);
     } else {
       if (coachEmotion() === 'shocked') setCoachEmotion('watching');
-      stockfish()?.postMessage('stop');
+      send('stop');
     }
   };
 
@@ -148,7 +137,7 @@ export function useChessBoard() {
             setSelectedSquare(null);
             setValidMoves([]);
             setHoveredSquare(null);
-            stockfish()?.postMessage('stop');
+            send('stop');
 
             const moveResponse = await fetch(`${API_URL}/move`, {
               method: 'POST',
