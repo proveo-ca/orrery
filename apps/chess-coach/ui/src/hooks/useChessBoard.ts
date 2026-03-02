@@ -31,17 +31,18 @@ export function useChessBoard() {
       
       if (hoveredSquare() && selectedSquare()) {
         if (line.startsWith('info ') || line.startsWith('bestmove')) {
-          logger.action('Stockfish Hover Eval', { line, lastHoverEval });
         }
 
         let isBlunder = false;
         const sideToMove = lastHoverEval?.fen.split(' ')[1] || game().fen().split(' ')[1] || 'w';
+        logger.action('Stockfish Hover Eval', { line, lastHoverEval, sideToMove });
+
         const humanColor = activePlayerColor();
         const scoreMultiplier = sideToMove === humanColor ? 1 : -1;
 
         if (match) {
           const cp = parseInt(match[1], 10) * scoreMultiplier;
-          if (cp <= -200) isBlunder = true;
+          if (cp > 150) isBlunder = true;
         } else if (mateMatch) {
           const mate = parseInt(mateMatch[1], 10) * scoreMultiplier;
           if (mate < 0) isBlunder = true;
@@ -149,9 +150,6 @@ export function useChessBoard() {
             setHoveredSquare(null);
             stockfish()?.postMessage('stop');
 
-            setAdvice("Thinking about my move...");
-            setCoachEmotion('thinking'); 
-            
             const moveResponse = await fetch(`${API_URL}/move`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
