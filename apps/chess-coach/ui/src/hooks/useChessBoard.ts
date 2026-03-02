@@ -28,7 +28,7 @@ export function useChessBoard() {
 
     if (msg.type === 'info' || msg.type === 'bestmove') {
       const sideToMove = lastHoverEval?.fen.split(' ')[1] || game().fen().split(' ')[1] || 'w';
-      logger.action('Stockfish Hover Eval', { msg, lastHoverEval, sideToMove });
+      // logger.action('Stockfish Hover Eval', { msg, lastHoverEval, sideToMove });
 
       let isBlunder = false;
       const humanColor = activePlayerColor();
@@ -37,7 +37,10 @@ export function useChessBoard() {
       if (msg.type === 'info' && msg.score) {
         if (msg.score.kind === 'cp') {
           const cp = msg.score.value * scoreMultiplier;
-          if (cp > 150) isBlunder = true;
+          console.log('------------------------')
+          console.log(cp)
+          console.log('------------------------')
+          if (cp < -200) isBlunder = true;
         } else if (msg.score.kind === 'mate') {
           const mate = msg.score.value * scoreMultiplier;
           if (mate < 0) isBlunder = true;
