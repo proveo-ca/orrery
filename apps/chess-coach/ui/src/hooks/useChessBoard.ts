@@ -1,8 +1,9 @@
 import { createSignal, createEffect, onCleanup } from 'solid-js';
 import { Chess, type Square } from 'chess.js';
-import { currentFen, addMoveToHistory, setAdvice, activePlayerColor, coachEmotion, setCoachEmotion, currentIndex, fenHistory } from '../store/gameStore';
+import { currentFen, activePlayerColor, coachEmotion, setCoachEmotion, currentIndex, fenHistory } from '../store/gameStore';
 import { logger } from '../utils/logger';
 import { useStockfishWorker } from './useStockfishWorker';
+import { useMoveExecutor } from './useMoveExecutor';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
 
@@ -12,11 +13,11 @@ export function useChessBoard() {
   const [hoveredSquare, setHoveredSquare] = createSignal<Square | null>(null);
   const [validMoves, setValidMoves] = createSignal<string[]>([]);
   const { send, analysis } = useStockfishWorker('/stockfish-18-lite.js');
+  const moveExecutor = useMoveExecutor(API_URL, () => send('stop'));
 
   const isReplaying = () => currentIndex() < fenHistory().length - 1;
   
   let evalTimeout: number | undefined;
-  let adviceAbortController: AbortController | null = null;
   let lastHoverEval: { from: Square; to: Square; fen: string } | null = null;
 
   createEffect(() => {
@@ -53,7 +54,7 @@ export function useChessBoard() {
   });
 
   onCleanup(() => {
-    adviceAbortController?.abort();
+    moveExecutor.abortAdvice();
   });
 
   createEffect(() => {
@@ -117,78 +118,12 @@ export function useChessBoard() {
     }
 
     if (selected) {
-      const move = g.moves({ square: selected, verbose: true }).find(m => m.to === square);
+      const didMove = await moveExecutor.executeMove({ game: g, selected, square });
 
-      if (move) {
-        try {
-          const gameCopy = new Chess(g.fen());
-          const result = gameCopy.move({ from: selected, to: square, promotion: 'q' });
-
-          if (result) {
-            if (adviceAbortController) {
-              adviceAbortController.abort();
-              adviceAbortController = null;
-            }
-
-            const humanMoveSan = result.san;
-            const fenAfterHuman = gameCopy.fen();
-            
-            addMoveToHistory(fenAfterHuman);
-            setSelectedSquare(null);
-            setValidMoves([]);
-            setHoveredSquare(null);
-            send('stop');
-
-            const moveResponse = await fetch(`${API_URL}/move`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ move: humanMoveSan, fen: fenAfterHuman })
-            });
-
-            if (moveResponse.ok) {
-              const moveData = await moveResponse.json();
-              addMoveToHistory(moveData.fen);
-              setAdvice("Move played! Let me think about some advice...");
-              
-              adviceAbortController = new AbortController();
-
-              try {
-                const adviceResponse = await fetch(`${API_URL}/advice`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ humanMove: humanMoveSan, aiMove: moveData.move, fen: moveData.fen }),
-                  signal: adviceAbortController.signal
-                });
-
-                if (adviceResponse.ok) {
-                  const adviceData = await adviceResponse.json();
-                  setAdvice(adviceData.advice);
-                  const adviceLower = adviceData.advice.toLowerCase();
-                  if (adviceLower.includes('blunder') || adviceLower.includes('mistake')) {
-                    setCoachEmotion('shocked', 3000);
-                  } else {
-                    setCoachEmotion('happy', 3000);
-                  }
-                } else {
-                  setAdvice("Error getting advice.");
-                  setCoachEmotion('shocked', 2000);
-                }
-              } catch (err: any) {
-                if (err.name === 'AbortError') {
-                  logger.action("Advice request aborted due to new move.");
-                } else {
-                  setAdvice("Error getting advice.");
-                  setCoachEmotion('shocked', 2000);
-                }
-              }
-            } else {
-              setAdvice("Error communicating with the coach.");
-              setCoachEmotion('shocked', 2000);
-            }
-          }
-        } catch (e) {
-          logger.error("Move execution error", e);
-        }
+      if (didMove) {
+        setSelectedSquare(null);
+        setValidMoves([]);
+        setHoveredSquare(null);
         return;
       }
     }

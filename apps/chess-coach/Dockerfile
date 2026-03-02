@@ -2,8 +2,11 @@
 FROM node:22-alpine AS ui-builder
 WORKDIR /ui
 COPY ui/package.json ./
+
 RUN npm install
 COPY ui/ ./
+
+ENV VITE_DEBUG=true
 RUN npm run build
 
 # --- Stage 2: Build Kotlin ---

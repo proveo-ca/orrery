@@ -99,7 +99,7 @@ class Orchestrator(
             "The human student just played $humanMove, and you replied with $aiMove. " +
             "Focus your advice PRIMARILY on evaluating the human's move ($humanMove). " +
             "Was it a good idea? Did it leave anything undefended? " +
-            "Keep the explanation of your own move ($aiMove) very brief."
+            "Don't mention your own move ($aiMove) unless it's a mate threat."
         } else {
             "You are making the first move of the game. Briefly explain your opening choice ($aiMove)."
         }
