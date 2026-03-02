@@ -48,6 +48,7 @@ export function useChessBoard() {
         }
 
         if (isBlunder) {
+          logger.action('Stockfish Hover Blunder Detected', { line, lastHoverEval });
           setCoachEmotion('shocked');
         } else if (coachEmotion() === 'shocked') {
           setCoachEmotion('watching');
