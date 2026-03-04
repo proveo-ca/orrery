@@ -7,7 +7,7 @@ import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class MoveRequest(val move: String, val fen: String)
+data class MoveRequest(val move: String, val fen: String, val difficulty: String = "beginner")
 
 @Serializable
 data class MoveResponse(val fen: String, val move: String)
@@ -51,7 +51,7 @@ fun Application.configureRouting(invoker: HarnessInvoker, stateReader: StateRead
             val request = call.receive<MoveRequest>()
             
             // Block and wait for the harness to complete the turn
-            val aiMove = invoker.executeMove(request.move, request.fen)
+            val aiMove = invoker.executeMove(request.move, request.fen, request.difficulty)
             
             // Read the updated state from the file system
             val fen = stateReader.readFen()

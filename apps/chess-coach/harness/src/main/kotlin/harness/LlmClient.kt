@@ -37,7 +37,9 @@ class LlmClient {
         
     private val apiKey: String? = System.getenv("LLM_API_KEY")
     
-    val defaultModel: String = System.getenv("LLM_MODEL") ?: "qwen2.5:7b"
+    val generalModel: String = System.getenv("LLM_GENERAL_MODEL") ?: System.getenv("LLM_MODEL") ?: "qwen2.5:7b"
+    val uciModel: String = System.getenv("LLM_UCI_MODEL") ?: generalModel
+    val commentaryModel: String = System.getenv("LLM_COMMENTARY_MODEL") ?: generalModel
 
     private val client = HttpClient(CIO) {
         install(ContentNegotiation) {
@@ -47,16 +49,16 @@ class LlmClient {
             })
         }
         install(HttpTimeout) {
-            requestTimeoutMillis = 15_000
-            connectTimeoutMillis = 15_000
-            socketTimeoutMillis = 15_000
+            requestTimeoutMillis = 30_000
+            connectTimeoutMillis = 30_000
+            socketTimeoutMillis = 30_000
         }
     }
 
     suspend fun prompt(
         systemPrompt: String, 
         userPrompt: String, 
-        model: String = defaultModel,
+        model: String = generalModel,
         temperature: Double = 0.7,
         format: String? = null
     ): String {

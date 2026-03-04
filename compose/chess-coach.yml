@@ -7,10 +7,10 @@ services:
     volumes:
       - ollama_data:/root/.ollama
     entrypoint: ["/bin/sh", "-c"]
-    command: ["ollama serve & sleep 5 && ollama pull hf.co/NAKSTStudio/chess-gemma-commentary:Q8_0 && wait"]
+    command: ["ollama serve & sleep 5 && ollama pull qwen2.5:7b && ollama pull hf.co/NAKSTStudio/chess-gemma-commentary:Q8_0 && wait"]
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "ollama list | grep -qi 'hf.co/NAKSTStudio/chess-gemma-commentary' || exit 1"]
+      test: ["CMD-SHELL", "ollama list | grep -qi 'qwen2.5:7b' && ollama list | grep -qi 'hf.co/NAKSTStudio/chess-gemma-commentary' || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 30
@@ -25,7 +25,9 @@ services:
       - "8080:8080"
     environment:
       - OLLAMA_BASE_URL=http://gemma_llm:11434/v1
-      - LLM_MODEL=hf.co/NAKSTStudio/chess-gemma-commentary:Q8_0
+      - LLM_GENERAL_MODEL=qwen2.5:7b
+      - LLM_UCI_MODEL=qwen2.5:7b
+      - LLM_COMMENTARY_MODEL=hf.co/NAKSTStudio/chess-gemma-commentary:Q8_0
       - CHESS_STATE_DIR=/data
     volumes:
       - chess_state:/data

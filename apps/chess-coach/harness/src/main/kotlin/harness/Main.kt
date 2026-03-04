@@ -1,8 +1,26 @@
 package harness
 
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+
+@Serializable
+data class DaemonRequest(
+    val command: String,
+    val difficulty: String = "beginner",
+    val humanMove: String = "",
+    val aiMove: String = "",
+    val fen: String = ""
+)
+
+@Serializable
+data class DaemonResponse(
+    val move: String = "",
+    val advice: String = "",
+    val hints: List<String> = emptyList(),
+    val phrases: UiPhrases? = null
+)
 
 fun main(args: Array<String>) = runBlocking {
     if (args.isEmpty()) {
@@ -15,7 +33,7 @@ fun main(args: Array<String>) = runBlocking {
     val engineBridge = EngineBridge()
     val llmClient = LlmClient()
     val orchestrator = Orchestrator(stateManager, engineBridge, llmClient)
-    val json = Json { prettyPrint = false }
+    val json = Json { ignoreUnknownKeys = true; prettyPrint = false }
 
     try {
         engineBridge.start()
@@ -24,27 +42,48 @@ fun main(args: Array<String>) = runBlocking {
             "daemon" -> {
                 while (true) {
                     val line = readlnOrNull() ?: break
-                    when (line.trim()) {
-                        "hello" -> {
-                            val phrases = orchestrator.generateUiPhrases()
-                            println(json.encodeToString(phrases))
-                            System.out.flush()
+                    if (line.trim() == "quit") return@runBlocking
+                    
+                    try {
+                        val req = json.decodeFromString<DaemonRequest>(line)
+                        val res = when (req.command) {
+                            "hello" -> {
+                                DaemonResponse(phrases = orchestrator.generateUiPhrases())
+                            }
+                            "move" -> {
+                                if (req.fen.isNotEmpty()) stateManager.writeFen(req.fen)
+                                if (req.humanMove.isNotEmpty()) stateManager.appendMoveToPgn(req.humanMove)
+                                val result = orchestrator.executeTurn(req.humanMove, req.difficulty)
+                                DaemonResponse(move = result.move)
+                            }
+                            "advice" -> {
+                                val advice = orchestrator.generateAdvice(req.humanMove, req.aiMove, req.fen)
+                                DaemonResponse(advice = advice)
+                            }
+                            "hint" -> {
+                                DaemonResponse(hints = listOf("e4 (+0.5)", "d4 (+0.4)"))
+                            }
+                            else -> DaemonResponse()
                         }
-                        "quit" -> return@runBlocking
+                        println(json.encodeToString(res))
+                        System.out.flush()
+                    } catch (e: Exception) {
+                        System.err.println("Daemon error: ${e.message}")
+                        e.printStackTrace()
+                        println("{}")
+                        System.out.flush()
                     }
                 }
             }
             "move" -> {
                 val humanMove = args.getOrNull(1) ?: ""
                 val humanFen = args.getOrNull(2) ?: ""
+                val difficulty = args.getOrNull(3) ?: "beginner"
                 
-                // Save the human's state before asking the LLM to play
                 if (humanFen.isNotEmpty()) stateManager.writeFen(humanFen)
                 if (humanMove.isNotEmpty()) stateManager.appendMoveToPgn(humanMove)
 
-                val result = orchestrator.executeTurn(humanMove)
-                
-                // Print ONLY the move to stdout so the API can capture it cleanly
+                val result = orchestrator.executeTurn(humanMove, difficulty)
                 println(result.move)
             }
             "advice" -> {

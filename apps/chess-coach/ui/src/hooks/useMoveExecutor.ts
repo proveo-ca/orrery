@@ -1,6 +1,6 @@
 import { Chess, type Square } from 'chess.js';
 import { createSignal } from 'solid-js';
-import { addMoveToHistory, setAdvice, setCoachEmotion } from '../store/gameStore';
+import { addMoveToHistory, setAdvice, setCoachEmotion, difficulty } from '../store/gameStore';
 import { logger } from '../utils/logger';
 import { postAdvice, postMove } from '../services/api';
 
@@ -42,7 +42,7 @@ export function useMoveExecutor(apiUrl: string, stopStockfish: () => void) {
       setAdvice('')
       let moveData: { fen: string; move: string };
       try {
-        moveData = await postMove(apiUrl, { move: humanMoveSan, fen: fenAfterHuman });
+        moveData = await postMove(apiUrl, { move: humanMoveSan, fen: fenAfterHuman, difficulty: difficulty() });
       } catch (e) {
         setAdvice('Error communicating with the coach.');
         setCoachEmotion('shocked', 2000);

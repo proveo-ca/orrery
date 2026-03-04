@@ -1,5 +1,5 @@
 import type { Component } from 'solid-js';
-import { goBack, goForward, resetGame, colorPref, setColorPref, activePlayerColor, setCoachEmotion, setAdvice, addMoveToHistory, currentFen, currentIndex, fenHistory } from '../store/gameStore';
+import { goBack, goForward, resetGame, colorPref, setColorPref, activePlayerColor, setCoachEmotion, setAdvice, addMoveToHistory, currentFen, currentIndex, fenHistory, difficulty, setDifficulty } from '../store/gameStore';
 import { ColorSelector } from './common/ColorSelector';
 import './Controls.css';
 
@@ -19,7 +19,7 @@ export const NewGamePanel: Component = () => {
           const moveRes = await fetch(`${API_URL}/move`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ move: "", fen: data.fen })
+            body: JSON.stringify({ move: "", fen: data.fen, difficulty: difficulty() })
           });
           
           if (moveRes.ok) {
@@ -39,6 +39,11 @@ export const NewGamePanel: Component = () => {
   return (
     <div class="new-game-panel">
       <ColorSelector value={colorPref()} onChange={setColorPref} />
+      <select class="difficulty-select" value={difficulty()} onChange={(e) => setDifficulty(e.target.value as any)}>
+        <option value="beginner">Beginner (1100)</option>
+        <option value="intermediate">Intermediate (1600)</option>
+        <option value="advanced">Advanced (2200)</option>
+      </select>
       <button onClick={handleNewGame}>New Game</button>
     </div>
   );

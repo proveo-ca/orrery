@@ -4,6 +4,7 @@ const STARTING_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 
 export type CoachEmotion = 'idle' | 'watching' | 'thinking' | 'happy' | 'shocked';
 export type PlayerColorPref = 'w' | 'b' | 'random';
+export type Difficulty = 'beginner' | 'intermediate' | 'advanced';
 
 export const [fenHistory, setFenHistory] = createSignal<string[]>([STARTING_FEN]);
 export const [currentIndex, setCurrentIndex] = createSignal<number>(0);
@@ -36,6 +37,7 @@ export const setCoachEmotion = (emotion: CoachEmotion, autoResetMs?: number) => 
 // Color Selection State
 export const [colorPref, setColorPref] = createSignal<PlayerColorPref>('w');
 export const [activePlayerColor, setActivePlayerColor] = createSignal<'w' | 'b'>('w');
+export const [difficulty, setDifficulty] = createSignal<Difficulty>('intermediate');
 
 export const currentFen = () => fenHistory()[currentIndex()];
 

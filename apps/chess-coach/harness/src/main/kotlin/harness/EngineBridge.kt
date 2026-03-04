@@ -9,6 +9,11 @@ class EngineBridge(private val stockfishPath: String = "stockfish") {
     private var reader: BufferedReader? = null
     private var writer: OutputStreamWriter? = null
 
+    private var lc0Process: Process? = null
+    private var lc0Reader: BufferedReader? = null
+    private var lc0Writer: OutputStreamWriter? = null
+    private var currentDifficulty: String? = null
+
     fun start() {
         process = ProcessBuilder(stockfishPath).start()
         reader = BufferedReader(InputStreamReader(process!!.inputStream))
@@ -52,9 +57,6 @@ class EngineBridge(private val stockfishPath: String = "stockfish") {
     }
 
     fun checkLegality(fen: String, move: String): Boolean {
-        // A simple way to check legality is to ask stockfish to evaluate the position after the move
-        // If the move is illegal, stockfish usually ignores it or throws an error in its internal state.
-        // A more robust way is to use a chess library, but sticking to the anti-framework raw I/O:
         sendCommand("position fen $fen moves $move")
         sendCommand("go depth 1")
         
@@ -86,7 +88,6 @@ class EngineBridge(private val stockfishPath: String = "stockfish") {
             }
         }
         
-        // If Stockfish ignores the move because it's illegal, the FEN won't change
         if (newFen == fen || newFen.isEmpty()) return null
         return newFen
     }
@@ -103,8 +104,74 @@ class EngineBridge(private val stockfishPath: String = "stockfish") {
         }
     }
 
+    fun getMaiaMove(fen: String, difficulty: String): String {
+        if (lc0Process == null || currentDifficulty != difficulty || !lc0Process!!.isAlive) {
+            stopLc0()
+            
+            val weightsFile = when (difficulty) {
+                "intermediate" -> "maia-1600.onnx"
+                "advanced" -> "maia-2200.onnx"
+                else -> "maia-1100.onnx"
+            }
+            
+            System.err.println("Starting lc0 with weights: $weightsFile")
+            lc0Process = ProcessBuilder("lc0", "--weights=/app/weights/$weightsFile").start()
+            lc0Reader = BufferedReader(InputStreamReader(lc0Process!!.inputStream))
+            lc0Writer = OutputStreamWriter(lc0Process!!.outputStream)
+            currentDifficulty = difficulty
+            
+            // 1. Initialize UCI
+            lc0Writer!!.write("uci\n")
+            lc0Writer!!.flush()
+            while (true) {
+                val line = lc0Reader!!.readLine() ?: break
+                System.err.println("lc0: $line")
+                if (line == "uciok") break
+            }
+            
+            // 2. Wait for neural network to finish loading
+            lc0Writer!!.write("isready\n")
+            lc0Writer!!.flush()
+            while (true) {
+                val line = lc0Reader!!.readLine() ?: break
+                System.err.println("lc0: $line")
+                if (line == "readyok") break
+            }
+        }
+        
+        // 3. Request the move
+        lc0Writer!!.write("position fen $fen\n")
+        lc0Writer!!.write("go nodes 1\n") // Maia is a policy network, 1 node is enough
+        lc0Writer!!.flush()
+        
+        var bestMove = ""
+        while (true) {
+            val line = lc0Reader!!.readLine() ?: break
+            System.err.println("lc0: $line")
+            if (line.startsWith("bestmove")) {
+                bestMove = line.substringAfter("bestmove ").substringBefore(" ")
+                break
+            }
+        }
+        
+        return bestMove
+    }
+
+    private fun stopLc0() {
+        try {
+            lc0Writer?.write("quit\n")
+            lc0Writer?.flush()
+        } catch (e: Exception) {}
+        lc0Process?.destroy()
+        lc0Process = null
+        lc0Reader = null
+        lc0Writer = null
+        currentDifficulty = null
+    }
+
     fun stop() {
         sendCommand("quit")
         process?.destroy()
+        stopLc0()
     }
 }

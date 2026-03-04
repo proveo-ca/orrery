@@ -1,4 +1,4 @@
-export type MoveRequest = { move: string; fen: string };
+export type MoveRequest = { move: string; fen: string; difficulty?: string };
 export type MoveResponse = { fen: string; move: string };
 
 export type AdviceRequest = { humanMove: string; aiMove: string; fen: string };

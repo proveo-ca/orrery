@@ -12,7 +12,7 @@ class Orchestrator(
     private val llmClient: LlmClient,
     private val skillLoader: SkillLoader = SkillLoader()
 ) {
-    suspend fun executeTurn(humanMove: String): TurnResult {
+    suspend fun executeTurn(humanMove: String, difficulty: String = "beginner"): TurnResult {
         System.err.println("--- Starting Turn ---")
         System.err.println("Human played: ${if (humanMove.isEmpty()) "(None - First Move)" else humanMove}")
         
@@ -30,53 +30,14 @@ class Orchestrator(
         val evalString = if (evalResult.isMate) "Mate in ${evalResult.mateIn}" else String.format("%.2f", evalResult.cp / 100.0)
         System.err.println("Stockfish Eval: Move: ${evalResult.bestMove}, Eval: $evalString")
         
-        // 3. Reflexion Loop (Anti-Framework)
-        var candidateMove = ""
-        var isLegal = false
-        var newFen = ""
-        var errorContext = ""
-        var attempts = 0
-        val maxAttempts = 3
+        // 3. Get Move from Maia (lc0)
+        System.err.println("Asking Maia ($difficulty) for move...")
+        val candidateMove = engineBridge.getMaiaMove(currentFen, difficulty)
+        System.err.println("Maia Suggested Move: $candidateMove")
         
-        val systemPrompt = "You are a chess engine playing $aiColor. " +
-                           "You must respond with ONLY the valid 4-character or 5-character UCI notation move (e.g., e2e4, g1f3, e7e8q). " +
-                           "NEVER use Standard Algebraic Notation (SAN) like 'e5' or 'Nf3'. " +
-                           "Do not include any other text, explanation, or markdown."
-
-        while (!isLegal && attempts < maxAttempts) {
-            attempts++
-            System.err.println("LLM Prompt Attempt $attempts...")
-            
-            val userPrompt = buildString {
-                appendLine("Current FEN: $currentFen")
-                appendLine("Game History: $history")
-                appendLine("Engine Evaluation: Move: ${evalResult.bestMove}, Eval: $evalString")
-                if (errorContext.isNotEmpty()) {
-                    appendLine("CRITICAL ERROR FROM PREVIOUS ATTEMPT: $errorContext")
-                }
-                appendLine("What is your next move? Respond ONLY with the 4-character UCI move (e.g. e7e5).")
-            }
-            
-            candidateMove = llmClient.prompt(systemPrompt, userPrompt, llmClient.defaultModel, temperature = 0.1).trim()
-            // Clean up potential markdown or extra spaces
-            candidateMove = candidateMove.replace("`", "").trim()
-            System.err.println("LLM Suggested Move: $candidateMove")
-            
-            // 4. Deterministic Handoff: Verify Candidate SAN
-            val resultingFen = engineBridge.getFenAfterMove(currentFen, candidateMove)
-            
-            if (resultingFen != null) {
-                isLegal = true
-                newFen = resultingFen
-            } else {
-                System.err.println("Move '$candidateMove' is ILLEGAL. Triggering reflexion...")
-                errorContext = "You previously suggested '$candidateMove', but the chess engine rejected it. You MUST use 4-character UCI format like 'e7e5'."
-            }
-        }
-        
-        if (!isLegal) {
-            throw IllegalStateException("LLM failed to generate a legal move after $maxAttempts attempts.")
-        }
+        // 4. Verify Candidate SAN
+        val newFen = engineBridge.getFenAfterMove(currentFen, candidateMove) 
+            ?: throw IllegalStateException("Maia generated an illegal move: $candidateMove")
         
         System.err.println("Move '$candidateMove' is LEGAL.")
         
@@ -117,7 +78,7 @@ Tag: Good
 BestAlt: ${evalResult.bestMove}
 CP: $cpString"""
         
-        val rawAdvice = llmClient.prompt(adviceSystemPrompt, adviceUserPrompt, llmClient.defaultModel, temperature = 0.7)
+        val rawAdvice = llmClient.prompt(adviceSystemPrompt, adviceUserPrompt, llmClient.commentaryModel, temperature = 0.7)
         System.err.println("Coach Advice generated.")
         
         // Extract just the commentary part if the model returns the full block
@@ -126,38 +87,10 @@ CP: $cpString"""
     }
 
     suspend fun generateUiPhrases(): UiPhrases {
-        val systemPrompt =
-            "You are a JSON generator. Generate EXACTLY valid JSON with keys 'thinking' and 'bestMove'. " +
-            "Each must be an array of exactly 5 short, distinct strings for a chess coach UI. " +
-            "Example: {\"thinking\": [\"Hmm...\", \"Let me see...\", \"Interesting...\", \"Calculating...\", \"What to do...\"], \"bestMove\": [\"Great move!\", \"Excellent!\", \"Strong play.\", \"I like that.\", \"Well done.\"]}"
-        val userPrompt = "Return the JSON now."
-
-        val raw = llmClient.prompt(
-            systemPrompt, 
-            userPrompt, 
-            llmClient.defaultModel, 
-            temperature = 0.1, 
-            format = "json"
-        ).trim()
-        
-        val startIndex = raw.indexOf('{')
-        val endIndex = raw.lastIndexOf('}')
-        
-        val cleaned = if (startIndex != -1 && endIndex != -1 && endIndex >= startIndex) {
-            raw.substring(startIndex, endIndex + 1)
-        } else {
-            raw
-        }
-
-        return try {
-            Json { ignoreUnknownKeys = true }.decodeFromString(UiPhrases.serializer(), cleaned)
-        } catch (e: Exception) {
-            System.err.println("Failed to parse UI phrases JSON. Raw output: $raw")
-            UiPhrases(
-                thinking = listOf("Hmm...", "Let me think...", "Interesting position...", "Calculating...", "What to do..."),
-                bestMove = listOf("Great move!", "Excellent!", "I like that.", "Strong play.", "Well done.")
-            )
-        }
+        return UiPhrases(
+            thinking = listOf("Hmm...", "Let me think...", "Interesting position...", "Calculating...", "What to do..."),
+            bestMove = listOf("Great move!", "Excellent!", "I like that.", "Strong play.", "Well done.")
+        )
     }
 }
 
