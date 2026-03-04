@@ -1,5 +1,9 @@
 package api
 
+import api.models.MoveRequest
+import api.routes.configureRouting
+import api.services.HarnessInvoker
+import api.services.StateReader
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.ktor.client.request.*
@@ -22,7 +26,7 @@ class RoutesIntegrationTest : StringSpec({
         val expectedAdvice = "Great move! Controlling the center."
         val expectedFen = "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2"
         
-        coEvery { mockInvoker.executeMove("e4", any()) } returns expectedAdvice
+        coEvery { mockInvoker.executeMove("e4", any(), any()) } returns HarnessInvoker.MoveResult(expectedFen, "e5")
         every { mockStateReader.readFen() } returns expectedFen
 
         testApplication {
@@ -34,34 +38,13 @@ class RoutesIntegrationTest : StringSpec({
             // Act
             val response = client.post("/move") {
                 contentType(ContentType.Application.Json)
-                setBody(Json.encodeToString(MoveRequest(move = "e4", fen = "dummy_fen")))
+                setBody(Json.encodeToString(MoveRequest(humanMoveSan = "e4", fenAfterHuman = "dummy_fen")))
             }
 
             // Assert
             response.status shouldBe HttpStatusCode.OK
             val responseBody = response.bodyAsText()
-            (responseBody.contains(expectedAdvice)) shouldBe true
             (responseBody.contains(expectedFen)) shouldBe true
-        }
-    }
-
-    "GET /hint should return a list of hints" {
-        // Arrange
-        val expectedHints = listOf("e4 (+0.5)", "d4 (+0.4)")
-        coEvery { mockInvoker.executeHint() } returns expectedHints
-
-        testApplication {
-            application {
-                configureRouting(mockInvoker, mockStateReader)
-            }
-
-            // Act
-            val response = client.get("/hint")
-
-            // Assert
-            response.status shouldBe HttpStatusCode.OK
-            val responseBody = response.bodyAsText()
-            (responseBody.contains("e4 (+0.5)")) shouldBe true
         }
     }
 

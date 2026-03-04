@@ -7,50 +7,68 @@ title Chess Coach API: Component Architecture
 actor "SolidJS UI" as UI
 
 package "Ktor Backend Bridge (chess-coach-api)" {
-    
-    [HTTP Server\n(Netty/CIO)] as SERVER
-    
-    package "Routing Layer" {
-        [POST /move\n{ "move": "e4" }] as EP_MOVE
-        [GET /hint\n(Returns Top 3)] as EP_HINT
+
+    [HTTP Server\n(Netty)] as SERVER
+
+    package "Plugins" {
+        [ContentNegotiation\n(kotlinx.serialization)] as CONTENT
+        [StatusPages\n(structured JSON errors)] as STATUS
+        [CORS / DefaultHeaders\n(COOP + COEP)] as HEADERS
+        [staticFiles\n(SolidJS build)] as STATIC
     }
 
-    package "Process Management" {
-        [Harness Invoker\n(ProcessBuilder)] as INVOKER
-        [State Reader\n(File I/O)] as READER
+    package "api.models" {
+        [MoveRequest\nMoveResponse\nAdviceRequest\nAdviceResponse\nNewGameResponse\nHelloResponse] as DTOS
+        [DaemonRequest\nDaemonResponse] as DAEMON_DTOS
+        [ErrorResponse] as ERR_DTO
+    }
+
+    package "api.routes" {
+        [GET /hello] as EP_HELLO
+        [POST /move] as EP_MOVE
+        [POST /advice] as EP_ADVICE
+        [POST /new] as EP_NEW
+    }
+
+    package "api.services" {
+        [HarnessInvoker\n(Daemon lifecycle)] as INVOKER
+        [StateReader\n(File I/O)] as READER
     }
 }
 
 package "External Systems" {
-    [Chess Coach Harness\n(CLI Executable)] as HARNESS
+    [Chess Coach Harness\n(Long-lived daemon)] as HARNESS
     database "File System" as FS {
         [game_state.fen]
-        [game_history.pgn]
     }
 }
 
 ' --- Relationships ---
 
-UI -> SERVER : "HTTP Requests"
+UI -> SERVER : "HTTP / JSON"
+SERVER --> STATIC : "GET / (index.html)"
+SERVER --> EP_HELLO
 SERVER --> EP_MOVE
-SERVER --> EP_HINT
+SERVER --> EP_ADVICE
+SERVER --> EP_NEW
 
-EP_MOVE --> INVOKER : "Trigger Turn"
-INVOKER --> HARNESS : "Exec: java -jar harness.jar move e4"
+EP_MOVE --> INVOKER
+EP_ADVICE --> INVOKER
+EP_HELLO --> INVOKER
+EP_NEW --> READER : "resetGame() + readFen()"
+
+INVOKER --> HARNESS : "JSON-line protocol\n(stdin/stdout)"
 note right of INVOKER
-  API acts as a process manager.
-  It blocks until the Harness
-  completes its execution loop.
+  Long-lived daemon process.
+  Mutex serialises write+read pairs.
+  Idle reaper shuts down after timeout.
+  Per-request timeout via withTimeout().
 end note
 
 HARNESS --> FS : "Updates State"
+READER --> FS : "Read game_state.fen"
 
-INVOKER --> READER : "On Success"
-READER --> FS : "Read updated FEN/PGN"
-READER --> EP_MOVE : "Return State + Advice"
-
-EP_HINT --> HARNESS : "Exec: java -jar harness.jar hint"
-HARNESS --> EP_HINT : "Stdout: Top 3 Moves"
+STATUS ..> ERR_DTO : "catches exceptions\n→ structured JSON"
 
 note top of SERVER
   Back/Forward history traversal
