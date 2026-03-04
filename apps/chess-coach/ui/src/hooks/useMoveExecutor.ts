@@ -50,6 +50,9 @@ export function useMoveExecutor(apiUrl: string, stopStockfish: () => void) {
         if (gameCopy.isCheckmate()) {
           setCoachEmotion('shocked');
           setAdvice("Checkmate! You win!");
+        } else if (gameCopy.isThreefoldRepetition()) {
+          setCoachEmotion('sleepy');
+          setAdvice("Game over — draw by threefold repetition.");
         } else {
           setCoachEmotion('sleepy');
           setAdvice("Game over. It's a draw.");
@@ -57,25 +60,20 @@ export function useMoveExecutor(apiUrl: string, stopStockfish: () => void) {
         return { didMove: true, fenAfterHuman };
       }
       
-      let thinkingTimeout: number | undefined;
       if (params.stockfishBestMove && humanMoveLan === params.stockfishBestMove) {
         const phrases = bestMovePhrases();
         setAdvice(phrases[Math.floor(Math.random() * phrases.length)]);
         setCoachEmotion('happy', 3000);
       } else {
         setCoachEmotion('thinking');
-
-        thinkingTimeout = window.setTimeout(() => {
-          const phrases = thinkingPhrases();
-          setAdvice(phrases[Math.floor(Math.random() * phrases.length)]);
-        }, 3000);
+        const phrases = thinkingPhrases();
+        setAdvice(phrases[Math.floor(Math.random() * phrases.length)]);
       }
       
       let moveData: { fen: string; move: string };
       try {
         moveData = await postMove(apiUrl, { humanMoveSan, fenAfterHuman, difficulty: difficulty() });
       } catch (e) {
-        clearTimeout(thinkingTimeout);
         setAdvice('Error communicating with the coach.');
         setCoachEmotion('shocked', 2000);
         return { didMove: true, fenAfterHuman };
@@ -88,16 +86,21 @@ export function useMoveExecutor(apiUrl: string, stopStockfish: () => void) {
       // Check if AI ended the game
       const finalGame = new Chess(moveData.fen);
       if (finalGame.isGameOver()) {
-        clearTimeout(thinkingTimeout);
         if (finalGame.isCheckmate()) {
           setCoachEmotion('happy');
           setAdvice("Checkmate! I win!");
+        } else if (finalGame.isThreefoldRepetition()) {
+          setCoachEmotion('sleepy');
+          setAdvice("Game over — draw by threefold repetition.");
         } else {
           setCoachEmotion('sleepy');
           setAdvice("Game over. It's a draw.");
         }
         return { didMove: true, fenAfterHuman };
       }
+
+      // AI moved — switch to idle while advice loads
+      setCoachEmotion('idle');
 
       const controller = new AbortController();
       setAdviceAbortController(controller);
@@ -109,7 +112,6 @@ export function useMoveExecutor(apiUrl: string, stopStockfish: () => void) {
           { signal: controller.signal }
         );
 
-        clearTimeout(thinkingTimeout);
         setAdvice(adviceData.advice);
         const adviceLower = adviceData.advice.toLowerCase();
         if (adviceLower.includes('blunder') || adviceLower.includes('mistake')) {
@@ -118,7 +120,6 @@ export function useMoveExecutor(apiUrl: string, stopStockfish: () => void) {
           setCoachEmotion('idle');
         }
       } catch (err: any) {
-        clearTimeout(thinkingTimeout);
         if (err.name === 'AbortError') {
           logger.action('Advice request aborted due to new move.');
         } else {

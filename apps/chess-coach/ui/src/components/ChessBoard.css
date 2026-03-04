@@ -16,9 +16,6 @@
   position: relative;
 }
 
-.chessboard-container.replay-mode {
-  filter: grayscale(1) contrast(1.35) brightness(0.85);
-}
 
 .square {
   width: 60px;

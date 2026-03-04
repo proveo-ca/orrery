@@ -1,6 +1,7 @@
-import { For } from 'solid-js';
+import { For, Show } from 'solid-js';
 import type { Component } from 'solid-js';
-import { advice, setAdviceHoveredSquares } from '../store/coachState';
+import { advice, setAdviceHoveredSquares, hoverBlunder } from '../store/coachState';
+import { isTravelling } from '../store/travelState';
 import './CoachAdvice.css';
 
 // Regex to match standard algebraic notation (SAN) and raw squares
@@ -8,7 +9,6 @@ import './CoachAdvice.css';
 const CHESS_NOTATION_REGEX = /(\b[KQRBN]?[a-h]?[1-8]?x?[a-h][1-8](?:=[QRBN])?[+#]?\b|\bO-O(?:-O)?\b)/g;
 
 export const CoachAdvice: Component = () => {
-  
   const handleMouseEnter = (text: string) => {
     // Extract just the square coordinates (e.g., "f3" from "Nf3")
     const squares = text.match(/[a-h][1-8]/g) || [];
@@ -19,8 +19,6 @@ export const CoachAdvice: Component = () => {
     setAdviceHoveredSquares([]);
   };
 
-  // Split the advice string by the regex. 
-  // Because of the capture group in the regex, the matched notation is included in the array.
   const parsedAdvice = () => advice().split(CHESS_NOTATION_REGEX);
 
   return (
@@ -44,6 +42,9 @@ export const CoachAdvice: Component = () => {
           }}
         </For>
       </p>
+      <Show when={hoverBlunder() && !isTravelling()}>
+        <span class="why-hint">Press <kbd>Space</kbd> — To learn why</span>
+      </Show>
     </div>
   );
 };

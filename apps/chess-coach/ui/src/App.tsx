@@ -3,19 +3,28 @@ import type { Component } from 'solid-js';
 import { BoardWrapper } from './components/ChessBoard';
 import { Avatar } from './components/Avatar';
 import { CoachAdvice } from './components/CoachAdvice';
-import { NewGamePanel, BoardActions } from './components/Controls';
-import { DebugControls } from './components/DebugControls';
+import { BoardActions } from './components/Controls';
+import { NewGamePanel } from './components/NewGamePanel';
+import { DebugControls, debugHistoryOverlay, debugLightSpeedOverlay } from './components/DebugControls';
+import { HistoryOverlay } from './components/common/HistoryOverlay';
+import { LightSpeedOverlay } from './components/common/LightSpeedOverlay';
 import { initGlobalLogging, logger } from './utils/logger';
 import { fetchHello } from './services/api';
-import { coachEmotion, setAdvice, setBestMovePhrases, setCoachEmotion, setThinkingPhrases } from './store/coachState';
+import { coachEmotion, hoverBlunder, hoverBlunderFen, setAdvice, setBestMovePhrases, setCoachEmotion, setThinkingPhrases } from './store';
+import { currentIndex, fenHistory, goForward, clearHoverOverride } from './store';
+import { isTravelling, exitTravel } from './store/travelState';
+import { useTravelMode } from './hooks/useTravelMode';
 import './theme.css';
 import './App.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
 const App: Component = () => {
+  const { activateTravel } = useTravelMode();
   let sleepyTimer: number | undefined;
   let sleepingTimer: number | undefined;
+
+  const isReplaying = () => currentIndex() < fenHistory().length - 1;
 
   const resetInactivityTimers = () => {
     if (sleepyTimer) clearTimeout(sleepyTimer);
@@ -30,11 +39,11 @@ const App: Component = () => {
     if (coachEmotion() !== 'thinking' && coachEmotion() !== 'shocked' && coachEmotion() !== 'happy') {
       sleepyTimer = window.setTimeout(() => {
         setCoachEmotion('sleepy');
-      }, 10000);
+      }, 20000);
 
       sleepingTimer = window.setTimeout(() => {
         setCoachEmotion('sleeping');
-      }, 20000);
+      }, 30000);
     }
   };
 
@@ -55,13 +64,31 @@ const App: Component = () => {
     }
   });
 
+  const handleKeyDown = (e: KeyboardEvent) => {
+    resetInactivityTimers();
+    if (e.code === 'Space' && hoverBlunder() && !isTravelling()) {
+      e.preventDefault();
+      const fen = hoverBlunderFen();
+      if (fen) activateTravel(fen);
+    } else if (e.code === 'Escape') {
+      if (isTravelling() || isReplaying()) {
+        e.preventDefault();
+        if (isTravelling()) exitTravel();
+        while (currentIndex() < fenHistory().length - 1) {
+          goForward();
+        }
+        clearHoverOverride();
+      }
+    }
+  };
+
   onMount(async () => {
     initGlobalLogging();
     logger.action('App Mounted');
     
     // Set up global activity listeners
     window.addEventListener('mousemove', resetInactivityTimers);
-    window.addEventListener('keydown', resetInactivityTimers);
+    window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('click', resetInactivityTimers);
     
     try {
@@ -73,14 +100,14 @@ const App: Component = () => {
       resetInactivityTimers();
     } catch (err) {
       logger.error('Failed to fetch /hello', err);
-      setAdvice("I couldn't connect to the server. Is it running?");
+      setAdvice("Hey! I couldn't connect to the server. Is it running?");
       setCoachEmotion('shocked');
     }
   });
 
   onCleanup(() => {
     window.removeEventListener('mousemove', resetInactivityTimers);
-    window.removeEventListener('keydown', resetInactivityTimers);
+    window.removeEventListener('keydown', handleKeyDown);
     window.removeEventListener('click', resetInactivityTimers);
     if (sleepyTimer) clearTimeout(sleepyTimer);
     if (sleepingTimer) clearTimeout(sleepingTimer);
@@ -88,13 +115,12 @@ const App: Component = () => {
 
   return (
     <div class="app-container">
+      <HistoryOverlay active={debugHistoryOverlay() || (isReplaying() && !isTravelling())} />
+      <LightSpeedOverlay active={debugLightSpeedOverlay() || isTravelling()} />
+
       <div class="coach-header">
-        <div class="avatar-container">
-          <Avatar />
-        </div>
-        <div class="advice-container">
-          <CoachAdvice />
-        </div>
+        <Avatar />
+        <CoachAdvice />
       </div>
 
       <div class="board-area">

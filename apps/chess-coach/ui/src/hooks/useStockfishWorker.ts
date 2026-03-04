@@ -1,4 +1,5 @@
 import { createSignal, onCleanup, onMount } from 'solid-js';
+import { stockfishService } from '../services/stockfishService';
 
 export type StockfishMessage =
   | {
@@ -70,7 +71,6 @@ const parseBestMove = (
 };
 
 export function useStockfishWorker(workerPath: string = '/stockfish-18-lite.js') {
-  const [worker, setWorker] = createSignal<Worker | null>(null);
   const [analysis, setAnalysis] = createSignal<StockfishAnalysis>({
     last: null,
     lastInfo: null,
@@ -78,15 +78,17 @@ export function useStockfishWorker(workerPath: string = '/stockfish-18-lite.js')
   });
 
   const send = (command: string) => {
-    worker()?.postMessage(command);
+    stockfishService.send(command);
   };
 
   onMount(() => {
-    const w = new Worker(workerPath);
+    stockfishService.getWorker(workerPath);
 
-    w.onmessage = (event) => {
+    const handleMessage = (event: MessageEvent) => {
       const raw = event.data;
       if (typeof raw !== 'string') return;
+
+      console.log('[SF]', raw.trim());
 
       const tokens = raw.trim().split(/\s+/).filter(Boolean);
       if (tokens.length === 0) return;
@@ -112,18 +114,17 @@ export function useStockfishWorker(workerPath: string = '/stockfish-18-lite.js')
 
       setAnalysis((prev) => ({
         last: msg,
-        lastInfo: msg.type === 'info' ? msg : prev.lastInfo,
+        lastInfo: msg.type === 'info' && msg.score ? msg : prev.lastInfo,
         lastBestMove: msg.type === 'bestmove' ? msg : prev.lastBestMove
       }));
     };
 
-    setWorker(w);
-    w.postMessage('uci');
+    stockfishService.addListener(handleMessage);
+
+    onCleanup(() => {
+      stockfishService.removeListener(handleMessage);
+    });
   });
 
-  onCleanup(() => {
-    worker()?.terminate();
-  });
-
-  return { worker, analysis, send };
+  return { analysis, send };
 }

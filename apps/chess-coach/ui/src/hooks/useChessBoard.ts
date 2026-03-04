@@ -1,7 +1,8 @@
 import { createSignal, createEffect, onCleanup } from 'solid-js';
 import { Chess, type Square } from 'chess.js';
-import { baseAdvice, baseCoachEmotion, clearHoverOverride, setHoverAdvice, setHoverEmotion } from '../store/coachState';
-import { currentFen, currentIndex, fenHistory } from '../store/gameState';
+import { baseAdvice, baseCoachEmotion, clearHoverOverride, setHoverAdvice, setHoverEmotion, setHoverBlunder } from '../store/coachState';
+import { currentFen, currentIndex, fenHistory, moveHistory } from '../store/gameState';
+import { isTravelling, travelFen, travelIndex, travelMoveHistory } from '../store/travelState';
 import { activePlayerColor } from '../store/settingsState';
 import { logger } from '../utils/logger';
 import { useStockfishWorker } from './useStockfishWorker';
@@ -49,6 +50,8 @@ export function useChessBoard() {
     }
   });
 
+  let lastProcessedEvalId = -1;
+
   createEffect(() => {
     if (!canApplyHoverOverride()) return;
 
@@ -60,8 +63,11 @@ export function useChessBoard() {
     if (!evalTarget) return;
     if (evalTarget.to !== hovered || evalTarget.from !== selected) return;
 
-    const msg = analysis().last;
-    if (!msg || msg.type !== 'info' || !msg.score) return;
+    const msg = analysis().lastInfo;
+    if (!msg || !msg.score) return;
+
+    // Skip if we already processed this eval's result
+    if (evalTarget.id <= lastProcessedEvalId) return;
 
     const sideToMove = evalTarget.fen.split(' ')[1] || 'w';
 
@@ -77,6 +83,11 @@ export function useChessBoard() {
       if (mate < 0) isBlunder = true;
     }
 
+    logger.action(`Hover Eval Result [${evalTarget.from}-${evalTarget.to}]`, { 
+      score: msg.score, 
+      isBlunder 
+    });
+
     if (!isBlunder) return;
 
     logger.action('Stockfish Hover Blunder Detected', { msg, evalTarget });
@@ -84,8 +95,10 @@ export function useChessBoard() {
     const piece = game().get(evalTarget.from);
     const pieceName = piece ? `${piece.color}${piece.type}` : 'piece';
 
+    lastProcessedEvalId = evalTarget.id;
     setHoverAdvice(`Moving the ${pieceName} to ${evalTarget.to} is a blunder`);
     setHoverEmotion('shocked');
+    setHoverBlunder(true, evalTarget.fen);
   });
 
   onCleanup(() => {
@@ -137,8 +150,9 @@ export function useChessBoard() {
         try {
           gameCopy.move({ from: selected, to: square, promotion: 'q' });
 
+          const evalId = ++hoverEvalSeq;
           currentHoverEval = {
-            id: ++hoverEvalSeq,
+            id: evalId,
             from: selected,
             to: square,
             fen: gameCopy.fen()
@@ -146,12 +160,9 @@ export function useChessBoard() {
 
           logger.action('Stockfish Hover Eval Request', currentHoverEval);
 
-          // Reset any prior blunder output immediately when hovering a new candidate square.
-          applyHoverBaseline();
-
           send('stop');
           send(`position fen ${gameCopy.fen()}`);
-          send('go depth 6');
+          send('go depth 8');
         } catch (e) {
           currentHoverEval = null;
           send('stop');
@@ -215,8 +226,26 @@ export function useChessBoard() {
     }
   };
 
+  const activeGame = () => {
+    if (isTravelling()) return new Chess(travelFen());
+    return game();
+  };
+
+  const lastMove = () => {
+    if (isTravelling()) {
+      const idx = travelIndex();
+      if (idx > 0) return travelMoveHistory()[idx - 1];
+      return null;
+    }
+    const idx = currentIndex();
+    if (idx > 0) return moveHistory()[idx - 1];
+    return null;
+  };
+
   return {
     game,
+    activeGame,
+    lastMove,
     selectedSquare,
     hoveredSquare,
     validMoves,

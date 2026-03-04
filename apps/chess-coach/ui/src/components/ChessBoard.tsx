@@ -2,7 +2,7 @@ import { For } from 'solid-js';
 import type { Component } from 'solid-js';
 import type { Square } from 'chess.js';
 import { adviceHoveredSquares } from '../store/coachState';
-import { currentIndex, fenHistory, moveHistory } from '../store/gameState';
+import { isTravelling } from '../store/travelState';
 import { activePlayerColor } from '../store/settingsState';
 import { useChessBoard } from '../hooks/useChessBoard';
 import { Modal } from './common/Modal';
@@ -18,24 +18,18 @@ export const BoardWrapper: Component = () => {
   const displayRanks = () => activePlayerColor() === 'w' ? RANKS : [...RANKS].reverse();
   const displayFiles = () => activePlayerColor() === 'w' ? FILES : [...FILES].reverse();
 
-  const isReplaying = () => currentIndex() < fenHistory().length - 1;
+  const activeGame = () => board.activeGame();
+  const lastMove = () => board.lastMove();
 
-  const lastMove = () => {
-    const idx = currentIndex();
-    if (idx > 0) return moveHistory()[idx - 1];
-    return null;
-  };
-
-  const isCheck = () => board.game().inCheck();
-  const isCheckmate = () => board.game().isCheckmate();
-  const isStalemate = () => board.game().isStalemate();
-  const isGameOver = () => board.game().isGameOver();
-  const turn = () => board.game().turn();
+  const isCheck = () => activeGame().inCheck();
+  const isCheckmate = () => activeGame().isCheckmate();
+  const isStalemate = () => activeGame().isStalemate();
+  const isGameOver = () => !isTravelling() && activeGame().isGameOver();
+  const turn = () => activeGame().turn();
 
   return (
     <div 
       class="chessboard-container"
-      classList={{ 'replay-mode': isReplaying() }}
       onMouseEnter={board.handleBoardMouseEnter}
       onMouseLeave={board.handleBoardMouseLeave}
     >
@@ -45,7 +39,7 @@ export const BoardWrapper: Component = () => {
             <For each={displayFiles()}>
               {(file, fIndex) => {
                 const square = `${file}${rank}` as Square;
-                const piece = () => board.game().get(square);
+                const piece = () => activeGame().get(square);
                 
                 const isInvalid = () => {
                   if (board.hoveredSquare() !== square) return false;
@@ -59,13 +53,10 @@ export const BoardWrapper: Component = () => {
                   }
                 };
 
-                const p = piece();
-                const isCurrentKing = p?.type === 'k' && p?.color === turn();
-
                 return (
                   <ChessSquare
                     square={square}
-                    piece={p ?? null}
+                    piece={piece() ?? null}
                     isLight={(rIndex() + fIndex()) % 2 === 0}
                     isSelected={board.selectedSquare() === square}
                     isHovered={board.hoveredSquare() === square}
@@ -77,9 +68,9 @@ export const BoardWrapper: Component = () => {
                     onClick={() => board.handleSquareClick(square)}
                     onMouseEnter={() => board.handleSquareHover(square)}
                     lastMove={lastMove()}
-                    isCheck={isCurrentKing && isCheck() && !isCheckmate()}
-                    isCheckmate={isCurrentKing && isCheckmate()}
-                    isStalemate={isCurrentKing && isStalemate()}
+                    isCheck={piece()?.type === 'k' && piece()?.color === turn() && isCheck() && !isCheckmate()}
+                    isCheckmate={piece()?.type === 'k' && piece()?.color === turn() && isCheckmate()}
+                    isStalemate={piece()?.type === 'k' && piece()?.color === turn() && isStalemate()}
                   />
                 );
               }}

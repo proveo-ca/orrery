@@ -26,8 +26,9 @@
   display: flex;
   gap: var(--spacing-sm);
   margin-bottom: var(--spacing-md);
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
+  width: 100%;
 }
 
 .nav-row {

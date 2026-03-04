@@ -1,4 +1,5 @@
 import { createSignal, onCleanup, onMount } from 'solid-js';
+import { stockfishService } from '../services/stockfishService';
 
 type PendingRequest = {
   resolve: (move: string) => void;
@@ -7,7 +8,6 @@ type PendingRequest = {
 };
 
 export function useHint(workerPath: string = '/stockfish-18-lite.js') {
-  const [worker, setWorker] = createSignal<Worker | null>(null);
   const [pendingHint, setPendingHint] = createSignal(false);
 
   let pending: PendingRequest | null = null;
@@ -21,9 +21,9 @@ export function useHint(workerPath: string = '/stockfish-18-lite.js') {
   };
 
   onMount(() => {
-    const w = new Worker(workerPath);
+    stockfishService.getWorker(workerPath);
 
-    w.onmessage = (event) => {
+    const handleMessage = (event: MessageEvent) => {
       const raw = event.data;
       if (typeof raw !== 'string') return;
 
@@ -43,20 +43,15 @@ export function useHint(workerPath: string = '/stockfish-18-lite.js') {
       resolve(move);
     };
 
-    setWorker(w);
-    w.postMessage('uci');
-    w.postMessage('isready');
-  });
+    stockfishService.addListener(handleMessage);
 
-  onCleanup(() => {
-    cleanupPending(new Error('hint request cancelled (component unmounted)'));
-    worker()?.terminate();
+    onCleanup(() => {
+      cleanupPending(new Error('hint request cancelled (component unmounted)'));
+      stockfishService.removeListener(handleMessage);
+    });
   });
 
   const requestHint = (fen: string, depth: number = 10): Promise<string> => {
-    const w = worker();
-    if (!w) return Promise.reject(new Error('hint engine not ready'));
-
     cleanupPending(new Error('hint request superseded by a new request'));
 
     setPendingHint(true);
@@ -69,15 +64,15 @@ export function useHint(workerPath: string = '/stockfish-18-lite.js') {
       pending = { resolve, reject, timeoutId };
 
       // Best-effort: stop any prior analysis and start a fresh search for this FEN.
-      w.postMessage('stop');
-      w.postMessage('ucinewgame');
-      w.postMessage(`position fen ${fen}`);
-      w.postMessage(`go depth ${depth}`);
+      stockfishService.send('stop');
+      stockfishService.send('ucinewgame');
+      stockfishService.send(`position fen ${fen}`);
+      stockfishService.send(`go depth ${depth}`);
     });
   };
 
   const stopHint = () => {
-    worker()?.postMessage('stop');
+    stockfishService.send('stop');
     cleanupPending(new Error('hint request cancelled'));
   };
 

@@ -21,6 +21,10 @@ type CoachState = {
   adviceHoveredSquares: string[];
   thinkingPhrases: string[];
   bestMovePhrases: string[];
+
+  // Whether the hover eval detected a blunder (drives "Why?" button)
+  hoverBlunder: boolean;
+  hoverBlunderFen: string | null;
 };
 
 const [coachState, setCoachState] = createStore<CoachState>({
@@ -32,7 +36,10 @@ const [coachState, setCoachState] = createStore<CoachState>({
 
   adviceHoveredSquares: [],
   thinkingPhrases: ['Hmm...'],
-  bestMovePhrases: ['Great move!']
+  bestMovePhrases: ['Great move!'],
+
+  hoverBlunder: false,
+  hoverBlunderFen: null,
 });
 
 // ===== Selectors (UI reads these; hover override wins) =====
@@ -46,6 +53,9 @@ export const adviceHoveredSquares = () => coachState.adviceHoveredSquares;
 export const thinkingPhrases = () => coachState.thinkingPhrases;
 export const bestMovePhrases = () => coachState.bestMovePhrases;
 
+export const hoverBlunder = () => coachState.hoverBlunder;
+export const hoverBlunderFen = () => coachState.hoverBlunderFen;
+
 // ===== Base setters =====
 export const setAdvice = (val: string) => setCoachState('baseAdvice', val);
 export const setAdviceHoveredSquares = (squares: string[]) => setCoachState('adviceHoveredSquares', squares);
@@ -57,10 +67,17 @@ export const setBestMovePhrases = (phrases: string[]) => setCoachState('bestMove
 export const setHoverAdvice = (val: string | null) => setCoachState('hoverAdvice', val);
 export const setHoverEmotion = (val: CoachEmotion | null) => setCoachState('hoverCoachEmotion', val);
 
+export const setHoverBlunder = (isBlunder: boolean, fen: string | null = null) => {
+  setCoachState('hoverBlunder', isBlunder);
+  setCoachState('hoverBlunderFen', fen);
+};
+
 export const clearHoverOverride = () => {
   setCoachState({
     hoverAdvice: null,
-    hoverCoachEmotion: null
+    hoverCoachEmotion: null,
+    hoverBlunder: false,
+    hoverBlunderFen: null,
   });
 };
 
