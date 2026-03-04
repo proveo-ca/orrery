@@ -115,7 +115,9 @@ class EngineBridge(private val stockfishPath: String = "stockfish") {
             }
             
             System.err.println("Starting lc0 with weights: $weightsFile")
-            lc0Process = ProcessBuilder("lc0", "--weights=/app/weights/$weightsFile").start()
+            lc0Process = ProcessBuilder("lc0", "--weights=/app/weights/$weightsFile")
+                .redirectError(ProcessBuilder.Redirect.INHERIT)
+                .start()
             lc0Reader = BufferedReader(InputStreamReader(lc0Process!!.inputStream))
             lc0Writer = OutputStreamWriter(lc0Process!!.outputStream)
             currentDifficulty = difficulty

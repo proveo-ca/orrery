@@ -66,6 +66,7 @@ WORKDIR /app
 # Copy the compiled lc0 binary and the ONNX runtime shared libraries
 COPY --from=lc0-builder /build/lc0-src/build/release/lc0 /usr/local/bin/lc0
 COPY --from=lc0-builder /build/onnxruntime/lib/libonnxruntime.so* /usr/lib/
+RUN ldconfig
 
 RUN mkdir -p /app/weights && \
     curl -fL -o /app/weights/maia-1100.onnx https://huggingface.co/shermansiu/maia-1100/resolve/main/model.onnx && \
