@@ -26,7 +26,7 @@ RUN chmod +x gradlew && ./gradlew installDist --no-daemon
 FROM ubuntu:20.04 AS lc0-builder
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y \
-    curl g++ meson ninja-build git python3 libopenblas-dev pkg-config
+    curl g++ meson ninja-build git python3 libopenblas-dev pkg-config protobuf-compiler
 
 WORKDIR /build
 # Downgrade to v0.29.0 (last version to support Maia's v1 network architecture)
