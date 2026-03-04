@@ -55,7 +55,7 @@ RUN apt-get update && \
     apt-get install -y software-properties-common && \
     add-apt-repository -y universe && \
     apt-get update && \
-    apt-get install -y bash curl stockfish libopenblas0 && \
+    apt-get install -y bash curl stockfish libopenblas0 zlib1g && \
     rm -rf /var/lib/apt/lists/*
 
 # Ubuntu installs games to /usr/games, which is not in the default PATH
