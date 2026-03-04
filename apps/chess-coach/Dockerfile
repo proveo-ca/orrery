@@ -22,20 +22,38 @@ COPY api/ ./api/
 WORKDIR /workspace/api
 RUN chmod +x gradlew && ./gradlew installDist --no-daemon
 
-# --- Stage 3: Final Runtime ---
-FROM eclipse-temurin:25-jdk-jammy
+# --- Stage 3: Build lc0 v0.29.0 ---
+FROM ubuntu:22.04 AS lc0-builder
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y \
+    g++ meson ninja-build git python3 libopenblas-dev pkg-config protobuf-compiler
+
+WORKDIR /build
+# Clone with submodules to fix the protobuf parsing error!
+RUN git clone -b release/0.29 --recurse-submodules https://github.com/LeelaChessZero/lc0.git lc0-src
+
+WORKDIR /build/lc0-src
+RUN ./build.sh -Dgtest=false
+
+# --- Stage 4: Final Runtime ---
+FROM eclipse-temurin:25-jdk-noble
 RUN apt-get update && \
     apt-get install -y software-properties-common && \
     add-apt-repository -y universe && \
     apt-get update && \
-    apt-get install -y bash curl stockfish lc0 && \
+    apt-get install -y bash curl stockfish libopenblas0 zlib1g libstdc++6 libgcc-s1 && \
     rm -rf /var/lib/apt/lists/*
 
 # Ubuntu installs games to /usr/games, which is not in the default PATH
-RUN ln -s /usr/games/stockfish /usr/local/bin/stockfish && \
-    ln -s /usr/games/lc0 /usr/local/bin/lc0
+RUN ln -s /usr/games/stockfish /usr/local/bin/stockfish
 
 WORKDIR /app
+
+# Copy the compiled lc0 binary
+COPY --from=lc0-builder /build/lc0-src/build/release/lc0 /usr/local/bin/lc0
+# Copy the zlib shared library that lc0 was linked against during the build
+COPY --from=lc0-builder /build/lc0-src/build/release/subprojects/zlib-1.2.11/libz.so* /usr/lib/
+RUN ldconfig
 
 RUN mkdir -p /app/weights && \
     curl -fL -o /app/weights/maia-1100.pb.gz https://github.com/CSSLab/maia-chess/releases/download/v1.0/maia-1100.pb.gz && \
