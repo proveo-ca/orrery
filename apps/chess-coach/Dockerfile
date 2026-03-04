@@ -23,7 +23,7 @@ WORKDIR /workspace/api
 RUN chmod +x gradlew && ./gradlew installDist --no-daemon
 
 # --- Stage 3: Build lc0 v0.29.0 ---
-FROM ubuntu:22.04 AS lc0-builder
+FROM ubuntu:20.04 AS lc0-builder
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y \
     curl g++ meson ninja-build git python3 libopenblas-dev pkg-config
