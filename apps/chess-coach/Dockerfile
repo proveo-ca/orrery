@@ -58,6 +58,9 @@ RUN apt-get update && \
     apt-get install -y bash curl stockfish libopenblas0 && \
     rm -rf /var/lib/apt/lists/*
 
+# Ubuntu installs games to /usr/games, which is not in the default PATH
+RUN ln -s /usr/games/stockfish /usr/local/bin/stockfish
+
 WORKDIR /app
 
 # Copy the compiled lc0 binary and the ONNX runtime shared libraries
