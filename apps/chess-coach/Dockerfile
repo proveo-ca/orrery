@@ -22,32 +22,19 @@ COPY api/ ./api/
 WORKDIR /workspace/api
 RUN chmod +x gradlew && ./gradlew installDist --no-daemon
 
-# --- Stage 3: Build lc0 with ONNX ---
+# --- Stage 3: Build lc0 v0.29.0 ---
 FROM ubuntu:24.04 AS lc0-builder
-ARG TARGETARCH
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y \
     curl g++ meson ninja-build git python3 libopenblas-dev pkg-config
 
 WORKDIR /build
-# Download ONNX Runtime C++ libraries based on architecture
-RUN if [ "$TARGETARCH" = "arm64" ]; then \
-        curl -L -o onnxruntime.tgz https://github.com/microsoft/onnxruntime/releases/download/v1.17.1/onnxruntime-linux-aarch64-1.17.1.tgz && \
-        tar -xzf onnxruntime.tgz && \
-        mv onnxruntime-linux-aarch64-1.17.1 /build/onnxruntime; \
-    else \
-        curl -L -o onnxruntime.tgz https://github.com/microsoft/onnxruntime/releases/download/v1.17.1/onnxruntime-linux-x64-1.17.1.tgz && \
-        tar -xzf onnxruntime.tgz && \
-        mv onnxruntime-linux-x64-1.17.1 /build/onnxruntime; \
-    fi
-
-# Download lc0 0.32
-RUN curl -L -o lc0.tar.gz https://api.github.com/repos/LeelaChessZero/lc0/tarball/release/0.32 && \
+# Downgrade to v0.29.0 (last version to support Maia's v1 network architecture)
+RUN curl -L -o lc0.tar.gz https://api.github.com/repos/LeelaChessZero/lc0/tarball/release/0.29 && \
     mkdir lc0-src && tar -xzf lc0.tar.gz -C lc0-src --strip-components=1
 
 WORKDIR /build/lc0-src
-# Build lc0 with ONNX support linked (Ubuntu 24.04 uses GCC 13 which supports std::format)
-RUN ./build.sh -Dgtest=false -Donnx_include=/build/onnxruntime/include -Donnx_libdir=/build/onnxruntime/lib
+RUN ./build.sh -Dgtest=false
 
 # --- Stage 4: Final Runtime ---
 FROM eclipse-temurin:25-jdk-noble
@@ -63,25 +50,16 @@ RUN ln -s /usr/games/stockfish /usr/local/bin/stockfish
 
 WORKDIR /app
 
-# Copy the compiled lc0 binary and the ONNX runtime shared libraries
+# Copy the compiled lc0 binary
 COPY --from=lc0-builder /build/lc0-src/build/release/lc0 /usr/local/bin/lc0
-COPY --from=lc0-builder /build/onnxruntime/lib/libonnxruntime.so* /usr/lib/
 # Copy the zlib shared library that lc0 was linked against during the build
 COPY --from=lc0-builder /build/lc0-src/build/release/subprojects/zlib-1.2.11/libz.so* /usr/lib/
 RUN ldconfig
 
 RUN mkdir -p /app/weights && \
-    curl -fL -o /app/weights/maia-1100.onnx https://huggingface.co/shermansiu/maia-1100/resolve/main/model.onnx?download=true && \
-    curl -fL -o /app/weights/maia-1600.onnx https://huggingface.co/shermansiu/maia-1600/resolve/main/model.onnx?download=true && \
-    curl -fL -o /app/weights/maia-2200.onnx https://huggingface.co/shermansiu/maia-2200/resolve/main/model.onnx?download=true && \
-    for f in /app/weights/*.onnx; do \
-        size=$(wc -c < "$f"); \
-        if [ "$size" -lt 1000000 ]; then \
-            echo "Error: $f is too small ($size bytes). Likely an HTML page or LFS pointer."; \
-            cat "$f"; \
-            exit 1; \
-        fi; \
-    done
+    curl -fL -o /app/weights/maia-1100.pb.gz https://github.com/CSSLab/maia-chess/releases/download/v1.0/maia-1100.pb.gz && \
+    curl -fL -o /app/weights/maia-1600.pb.gz https://github.com/CSSLab/maia-chess/releases/download/v1.0/maia-1600.pb.gz && \
+    curl -fL -o /app/weights/maia-2200.pb.gz "https://github.com/CallOn84/LeelaNets/raw/main/Nets/Maia%202200/maia-2200.pb.gz"
 
 # Copy Kotlin binaries
 COPY --from=kt-builder /workspace/harness/build/install/chess-coach-harness ./harness

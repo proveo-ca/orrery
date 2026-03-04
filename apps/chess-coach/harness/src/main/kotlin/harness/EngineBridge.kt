@@ -109,13 +109,13 @@ class EngineBridge(private val stockfishPath: String = "stockfish") {
             stopLc0()
             
             val weightsFile = when (difficulty) {
-                "advanced" -> "maia-1600.onnx"
-                "expert" -> "maia-2200.onnx"
-                else -> "maia-1100.onnx"
+                "advanced" -> "maia-1600.pb.gz"
+                "expert" -> "maia-2200.pb.gz"
+                else -> "maia-1100.pb.gz"
             }
             
             System.err.println("Starting lc0 with weights: $weightsFile")
-            lc0Process = ProcessBuilder("lc0", "--weights=/app/weights/$weightsFile")
+            lc0Process = ProcessBuilder("lc0", "--weights=/app/weights/$weightsFile", "--backend=blas")
                 .redirectError(ProcessBuilder.Redirect.INHERIT)
                 .start()
             lc0Reader = BufferedReader(InputStreamReader(lc0Process!!.inputStream))
