@@ -4,61 +4,77 @@ skinparam componentStyle rectangle
 
 title Chess Coach Harness: Component Architecture
 
-package "Kotlin Backend (Anti-Framework Harness)" {
-    
-    [Ktor REST API] as API
-    
+package "Kotlin Harness (Anti-Framework)" {
+
+    [Main\n(CLI + Daemon mode)] as MAIN
+
     package "Core Orchestration" {
-        [Kotlin Orchestrator\n(The Execution Loop)] as ORCH
-        [State Manager\n(FEN, PGN, I/O)] as STATE
-        [LLM Client\n(Raw HTTP/JSON)] as LLM_CLIENT
+        [Orchestrator\n(The Execution Loop)] as ORCH
+        [State Manager\n(FEN I/O)] as STATE
+        [LlmClient\n(OpenAI-compatible HTTP)] as LLM_CLIENT
     }
 
-    package "Deterministic Handoff Engines" as DHE {
-        [Move Validator\n(SAN -> FEN Logic)] as VALIDATOR
-        [Engine Bridge\n(UCI Wrapper)] as BRIDGE
+    package "Engine Layer" {
+        [EngineBridge\n(facade)] as BRIDGE
+        [StockfishEngine] as SF
+        [MaiaEngine] as MAIA
+        [UciDriver\n(process + queue + timeout)] as UCI
     }
 }
 
 package "External Processes" {
-    [Stockfish Binary\n(The Engine)] as STOCKFISH
-    [Qwen 2.5 API\n(The Formalizer)] as QWEN
+    [Stockfish Binary] as STOCKFISH
+    [lc0 + Maia Weights] as LC0
+}
+
+package "External Services" {
+    [Ollama LLM Server] as OLLAMA
 }
 
 database "File System" as FS {
     [game_state.fen]
-    [game_history.pgn]
 }
 
 ' --- Relationships ---
 
-API <--> ORCH : " Request bridge (/move POST => 200 OK)"
+MAIN --> ORCH : "CLI/daemon dispatches\nmove / advice / hello"
 
-ORCH <-> STATE : "Get/Commit State"
-STATE --> FS : "Read/Write FEN/PGN"
+ORCH <-> STATE : "Read/Write FEN"
+STATE --> FS : "Read/Write game_state.fen"
 
-BRIDGE <--> STOCKFISH : "UCI: position fen... \ngo depth 15 \n outoput: score"
+ORCH --> BRIDGE : "Evaluation / Move / Legality"
+BRIDGE --> SF : "Eval, legality, FEN derivation"
+BRIDGE --> MAIA : "AI move selection\n(difficulty-based)"
+SF --> UCI : "UCI commands"
+MAIA --> UCI : "UCI commands"
+UCI --> STOCKFISH : "UCI Protocol\n(stdin/stdout)"
+UCI --> LC0 : "UCI Protocol\n(stdin/stdout)"
 
-ORCH <--> LLM_CLIENT : "Prompts (State + Eval / Advice)"
-LLM_CLIENT <---> QWEN : "Generate SAN/Advice"
+ORCH --> LLM_CLIENT : "Generate coaching advice"
+LLM_CLIENT --> OLLAMA : "HTTP POST\n/v1/chat/completions"
 
-ORCH <---> DHE : "Validate"
-VALIDATOR --> BRIDGE : "Check Legality"
-
-note bottom of VALIDATOR
-  **Deterministic Handoff:**
-  The LLM guesses a move. The Validator
-  proves it mathematically. If illegal,
-  the Orchestrator loops back to the LLM
-  for a retry (Reflexion).
+note bottom of MAIA
+  **Move Generation:**
+  Maia (a policy network running on lc0)
+  generates the AI move directly.
+  No LLM is involved in move selection.
+  Stockfish validates legality and
+  derives the resulting FEN.
 end note
 
 note top of ORCH
-  **Anti-Framework Loop:**
-  A pure Kotlin `while` loop.
+  **Anti-Framework Design:**
+  A pure Kotlin execution loop.
   No LangChain, no hidden graphs.
-  Direct control over JSON parsing
-  and retry logic.
+  Direct control over engine I/O,
+  LLM prompts, and state management.
+end note
+
+note bottom of UCI
+  **UciDriver:**
+  Background reader thread + queue.
+  Timeout-aware line reading.
+  Stderr draining prevents deadlocks.
 end note
 
 @enduml

@@ -5,58 +5,100 @@ skinparam maxMessageSize 150
 title Chess Coach Harness: Execution Lifecycle
 
 participant "Ktor API" as API
-participant "Kotlin Orchestrator" as ORCH
+participant "Harness Daemon\n(Main)" as MAIN
+participant "Orchestrator" as ORCH
 participant "State Manager" as STATE
-participant "Engine Bridge" as BRIDGE
+participant "EngineBridge" as BRIDGE
+participant "StockfishEngine" as SF
 participant "Stockfish" as STOCKFISH
-participant "LLM Client" as LLM
-participant "Ollama (Qwen 2.5 7B)" as OLLAMA
-participant "Move Validator" as VALIDATOR
+participant "MaiaEngine" as MAIA
+participant "lc0" as LC0
+participant "LlmClient" as LLM
+participant "Ollama" as OLLAMA
 
-API -> ORCH : POST /move (Human SAN)
+== Move Phase ==
+
+API -> MAIN : JSON-line:\n{ command: "move",\n  fenAfterHuman, humanMoveSan, difficulty }
+activate MAIN
+
+MAIN -> ORCH : executeTurn(humanMoveSan, difficulty)
 activate ORCH
 
-ORCH -> STATE : Read Current State
-STATE --> ORCH : FEN & PGN History
+ORCH -> STATE : Read current FEN
+STATE --> ORCH : FEN string
 
-ORCH -> BRIDGE : Get Board Evaluation (FEN)
-BRIDGE -> STOCKFISH : UCI: position fen... \ngo depth 15
-STOCKFISH --> BRIDGE : score cp 45
-BRIDGE --> ORCH : Eval (+0.45)
+ORCH -> BRIDGE : getEvaluation(fen, depth=15)
+BRIDGE -> SF : getEvaluation(fen)
+SF -> STOCKFISH : UCI: position fen ...\ngo depth 15
+STOCKFISH --> SF : info score cp 45\nbestmove e2e4
+SF --> BRIDGE : EvalResult(bestMove, cp)
+BRIDGE --> ORCH : EvalResult (+0.45)
 
-loop Reflexion Loop (Anti-Framework)
-    ORCH -> LLM : Build JSON Prompt\n(State + Eval + History)
-    LLM -> OLLAMA : POST /v1/chat/completions\n(OpenAI Format)
-    OLLAMA --> LLM : JSON Response
-    LLM --> ORCH : Candidate Move (SAN)
+ORCH -> BRIDGE : getMaiaMove(fen, difficulty)
+BRIDGE -> MAIA : getMove(fen, difficulty)
 
-    ORCH -> VALIDATOR : Verify Candidate SAN
-    VALIDATOR -> BRIDGE : Check Legality
-    BRIDGE -> STOCKFISH : UCI Legality Check
-    STOCKFISH --> BRIDGE : Valid / Invalid
-    BRIDGE --> VALIDATOR : Result
-    VALIDATOR --> ORCH : Boolean (Is Legal?)
+note over MAIA, LC0
+  Maia is a policy network.
+  1 node search is sufficient.
+  No LLM involved in move generation.
+end note
 
-    alt Move is Invalid
-        note over ORCH, OLLAMA
-            **Deterministic Handoff Failed:**
-            Append error to context ("Move illegal, try again")
-            and repeat loop.
-        end note
-    else Move is Valid
-        break
-    end
-end
+MAIA -> LC0 : UCI: position fen ...\ngo nodes 1
+LC0 --> MAIA : bestmove e7e5
+MAIA --> BRIDGE : "e7e5"
+BRIDGE --> ORCH : candidateMove
 
-ORCH -> STATE : Commit Valid Move
-STATE --> ORCH : Updated FEN/PGN
+ORCH -> BRIDGE : getFenAfterMove(fen, candidateMove)
+BRIDGE -> SF : getFenAfterMove(fen, move)
+SF -> STOCKFISH : UCI: position fen ... moves e7e5\nd
+STOCKFISH --> SF : Fen: <newFen>\nCheckers: ...
+SF --> BRIDGE : newFen (or null if illegal)
+BRIDGE --> ORCH : newFen
 
-ORCH -> LLM : Build JSON Prompt\n(Request Coaching Advice)
-LLM -> OLLAMA : POST /v1/chat/completions
-OLLAMA --> LLM : JSON Response
-LLM --> ORCH : Advice String
-
-ORCH --> API : 200 OK\n{ fen: "...", advice: "..." }
+ORCH -> STATE : Write new FEN
+ORCH --> MAIN : TurnResult(fen, move)
 deactivate ORCH
+
+MAIN --> API : JSON-line:\n{ fen: "<newFen>", move: "e7e5" }
+deactivate MAIN
+
+note over API
+  API responds to UI:
+  HTTP 200 { fen, move }
+  Board updates immediately.
+end note
+
+== Advice Phase (separate request) ==
+
+API -> MAIN : JSON-line:\n{ command: "advice",\n  humanMoveSan, aiMove, fenAfterHuman }
+activate MAIN
+
+MAIN -> ORCH : generateAdvice(humanMoveSan, aiMove, fen)
+activate ORCH
+
+ORCH -> BRIDGE : getEvaluation(fen, depth=15)
+BRIDGE -> SF : getEvaluation(fen)
+SF -> STOCKFISH : UCI: position fen ...\ngo depth 15
+STOCKFISH --> SF : score cp, bestmove
+SF --> BRIDGE : EvalResult
+BRIDGE --> ORCH : Eval context for prompt
+
+ORCH -> LLM : prompt(systemPrompt, userPrompt,\ncommentaryModel)
+LLM -> OLLAMA : POST /v1/chat/completions\n(OpenAI-compatible)
+OLLAMA --> LLM : ChatResponse
+LLM --> ORCH : Raw advice text
+
+ORCH --> ORCH : Extract commentary\n(regex parse)
+ORCH --> MAIN : advice string
+deactivate ORCH
+
+MAIN --> API : JSON-line:\n{ advice: "..." }
+deactivate MAIN
+
+note over API
+  API responds to UI:
+  HTTP 200 { advice }
+  Coach panel updates with commentary.
+end note
 
 @enduml
