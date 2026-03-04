@@ -56,7 +56,7 @@ class Orchestrator(
                 appendLine("What is your next move? Respond ONLY with the 4-character UCI move (e.g. e7e5).")
             }
             
-            candidateMove = llmClient.prompt(systemPrompt, userPrompt, llmClient.defaultModel).trim()
+            candidateMove = llmClient.prompt(systemPrompt, userPrompt, llmClient.defaultModel, temperature = 0.1).trim()
             // Clean up potential markdown or extra spaces
             candidateMove = candidateMove.replace("`", "").trim()
             System.err.println("LLM Suggested Move: $candidateMove")
@@ -126,12 +126,18 @@ class Orchestrator(
 
     suspend fun generateUiPhrases(): UiPhrases {
         val systemPrompt =
-            "Generate EXACTLY valid JSON with keys thinking and bestMove. " +
+            "You are a JSON generator. Generate EXACTLY valid JSON with keys 'thinking' and 'bestMove'. " +
             "Each must be an array of exactly 5 short, distinct strings for a chess coach UI. " +
-            "No extra text. No markdown."
+            "Example: {\"thinking\": [\"Hmm...\", \"Let me see...\", \"Interesting...\", \"Calculating...\", \"What to do...\"], \"bestMove\": [\"Great move!\", \"Excellent!\", \"Strong play.\", \"I like that.\", \"Well done.\"]}"
         val userPrompt = "Return the JSON now."
 
-        val raw = llmClient.prompt(systemPrompt, userPrompt, llmClient.defaultModel).trim()
+        val raw = llmClient.prompt(
+            systemPrompt, 
+            userPrompt, 
+            llmClient.defaultModel, 
+            temperature = 0.1, 
+            format = "json"
+        ).trim()
         
         val startIndex = raw.indexOf('{')
         val endIndex = raw.lastIndexOf('}')

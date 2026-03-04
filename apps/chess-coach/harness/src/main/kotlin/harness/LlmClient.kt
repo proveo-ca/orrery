@@ -19,7 +19,8 @@ data class ChatRequest(
     val model: String,
     val messages: List<ChatMessage>,
     val stream: Boolean = false,
-    val temperature: Double = 0.7
+    val temperature: Double = 0.7,
+    val format: String? = null
 )
 
 @Serializable
@@ -52,13 +53,21 @@ class LlmClient {
         }
     }
 
-    suspend fun prompt(systemPrompt: String, userPrompt: String, model: String = defaultModel): String {
+    suspend fun prompt(
+        systemPrompt: String, 
+        userPrompt: String, 
+        model: String = defaultModel,
+        temperature: Double = 0.7,
+        format: String? = null
+    ): String {
         val requestPayload = ChatRequest(
             model = model,
             messages = listOf(
                 ChatMessage(role = "system", content = systemPrompt),
                 ChatMessage(role = "user", content = userPrompt)
-            )
+            ),
+            temperature = temperature,
+            format = format
         )
 
         val response: ChatResponse = client.post("$baseUrl/chat/completions") {

@@ -40,7 +40,7 @@ fun Application.configureRouting(invoker: HarnessInvoker, stateReader: StateRead
             call.respond(
                 HelloResponse(
                     model = model,
-                    greeting = "Hi! I'm Selena. Let's play chess.",
+                    greeting = "Hey! I'm Selena. Let's play chess.",
                     thinking = phrases.thinking,
                     bestMove = phrases.bestMove
                 )
