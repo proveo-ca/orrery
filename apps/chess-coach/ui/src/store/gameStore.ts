@@ -7,7 +7,7 @@ export type PlayerColorPref = 'w' | 'b' | 'random';
 
 export const [fenHistory, setFenHistory] = createSignal<string[]>([STARTING_FEN]);
 export const [currentIndex, setCurrentIndex] = createSignal<number>(0);
-export const [advice, setAdvice] = createSignal<string>("Welcome! Make a move to get started.");
+export const [advice, setAdvice] = createSignal<string>("Hey! Make a move to get started.");
 export const [adviceHoveredSquares, setAdviceHoveredSquares] = createSignal<string[]>([]);
 
 // Custom Coach Emotion State with Auto-Reset
@@ -67,9 +67,9 @@ export const resetGame = (fen: string = STARTING_FEN) => {
   setActivePlayerColor(nextColor);
   
   if (nextColor === 'w') {
-    setAdvice("New game started. You play White. Your move!");
+    setAdvice("New game! You play White. Your move!");
   } else {
-    setAdvice("New game started. You play Black. I'm thinking...");
+    setAdvice("New game! You play Black. I'm thinking...");
   }
   
   setCoachEmotion('happy', 2000);
