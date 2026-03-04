@@ -88,7 +88,7 @@ CP: $cpString"""
 
     suspend fun generateUiPhrases(): UiPhrases {
         return UiPhrases(
-            thinking = listOf("Hmm...", "Let me think...", "Interesting position...", "Calculating...", "What to do..."),
+            thinking = listOf("Hmm...", "Let me think...", "Interesting position...", "Rats...", "What to do..."),
             bestMove = listOf("Great move!", "Excellent!", "I like that.", "Strong play.", "Well done.")
         )
     }

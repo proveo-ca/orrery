@@ -51,25 +51,14 @@ RUN ./build.sh -Dgtest=false -Donnx_include=/build/onnxruntime/include -Donnx_li
 
 # --- Stage 4: Final Runtime ---
 FROM eclipse-temurin:25-jdk-noble
-ARG TARGETARCH
 RUN apt-get update && \
-    apt-get install -y bash curl libopenblas0 unzip && \
+    apt-get install -y software-properties-common && \
+    add-apt-repository -y universe && \
+    apt-get update && \
+    apt-get install -y bash curl stockfish libopenblas0 && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-
-# Download pre-compiled Stockfish 18 based on architecture
-RUN if [ "$TARGETARCH" = "arm64" ]; then \
-        curl -L -o stockfish.tar https://github.com/official-stockfish/Stockfish/releases/download/sf_18/stockfish-ubuntu-arm-v8.tar && \
-        tar -xf stockfish.tar && \
-        mv stockfish/stockfish-ubuntu-arm-v8 /usr/local/bin/stockfish; \
-    else \
-        curl -L -o stockfish.tar https://github.com/official-stockfish/Stockfish/releases/download/sf_18/stockfish-ubuntu-x86-64-avx2.tar && \
-        tar -xf stockfish.tar && \
-        mv stockfish/stockfish-ubuntu-x86-64-avx2 /usr/local/bin/stockfish; \
-    fi && \
-    chmod +x /usr/local/bin/stockfish && \
-    rm -rf stockfish.tar stockfish
 
 # Copy the compiled lc0 binary and the ONNX runtime shared libraries
 COPY --from=lc0-builder /build/lc0-src/build/release/lc0 /usr/local/bin/lc0
