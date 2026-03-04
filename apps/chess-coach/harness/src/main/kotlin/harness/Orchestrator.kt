@@ -60,7 +60,7 @@ class Orchestrator(
         val aiColor = if (activeColor == "w") "Black" else "White"
         val humanColor = if (aiColor == "White") "Black" else "White"
 
-        val adviceSystemPrompt = "Generate professional chess commentary in the specified language. For Type=standard use 30–40 words. For Type=explanation, explain the best move briefly (≤50 words). Return exactly: Commentary, Predicted ELO, Verified Classification."
+        val adviceSystemPrompt = "Generate professional chess commentary in the specified language. Always use Standard Algebraic Notation (SAN) for moves (e.g., Nf3, e4). For Type=standard use 30–40 words. For Type=explanation, explain the best move briefly (≤50 words). Return exactly: Commentary, Predicted ELO, Verified Classification."
         
         // We approximate the CP delta since we don't have the exact previous evaluation stored
         val cpString = if (evalResult.isMate) "Mate in ${evalResult.mateIn}" else "${evalResult.cp}->${evalResult.cp} (Δ=0)"

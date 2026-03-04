@@ -1,6 +1,6 @@
 import { Chess, type Square } from 'chess.js';
 import { createSignal } from 'solid-js';
-import { addMoveToHistory, setAdvice, setCoachEmotion, difficulty } from '../store/gameStore';
+import { addMoveToHistory, setAdvice, setCoachEmotion, difficulty, thinkingPhrases, bestMovePhrases } from '../store/gameStore';
 import { logger } from '../utils/logger';
 import { postAdvice, postMove } from '../services/api';
 
@@ -8,6 +8,7 @@ type ExecuteMoveParams = {
   game: Chess;
   selected: Square;
   square: Square;
+  stockfishBestMove?: string;
 };
 
 export function useMoveExecutor(apiUrl: string, stopStockfish: () => void) {
@@ -34,12 +35,22 @@ export function useMoveExecutor(apiUrl: string, stopStockfish: () => void) {
       abortAdvice();
 
       const humanMoveSan = result.san;
+      const humanMoveLan = result.lan; // e.g. "e2e4"
       const fenAfterHuman = gameCopy.fen();
 
       addMoveToHistory(fenAfterHuman);
       stopStockfish();
-      setCoachEmotion('thinking')
-      setAdvice('')
+      
+      if (params.stockfishBestMove && humanMoveLan === params.stockfishBestMove) {
+        const phrases = bestMovePhrases();
+        setAdvice(phrases[Math.floor(Math.random() * phrases.length)]);
+        setCoachEmotion('happy', 3000);
+      } else {
+        const phrases = thinkingPhrases();
+        setAdvice(phrases[Math.floor(Math.random() * phrases.length)]);
+        setCoachEmotion('thinking');
+      }
+      
       let moveData: { fen: string; move: string };
       try {
         moveData = await postMove(apiUrl, { move: humanMoveSan, fen: fenAfterHuman, difficulty: difficulty() });
@@ -66,7 +77,7 @@ export function useMoveExecutor(apiUrl: string, stopStockfish: () => void) {
         if (adviceLower.includes('blunder') || adviceLower.includes('mistake')) {
           setCoachEmotion('shocked', 3000);
         } else {
-          setCoachEmotion('happy', 3000);
+          setCoachEmotion('idle');
         }
       } catch (err: any) {
         if (err.name === 'AbortError') {

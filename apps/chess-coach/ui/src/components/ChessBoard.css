@@ -1,7 +1,6 @@
 .chessboard-container {
   display: flex;
   justify-content: center;
-  margin: 1rem 0;
   filter: none;
   transition: filter 220ms ease;
 }

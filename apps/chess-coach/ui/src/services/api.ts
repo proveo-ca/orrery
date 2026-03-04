@@ -11,6 +11,25 @@ export type HelloResponse = {
   bestMove: string[];
 };
 
+export type NewGameResponse = { fen: string };
+export type HintResponse = { hints: string[] };
+
+export async function postNewGame(apiUrl: string): Promise<NewGameResponse> {
+  const response = await fetch(`${apiUrl}/new`, { method: 'POST' });
+  if (!response.ok) {
+    throw new Error('new game request failed');
+  }
+  return response.json();
+}
+
+export async function fetchHint(apiUrl: string): Promise<HintResponse> {
+  const response = await fetch(`${apiUrl}/hint`);
+  if (!response.ok) {
+    throw new Error('hint request failed');
+  }
+  return response.json();
+}
+
 export async function fetchHello(apiUrl: string): Promise<HelloResponse> {
   const response = await fetch(`${apiUrl}/hello`);
   if (!response.ok) {

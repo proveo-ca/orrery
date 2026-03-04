@@ -16,6 +16,11 @@ export const Avatar: Component = () => {
         </div>
         <div class="muzzle"></div>
       </div>
+      <div class="zzz-container">
+        <div class="z z-1">Z</div>
+        <div class="z z-2">Z</div>
+        <div class="z z-3">Z</div>
+      </div>
     </div>
   );
 };

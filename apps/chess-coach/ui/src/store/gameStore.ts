@@ -2,17 +2,20 @@ import { createSignal } from 'solid-js';
 
 const STARTING_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 
-export type CoachEmotion = 'idle' | 'watching' | 'thinking' | 'happy' | 'shocked';
+export type CoachEmotion = 'idle' | 'watching' | 'thinking' | 'happy' | 'shocked' | 'sleepy' | 'sleeping';
 export type PlayerColorPref = 'w' | 'b' | 'random';
 export type Difficulty = 'intermediate' | 'advanced' | 'expert';
 
 export const [fenHistory, setFenHistory] = createSignal<string[]>([STARTING_FEN]);
 export const [currentIndex, setCurrentIndex] = createSignal<number>(0);
-export const [advice, setAdvice] = createSignal<string>("Hey! Make a move to get started.");
+export const [advice, setAdvice] = createSignal<string>("Zzz...");
 export const [adviceHoveredSquares, setAdviceHoveredSquares] = createSignal<string[]>([]);
 
+export const [thinkingPhrases, setThinkingPhrases] = createSignal<string[]>(["Hmm..."]);
+export const [bestMovePhrases, setBestMovePhrases] = createSignal<string[]>(["Great move!"]);
+
 // Custom Coach Emotion State with Auto-Reset
-const [_coachEmotion, _setCoachEmotion] = createSignal<CoachEmotion>('idle');
+const [_coachEmotion, _setCoachEmotion] = createSignal<CoachEmotion>('sleeping');
 export const coachEmotion = _coachEmotion;
 
 let emotionTimeout: number | undefined;

@@ -22,6 +22,8 @@ export const DebugControls: Component = () => {
           <button onClick={() => setCoachEmotion('thinking')}>Thinking</button>
           <button onClick={() => setCoachEmotion('happy')}>Happy</button>
           <button onClick={() => setCoachEmotion('shocked')}>Shocked</button>
+          <button onClick={() => setCoachEmotion('sleepy')}>Sleepy</button>
+          <button onClick={() => setCoachEmotion('sleeping')}>Sleeping</button>
         </div>
       </div>
     </Show>

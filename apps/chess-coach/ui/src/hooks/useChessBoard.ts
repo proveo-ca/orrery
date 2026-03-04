@@ -147,7 +147,8 @@ export function useChessBoard() {
     }
 
     if (selected) {
-      const didMove = await moveExecutor.executeMove({ game: g, selected, square });
+      const sfBestMove = analysis().lastBestMove?.raw?.split(' ')[1]; // e.g. "bestmove e2e4" -> "e2e4"
+      const didMove = await moveExecutor.executeMove({ game: g, selected, square, stockfishBestMove: sfBestMove });
 
       if (didMove) {
         setSelectedSquare(null);

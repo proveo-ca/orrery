@@ -1,6 +1,7 @@
 import type { Component } from 'solid-js';
 import { goBack, goForward, resetGame, colorPref, setColorPref, activePlayerColor, setCoachEmotion, setAdvice, addMoveToHistory, currentFen, currentIndex, fenHistory, difficulty, setDifficulty } from '../store/gameStore';
 import { ColorSelector } from './common/ColorSelector';
+import { postNewGame, postMove, fetchHint } from '../services/api';
 import './Controls.css';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
@@ -8,26 +9,21 @@ const API_URL = import.meta.env.VITE_API_URL || '';
 export const NewGamePanel: Component = () => {
   const handleNewGame = async () => {
     try {
-      const res = await fetch(`${API_URL}/new`, { method: 'POST' });
-      if (res.ok) {
-        const data = await res.json();
-        resetGame(data.fen);
-        
-        // If player is Black, trigger the AI to make the first move
-        if (activePlayerColor() === 'b') {
-          setCoachEmotion('thinking');
-          const moveRes = await fetch(`${API_URL}/move`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ move: "", fen: data.fen, difficulty: difficulty() })
-          });
-          
-          if (moveRes.ok) {
-            const moveData = await moveRes.json();
-            addMoveToHistory(moveData.fen);
-            setAdvice(moveData.advice);
-            setCoachEmotion('happy', 3000);
-          }
+      const data = await postNewGame(API_URL);
+      resetGame(data.fen);
+      
+      // If player is Black, trigger the AI to make the first move
+      if (activePlayerColor() === 'b') {
+        setCoachEmotion('thinking');
+        try {
+          const moveData = await postMove(API_URL, { move: "", fen: data.fen, difficulty: difficulty() });
+          addMoveToHistory(moveData.fen);
+          // Note: MoveResponse doesn't officially have 'advice', but keeping fallback just in case
+          setAdvice((moveData as any).advice || "I've made my move!");
+          setCoachEmotion('happy', 3000);
+        } catch (e) {
+          console.error("Failed to get AI's first move", e);
+          setCoachEmotion('shocked', 3000);
         }
       }
     } catch (e) {
@@ -64,11 +60,8 @@ export const BoardActions: Component = () => {
 
   const handleHint = async () => {
     try {
-      const res = await fetch(`${API_URL}/hint`);
-      if (res.ok) {
-        const data = await res.json();
-        alert(`Hints:\n${data.hints.join('\n')}`);
-      }
+      const data = await fetchHint(API_URL);
+      alert(`Hints:\n${data.hints.join('\n')}`);
     } catch (e) {
       console.error("Failed to get hint", e);
     }

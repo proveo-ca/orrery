@@ -168,9 +168,39 @@
   border-radius: 50% 50% 50% 50% / 30% 30% 70% 70%;
 }
 
+.zzz-container {
+  display: none; /* Hidden by default */
+  position: absolute;
+  top: -30%;
+  right: -25%;
+  width: 50%;
+  height: 50%;
+  pointer-events: none;
+}
+
+.z {
+  position: absolute;
+  font-family: sans-serif;
+  font-weight: bold;
+  color: #fff;
+  opacity: 0;
+}
+
+.z-1 { font-size: 1rem; right: 20%; bottom: 20%; }
+.z-2 { font-size: 1.4rem; right: 10%; bottom: 40%; }
+.z-3 { font-size: 1.8rem; right: 0%; bottom: 60%; }
+
 /* =========================================
    Keyframes
    ========================================= */
+
+@keyframes float-z {
+  0% { transform: translate(0, 0) rotate(0deg); opacity: 0; }
+  20% { opacity: 0.8; }
+  80% { opacity: 0.8; }
+  100% { transform: translate(20px, -40px) rotate(20deg); opacity: 0; }
+}
+
 @keyframes blink {
   0% { height: 0; }
   90% { height: 0; }
@@ -226,6 +256,65 @@
 }
 .cat.thinking .ear--right {
   transform: rotate(5deg);
+}
+
+/* SLEEPY: Inactive for 10s */
+.cat.sleepy .zzz-container {
+  display: block;
+}
+.cat.sleepy .z-1 { animation: float-z 4s infinite 0s; }
+.cat.sleepy .z-2 { animation: float-z 4s infinite 1.3s; }
+.cat.sleepy .z-3 { animation: float-z 4s infinite 2.6s; }
+
+.cat.sleepy .eye {
+  height: 15%;
+  top: 45%;
+  border-radius: 50% 50% 50% 50% / 20% 20% 80% 80%;
+}
+.cat.sleepy .eye::after {
+  display: none; /* Stop blinking */
+}
+.cat.sleepy .eye-pupil {
+  height: 40%;
+  transform: translate(0, 10%);
+}
+.cat.sleepy .ear--left {
+  transform: rotate(-30deg);
+  top: -20%;
+}
+.cat.sleepy .ear--right {
+  transform: rotate(30deg);
+  top: -20%;
+}
+
+/* SLEEPING: Initial state before API loads */
+.cat.sleeping .zzz-container {
+  display: block;
+}
+.cat.sleeping .z-1 { animation: float-z 5s infinite 0s; }
+.cat.sleeping .z-2 { animation: float-z 5s infinite 1.6s; }
+.cat.sleeping .z-3 { animation: float-z 5s infinite 3.2s; }
+
+.cat.sleeping .eye {
+  height: 36%;
+  top: 36%;
+  background-color: transparent;
+  border: solid #fff;
+  border-width: 0 0 6px 0;
+  border-radius: 0 0 50% 50%;
+}
+.cat.sleeping .eye::before,
+.cat.sleeping .eye::after,
+.cat.sleeping .eye-pupil {
+  display: none;
+}
+.cat.sleeping .ear--left {
+  transform: rotate(-45deg);
+  top: -15%;
+}
+.cat.sleeping .ear--right {
+  transform: rotate(45deg);
+  top: -15%;
 }
 
 /* HAPPY: Good move or new game (Classic ^^ eyes) */
