@@ -46,9 +46,9 @@ class LlmClient {
             })
         }
         install(HttpTimeout) {
-            requestTimeoutMillis = 300_000 // 5 minutes
-            connectTimeoutMillis = 300_000
-            socketTimeoutMillis = 300_000
+            requestTimeoutMillis = 15_000
+            connectTimeoutMillis = 15_000
+            socketTimeoutMillis = 15_000
         }
     }
 

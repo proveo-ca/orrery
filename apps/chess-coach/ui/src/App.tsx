@@ -6,13 +6,24 @@ import { CoachAdvice } from './components/CoachAdvice';
 import { NewGamePanel, BoardActions } from './components/Controls';
 import { DebugControls } from './components/DebugControls';
 import { initGlobalLogging, logger } from './utils/logger';
+import { fetchHello } from './services/api';
+import { setAdvice } from './store/gameStore';
 import './theme.css';
 import './App.css';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+
 const App: Component = () => {
-  onMount(() => {
+  onMount(async () => {
     initGlobalLogging();
     logger.action('App Mounted');
+    
+    try {
+      const helloData = await fetchHello(API_URL);
+      setAdvice(helloData.greeting);
+    } catch (err) {
+      logger.error('Failed to fetch /hello', err);
+    }
   });
 
   return (

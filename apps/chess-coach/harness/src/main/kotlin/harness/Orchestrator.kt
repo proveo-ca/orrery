@@ -1,5 +1,11 @@
 package harness
 
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+
+@Serializable
+data class UiPhrases(val thinking: List<String>, val bestMove: List<String>)
+
 class Orchestrator(
     private val stateManager: StateManager,
     private val engineBridge: EngineBridge,
@@ -116,6 +122,35 @@ class Orchestrator(
         val advice = llmClient.prompt(adviceSystemPrompt, adviceUserPrompt, llmClient.defaultModel)
         System.err.println("Coach Advice generated.")
         return advice
+    }
+
+    suspend fun generateUiPhrases(): UiPhrases {
+        val systemPrompt =
+            "Generate EXACTLY valid JSON with keys thinking and bestMove. " +
+            "Each must be an array of exactly 5 short, distinct strings for a chess coach UI. " +
+            "No extra text. No markdown."
+        val userPrompt = "Return the JSON now."
+
+        val raw = llmClient.prompt(systemPrompt, userPrompt, llmClient.defaultModel).trim()
+        
+        val startIndex = raw.indexOf('{')
+        val endIndex = raw.lastIndexOf('}')
+        
+        val cleaned = if (startIndex != -1 && endIndex != -1 && endIndex >= startIndex) {
+            raw.substring(startIndex, endIndex + 1)
+        } else {
+            raw
+        }
+
+        return try {
+            Json { ignoreUnknownKeys = true }.decodeFromString(UiPhrases.serializer(), cleaned)
+        } catch (e: Exception) {
+            System.err.println("Failed to parse UI phrases JSON. Raw output: $raw")
+            UiPhrases(
+                thinking = listOf("Hmm...", "Let me think...", "Interesting position...", "Calculating...", "What to do..."),
+                bestMove = listOf("Great move!", "Excellent!", "I like that.", "Strong play.", "Well done.")
+            )
+        }
     }
 }
 

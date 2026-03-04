@@ -1,6 +1,8 @@
 package harness
 
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 fun main(args: Array<String>) = runBlocking {
     if (args.isEmpty()) {
@@ -13,11 +15,25 @@ fun main(args: Array<String>) = runBlocking {
     val engineBridge = EngineBridge()
     val llmClient = LlmClient()
     val orchestrator = Orchestrator(stateManager, engineBridge, llmClient)
+    val json = Json { prettyPrint = false }
 
     try {
         engineBridge.start()
 
         when (command) {
+            "daemon" -> {
+                while (true) {
+                    val line = readlnOrNull() ?: break
+                    when (line.trim()) {
+                        "hello" -> {
+                            val phrases = orchestrator.generateUiPhrases()
+                            println(json.encodeToString(phrases))
+                            System.out.flush()
+                        }
+                        "quit" -> return@runBlocking
+                    }
+                }
+            }
             "move" -> {
                 val humanMove = args.getOrNull(1) ?: ""
                 val humanFen = args.getOrNull(2) ?: ""
@@ -45,8 +61,14 @@ fun main(args: Array<String>) = runBlocking {
             }
             else -> System.err.println("Unknown command: $command")
         }
+    } catch (e: Exception) {
+        System.err.println("Fatal error in harness:")
+        e.printStackTrace()
     } finally {
         engineBridge.stop()
         llmClient.close()
+        if (command != "daemon") {
+            kotlin.system.exitProcess(0)
+        }
     }
 }

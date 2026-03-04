@@ -4,6 +4,21 @@ export type MoveResponse = { fen: string; move: string };
 export type AdviceRequest = { humanMove: string; aiMove: string; fen: string };
 export type AdviceResponse = { advice: string };
 
+export type HelloResponse = {
+  model: string;
+  greeting: string;
+  thinking: string[];
+  bestMove: string[];
+};
+
+export async function fetchHello(apiUrl: string): Promise<HelloResponse> {
+  const response = await fetch(`${apiUrl}/hello`);
+  if (!response.ok) {
+    throw new Error('hello request failed');
+  }
+  return response.json();
+}
+
 export async function postMove(apiUrl: string, request: MoveRequest): Promise<MoveResponse> {
   const moveResponse = await fetch(`${apiUrl}/move`, {
     method: 'POST',

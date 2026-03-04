@@ -24,8 +24,29 @@ data class HintResponse(val hints: List<String>)
 @Serializable
 data class NewGameResponse(val fen: String)
 
+@Serializable
+data class HelloResponse(
+    val model: String,
+    val greeting: String,
+    val thinking: List<String>,
+    val bestMove: List<String>
+)
+
 fun Application.configureRouting(invoker: HarnessInvoker, stateReader: StateReader) {
     routing {
+        get("/hello") {
+            val model = System.getenv("LLM_MODEL") ?: ""
+            val phrases = invoker.executeHello()
+            call.respond(
+                HelloResponse(
+                    model = model,
+                    greeting = "Hi! I'm Selena. Let's play chess.",
+                    thinking = phrases.thinking,
+                    bestMove = phrases.bestMove
+                )
+            )
+        }
+
         post("/move") {
             val request = call.receive<MoveRequest>()
             
