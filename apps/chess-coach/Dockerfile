@@ -71,9 +71,9 @@ COPY --from=lc0-builder /build/lc0-src/build/release/subprojects/zlib-1.2.11/lib
 RUN ldconfig
 
 RUN mkdir -p /app/weights && \
-    curl -fL -o /app/weights/maia-1100.onnx https://huggingface.co/shermansiu/maia-1100/resolve/main/model.onnx && \
-    curl -fL -o /app/weights/maia-1600.onnx https://huggingface.co/shermansiu/maia-1600/resolve/main/model.onnx && \
-    curl -fL -o /app/weights/maia-2200.onnx https://huggingface.co/shermansiu/maia-2200/resolve/main/model.onnx && \
+    curl -fL -o /app/weights/maia-1100.onnx https://huggingface.co/shermansiu/maia-1100/resolve/main/model.onnx?download=true && \
+    curl -fL -o /app/weights/maia-1600.onnx https://huggingface.co/shermansiu/maia-1600/resolve/main/model.onnx?download=true && \
+    curl -fL -o /app/weights/maia-2200.onnx https://huggingface.co/shermansiu/maia-2200/resolve/main/model.onnx?download=true && \
     for f in /app/weights/*.onnx; do \
         size=$(wc -c < "$f"); \
         if [ "$size" -lt 1000000 ]; then \
