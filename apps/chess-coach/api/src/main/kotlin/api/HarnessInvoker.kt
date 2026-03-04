@@ -16,7 +16,7 @@ data class HelloPhrases(val thinking: List<String>, val bestMove: List<String>)
 @Serializable
 data class DaemonRequest(
     val command: String,
-    val difficulty: String = "beginner",
+    val difficulty: String = "intermediate",
     val humanMove: String = "",
     val aiMove: String = "",
     val fen: String = ""

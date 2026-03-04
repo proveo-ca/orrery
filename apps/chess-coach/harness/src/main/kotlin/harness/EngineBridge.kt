@@ -109,8 +109,8 @@ class EngineBridge(private val stockfishPath: String = "stockfish") {
             stopLc0()
             
             val weightsFile = when (difficulty) {
-                "intermediate" -> "maia-1600.onnx"
-                "advanced" -> "maia-2200.onnx"
+                "advanced" -> "maia-1600.onnx"
+                "expert" -> "maia-2200.onnx"
                 else -> "maia-1100.onnx"
             }
             

@@ -40,9 +40,9 @@ export const NewGamePanel: Component = () => {
     <div class="new-game-panel">
       <ColorSelector value={colorPref()} onChange={setColorPref} />
       <select class="difficulty-select" value={difficulty()} onChange={(e) => setDifficulty(e.target.value as any)}>
-        <option value="beginner">Beginner (1100)</option>
-        <option value="intermediate">Intermediate (1600)</option>
-        <option value="advanced">Advanced (2200)</option>
+        <option value="intermediate">Intermediate (1100)</option>
+        <option value="advanced">Advanced (1600)</option>
+        <option value="expert">Expert (2200)</option>
       </select>
       <button onClick={handleNewGame}>New Game</button>
     </div>

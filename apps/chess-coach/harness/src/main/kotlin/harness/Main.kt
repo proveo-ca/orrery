@@ -8,7 +8,7 @@ import kotlinx.serialization.json.Json
 @Serializable
 data class DaemonRequest(
     val command: String,
-    val difficulty: String = "beginner",
+    val difficulty: String = "intermediate",
     val humanMove: String = "",
     val aiMove: String = "",
     val fen: String = ""
@@ -78,7 +78,7 @@ fun main(args: Array<String>) = runBlocking {
             "move" -> {
                 val humanMove = args.getOrNull(1) ?: ""
                 val humanFen = args.getOrNull(2) ?: ""
-                val difficulty = args.getOrNull(3) ?: "beginner"
+                val difficulty = args.getOrNull(3) ?: "intermediate"
                 
                 if (humanFen.isNotEmpty()) stateManager.writeFen(humanFen)
                 if (humanMove.isNotEmpty()) stateManager.appendMoveToPgn(humanMove)

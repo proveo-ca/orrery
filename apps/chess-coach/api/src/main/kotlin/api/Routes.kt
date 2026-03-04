@@ -7,7 +7,7 @@ import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class MoveRequest(val move: String, val fen: String, val difficulty: String = "beginner")
+data class MoveRequest(val move: String, val fen: String, val difficulty: String = "intermediate")
 
 @Serializable
 data class MoveResponse(val fen: String, val move: String)

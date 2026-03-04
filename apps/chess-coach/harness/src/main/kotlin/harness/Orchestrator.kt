@@ -12,7 +12,7 @@ class Orchestrator(
     private val llmClient: LlmClient,
     private val skillLoader: SkillLoader = SkillLoader()
 ) {
-    suspend fun executeTurn(humanMove: String, difficulty: String = "beginner"): TurnResult {
+    suspend fun executeTurn(humanMove: String, difficulty: String = "intermediate"): TurnResult {
         System.err.println("--- Starting Turn ---")
         System.err.println("Human played: ${if (humanMove.isEmpty()) "(None - First Move)" else humanMove}")
         
