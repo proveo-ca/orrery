@@ -23,7 +23,7 @@ WORKDIR /workspace/api
 RUN chmod +x gradlew && ./gradlew installDist --no-daemon
 
 # --- Stage 3: Build lc0 v0.29.0 ---
-FROM ubuntu:22.04 AS lc0-builder
+FROM ubuntu:20.04 AS lc0-builder
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y \
     g++ meson ninja-build git python3 libopenblas-dev pkg-config protobuf-compiler
@@ -51,8 +51,6 @@ WORKDIR /app
 
 # Copy the compiled lc0 binary
 COPY --from=lc0-builder /build/lc0-src/build/release/lc0 /usr/local/bin/lc0
-# Copy the zlib shared library that lc0 was linked against during the build
-COPY --from=lc0-builder /build/lc0-src/build/release/subprojects/zlib-1.2.11/libz.so* /usr/lib/
 RUN ldconfig
 
 RUN mkdir -p /app/weights && \
