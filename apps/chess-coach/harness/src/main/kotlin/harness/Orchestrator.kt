@@ -18,7 +18,6 @@ class Orchestrator(
         
         // 1. Read Current State
         val currentFen = stateManager.readFen()
-        val history = stateManager.readPgn()
         
         // Determine colors based on whose turn it is in the FEN
         val activeColor = currentFen.split(" ").getOrNull(1) ?: "w"
@@ -43,7 +42,6 @@ class Orchestrator(
         
         // 5. Commit Valid Move
         stateManager.writeFen(newFen)
-        stateManager.appendMoveToPgn(candidateMove)
         
         return TurnResult(
             fen = newFen,

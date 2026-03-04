@@ -6,8 +6,13 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
 
+/**
+ * Move request from the UI.
+ * [fenAfterHuman] is the board position AFTER the human move has been applied client-side.
+ * [humanMoveSan] is the human's move in Standard Algebraic Notation (for history/logging).
+ */
 @Serializable
-data class MoveRequest(val move: String, val fen: String, val difficulty: String = "intermediate")
+data class MoveRequest(val humanMoveSan: String, val fenAfterHuman: String, val difficulty: String = "intermediate")
 
 @Serializable
 data class MoveResponse(val fen: String, val move: String)
@@ -17,9 +22,6 @@ data class AdviceRequest(val humanMove: String, val aiMove: String, val fen: Str
 
 @Serializable
 data class AdviceResponse(val advice: String)
-
-@Serializable
-data class HintResponse(val hints: List<String>)
 
 @Serializable
 data class NewGameResponse(val fen: String)
@@ -50,13 +52,11 @@ fun Application.configureRouting(invoker: HarnessInvoker, stateReader: StateRead
         post("/move") {
             val request = call.receive<MoveRequest>()
             
-            // Block and wait for the harness to complete the turn
-            val aiMove = invoker.executeMove(request.move, request.fen, request.difficulty)
+            // fenAfterHuman is already post-human-move; harness generates AI reply from it.
+            // The daemon returns the resulting FEN directly—no need to read state files.
+            val result = invoker.executeMove(request.humanMoveSan, request.fenAfterHuman, request.difficulty)
             
-            // Read the updated state from the file system
-            val fen = stateReader.readFen()
-            
-            call.respond(MoveResponse(fen = fen, move = aiMove))
+            call.respond(MoveResponse(fen = result.fen, move = result.move))
         }
         
         post("/advice") {
@@ -65,16 +65,11 @@ fun Application.configureRouting(invoker: HarnessInvoker, stateReader: StateRead
             // Block and wait for the harness to generate advice
             val advice = invoker.executeAdvice(request.humanMove, request.aiMove, request.fen)
             
+            // Note: AdviceRequest keeps its own field names (humanMove/aiMove/fen)
+            // because it describes a completed exchange, not a "please apply" request.
             call.respond(AdviceResponse(advice = advice))
         }
         
-        get("/hint") {
-            // Block and wait for the harness to generate hints
-            val hints = invoker.executeHint()
-            
-            call.respond(HintResponse(hints = hints))
-        }
-
         post("/new") {
             // Reset the game state files
             stateReader.resetGame()

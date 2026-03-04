@@ -5,17 +5,25 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
+/**
+ * Daemon request received over stdin (JSON-line protocol).
+ *
+ * For "move": [fenAfterHuman] is the position after the human move (applied client-side).
+ *             [humanMoveSan] is the human's move in SAN (for history/logging only).
+ * For "advice": [humanMoveSan], [aiMove], and [fenAfterHuman] describe the completed exchange.
+ */
 @Serializable
 data class DaemonRequest(
     val command: String,
     val difficulty: String = "intermediate",
-    val humanMove: String = "",
+    val humanMoveSan: String = "",
     val aiMove: String = "",
-    val fen: String = ""
+    val fenAfterHuman: String = ""
 )
 
 @Serializable
 data class DaemonResponse(
+    val fen: String = "",
     val move: String = "",
     val advice: String = "",
     val hints: List<String> = emptyList(),
@@ -51,17 +59,15 @@ fun main(args: Array<String>) = runBlocking {
                                 DaemonResponse(phrases = orchestrator.generateUiPhrases())
                             }
                             "move" -> {
-                                if (req.fen.isNotEmpty()) stateManager.writeFen(req.fen)
-                                if (req.humanMove.isNotEmpty()) stateManager.appendMoveToPgn(req.humanMove)
-                                val result = orchestrator.executeTurn(req.humanMove, req.difficulty)
-                                DaemonResponse(move = result.move)
+                                // fenAfterHuman is the position after the human move (applied client-side).
+                                // humanMoveSan is for history/logging only; the harness does NOT re-apply it.
+                                if (req.fenAfterHuman.isNotEmpty()) stateManager.writeFen(req.fenAfterHuman)
+                                val result = orchestrator.executeTurn(req.humanMoveSan, req.difficulty)
+                                DaemonResponse(fen = result.fen, move = result.move)
                             }
                             "advice" -> {
-                                val advice = orchestrator.generateAdvice(req.humanMove, req.aiMove, req.fen)
+                                val advice = orchestrator.generateAdvice(req.humanMoveSan, req.aiMove, req.fenAfterHuman)
                                 DaemonResponse(advice = advice)
-                            }
-                            "hint" -> {
-                                DaemonResponse(hints = listOf("e4 (+0.5)", "d4 (+0.4)"))
                             }
                             else -> DaemonResponse()
                         }
@@ -76,22 +82,25 @@ fun main(args: Array<String>) = runBlocking {
                 }
             }
             "move" -> {
-                val humanMove = args.getOrNull(1) ?: ""
-                val humanFen = args.getOrNull(2) ?: ""
+                // CLI: harness move <humanMoveSan> <fenAfterHuman> [difficulty]
+                // fenAfterHuman is the position AFTER the human move (applied client-side).
+                val humanMoveSan = args.getOrNull(1) ?: ""
+                val fenAfterHuman = args.getOrNull(2) ?: ""
                 val difficulty = args.getOrNull(3) ?: "intermediate"
                 
-                if (humanFen.isNotEmpty()) stateManager.writeFen(humanFen)
-                if (humanMove.isNotEmpty()) stateManager.appendMoveToPgn(humanMove)
+                if (fenAfterHuman.isNotEmpty()) stateManager.writeFen(fenAfterHuman)
 
-                val result = orchestrator.executeTurn(humanMove, difficulty)
-                println(result.move)
+                val result = orchestrator.executeTurn(humanMoveSan, difficulty)
+                // Output both fen and move so callers don't need to read state files
+                println("${result.move} ${result.fen}")
             }
             "advice" -> {
-                val humanMove = args.getOrNull(1) ?: ""
+                // CLI: harness advice <humanMoveSan> <aiMove> [fenAfterHuman]
+                val humanMoveSan = args.getOrNull(1) ?: ""
                 val aiMove = args.getOrNull(2) ?: ""
-                val currentFen = args.getOrNull(3) ?: stateManager.readFen()
+                val fenAfterHuman = args.getOrNull(3) ?: stateManager.readFen()
                 
-                val advice = orchestrator.generateAdvice(humanMove, aiMove, currentFen)
+                val advice = orchestrator.generateAdvice(humanMoveSan, aiMove, fenAfterHuman)
                 println(advice)
             }
             "hint" -> {

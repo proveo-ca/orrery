@@ -3,8 +3,7 @@ package harness
 import java.io.File
 
 class StateManager(
-    private val fenFilePath: String = resolveStatePath("game_state.fen"),
-    private val pgnFilePath: String = resolveStatePath("game_history.pgn")
+    private val fenFilePath: String = resolveStatePath("game_state.fen")
 ) {
     fun readFen(): String {
         val file = File(fenFilePath)
@@ -19,23 +18,6 @@ class StateManager(
     fun writeFen(fen: String) {
         File(fenFilePath).parentFile?.mkdirs()
         File(fenFilePath).writeText(fen)
-    }
-
-    fun readPgn(): String {
-        val file = File(pgnFilePath)
-        return if (file.exists()) {
-            file.readText().trim()
-        } else {
-            ""
-        }
-    }
-
-    fun appendMoveToPgn(move: String) {
-        File(pgnFilePath).parentFile?.mkdirs()
-        val file = File(pgnFilePath)
-        val current = if (file.exists()) file.readText().trim() else ""
-        val newPgn = if (current.isEmpty()) move else "$current $move"
-        file.writeText(newPgn)
     }
 
     private companion object {

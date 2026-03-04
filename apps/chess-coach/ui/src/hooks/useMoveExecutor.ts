@@ -73,7 +73,7 @@ export function useMoveExecutor(apiUrl: string, stopStockfish: () => void) {
       
       let moveData: { fen: string; move: string };
       try {
-        moveData = await postMove(apiUrl, { move: humanMoveSan, fen: fenAfterHuman, difficulty: difficulty() });
+        moveData = await postMove(apiUrl, { humanMoveSan, fenAfterHuman, difficulty: difficulty() });
       } catch (e) {
         clearTimeout(thinkingTimeout);
         setAdvice('Error communicating with the coach.');

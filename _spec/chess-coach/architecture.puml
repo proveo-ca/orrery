@@ -15,48 +15,49 @@ package "Docker Container (Harness: Chess Coach)" {
         [Ktor REST API] as Ktor
     }
 
-    [Bash Orchestrator] as Bash
+    [Harness Daemon\n(Kotlin CLI)] as Harness
 
-    package "LLM Sub-Agents (Qwen 2.5)" {
-        actor "State Analyzer" as Analyzer
-        actor "Strategy Agent" as Strategy
-        actor "Dialogue Agent" as Dialogue
+    package "LLM Layer" {
+        [Commentary Agent\n(LlmClient)] as Commentary
     }
 
-    package "Kotlin CLI Tools" {
-        [Move Validator] as Validator
-        [Engine Bridge] as Bridge
+    package "Engine Layer" {
+        [EngineBridge\n(facade)] as Bridge
+        [StockfishEngine] as SFEngine
+        [MaiaEngine] as MaiaEng
     }
 
     package "External Binaries" {
-        [Stockfish Engine] as Stockfish
+        [Stockfish] as Stockfish
+        [lc0 + Maia Weights] as Lc0
     }
 
     database "State Storage" as State {
         [game_state.fen] as FEN
-        [game_history.pgn] as PGN
     }
+}
+
+package "External Service" {
+    [Ollama LLM Server] as Ollama
 }
 
 User <---> SolidJS : User Actions / Board render
 SolidJS <-> Ktor : HTTP Requests (Move/Advice/Hello/New)
 SolidJS <-> StockfishWorker : Local UCI (Hint / Hover Eval)
-Ktor ..> State : (If History) Read past FEN states
+Ktor ..> State : (Reset only) StateReader for /new
 
-Ktor <--> Bash : Subprocess (bash orchestrator.sh) moves bridge
+Ktor <--> Harness : JSON-line daemon protocol\n(stdin/stdout)
 
-Bash ---> Analyzer : Triggers Analysis
-Analyzer ---> State : Reads State
-Analyzer --> Bridge : Requests Evaluation
-Bridge --> Stockfish : UCI Protocol
-Analyzer -> Strategy : Passes Analysis
-Strategy --> Validator : Proposes SAN move
-Validator --> Bridge : Checks Legality
-Strategy --> Bash : Returns Valid Move
+Harness --> Bridge : Evaluation / Move / Legality
+Bridge --> SFEngine : Eval, legality, FEN derivation
+Bridge --> MaiaEng : AI move selection
+SFEngine --> Stockfish : UCI Protocol
+MaiaEng --> Lc0 : UCI Protocol
 
-Bash ------> State : Updates State
-Bash ----> Dialogue : Requests \nCoaching Commentary
-Dialogue .up..> User : Outputs Coaching Advice
+Harness --> Commentary : Generate coaching advice
+Commentary --> Ollama : HTTP (OpenAI-compatible API)
+
+Harness --> State : Writes FEN\n(persistence/debug)
 
 User -[hidden]-> SolidJS
 

@@ -1,6 +1,7 @@
 import type { Difficulty } from '../store/settingsState';
 
-export type MoveRequest = { move: string; fen: string; difficulty?: Difficulty };
+/** fen is the position AFTER the human move has been applied client-side. */
+export type MoveRequest = { humanMoveSan: string; fenAfterHuman: string; difficulty?: Difficulty };
 export type MoveResponse = { fen: string; move: string; advice?: string };
 
 export type AdviceRequest = { humanMove: string; aiMove: string; fen: string };
