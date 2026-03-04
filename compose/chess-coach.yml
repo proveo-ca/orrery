@@ -1,16 +1,16 @@
 services:
   llm:
     image: ollama/ollama:latest
-    container_name: qwen_llm
+    container_name: gemma_llm
     ports:
       - "11434:11434"
     volumes:
       - ollama_data:/root/.ollama
     entrypoint: ["/bin/sh", "-c"]
-    command: ["ollama serve & sleep 5 && ollama pull qwen2.5:7b && wait"]
+    command: ["ollama serve & sleep 5 && ollama pull nakststudio/chess-gemma-commentary && wait"]
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "ollama list | grep -q 'qwen2.5:7b' || exit 1"]
+      test: ["CMD-SHELL", "ollama list | grep -qi 'chess-gemma-commentary' || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 30
@@ -24,7 +24,8 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - OLLAMA_BASE_URL=http://qwen_llm:11434/v1
+      - OLLAMA_BASE_URL=http://gemma_llm:11434/v1
+      - LLM_MODEL=nakststudio/chess-gemma-commentary
       - CHESS_STATE_DIR=/data
     volumes:
       - chess_state:/data
