@@ -1,5 +1,6 @@
 import type { Component } from 'solid-js';
 import type { Square, PieceSymbol, Color } from 'chess.js';
+import type { MoveSquares } from '../store/gameStore';
 
 interface ChessSquareProps {
   square: Square;
@@ -14,6 +15,11 @@ interface ChessSquareProps {
   showFile: string | false;
   onClick: () => void;
   onMouseEnter: () => void;
+  lastMove: MoveSquares | null;
+  activeColor: 'w' | 'b';
+  isCheck: boolean;
+  isCheckmate: boolean;
+  isStalemate: boolean;
 }
 
 const getPieceImg = (type: PieceSymbol, color: Color) => {
@@ -23,6 +29,7 @@ const getPieceImg = (type: PieceSymbol, color: Color) => {
 
 export const ChessSquare: Component<ChessSquareProps> = (props) => {
   const isCapture = () => props.isValidMove && !!props.piece;
+  const isLastMove = () => props.lastMove?.from === props.square || props.lastMove?.to === props.square;
 
   return (
     <div
@@ -36,13 +43,18 @@ export const ChessSquare: Component<ChessSquareProps> = (props) => {
         hovered: props.isHovered && !props.isInvalid,
         invalid: props.isInvalid,
         'advice-highlight': props.isAdviceHovered,
-        'has-piece': !!props.piece
+        'has-piece': !!props.piece,
+        'in-check': props.isCheck,
+        'in-checkmate': props.isCheckmate,
+        'in-stalemate': props.isStalemate
       }}
       onClick={props.onClick}
       onMouseEnter={props.onMouseEnter}
     >
       {props.showRank && <span class="coordinate rank-label">{props.showRank}</span>}
       {props.showFile && <span class="coordinate file-label">{props.showFile}</span>}
+
+      {isLastMove() && <div class="last-move-indicator"></div>}
 
       {props.piece && (
         <img

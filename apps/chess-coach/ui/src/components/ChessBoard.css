@@ -13,6 +13,7 @@
   border: 4px solid #2c2c2c;
   border-radius: 4px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  position: relative;
 }
 
 .chessboard-container.replay-mode {
@@ -119,6 +120,16 @@
   border-radius: 50%;
 }
 
+.last-move-indicator {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  border: 4px solid rgba(0, 128, 0, 0.7);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 3;
+}
+
 /* Blue ring for advice highlight */
 .square.advice-highlight::after {
   content: '';
@@ -139,4 +150,46 @@
   user-select: none;
   z-index: 10;
   pointer-events: none; /* Let clicks pass through to the square */
+}
+
+/* =========================================
+   Game Over States
+   ========================================= */
+.game-over-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 30;
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.game-over-banner {
+  background: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  padding: 1rem 2rem;
+  font-size: 2rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 4px;
+  border: 2px solid #76b3e1;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  pointer-events: auto;
+}
+
+.square.in-check {
+  background: radial-gradient(circle, rgba(255, 68, 68, 0.8) 0%, transparent 80%);
+}
+
+.square.in-checkmate {
+  background-color: #cc0000;
+}
+
+.square.in-stalemate {
+  background: radial-gradient(circle, rgba(170, 170, 170, 0.8) 0%, transparent 80%);
 }

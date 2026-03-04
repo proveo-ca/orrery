@@ -40,9 +40,6 @@ export function useChessBoard() {
       if (msg.type === 'info' && msg.score) {
         if (msg.score.kind === 'cp') {
           const cp = msg.score.value * scoreMultiplier;
-          console.log('------------------------')
-          console.log(cp)
-          console.log('------------------------')
           if (cp < -200) isBlunder = true;
         } else if (msg.score.kind === 'mate') {
           const mate = msg.score.value * scoreMultiplier;

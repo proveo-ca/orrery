@@ -1,7 +1,8 @@
 import type { Component } from 'solid-js';
+import { Chess } from 'chess.js';
 import { goBack, goForward, resetGame, colorPref, setColorPref, activePlayerColor, setCoachEmotion, setAdvice, addMoveToHistory, currentFen, currentIndex, fenHistory, difficulty, setDifficulty } from '../store/gameStore';
 import { ColorSelector } from './common/ColorSelector';
-import { postNewGame, postMove, fetchHint } from '../services/api';
+import { postNewGame, postMove } from '../services/api';
 import './Controls.css';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
@@ -14,14 +15,20 @@ export const NewGamePanel: Component = () => {
       
       // If player is Black, trigger the AI to make the first move
       if (activePlayerColor() === 'b') {
-        setCoachEmotion('thinking');
+        const thinkingTimeout = window.setTimeout(() => {
+          setCoachEmotion('thinking');
+        }, 3000);
         try {
           const moveData = await postMove(API_URL, { move: "", fen: data.fen, difficulty: difficulty() });
-          addMoveToHistory(moveData.fen);
+          clearTimeout(thinkingTimeout);
+          const aiGame = new Chess(data.fen);
+          const aiMove = aiGame.move(moveData.move);
+          addMoveToHistory(moveData.fen, { from: aiMove.from, to: aiMove.to });
           // Note: MoveResponse doesn't officially have 'advice', but keeping fallback just in case
           setAdvice((moveData as any).advice || "I've made my move!");
           setCoachEmotion('happy', 3000);
         } catch (e) {
+          clearTimeout(thinkingTimeout);
           console.error("Failed to get AI's first move", e);
           setCoachEmotion('shocked', 3000);
         }
@@ -58,13 +65,17 @@ export const BoardActions: Component = () => {
     return `Move ${fullmove}${activeColor === 'b' ? '...' : '.'}`;
   };
 
-  const handleHint = async () => {
-    try {
-      const data = await fetchHint(API_URL);
-      alert(`Hints:\n${data.hints.join('\n')}`);
-    } catch (e) {
-      console.error("Failed to get hint", e);
-    }
+  const handleHint = () => {
+    const worker = new Worker('/stockfish-18-lite.js');
+    worker.onmessage = (e) => {
+      if (typeof e.data === 'string' && e.data.startsWith('bestmove')) {
+        const move = e.data.split(' ')[1];
+        alert(`Hint: Try moving ${move}`);
+        worker.terminate();
+      }
+    };
+    worker.postMessage(`position fen ${currentFen()}`);
+    worker.postMessage('go depth 10');
   };
 
   return (

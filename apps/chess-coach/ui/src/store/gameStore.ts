@@ -5,8 +5,10 @@ const STARTING_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 export type CoachEmotion = 'idle' | 'watching' | 'thinking' | 'happy' | 'shocked' | 'sleepy' | 'sleeping';
 export type PlayerColorPref = 'w' | 'b' | 'random';
 export type Difficulty = 'intermediate' | 'advanced' | 'expert';
+export type MoveSquares = { from: string; to: string };
 
 export const [fenHistory, setFenHistory] = createSignal<string[]>([STARTING_FEN]);
+export const [moveHistory, setMoveHistory] = createSignal<MoveSquares[]>([]);
 export const [currentIndex, setCurrentIndex] = createSignal<number>(0);
 export const [advice, setAdvice] = createSignal<string>("Zzz...");
 export const [adviceHoveredSquares, setAdviceHoveredSquares] = createSignal<string[]>([]);
@@ -44,9 +46,15 @@ export const [difficulty, setDifficulty] = createSignal<Difficulty>('intermediat
 
 export const currentFen = () => fenHistory()[currentIndex()];
 
-export const addMoveToHistory = (newFen: string) => {
+export const addMoveToHistory = (newFen: string, move?: MoveSquares) => {
   const history = fenHistory().slice(0, currentIndex() + 1);
+  const mHistory = moveHistory().slice(0, currentIndex());
   setFenHistory([...history, newFen]);
+  if (move) {
+    setMoveHistory([...mHistory, move]);
+  } else {
+    setMoveHistory([...mHistory, {from: '', to: ''}]);
+  }
   setCurrentIndex(history.length);
 };
 
@@ -60,6 +68,7 @@ export const goForward = () => {
 
 export const resetGame = (fen: string = STARTING_FEN) => {
   setFenHistory([fen]);
+  setMoveHistory([]);
   setCurrentIndex(0);
   
   // Resolve random color

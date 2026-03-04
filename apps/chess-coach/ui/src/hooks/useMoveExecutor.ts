@@ -38,29 +38,62 @@ export function useMoveExecutor(apiUrl: string, stopStockfish: () => void) {
       const humanMoveLan = result.lan; // e.g. "e2e4"
       const fenAfterHuman = gameCopy.fen();
 
-      addMoveToHistory(fenAfterHuman);
+      addMoveToHistory(fenAfterHuman, { from: result.from, to: result.to });
       stopStockfish();
+
+      // Check if human ended the game
+      if (gameCopy.isGameOver()) {
+        if (gameCopy.isCheckmate()) {
+          setCoachEmotion('shocked');
+          setAdvice("Checkmate! You win!");
+        } else {
+          setCoachEmotion('sleepy');
+          setAdvice("Game over. It's a draw.");
+        }
+        return { fenAfterHuman };
+      }
       
+      let thinkingTimeout: number | undefined;
       if (params.stockfishBestMove && humanMoveLan === params.stockfishBestMove) {
         const phrases = bestMovePhrases();
         setAdvice(phrases[Math.floor(Math.random() * phrases.length)]);
         setCoachEmotion('happy', 3000);
       } else {
-        const phrases = thinkingPhrases();
-        setAdvice(phrases[Math.floor(Math.random() * phrases.length)]);
         setCoachEmotion('thinking');
+
+        thinkingTimeout = window.setTimeout(() => {
+          const phrases = thinkingPhrases();
+          setAdvice(phrases[Math.floor(Math.random() * phrases.length)]);
+        }, 3000);
       }
       
       let moveData: { fen: string; move: string };
       try {
         moveData = await postMove(apiUrl, { move: humanMoveSan, fen: fenAfterHuman, difficulty: difficulty() });
       } catch (e) {
+        clearTimeout(thinkingTimeout);
         setAdvice('Error communicating with the coach.');
         setCoachEmotion('shocked', 2000);
         return { fenAfterHuman };
       }
-      setCoachEmotion('idle')
-      addMoveToHistory(moveData.fen);
+      
+      const aiGame = new Chess(fenAfterHuman);
+      const aiMove = aiGame.move(moveData.move);
+      addMoveToHistory(moveData.fen, { from: aiMove.from, to: aiMove.to });
+
+      // Check if AI ended the game
+      const finalGame = new Chess(moveData.fen);
+      if (finalGame.isGameOver()) {
+        clearTimeout(thinkingTimeout);
+        if (finalGame.isCheckmate()) {
+          setCoachEmotion('happy');
+          setAdvice("Checkmate! I win!");
+        } else {
+          setCoachEmotion('sleepy');
+          setAdvice("Game over. It's a draw.");
+        }
+        return { fenAfterHuman };
+      }
 
       const controller = new AbortController();
       setAdviceAbortController(controller);
@@ -72,6 +105,7 @@ export function useMoveExecutor(apiUrl: string, stopStockfish: () => void) {
           { signal: controller.signal }
         );
 
+        clearTimeout(thinkingTimeout);
         setAdvice(adviceData.advice);
         const adviceLower = adviceData.advice.toLowerCase();
         if (adviceLower.includes('blunder') || adviceLower.includes('mistake')) {
@@ -80,6 +114,7 @@ export function useMoveExecutor(apiUrl: string, stopStockfish: () => void) {
           setCoachEmotion('idle');
         }
       } catch (err: any) {
+        clearTimeout(thinkingTimeout);
         if (err.name === 'AbortError') {
           logger.action('Advice request aborted due to new move.');
         } else {
