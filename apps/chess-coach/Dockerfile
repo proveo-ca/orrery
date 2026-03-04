@@ -66,6 +66,8 @@ WORKDIR /app
 # Copy the compiled lc0 binary and the ONNX runtime shared libraries
 COPY --from=lc0-builder /build/lc0-src/build/release/lc0 /usr/local/bin/lc0
 COPY --from=lc0-builder /build/onnxruntime/lib/libonnxruntime.so* /usr/lib/
+# Copy the zlib shared library that lc0 was linked against during the build
+COPY --from=lc0-builder /build/lc0-src/build/release/subprojects/zlib-1.2.11/libz.so* /usr/lib/
 RUN ldconfig
 
 RUN mkdir -p /app/weights && \
