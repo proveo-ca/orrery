@@ -1,6 +1,6 @@
 import { Show } from 'solid-js';
 import type { Component } from 'solid-js';
-import { setCoachEmotion } from '../store/gameStore';
+import { setCoachEmotion } from '../store/coachState';
 
 const isDebug = import.meta.env.VITE_DEBUG === 'true' || import.meta.env.MODE === 'debug';
 

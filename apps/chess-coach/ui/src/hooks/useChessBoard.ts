@@ -1,11 +1,15 @@
 import { createSignal, createEffect, onCleanup } from 'solid-js';
 import { Chess, type Square } from 'chess.js';
-import { currentFen, activePlayerColor, coachEmotion, setCoachEmotion, currentIndex, fenHistory, advice, setAdvice } from '../store/gameStore';
+import { baseAdvice, baseCoachEmotion, clearHoverOverride, setHoverAdvice, setHoverEmotion } from '../store/coachState';
+import { currentFen, currentIndex, fenHistory } from '../store/gameState';
+import { activePlayerColor } from '../store/settingsState';
 import { logger } from '../utils/logger';
 import { useStockfishWorker } from './useStockfishWorker';
 import { useMoveExecutor } from './useMoveExecutor';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
+
+type HoverEval = { id: number; from: Square; to: Square; fen: string };
 
 export function useChessBoard() {
   const [game, setGame] = createSignal(new Chess(currentFen()));
@@ -16,54 +20,72 @@ export function useChessBoard() {
   const moveExecutor = useMoveExecutor(API_URL, () => send('stop'));
 
   const isReplaying = () => currentIndex() < fenHistory().length - 1;
-  
-  let evalTimeout: number | undefined;
-  let lastHoverEval: { from: Square; to: Square; fen: string } | null = null;
 
-  let savedAdviceBeforeHover: string | null = null;
-  let hoverBlunderShown = false;
+  let evalTimeout: number | undefined;
+  let hoverEvalSeq = 0;
+  let currentHoverEval: HoverEval | null = null;
+
+  const canApplyHoverOverride = () => {
+    const base = baseCoachEmotion();
+    return base === 'idle' || base === 'watching';
+  };
+
+  const applyHoverBaseline = () => {
+    if (!canApplyHoverOverride()) return;
+    setHoverEmotion('watching');
+
+    // Hover always overrides advice; baseline override matches current base advice
+    // so the UI doesn't "jump" until we have something meaningful to say.
+    setHoverAdvice(baseAdvice());
+  };
 
   createEffect(() => {
-    if (!(hoveredSquare() && selectedSquare())) return;
+    // If the base coach state becomes something "active" (thinking/happy/shocked/sleepy/etc),
+    // ensure hover doesn't mask it.
+    if (!canApplyHoverOverride()) {
+      clearHoverOverride();
+      currentHoverEval = null;
+      send('stop');
+    }
+  });
+
+  createEffect(() => {
+    if (!canApplyHoverOverride()) return;
+
+    const hovered = hoveredSquare();
+    const selected = selectedSquare();
+    if (!hovered || !selected) return;
+
+    const evalTarget = currentHoverEval;
+    if (!evalTarget) return;
+    if (evalTarget.to !== hovered || evalTarget.from !== selected) return;
 
     const msg = analysis().last;
-    if (!msg) return;
+    if (!msg || msg.type !== 'info' || !msg.score) return;
 
-    if (msg.type === 'info' || msg.type === 'bestmove') {
-      const sideToMove = lastHoverEval?.fen.split(' ')[1] || game().fen().split(' ')[1] || 'w';
-      // logger.action('Stockfish Hover Eval', { msg, lastHoverEval, sideToMove });
+    const sideToMove = evalTarget.fen.split(' ')[1] || 'w';
 
-      let isBlunder = false;
-      const humanColor = activePlayerColor();
-      const scoreMultiplier = sideToMove === humanColor ? 1 : -1;
+    let isBlunder = false;
+    const humanColor = activePlayerColor();
+    const scoreMultiplier = sideToMove === humanColor ? 1 : -1;
 
-      if (msg.type === 'info' && msg.score) {
-        if (msg.score.kind === 'cp') {
-          const cp = msg.score.value * scoreMultiplier;
-          if (cp < -200) isBlunder = true;
-        } else if (msg.score.kind === 'mate') {
-          const mate = msg.score.value * scoreMultiplier;
-          if (mate < 0) isBlunder = true;
-        }
-      }
-
-      if (isBlunder) {
-        logger.action('Stockfish Hover Blunder Detected', { msg, lastHoverEval });
-
-        if (!hoverBlunderShown) {
-          savedAdviceBeforeHover = advice();
-          hoverBlunderShown = true;
-
-          const piece = game().get((lastHoverEval?.from ?? selectedSquare()) as Square);
-          const pieceName = piece ? `${piece.color}${piece.type}` : 'piece';
-          const location = lastHoverEval?.to ?? hoveredSquare();
-
-          setAdvice(`Moving the ${pieceName} to ${location} is a blunder`);
-        }
-
-        setCoachEmotion('shocked');
-      }
+    if (msg.score.kind === 'cp') {
+      const cp = msg.score.value * scoreMultiplier;
+      if (cp < -200) isBlunder = true;
+    } else if (msg.score.kind === 'mate') {
+      const mate = msg.score.value * scoreMultiplier;
+      if (mate < 0) isBlunder = true;
     }
+
+    if (!isBlunder) return;
+
+    logger.action('Stockfish Hover Blunder Detected', { msg, evalTarget });
+
+    const piece = game().get(evalTarget.from);
+    const pieceName = piece ? `${piece.color}${piece.type}` : 'piece';
+
+    setHoverAdvice(`Moving the ${pieceName} to ${evalTarget.to} is a blunder`);
+    setHoverEmotion('shocked');
   });
 
   onCleanup(() => {
@@ -75,24 +97,23 @@ export function useChessBoard() {
     setSelectedSquare(null);
     setHoveredSquare(null);
     setValidMoves([]);
+    clearHoverOverride();
+    currentHoverEval = null;
+    send('stop');
   });
 
   const handleBoardMouseEnter = () => {
     if (isReplaying()) return;
-    if (coachEmotion() === 'idle') setCoachEmotion('watching');
+    applyHoverBaseline();
   };
 
   const handleBoardMouseLeave = () => {
     if (isReplaying()) return;
+
     setHoveredSquare(null);
+    clearHoverOverride();
+    currentHoverEval = null;
 
-    if (hoverBlunderShown) {
-      setAdvice(savedAdviceBeforeHover ?? advice());
-      savedAdviceBeforeHover = null;
-      hoverBlunderShown = false;
-    }
-
-    if (coachEmotion() === 'watching' || coachEmotion() === 'shocked') setCoachEmotion('idle');
     send('stop');
   };
 
@@ -100,30 +121,44 @@ export function useChessBoard() {
     if (isReplaying()) return;
 
     setHoveredSquare(square);
+    applyHoverBaseline();
+
+    if (!canApplyHoverOverride()) {
+      currentHoverEval = null;
+      send('stop');
+      return;
+    }
+
     const selected = selectedSquare();
-    
     if (selected && validMoves().includes(square)) {
       clearTimeout(evalTimeout);
       evalTimeout = window.setTimeout(() => {
         const gameCopy = new Chess(game().fen());
         try {
           gameCopy.move({ from: selected, to: square, promotion: 'q' });
-          lastHoverEval = { from: selected, to: square, fen: gameCopy.fen() };
-          logger.action('Stockfish Hover Eval Request', lastHoverEval);
+
+          currentHoverEval = {
+            id: ++hoverEvalSeq,
+            from: selected,
+            to: square,
+            fen: gameCopy.fen()
+          };
+
+          logger.action('Stockfish Hover Eval Request', currentHoverEval);
+
+          // Reset any prior blunder output immediately when hovering a new candidate square.
+          applyHoverBaseline();
 
           send('stop');
           send(`position fen ${gameCopy.fen()}`);
           send('go depth 6');
-        } catch (e) {}
+        } catch (e) {
+          currentHoverEval = null;
+          send('stop');
+        }
       }, 150);
     } else {
-      if (hoverBlunderShown) {
-        setAdvice(savedAdviceBeforeHover ?? advice());
-        savedAdviceBeforeHover = null;
-        hoverBlunderShown = false;
-      }
-
-      if (coachEmotion() === 'shocked') setCoachEmotion('watching');
+      currentHoverEval = null;
       send('stop');
     }
   };
@@ -140,17 +175,28 @@ export function useChessBoard() {
     if (selected === square) {
       setSelectedSquare(null);
       setValidMoves([]);
+      setHoveredSquare(null);
+      clearHoverOverride();
+      currentHoverEval = null;
+      send('stop');
       return;
     }
 
     if (selected) {
       const sfBestMove = analysis().lastBestMove?.raw?.split(' ')[1]; // e.g. "bestmove e2e4" -> "e2e4"
-      const didMove = await moveExecutor.executeMove({ game: g, selected, square, stockfishBestMove: sfBestMove });
+      const result = await moveExecutor.executeMove({
+        game: g,
+        selected,
+        square,
+        stockfishBestMove: sfBestMove
+      });
 
-      if (didMove) {
+      if (result.didMove) {
         setSelectedSquare(null);
         setValidMoves([]);
         setHoveredSquare(null);
+        clearHoverOverride();
+        currentHoverEval = null;
         return;
       }
     }
@@ -160,10 +206,12 @@ export function useChessBoard() {
 
     if (canTouch) {
       setSelectedSquare(square);
-      setValidMoves(g.moves({ square, verbose: true }).map(m => m.to));
+      setValidMoves(g.moves({ square, verbose: true }).map((m) => m.to));
     } else {
       setSelectedSquare(null);
       setValidMoves([]);
+      clearHoverOverride();
+      currentHoverEval = null;
     }
   };
 

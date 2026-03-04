@@ -1,5 +1,5 @@
 import type { Component } from 'solid-js';
-import type { PlayerColorPref } from '../../store/gameStore';
+import type { PlayerColorPref } from '../../store/settingsState';
 import './ColorSelector.css';
 
 interface Props {

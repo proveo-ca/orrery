@@ -2,6 +2,7 @@
 !includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
 actor User
 participant "SolidJS UI" as SolidJS
+participant "Stockfish Web Worker\n(stockfish-18-lite.js)" as StockfishWorker
 participant "Ktor Server" as Ktor
 participant "Bash Orchestrator" as Bash
 participant "State Analyzer" as Analyzer
@@ -10,63 +11,57 @@ participant "Dialogue Agent" as Dialogue
 participant "Kotlin Tools (Validator/Bridge)" as Tools
 participant "Stockfish" as Stockfish
 
-== Hint Request Flow ==
+== Hint Request Flow (Local Worker) ==
 User -> SolidJS: Clicks "Get Hint"
-SolidJS -> Ktor: GET /api/hint
-Ktor -> Tools: Get Top 3 Moves (FEN, MultiPV=3)
-Tools -> Stockfish: position fen ... \n go depth 15
-Stockfish --> Tools: info ... pv e4 ... \n info ... pv d4 ... \n info ... pv Nf3 ...
-Tools --> Ktor: [ "e4 (+0.5)", "d4 (+0.4)", "Nf3 (+0.3)" ]
-Ktor --> SolidJS: Returns hints
-SolidJS -> User: Displays Top 3 lines
+SolidJS -> StockfishWorker: uci / isready (once)
+SolidJS -> StockfishWorker: position fen <current>
+SolidJS -> StockfishWorker: go depth 10
+StockfishWorker --> SolidJS: bestmove e2e4
+SolidJS -> User: Displays hint (bestmove)
 
-== Replayability Flow ==
-User -> SolidJS: Clicks "Previous Move"
-SolidJS -> Ktor: GET /api/history?move=-1
-Ktor -> Ktor: Read PGN, calculate past FEN
-Ktor --> SolidJS: Return historical FEN
-SolidJS -> User: Renders past state
+== Hover Blunder Flow (Local Worker) ==
+User -> SolidJS: Hovers candidate move square
+SolidJS -> StockfishWorker: position fen <after hypothetical move>
+SolidJS -> StockfishWorker: go depth 6
+StockfishWorker --> SolidJS: info score cp -250 ...
+SolidJS -> User: Hover override advice + shocked emotion
 
-== Standard Move Flow (Coach Response) ==
-User -> SolidJS: Drags Piece (e2 to e4)
-SolidJS -> Ktor: POST /api/move { "move": "e4" }
-Ktor -> Bash: ProcessBuilder("bash", "orchestrator.sh", "e4").start()
+== Replayability Flow (Local History) ==
+User -> SolidJS: Clicks "Back" / "Forward"
+SolidJS -> SolidJS: Update currentIndex in gameState
+SolidJS -> User: Renders historical FEN (no API call)
 
-note over Bash, Stockfish: Bash Orchestration Loop Starts
+== Standard Move Flow (Move + Advice) ==
+User -> SolidJS: Click-to-move (e2 -> e4)
+SolidJS -> Ktor: POST /move { move: "e4", fen: "<fen>", difficulty: "<difficulty>" }
+Ktor -> Bash: Subprocess: harness daemon / orchestrator move command
 
-Bash -> Tools: Validate Human Move ("e4")
-Tools -> Stockfish: Verify Legality
-Stockfish --> Tools: Valid
-Tools --> Bash: Move Valid
-Bash -> Bash: Update FEN & PGN
+note over Bash, Stockfish: AI move generation (engine-assisted)
 
-note over Bash, Stockfish: LLM Coaching Turn Begins
+Bash -> Tools: Validate and compute response move
+Tools -> Stockfish: UCI search (best move)
+Stockfish --> Tools: bestmove e7e5
+Tools --> Bash: AI move resolved
 
-Bash -> Analyzer: Analyze Current FEN
+Bash --> Ktor: Returns { fen: "<updated>", move: "e7e5" }
+Ktor --> SolidJS: HTTP 200 OK { fen: "<updated>", move: "e7e5" }
+SolidJS -> User: Renders updated position
+
+SolidJS -> Ktor: POST /advice { humanMove: "e4", aiMove: "e7e5", fen: "<updated>" }
+
+note over Bash, Dialogue: Coaching commentary generation
+
+Ktor -> Bash: Subprocess: harness daemon / orchestrator advice command
+Bash -> Analyzer: Analyze position (evaluation context)
 Analyzer -> Tools: Get Evaluation (FEN)
 Tools -> Stockfish: eval
 Stockfish --> Tools: score cp 45
 Tools --> Analyzer: Evaluation (+0.45)
-Analyzer -> Strategy: Context: "Solid opening by user, slight edge."
 
-Strategy -> Strategy: Generate Candidate Coach Moves (SAN)
-Strategy -> Tools: Validate Candidates
-Tools -> Stockfish: check legality
-Stockfish --> Tools: Valid
-Tools --> Strategy: Valid
-
-Strategy -> Bash: Selects Move (e.g. "e5")
-
-Bash -> Dialogue: Generate Advice (User="e4", Opponent="e5", Eval="+0.45")
-Dialogue --> Bash: "Good center control. I'll play e5 to challenge it."
-
-Bash -> Bash: Update FEN & PGN
-
-note over Bash, Stockfish: Bash Orchestration Loop Ends
-
-Bash --> Ktor: Process Exits (Code 0)
-Ktor -> Ktor: Read updated game_state.fen
-Ktor --> SolidJS: HTTP 200 OK { fen: "rnbqk...", dialog: "Good center control..." }
-SolidJS -> User: Renders Board & Coach Advice
+Bash -> Dialogue: Generate coaching advice
+Dialogue --> Bash: Advice text
+Bash --> Ktor: Returns { advice: "..." }
+Ktor --> SolidJS: HTTP 200 OK { advice: "..." }
+SolidJS -> User: Displays coach advice (and emotion)
 
 @enduml

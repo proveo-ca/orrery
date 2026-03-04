@@ -8,6 +8,7 @@ package "Docker Container (Harness: Chess Coach)" {
     
     package "Web UI" {
         [SolidJS Chessboard] as SolidJS
+        [Stockfish Web Worker\n(stockfish-18-lite.js)] as StockfishWorker
     }
 
     package "Ktor Backend Bridge" {
@@ -38,8 +39,8 @@ package "Docker Container (Harness: Chess Coach)" {
 }
 
 User <---> SolidJS : User Actions / Board render
-SolidJS <-> Ktor : HTTP Requests
-Ktor ..> Bridge : (If Hint) Request Top 3 Moves
+SolidJS <-> Ktor : HTTP Requests (Move/Advice/Hello/New)
+SolidJS <-> StockfishWorker : Local UCI (Hint / Hover Eval)
 Ktor ..> State : (If History) Read past FEN states
 
 Ktor <--> Bash : Subprocess (bash orchestrator.sh) moves bridge

@@ -1,4 +1,4 @@
-import { onMount, onCleanup } from 'solid-js';
+import { createEffect, onMount, onCleanup } from 'solid-js';
 import type { Component } from 'solid-js';
 import { BoardWrapper } from './components/ChessBoard';
 import { Avatar } from './components/Avatar';
@@ -7,19 +7,19 @@ import { NewGamePanel, BoardActions } from './components/Controls';
 import { DebugControls } from './components/DebugControls';
 import { initGlobalLogging, logger } from './utils/logger';
 import { fetchHello } from './services/api';
-import { setAdvice, coachEmotion, setCoachEmotion, setThinkingPhrases, setBestMovePhrases } from './store/gameStore';
+import { coachEmotion, setAdvice, setBestMovePhrases, setCoachEmotion, setThinkingPhrases } from './store/coachState';
 import './theme.css';
 import './App.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
 const App: Component = () => {
-  let sleepyTimer: number;
-  let sleepingTimer: number;
+  let sleepyTimer: number | undefined;
+  let sleepingTimer: number | undefined;
 
   const resetInactivityTimers = () => {
-    clearTimeout(sleepyTimer);
-    clearTimeout(sleepingTimer);
+    if (sleepyTimer) clearTimeout(sleepyTimer);
+    if (sleepingTimer) clearTimeout(sleepingTimer);
 
     // Only wake up if currently sleepy or sleeping
     if (coachEmotion() === 'sleepy' || coachEmotion() === 'sleeping') {
@@ -37,6 +37,23 @@ const App: Component = () => {
       }, 20000);
     }
   };
+
+  createEffect(() => {
+    const emotion = coachEmotion();
+
+    // When internal state changes back to "idle" (or "watching") without user activity,
+    // restart the inactivity timers so "sleepy/sleeping" can still happen later.
+    if (emotion === 'idle' || emotion === 'watching') {
+      resetInactivityTimers();
+      return;
+    }
+
+    // While actively thinking/happy/shocked, ensure we don't drift into sleepy/sleeping.
+    if (emotion === 'thinking' || emotion === 'shocked' || emotion === 'happy') {
+      if (sleepyTimer) clearTimeout(sleepyTimer);
+      if (sleepingTimer) clearTimeout(sleepingTimer);
+    }
+  });
 
   onMount(async () => {
     initGlobalLogging();
@@ -65,8 +82,8 @@ const App: Component = () => {
     window.removeEventListener('mousemove', resetInactivityTimers);
     window.removeEventListener('keydown', resetInactivityTimers);
     window.removeEventListener('click', resetInactivityTimers);
-    clearTimeout(sleepyTimer);
-    clearTimeout(sleepingTimer);
+    if (sleepyTimer) clearTimeout(sleepyTimer);
+    if (sleepingTimer) clearTimeout(sleepingTimer);
   });
 
   return (

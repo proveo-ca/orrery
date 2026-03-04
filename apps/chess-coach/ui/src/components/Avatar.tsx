@@ -1,5 +1,5 @@
 import type { Component } from 'solid-js';
-import { coachEmotion } from '../store/gameStore';
+import { coachEmotion } from '../store/coachState';
 import './Avatar.css';
 
 export const Avatar: Component = () => {

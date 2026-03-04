@@ -1,6 +1,8 @@
 import { Chess, type Square } from 'chess.js';
 import { createSignal } from 'solid-js';
-import { addMoveToHistory, setAdvice, setCoachEmotion, difficulty, thinkingPhrases, bestMovePhrases } from '../store/gameStore';
+import { setAdvice, setCoachEmotion, thinkingPhrases, bestMovePhrases } from '../store/coachState';
+import { addMoveToHistory } from '../store/gameState';
+import { difficulty } from '../store/settingsState';
 import { logger } from '../utils/logger';
 import { postAdvice, postMove } from '../services/api';
 
@@ -20,17 +22,19 @@ export function useMoveExecutor(apiUrl: string, stopStockfish: () => void) {
     setAdviceAbortController(null);
   };
 
-  const executeMove = async (params: ExecuteMoveParams): Promise<{ fenAfterHuman?: string } | null> => {
+  const executeMove = async (
+    params: ExecuteMoveParams
+  ): Promise<{ didMove: boolean; fenAfterHuman?: string }> => {
     const { game, selected, square } = params;
 
     const move = game.moves({ square: selected, verbose: true }).find((m) => m.to === square);
-    if (!move) return null;
+    if (!move) return { didMove: false };
 
     try {
       const gameCopy = new Chess(game.fen());
       const result = gameCopy.move({ from: selected, to: square, promotion: 'q' });
 
-      if (!result) return null;
+      if (!result) return { didMove: false };
 
       abortAdvice();
 
@@ -50,7 +54,7 @@ export function useMoveExecutor(apiUrl: string, stopStockfish: () => void) {
           setCoachEmotion('sleepy');
           setAdvice("Game over. It's a draw.");
         }
-        return { fenAfterHuman };
+        return { didMove: true, fenAfterHuman };
       }
       
       let thinkingTimeout: number | undefined;
@@ -74,7 +78,7 @@ export function useMoveExecutor(apiUrl: string, stopStockfish: () => void) {
         clearTimeout(thinkingTimeout);
         setAdvice('Error communicating with the coach.');
         setCoachEmotion('shocked', 2000);
-        return { fenAfterHuman };
+        return { didMove: true, fenAfterHuman };
       }
       
       const aiGame = new Chess(fenAfterHuman);
@@ -92,7 +96,7 @@ export function useMoveExecutor(apiUrl: string, stopStockfish: () => void) {
           setCoachEmotion('sleepy');
           setAdvice("Game over. It's a draw.");
         }
-        return { fenAfterHuman };
+        return { didMove: true, fenAfterHuman };
       }
 
       const controller = new AbortController();
@@ -123,10 +127,10 @@ export function useMoveExecutor(apiUrl: string, stopStockfish: () => void) {
         }
       }
 
-      return { fenAfterHuman };
+      return { didMove: true, fenAfterHuman };
     } catch (e) {
       logger.error('Move execution error', e);
-      return null;
+      return { didMove: false };
     }
   };
 

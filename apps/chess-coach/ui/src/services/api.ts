@@ -1,5 +1,7 @@
-export type MoveRequest = { move: string; fen: string; difficulty?: string };
-export type MoveResponse = { fen: string; move: string };
+import type { Difficulty } from '../store/settingsState';
+
+export type MoveRequest = { move: string; fen: string; difficulty?: Difficulty };
+export type MoveResponse = { fen: string; move: string; advice?: string };
 
 export type AdviceRequest = { humanMove: string; aiMove: string; fen: string };
 export type AdviceResponse = { advice: string };

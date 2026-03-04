@@ -1,8 +1,11 @@
 import { For } from 'solid-js';
 import type { Component } from 'solid-js';
 import type { Square } from 'chess.js';
-import { activePlayerColor, adviceHoveredSquares, currentIndex, fenHistory, moveHistory } from '../store/gameStore';
+import { adviceHoveredSquares } from '../store/coachState';
+import { currentIndex, fenHistory, moveHistory } from '../store/gameState';
+import { activePlayerColor } from '../store/settingsState';
 import { useChessBoard } from '../hooks/useChessBoard';
+import { Modal } from './common/Modal';
 import { ChessSquare } from './ChessSquare';
 import './ChessBoard.css';
 
@@ -74,7 +77,6 @@ export const BoardWrapper: Component = () => {
                     onClick={() => board.handleSquareClick(square)}
                     onMouseEnter={() => board.handleSquareHover(square)}
                     lastMove={lastMove()}
-                    activeColor={activePlayerColor()}
                     isCheck={isCurrentKing && isCheck() && !isCheckmate()}
                     isCheckmate={isCurrentKing && isCheckmate()}
                     isStalemate={isCurrentKing && isStalemate()}
@@ -85,13 +87,16 @@ export const BoardWrapper: Component = () => {
           )}
         </For>
 
-        {isGameOver() && (
-          <div class="game-over-overlay">
-            <div class="game-over-banner">
-              {isCheckmate() ? "Checkmate" : isStalemate() ? "Stalemate" : "Draw"}
-            </div>
-          </div>
-        )}
+        <Modal
+          open={isGameOver()}
+          position="absolute"
+          dismissible={false}
+          showCloseButton={false}
+          overlayClass="game-over-overlay"
+          contentClass="game-over-banner"
+        >
+          <div>{isCheckmate() ? 'Checkmate' : isStalemate() ? 'Stalemate' : 'Draw'}</div>
+        </Modal>
       </div>
     </div>
   );

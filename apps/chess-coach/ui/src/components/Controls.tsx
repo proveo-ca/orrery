@@ -1,6 +1,11 @@
+import { createSignal } from 'solid-js';
 import type { Component } from 'solid-js';
 import { Chess } from 'chess.js';
-import { goBack, goForward, resetGame, colorPref, setColorPref, activePlayerColor, setCoachEmotion, setAdvice, addMoveToHistory, currentFen, currentIndex, fenHistory, difficulty, setDifficulty } from '../store/gameStore';
+import { addMoveToHistory, currentFen, currentIndex, fenHistory, goBack, goForward, resetGame } from '../store/gameState';
+import { setAdvice, setCoachEmotion } from '../store/coachState';
+import { activePlayerColor, colorPref, difficulty, setColorPref, setDifficulty, type Difficulty } from '../store/settingsState';
+import { useHint } from '../hooks/useHint';
+import { Credits } from './Credits';
 import { ColorSelector } from './common/ColorSelector';
 import { postNewGame, postMove } from '../services/api';
 import './Controls.css';
@@ -24,8 +29,7 @@ export const NewGamePanel: Component = () => {
           const aiGame = new Chess(data.fen);
           const aiMove = aiGame.move(moveData.move);
           addMoveToHistory(moveData.fen, { from: aiMove.from, to: aiMove.to });
-          // Note: MoveResponse doesn't officially have 'advice', but keeping fallback just in case
-          setAdvice((moveData as any).advice || "I've made my move!");
+          setAdvice(moveData.advice ?? "I've made my move!");
           setCoachEmotion('happy', 3000);
         } catch (e) {
           clearTimeout(thinkingTimeout);
@@ -42,7 +46,11 @@ export const NewGamePanel: Component = () => {
   return (
     <div class="new-game-panel">
       <ColorSelector value={colorPref()} onChange={setColorPref} />
-      <select class="difficulty-select" value={difficulty()} onChange={(e) => setDifficulty(e.target.value as any)}>
+      <select
+        class="difficulty-select"
+        value={difficulty()}
+        onChange={(e) => setDifficulty(e.currentTarget.value as Difficulty)}
+      >
         <option value="intermediate">Intermediate (1100)</option>
         <option value="advanced">Advanced (1600)</option>
         <option value="expert">Expert (2200)</option>
@@ -53,6 +61,9 @@ export const NewGamePanel: Component = () => {
 };
 
 export const BoardActions: Component = () => {
+  const [showCredits, setShowCredits] = createSignal(false);
+  const { requestHint, pendingHint } = useHint('/stockfish-18-lite.js');
+
   const atStart = () => currentIndex() === 0;
   const atLatest = () => currentIndex() === fenHistory().length - 1;
 
@@ -65,31 +76,42 @@ export const BoardActions: Component = () => {
     return `Move ${fullmove}${activeColor === 'b' ? '...' : '.'}`;
   };
 
-  const handleHint = () => {
-    const worker = new Worker('/stockfish-18-lite.js');
-    worker.onmessage = (e) => {
-      if (typeof e.data === 'string' && e.data.startsWith('bestmove')) {
-        const move = e.data.split(' ')[1];
-        alert(`Hint: Try moving ${move}`);
-        worker.terminate();
+  const handleHint = async () => {
+    try {
+      const move = await requestHint(currentFen(), 10);
+      if (!move) {
+        alert('Hint: No best move available.');
+        return;
       }
-    };
-    worker.postMessage(`position fen ${currentFen()}`);
-    worker.postMessage('go depth 10');
+      alert(`Hint: Try moving ${move}`);
+    } catch {
+      alert('Hint: Unable to generate a hint right now.');
+    }
   };
 
   return (
     <div class="board-actions">
       <div class="nav-row">
-        <button onClick={goBack} disabled={atStart()}>&larr; Back</button>
-        <button onClick={goForward} disabled={atLatest()}>Forward &rarr;</button>
+        <button onClick={goBack} disabled={atStart()}>
+          &larr; Back
+        </button>
+        <button onClick={goForward} disabled={atLatest()}>
+          Forward &rarr;
+        </button>
       </div>
 
-      {isReplaying() && (
-        <div class="turn-label">{turnLabel()}</div>
+      {isReplaying() && <div class="turn-label">{turnLabel()}</div>}
+
+      {!isReplaying() && (
+        <>
+          <button onClick={handleHint} disabled={pendingHint()}>
+            {pendingHint() ? 'Thinking...' : 'Get Hint'}
+          </button>
+          <button onClick={() => setShowCredits(true)}>Credits</button>
+        </>
       )}
 
-      {!isReplaying() && <button onClick={handleHint}>Get Hint</button>}
+      <Credits open={showCredits()} onClose={() => setShowCredits(false)} />
     </div>
   );
 };

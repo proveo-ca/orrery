@@ -1,6 +1,6 @@
 import type { Component } from 'solid-js';
 import type { Square, PieceSymbol, Color } from 'chess.js';
-import type { MoveSquares } from '../store/gameStore';
+import type { MoveSquares } from '../store/gameState';
 
 interface ChessSquareProps {
   square: Square;
@@ -16,7 +16,6 @@ interface ChessSquareProps {
   onClick: () => void;
   onMouseEnter: () => void;
   lastMove: MoveSquares | null;
-  activeColor: 'w' | 'b';
   isCheck: boolean;
   isCheckmate: boolean;
   isStalemate: boolean;

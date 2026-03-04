@@ -1,6 +1,6 @@
 import { For } from 'solid-js';
 import type { Component } from 'solid-js';
-import { advice, setAdviceHoveredSquares } from '../store/gameStore';
+import { advice, setAdviceHoveredSquares } from '../store/coachState';
 import './CoachAdvice.css';
 
 // Regex to match standard algebraic notation (SAN) and raw squares
