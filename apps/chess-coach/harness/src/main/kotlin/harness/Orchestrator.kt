@@ -27,7 +27,8 @@ class Orchestrator(
         // 2. Get Board Evaluation
         System.err.println("Evaluating position...")
         val evalResult = engineBridge.getEvaluation(currentFen, depth = 15)
-        System.err.println("Stockfish Eval: $evalResult")
+        val evalString = if (evalResult.isMate) "Mate in ${evalResult.mateIn}" else String.format("%.2f", evalResult.cp / 100.0)
+        System.err.println("Stockfish Eval: Move: ${evalResult.bestMove}, Eval: $evalString")
         
         // 3. Reflexion Loop (Anti-Framework)
         var candidateMove = ""
@@ -49,7 +50,7 @@ class Orchestrator(
             val userPrompt = buildString {
                 appendLine("Current FEN: $currentFen")
                 appendLine("Game History: $history")
-                appendLine("Engine Evaluation: $evalResult")
+                appendLine("Engine Evaluation: Move: ${evalResult.bestMove}, Eval: $evalString")
                 if (errorContext.isNotEmpty()) {
                     appendLine("CRITICAL ERROR FROM PREVIOUS ATTEMPT: $errorContext")
                 }
@@ -92,36 +93,36 @@ class Orchestrator(
 
     suspend fun generateAdvice(humanMove: String, aiMove: String, currentFen: String): String {
         System.err.println("Generating coaching advice...")
-        val history = stateManager.readPgn()
         val evalResult = engineBridge.getEvaluation(currentFen, depth = 15)
         
         val activeColor = currentFen.split(" ").getOrNull(1) ?: "w"
-        val aiColor = if (activeColor == "w") "Black" else "White" // AI just played, so it's the opposite of active
+        val aiColor = if (activeColor == "w") "Black" else "White"
         val humanColor = if (aiColor == "White") "Black" else "White"
 
-        val skillsContext = skillLoader.loadAllSkills()
+        val adviceSystemPrompt = "Generate professional chess commentary in the specified language. For Type=standard use 30–40 words. For Type=explanation, explain the best move briefly (≤50 words). Return exactly: Commentary, Predicted ELO, Verified Classification."
         
-        val humanMoveContext = if (humanMove.isNotBlank()) {
-            "The human student just played $humanMove, and you replied with $aiMove. " +
-            "Focus your advice PRIMARILY on evaluating the human's move ($humanMove). " +
-            "Was it a good idea? Did it leave anything undefended? " +
-            "Don't mention your own move ($aiMove) unless it's a mate threat."
-        } else {
-            "You are making the first move of the game. Briefly explain your opening choice ($aiMove)."
-        }
+        // We approximate the CP delta since we don't have the exact previous evaluation stored
+        val cpString = if (evalResult.isMate) "Mate in ${evalResult.mateIn}" else "${evalResult.cp}->${evalResult.cp} (Δ=0)"
+        val safeHumanMove = if (humanMove.isBlank()) "e4" else humanMove
+
+        val adviceUserPrompt = """LanguageL: English
+LangCode: en
+Type: standard
+FEN: $currentFen
+MoveSAN: $safeHumanMove
+Side: $humanColor
+Actor: human
+Gender: neutral
+Tag: Good
+BestAlt: ${evalResult.bestMove}
+CP: $cpString"""
         
-        val adviceSystemPrompt = "You are Selena, a cute black cat and an expert chess coach. " +
-                                 "You are playing $aiColor, and the human student is playing $humanColor. " +
-                                 "$humanMoveContext " +
-                                 "Give friendly, encouraging coaching advice. " +
-                                 "Use the following chess knowledge to inform your advice if relevant:\n$skillsContext\n" +
-                                 "CRITICAL: Your response MUST be under 256 characters."
-                                 
-        val adviceUserPrompt = "Game History: $history\nCurrent FEN: $currentFen\nEval: $evalResult\nProvide your coaching advice."
-        
-        val advice = llmClient.prompt(adviceSystemPrompt, adviceUserPrompt, llmClient.defaultModel)
+        val rawAdvice = llmClient.prompt(adviceSystemPrompt, adviceUserPrompt, llmClient.defaultModel, temperature = 0.7)
         System.err.println("Coach Advice generated.")
-        return advice
+        
+        // Extract just the commentary part if the model returns the full block
+        val commentaryMatch = Regex("Commentary:\\s*(.*?)(?:\\n|Predicted ELO:|$)", RegexOption.DOT_MATCHES_ALL).find(rawAdvice)
+        return commentaryMatch?.groupValues?.get(1)?.trim() ?: rawAdvice
     }
 
     suspend fun generateUiPhrases(): UiPhrases {

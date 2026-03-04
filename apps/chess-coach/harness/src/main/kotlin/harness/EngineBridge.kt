@@ -19,27 +19,28 @@ class EngineBridge(private val stockfishPath: String = "stockfish") {
         waitForResponse("uciok")
     }
 
-    fun getEvaluation(fen: String, depth: Int = 15): String {
+    data class EvalResult(val bestMove: String, val cp: Int, val isMate: Boolean, val mateIn: Int = 0)
+
+    fun getEvaluation(fen: String, depth: Int = 15): EvalResult {
         sendCommand("position fen $fen")
         sendCommand("go depth $depth")
         
         var bestMove = ""
-        var score = ""
+        var cp = 0
+        var isMate = false
+        var mateIn = 0
         
-        // Parse Stockfish output until it finishes thinking
         while (true) {
             val line = reader?.readLine() ?: break
             if (line.contains("score cp")) {
-                // Extract centipawn score (e.g., "score cp 45")
                 try {
-                    val cp = line.substringAfter("score cp ").substringBefore(" ").toInt()
-                    score = String.format("%.2f", cp / 100.0)
-                } catch (e: Exception) {
-                    // Fallback if parsing fails
-                }
+                    cp = line.substringAfter("score cp ").substringBefore(" ").toInt()
+                } catch (e: Exception) {}
             } else if (line.contains("score mate")) {
-                val mateIn = line.substringAfter("score mate ").substringBefore(" ")
-                score = "Mate in $mateIn"
+                try {
+                    isMate = true
+                    mateIn = line.substringAfter("score mate ").substringBefore(" ").toInt()
+                } catch (e: Exception) {}
             }
             
             if (line.startsWith("bestmove")) {
@@ -47,7 +48,7 @@ class EngineBridge(private val stockfishPath: String = "stockfish") {
                 break
             }
         }
-        return "Move: $bestMove, Eval: $score"
+        return EvalResult(bestMove, cp, isMate, mateIn)
     }
 
     fun checkLegality(fen: String, move: String): Boolean {
