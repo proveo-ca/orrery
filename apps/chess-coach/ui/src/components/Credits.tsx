@@ -19,6 +19,12 @@ export const Credits: Component<Props> = (props) => {
             </a>
           </li>
           <li>
+            <strong>The Board:</strong> by Jeff Hlywa <br />
+            <a href="https://github.com/jhlywa/chess.js" target="_blank" rel="noopener noreferrer">
+              github.com/jhlywa/chess.js
+            </a>
+          </li>
+          <li>
             <strong>The Eval Engine:</strong> by Stockfish <br />
             <a href="https://stockfishchess.org/" target="_blank" rel="noopener noreferrer">
               stockfishchess.org

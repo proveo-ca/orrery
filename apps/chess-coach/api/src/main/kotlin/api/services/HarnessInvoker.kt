@@ -127,4 +127,10 @@ class HarnessInvoker(private val harnessCommand: String = "./harness/bin/chess-c
         return res.advice
     }
 
+    suspend fun executeExplain(fen: String): String {
+        println("Invoking harness daemon for explanation")
+        val res = sendDaemonRequest(DaemonRequest(command = "explain", fen = fen))
+        return res.explanation
+    }
+
 }
