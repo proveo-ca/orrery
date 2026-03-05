@@ -24,7 +24,7 @@ export function useChessBoard() {
 
   let evalTimeout: number | undefined;
   let hoverEvalSeq = 0;
-  let currentHoverEval: HoverEval | null = null;
+  const [currentHoverEval, setCurrentHoverEval] = createSignal<HoverEval | null>(null);
 
   const canApplyHoverOverride = () => {
     const base = baseCoachEmotion();
@@ -45,7 +45,7 @@ export function useChessBoard() {
     // ensure hover doesn't mask it.
     if (!canApplyHoverOverride()) {
       clearHoverOverride();
-      currentHoverEval = null;
+      setCurrentHoverEval(null);
       send('stop');
     }
   });
@@ -59,7 +59,7 @@ export function useChessBoard() {
     const selected = selectedSquare();
     if (!hovered || !selected) return;
 
-    const evalTarget = currentHoverEval;
+    const evalTarget = currentHoverEval();
     if (!evalTarget) return;
     if (evalTarget.to !== hovered || evalTarget.from !== selected) return;
 
@@ -111,7 +111,7 @@ export function useChessBoard() {
     setHoveredSquare(null);
     setValidMoves([]);
     clearHoverOverride();
-    currentHoverEval = null;
+    setCurrentHoverEval(null);
     send('stop');
   });
 
@@ -125,7 +125,7 @@ export function useChessBoard() {
 
     setHoveredSquare(null);
     clearHoverOverride();
-    currentHoverEval = null;
+    setCurrentHoverEval(null);
 
     send('stop');
   };
@@ -137,7 +137,7 @@ export function useChessBoard() {
     applyHoverBaseline();
 
     if (!canApplyHoverOverride()) {
-      currentHoverEval = null;
+      setCurrentHoverEval(null);
       send('stop');
       return;
     }
@@ -151,25 +151,26 @@ export function useChessBoard() {
           gameCopy.move({ from: selected, to: square, promotion: 'q' });
 
           const evalId = ++hoverEvalSeq;
-          currentHoverEval = {
+          const newEval = {
             id: evalId,
             from: selected,
             to: square,
             fen: gameCopy.fen()
           };
+          setCurrentHoverEval(newEval);
 
-          logger.action('Stockfish Hover Eval Request', currentHoverEval);
+          logger.action('Stockfish Hover Eval Request', newEval);
 
           send('stop');
           send(`position fen ${gameCopy.fen()}`);
           send('go depth 8');
         } catch (e) {
-          currentHoverEval = null;
+          setCurrentHoverEval(null);
           send('stop');
         }
       }, 150);
     } else {
-      currentHoverEval = null;
+      setCurrentHoverEval(null);
       send('stop');
     }
   };
@@ -188,7 +189,7 @@ export function useChessBoard() {
       setValidMoves([]);
       setHoveredSquare(null);
       clearHoverOverride();
-      currentHoverEval = null;
+      setCurrentHoverEval(null);
       send('stop');
       return;
     }
@@ -207,7 +208,7 @@ export function useChessBoard() {
         setValidMoves([]);
         setHoveredSquare(null);
         clearHoverOverride();
-        currentHoverEval = null;
+        setCurrentHoverEval(null);
         return;
       }
     }
@@ -222,7 +223,7 @@ export function useChessBoard() {
       setSelectedSquare(null);
       setValidMoves([]);
       clearHoverOverride();
-      currentHoverEval = null;
+      setCurrentHoverEval(null);
     }
   };
 
