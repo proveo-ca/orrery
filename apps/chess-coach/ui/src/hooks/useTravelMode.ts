@@ -103,7 +103,6 @@ export function useTravelMode(workerPath: string = '/stockfish-18-lite.js') {
         }
       }
 
-      const actualMoves = fens.length - 1;
       startTravel(fens, moves);
       // We don't overwrite hoverAdvice here so the LLM explanation stays visible
       setHoverEmotion('watching');

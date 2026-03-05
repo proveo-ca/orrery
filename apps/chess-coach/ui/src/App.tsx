@@ -1,4 +1,4 @@
-import { onMount, onCleanup } from 'solid-js';
+import { onMount } from 'solid-js';
 import type { Component } from 'solid-js';
 import { BoardWrapper } from './components/ChessBoard';
 import { Avatar } from './components/Avatar';
@@ -10,8 +10,7 @@ import { HistoryOverlay } from './components/common/HistoryOverlay';
 import { LightSpeedOverlay } from './components/common/LightSpeedOverlay';
 import { initGlobalLogging, logger } from './utils/logger';
 import { fetchHello } from './services/api';
-import { hoverBlunder, hoverBlunderFen, setAdvice, setBestMovePhrases, setCoachEmotion, setThinkingPhrases } from './store';
-import { currentIndex, fenHistory, goForward, clearHoverOverride } from './store';
+import { setAdvice, setBestMovePhrases, setCoachEmotion, setThinkingPhrases, currentIndex, fenHistory } from './store';
 import { isTravelling } from './store/travelState';
 import { useInactivityTimers } from './hooks/useInactivityTimers';
 import { useGlobalShortcuts } from './hooks/useGlobalShortcuts';

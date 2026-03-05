@@ -84,6 +84,28 @@ CP: $cpString"""
         return commentaryMatch?.groupValues?.get(1)?.trim() ?: rawAdvice
     }
 
+    suspend fun generateExplanation(currentFen: String): String {
+        System.err.println("Generating blunder explanation...")
+        val evalResult = engineBridge.getEvaluation(currentFen, depth = 15)
+        
+        val activeColor = currentFen.split(" ").getOrNull(1) ?: "w"
+        val humanColor = if (activeColor == "w") "White" else "Black"
+
+        val explainSystemPrompt = "You are a helpful chess coach. Explain briefly (under 40 words) why the last move resulting in this position is a blunder or mistake. Focus on the immediate tactical problem."
+        
+        val cpString = if (evalResult.isMate) "Mate in ${evalResult.mateIn}" else "${evalResult.cp}"
+
+        val explainUserPrompt = """FEN: $currentFen
+Side to move: $humanColor
+Best alternative: ${evalResult.bestMove}
+Current Eval: $cpString"""
+        
+        val rawExplanation = llmClient.prompt(explainSystemPrompt, explainUserPrompt, llmClient.commentaryModel, temperature = 0.7)
+        System.err.println("Explanation generated.")
+        
+        return rawExplanation.trim()
+    }
+
     suspend fun generateUiPhrases(): UiPhrases {
         return UiPhrases(
             thinking = listOf("Hmm...", "Let me think...", "Interesting position...", "Rats...", "What to do..."),

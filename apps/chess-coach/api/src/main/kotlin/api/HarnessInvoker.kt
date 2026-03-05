@@ -30,7 +30,8 @@ data class DaemonRequest(
     val difficulty: String = "intermediate",
     val humanMoveSan: String = "",
     val aiMove: String = "",
-    val fenAfterHuman: String = ""
+    val fenAfterHuman: String = "",
+    val fen: String = ""
 )
 
 @Serializable
@@ -38,6 +39,7 @@ data class DaemonResponse(
     val fen: String = "",
     val move: String = "",
     val advice: String = "",
+    val explanation: String = "",
     val hints: List<String> = emptyList(),
     val phrases: HelloPhrases? = null
 )
@@ -151,6 +153,12 @@ class HarnessInvoker(private val harnessCommand: String = "./harness/bin/chess-c
         println("Invoking harness daemon for advice")
         val res = sendDaemonRequest(DaemonRequest(command = "advice", humanMoveSan = humanMoveSan, aiMove = aiMove, fenAfterHuman = fenAfterHuman))
         return res.advice
+    }
+
+    suspend fun executeExplain(fen: String): String {
+        println("Invoking harness daemon for explanation")
+        val res = sendDaemonRequest(DaemonRequest(command = "explain", fen = fen))
+        return res.explanation
     }
 
 }

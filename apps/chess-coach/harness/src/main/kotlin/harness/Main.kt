@@ -18,7 +18,8 @@ data class DaemonRequest(
     val difficulty: String = "intermediate",
     val humanMoveSan: String = "",
     val aiMove: String = "",
-    val fenAfterHuman: String = ""
+    val fenAfterHuman: String = "",
+    val fen: String = ""
 )
 
 @Serializable
@@ -26,6 +27,7 @@ data class DaemonResponse(
     val fen: String = "",
     val move: String = "",
     val advice: String = "",
+    val explanation: String = "",
     val hints: List<String> = emptyList(),
     val phrases: UiPhrases? = null
 )
@@ -68,6 +70,10 @@ fun main(args: Array<String>) = runBlocking {
                             "advice" -> {
                                 val advice = orchestrator.generateAdvice(req.humanMoveSan, req.aiMove, req.fenAfterHuman)
                                 DaemonResponse(advice = advice)
+                            }
+                            "explain" -> {
+                                val explanation = orchestrator.generateExplanation(req.fen)
+                                DaemonResponse(explanation = explanation)
                             }
                             else -> DaemonResponse()
                         }
