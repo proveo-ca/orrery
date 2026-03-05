@@ -1,28 +1,50 @@
 // apps/chess-coach/ui/src/hooks/useGlobalShortcuts.ts
 import { onCleanup, onMount } from 'solid-js';
-import { hoverBlunder, hoverBlunderFen, currentIndex, fenHistory, goForward, clearHoverOverride } from '../store';
-import { isTravelling, exitTravel } from '../store/travelState';
+import { hoverBlunder, hoverBlunderFen, currentIndex, fenHistory, goForward, goBack, clearHoverOverride, coachEmotion, dispatchCoachEvent } from '../store';
+import { isTravelling, exitTravel, travelIndex, travelBack, travelForward } from '../store/travelState';
 import { useTravelMode } from './useTravelMode';
 
-export function useGlobalShortcuts(resetInactivityTimers: () => void) {
+export function useGlobalShortcuts() {
   const { activateTravel, loading } = useTravelMode();
 
   const handleKeyDown = (e: KeyboardEvent) => {
-    resetInactivityTimers();
-    const isReplaying = currentIndex() < fenHistory().length - 1;
+    if (coachEmotion() === 'sleepy' || coachEmotion() === 'sleeping') {
+      dispatchCoachEvent({ type: 'WAKE_UP' });
+    }
+
+    const isReplaying = () => currentIndex() < fenHistory().length - 1;
 
     if (e.code === 'Space' && hoverBlunder() && !isTravelling() && !loading()) {
       e.preventDefault();
       const fen = hoverBlunderFen();
       if (fen) activateTravel(fen);
     } else if (e.code === 'Escape') {
-      if (isTravelling() || isReplaying) {
+      if (isTravelling() || isReplaying()) {
         e.preventDefault();
         if (isTravelling()) exitTravel();
         while (currentIndex() < fenHistory().length - 1) {
           goForward();
         }
         clearHoverOverride();
+      }
+    } else if (e.code === 'ArrowLeft') {
+      e.preventDefault();
+      if (isTravelling()) {
+        if (travelIndex() === 0) {
+          exitTravel();
+          clearHoverOverride();
+        } else {
+          travelBack();
+        }
+      } else {
+        goBack();
+      }
+    } else if (e.code === 'ArrowRight') {
+      e.preventDefault();
+      if (isTravelling()) {
+        travelForward();
+      } else {
+        goForward();
       }
     }
   };

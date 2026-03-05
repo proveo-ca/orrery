@@ -50,7 +50,6 @@ class LlmClient {
     private val apiKey: String? = System.getenv("LLM_API_KEY")
     
     val generalModel: String = System.getenv("LLM_GENERAL_MODEL") ?: System.getenv("LLM_MODEL") ?: "qwen2.5:7b"
-    val uciModel: String = System.getenv("LLM_UCI_MODEL") ?: generalModel
     val commentaryModel: String = System.getenv("LLM_COMMENTARY_MODEL") ?: generalModel
 
     private val client = HttpClient(CIO) {
@@ -70,7 +69,7 @@ class LlmClient {
     suspend fun prompt(
         systemPrompt: String, 
         userPrompt: String, 
-        model: String = generalModel,
+        model: String = commentaryModel,
         temperature: Double = 0.7,
         format: String? = null,
         maxTokens: Int? = null
@@ -103,7 +102,7 @@ class LlmClient {
     suspend fun promptStream(
         systemPrompt: String, 
         userPrompt: String, 
-        model: String = generalModel,
+        model: String = commentaryModel,
         temperature: Double = 0.7,
         maxTokens: Int? = null
     ): Flow<String> = flow {

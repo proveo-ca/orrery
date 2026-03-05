@@ -117,18 +117,19 @@ CP: $cpString"""
         System.err.println("Generating blunder explanation...")
         val evalResult = engineBridge.getEvaluation(fenAfter, depth = 15)
         
-        val activeColor = fenAfter.split(" ").getOrNull(1) ?: "w"
-        val humanColor = if (activeColor == "w") "White" else "Black"
+        val activeColorAfter = fenAfter.split(" ").getOrNull(1) ?: "w"
+        val blunderColor = if (activeColorAfter == "w") "Black" else "White"
+        val punishingColor = if (activeColorAfter == "w") "White" else "Black"
 
-        val explainSystemPrompt = "You are a chess expert. The user played a move that changed the board from 'Before FEN' to 'After FEN'. This move is a blunder. Explain in exactly ONE short sentence why it is a blunder. Do not provide any formatting, greetings, or extra text."
+        val explainSystemPrompt = "You are a chess expert. The player playing $blunderColor just made a move that changed the board from 'Before FEN' to 'After FEN'. This move is a blunder. Explain in exactly ONE short sentence why $blunderColor's move is a blunder. Do not provide any formatting, greetings, or extra text."
         
         val cpString = if (evalResult.isMate) "Mate in ${evalResult.mateIn}" else "${evalResult.cp}"
 
         val explainUserPrompt = """Before FEN: $fenBefore
 After FEN: $fenAfter
-Side to move (after): $humanColor
-Best alternative (after): ${evalResult.bestMove}
-Current Eval (after): $cpString"""
+Blunder played by: $blunderColor
+Best response for $punishingColor: ${evalResult.bestMove}
+Current Eval (after blunder): $cpString"""
         
         val rawExplanation = llmClient.prompt(explainSystemPrompt, explainUserPrompt, llmClient.commentaryModel, temperature = 0.7, maxTokens = 60)
         System.err.println("Explanation generated.")
@@ -140,18 +141,19 @@ Current Eval (after): $cpString"""
         System.err.println("Generating blunder explanation stream...")
         val evalResult = engineBridge.getEvaluation(fenAfter, depth = 15)
         
-        val activeColor = fenAfter.split(" ").getOrNull(1) ?: "w"
-        val humanColor = if (activeColor == "w") "White" else "Black"
+        val activeColorAfter = fenAfter.split(" ").getOrNull(1) ?: "w"
+        val blunderColor = if (activeColorAfter == "w") "Black" else "White"
+        val punishingColor = if (activeColorAfter == "w") "White" else "Black"
 
-        val explainSystemPrompt = "You are a chess expert. The user played a move that changed the board from 'Before FEN' to 'After FEN'. This move is a blunder. Explain in exactly ONE short sentence why it is a blunder. Do not provide any formatting, greetings, or extra text."
+        val explainSystemPrompt = "You are a chess expert. The player playing $blunderColor just made a move that changed the board from 'Before FEN' to 'After FEN'. This move is a blunder. Explain in exactly ONE short sentence why $blunderColor's move is a blunder. Do not provide any formatting, greetings, or extra text."
         
         val cpString = if (evalResult.isMate) "Mate in ${evalResult.mateIn}" else "${evalResult.cp}"
 
         val explainUserPrompt = """Before FEN: $fenBefore
 After FEN: $fenAfter
-Side to move (after): $humanColor
-Best alternative (after): ${evalResult.bestMove}
-Current Eval (after): $cpString"""
+Blunder played by: $blunderColor
+Best response for $punishingColor: ${evalResult.bestMove}
+Current Eval (after blunder): $cpString"""
         
         return llmClient.promptStream(explainSystemPrompt, explainUserPrompt, llmClient.commentaryModel, temperature = 0.7, maxTokens = 60)
     }

@@ -1,3 +1,4 @@
+import { createRoot, createEffect } from 'solid-js';
 import { createStore } from 'solid-js/store';
 
 export type CoachEmotion =
@@ -157,3 +158,27 @@ export const dispatchCoachEvent = (event: CoachEvent) => {
       break;
   }
 };
+
+// ===== Reactive Inactivity Timers =====
+let sleepyTimer: number | undefined;
+let sleepingTimer: number | undefined;
+
+createRoot(() => {
+  createEffect(() => {
+    const current = coachEmotion();
+    
+    // Any emotion change (except falling asleep) resets the timers.
+    if (current !== 'sleepy' && current !== 'sleeping') {
+      if (sleepyTimer) clearTimeout(sleepyTimer);
+      if (sleepingTimer) clearTimeout(sleepingTimer);
+      
+      sleepyTimer = window.setTimeout(() => {
+        dispatchCoachEvent({ type: 'SLEEPY' });
+      }, 30000);
+
+      sleepingTimer = window.setTimeout(() => {
+        dispatchCoachEvent({ type: 'SLEEPING' });
+      }, 40000);
+    }
+  });
+});

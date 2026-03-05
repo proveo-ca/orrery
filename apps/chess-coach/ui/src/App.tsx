@@ -13,7 +13,6 @@ import { Chess } from 'chess.js';
 import { fetchHello, postMove, postAdviceStream } from './services/api';
 import { setAdvice, setBestMovePhrases, dispatchCoachEvent, setThinkingPhrases, currentIndex, fenHistory, currentFen, activePlayerColor, difficulty, addMoveToHistory } from './store';
 import { isTravelling } from './store/travelState';
-import { useInactivityTimers } from './hooks/useInactivityTimers';
 import { useGlobalShortcuts } from './hooks/useGlobalShortcuts';
 import './theme.css';
 import './App.css';
@@ -21,8 +20,7 @@ import './App.css';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
 const App: Component = () => {
-  const { resetInactivityTimers } = useInactivityTimers();
-  useGlobalShortcuts(resetInactivityTimers);
+  useGlobalShortcuts();
 
   const isReplaying = () => currentIndex() < fenHistory().length - 1;
 
@@ -42,7 +40,6 @@ const App: Component = () => {
       setThinkingPhrases(helloData.thinking);
       setBestMovePhrases(helloData.bestMove);
       dispatchCoachEvent({ type: 'APP_READY' });
-      resetInactivityTimers();
 
       // Check if it's the AI's turn to move
       const current = currentFen();

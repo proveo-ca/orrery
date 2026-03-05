@@ -29,7 +29,6 @@ services:
     environment:
       - OLLAMA_BASE_URL=http://gemma_llm:11434/v1
       - LLM_GENERAL_MODEL=qwen2.5:7b
-      - LLM_UCI_MODEL=qwen2.5:7b
       - LLM_COMMENTARY_MODEL=hf.co/NAKSTStudio/chess-gemma-commentary:Q8_0
       - CHESS_STATE_DIR=/data
     volumes:
