@@ -1,10 +1,21 @@
-import type { Component } from 'solid-js';
-import { Chess } from 'chess.js';
-import { addMoveToHistory, resetGame } from '../store/gameState';
-import { setAdvice, setCoachEmotion } from '../store/coachState';
-import { activePlayerColor, colorPref, difficulty, setColorPref, setDifficulty, type Difficulty } from '../store/settingsState';
-import { ColorSelector } from './common/ColorSelector';
-import { postNewGame, postMove } from '../services/api';
+import type {Component} from 'solid-js';
+import {Chess} from 'chess.js';
+import {
+  addMoveToHistory,
+  resetGame,
+  setAdvice,
+  setCoachEmotion,
+  activePlayerColor,
+  colorPref,
+  difficulty,
+  setColorPref,
+  setDifficulty,
+  type Difficulty
+} from '../store';
+import {ColorSelector} from './common/ColorSelector';
+import {Button} from './common/Button';
+import {Select} from './common/Select';
+import {postNewGame, postMove} from '../services/api';
 import './Controls.css';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
@@ -21,11 +32,15 @@ export const NewGamePanel: Component = () => {
           setCoachEmotion('thinking');
         }, 3000);
         try {
-          const moveData = await postMove(API_URL, { humanMoveSan: "", fenAfterHuman: data.fen, difficulty: difficulty() });
+          const moveData = await postMove(API_URL, {
+            humanMoveSan: "",
+            fenAfterHuman: data.fen,
+            difficulty: difficulty()
+          });
           clearTimeout(thinkingTimeout);
           const aiGame = new Chess(data.fen);
           const aiMove = aiGame.move(moveData.move);
-          addMoveToHistory(moveData.fen, { from: aiMove.from, to: aiMove.to });
+          addMoveToHistory(moveData.fen, {from: aiMove.from, to: aiMove.to});
           setAdvice(moveData.advice ?? "I've made my move!");
           setCoachEmotion('happy', 3000);
         } catch (e) {
@@ -42,8 +57,8 @@ export const NewGamePanel: Component = () => {
 
   return (
     <div class="new-game-panel">
-      <ColorSelector value={colorPref()} onChange={setColorPref} />
-      <select
+      <ColorSelector value={colorPref()} onChange={setColorPref}/>
+      <Select
         class="difficulty-select"
         value={difficulty()}
         onChange={(e) => setDifficulty(e.currentTarget.value as Difficulty)}
@@ -51,8 +66,8 @@ export const NewGamePanel: Component = () => {
         <option value="intermediate">Intermediate (1100)</option>
         <option value="advanced">Advanced (1600)</option>
         <option value="expert">Expert (2200)</option>
-      </select>
-      <button onClick={handleNewGame}>New Game</button>
+      </Select>
+      <Button onClick={handleNewGame}>New Game</Button>
     </div>
   );
 };

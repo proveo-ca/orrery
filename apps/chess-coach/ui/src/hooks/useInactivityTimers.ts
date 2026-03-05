@@ -1,5 +1,5 @@
 import { createEffect, onCleanup, onMount } from 'solid-js';
-import { coachEmotion, setCoachEmotion } from '../store/coachState';
+import { coachEmotion, dispatchCoachEvent } from '../store';
 
 export function useInactivityTimers() {
   let sleepyTimer: number | undefined;
@@ -11,17 +11,17 @@ export function useInactivityTimers() {
 
     // Only wake up if currently sleepy or sleeping
     if (coachEmotion() === 'sleepy' || coachEmotion() === 'sleeping') {
-      setCoachEmotion('idle');
+      dispatchCoachEvent({ type: 'WAKE_UP' });
     }
 
     // Don't start sleep timers if she is actively thinking, happy, or shocked
     if (coachEmotion() !== 'thinking' && coachEmotion() !== 'shocked' && coachEmotion() !== 'happy') {
       sleepyTimer = window.setTimeout(() => {
-        setCoachEmotion('sleepy');
+        dispatchCoachEvent({ type: 'SLEEPY' });
       }, 20000);
 
       sleepingTimer = window.setTimeout(() => {
-        setCoachEmotion('sleeping');
+        dispatchCoachEvent({ type: 'SLEEPING' });
       }, 30000);
     }
   };
@@ -29,15 +29,12 @@ export function useInactivityTimers() {
   createEffect(() => {
     const emotion = coachEmotion();
 
-    // When internal state changes back to "idle" (or "watching") without user activity,
-    // restart the inactivity timers so "sleepy/sleeping" can still happen later.
+    // Any change in emotion (including idle <-> watching) re-runs this effect.
+    // Calling resetInactivityTimers() here resets the 20s/30s countdown.
     if (emotion === 'idle' || emotion === 'watching') {
       resetInactivityTimers();
-      return;
-    }
-
-    // While actively thinking/happy/shocked, ensure we don't drift into sleepy/sleeping.
-    if (emotion === 'thinking' || emotion === 'shocked' || emotion === 'happy') {
+    } else {
+      // If thinking, happy, shocked, sleepy, sleeping, stop the timers completely
       if (sleepyTimer) clearTimeout(sleepyTimer);
       if (sleepingTimer) clearTimeout(sleepingTimer);
     }

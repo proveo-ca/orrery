@@ -1,7 +1,7 @@
 import { onMount } from 'solid-js';
 import type { Component } from 'solid-js';
 import { BoardWrapper } from './components/ChessBoard';
-import { Avatar } from './components/Avatar';
+import { CoachAvatar } from './components/CoachAvatar.tsx';
 import { CoachAdvice } from './components/CoachAdvice';
 import { BoardActions } from './components/Controls';
 import { NewGamePanel } from './components/NewGamePanel';
@@ -49,7 +49,7 @@ const App: Component = () => {
       <LightSpeedOverlay active={debugLightSpeedOverlay() || isTravelling()} />
 
       <div class="coach-header">
-        <Avatar />
+        <CoachAvatar />
         <CoachAdvice />
       </div>
 

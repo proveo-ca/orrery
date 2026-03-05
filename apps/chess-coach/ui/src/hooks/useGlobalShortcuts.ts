@@ -5,13 +5,13 @@ import { isTravelling, exitTravel } from '../store/travelState';
 import { useTravelMode } from './useTravelMode';
 
 export function useGlobalShortcuts(resetInactivityTimers: () => void) {
-  const { activateTravel } = useTravelMode();
+  const { activateTravel, loading } = useTravelMode();
 
   const handleKeyDown = (e: KeyboardEvent) => {
     resetInactivityTimers();
     const isReplaying = currentIndex() < fenHistory().length - 1;
 
-    if (e.code === 'Space' && hoverBlunder() && !isTravelling()) {
+    if (e.code === 'Space' && hoverBlunder() && !isTravelling() && !loading()) {
       e.preventDefault();
       const fen = hoverBlunderFen();
       if (fen) activateTravel(fen);

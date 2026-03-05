@@ -100,3 +100,60 @@ export const setCoachEmotion = (emotion: CoachEmotion, autoResetMs?: number) => 
     }, autoResetMs);
   }
 };
+
+// ===== Event Dispatcher =====
+export type CoachEvent = 
+  | { type: 'APP_READY' }
+  | { type: 'APP_ERROR' }
+  | { type: 'NEW_GAME' }
+  | { type: 'HUMAN_MOVE_BEST' }
+  | { type: 'HUMAN_MOVE_NORMAL' }
+  | { type: 'AI_THINKING' }
+  | { type: 'AI_MOVED' }
+  | { type: 'AI_ERROR' }
+  | { type: 'GAME_OVER'; result: 'win' | 'loss' | 'draw' }
+  | { type: 'ADVICE_RECEIVED'; isBlunder: boolean }
+  | { type: 'SLEEPY' }
+  | { type: 'SLEEPING' }
+  | { type: 'WAKE_UP' };
+
+export const dispatchCoachEvent = (event: CoachEvent) => {
+  switch (event.type) {
+    case 'APP_READY':
+    case 'AI_MOVED':
+    case 'WAKE_UP':
+      setCoachEmotion('idle');
+      break;
+    case 'APP_ERROR':
+      setCoachEmotion('shocked');
+      break;
+    case 'NEW_GAME':
+      setCoachEmotion('happy', 2000);
+      break;
+    case 'HUMAN_MOVE_BEST':
+      setCoachEmotion('happy'); // Stays happy until AI moves
+      break;
+    case 'HUMAN_MOVE_NORMAL':
+    case 'AI_THINKING':
+      setCoachEmotion('thinking');
+      break;
+    case 'AI_ERROR':
+      setCoachEmotion('shocked', 3000);
+      break;
+    case 'GAME_OVER':
+      if (event.result === 'win') setCoachEmotion('shocked');
+      else if (event.result === 'loss') setCoachEmotion('happy');
+      else setCoachEmotion('sleepy');
+      break;
+    case 'ADVICE_RECEIVED':
+      if (event.isBlunder) setCoachEmotion('shocked', 3000);
+      else setCoachEmotion('idle');
+      break;
+    case 'SLEEPY':
+      setCoachEmotion('sleepy');
+      break;
+    case 'SLEEPING':
+      setCoachEmotion('sleeping');
+      break;
+  }
+};

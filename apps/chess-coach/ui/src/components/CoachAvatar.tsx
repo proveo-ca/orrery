@@ -1,8 +1,8 @@
 import type { Component } from 'solid-js';
-import { coachEmotion } from '../store/coachState';
-import './Avatar.css';
+import { coachEmotion } from '../store';
+import './CoachAvatar.css';
 
-export const Avatar: Component = () => {
+export const CoachAvatar: Component = () => {
   return (
     <div class={"cat " + coachEmotion()}>
       <div class="ear ear--left"></div>

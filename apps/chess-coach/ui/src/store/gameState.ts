@@ -1,4 +1,4 @@
-import { createStore } from 'solid-js/store';
+import { createPersistedStore } from './createPersistedStore';
 import { colorPref, setActivePlayerColor } from './settingsState';
 import { setAdvice, setCoachEmotion } from './coachState';
 
@@ -6,7 +6,7 @@ const STARTING_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 
 export type MoveSquares = { from: string; to: string };
 
-const [gameState, setGameState] = createStore({
+const [gameState, setGameState] = createPersistedStore('chess_coach_game_state', {
   fenHistory: [STARTING_FEN] as string[],
   moveHistory: [] as (MoveSquares | null)[],
   currentIndex: 0

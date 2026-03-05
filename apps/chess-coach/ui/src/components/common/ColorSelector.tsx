@@ -1,5 +1,6 @@
 import type { Component } from 'solid-js';
 import type { PlayerColorPref } from '../../store/settingsState';
+import { Button } from './Button';
 import './ColorSelector.css';
 
 interface Props {
@@ -10,18 +11,18 @@ interface Props {
 export const ColorSelector: Component<Props> = (props) => {
   return (
     <div class="color-selector">
-      <button 
+      <Button 
         class={props.value === 'w' ? 'active' : ''} 
         onClick={() => props.onChange('w')}
-      >White</button>
-      <button 
+      >White</Button>
+      <Button 
         class={props.value === 'random' ? 'active' : ''} 
         onClick={() => props.onChange('random')}
-      >Random</button>
-      <button 
+      >Random</Button>
+      <Button 
         class={props.value === 'b' ? 'active' : ''} 
         onClick={() => props.onChange('b')}
-      >Black</button>
+      >Black</Button>
     </div>
   );
 };

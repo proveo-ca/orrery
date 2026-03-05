@@ -1,6 +1,6 @@
 import { Show, createMemo } from 'solid-js';
 import type { Component } from 'solid-js';
-import { currentFen, currentIndex, fenHistory } from '../store/gameState';
+import { currentFen, currentIndex, fenHistory } from '../store';
 import { isTravelling } from '../store/travelState';
 import './Controls.css';
 

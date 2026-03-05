@@ -1,9 +1,9 @@
-import { createStore } from 'solid-js/store';
+import { createPersistedStore } from './createPersistedStore';
 
 export type PlayerColorPref = 'w' | 'b' | 'random';
 export type Difficulty = 'intermediate' | 'advanced' | 'expert';
 
-const [settingsState, setSettingsState] = createStore({
+const [settingsState, setSettingsState] = createPersistedStore('chess_coach_settings_state', {
   colorPref: 'w' as PlayerColorPref,
   activePlayerColor: 'w' as 'w' | 'b',
   difficulty: 'intermediate' as Difficulty

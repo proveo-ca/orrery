@@ -1,10 +1,8 @@
 import { Chess, type Square } from 'chess.js';
 import { createSignal } from 'solid-js';
-import { setAdvice, setCoachEmotion, thinkingPhrases, bestMovePhrases } from '../store/coachState';
-import { addMoveToHistory } from '../store/gameState';
-import { difficulty } from '../store/settingsState';
+import { addMoveToHistory, difficulty, setAdvice, setCoachEmotion, thinkingPhrases, bestMovePhrases } from '../store';
 import { logger } from '../utils/logger';
-import { postAdvice, postMove } from '../services/api';
+import { postAdviceStream, postMove } from '../services/api';
 
 type ExecuteMoveParams = {
   game: Chess;
@@ -63,7 +61,7 @@ export function useMoveExecutor(apiUrl: string, stopStockfish: () => void) {
       if (params.stockfishBestMove && humanMoveLan === params.stockfishBestMove) {
         const phrases = bestMovePhrases();
         setAdvice(phrases[Math.floor(Math.random() * phrases.length)]);
-        setCoachEmotion('happy', 3000);
+        setCoachEmotion('happy'); // Stay happy while waiting for AI move
       } else {
         setCoachEmotion('thinking');
         const phrases = thinkingPhrases();
@@ -106,14 +104,24 @@ export function useMoveExecutor(apiUrl: string, stopStockfish: () => void) {
       setAdviceAbortController(controller);
 
       try {
-        const adviceData = await postAdvice(
+        let fullAdvice = '';
+        let receivedFirstChunk = false;
+
+        await postAdviceStream(
           apiUrl,
           { humanMove: humanMoveSan, aiMove: moveData.move, fen: moveData.fen },
+          (chunk) => {
+            if (!receivedFirstChunk) {
+              fullAdvice = ''; // Clear the "thinking" phrase on first token
+              receivedFirstChunk = true;
+            }
+            fullAdvice += chunk;
+            setAdvice(fullAdvice);
+          },
           { signal: controller.signal }
         );
 
-        setAdvice(adviceData.advice);
-        const adviceLower = adviceData.advice.toLowerCase();
+        const adviceLower = fullAdvice.toLowerCase();
         if (adviceLower.includes('blunder') || adviceLower.includes('mistake')) {
           setCoachEmotion('shocked', 3000);
         } else {

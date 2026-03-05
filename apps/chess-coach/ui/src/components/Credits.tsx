@@ -31,9 +31,21 @@ export const Credits: Component<Props> = (props) => {
             </a>
           </li>
           <li>
-            <strong>The Brain:</strong> by Maia <br />
+            <strong>The Brain (Chess Moves):</strong> by Maia <br />
             <a href="https://maiachess.com/" target="_blank" rel="noopener noreferrer">
               maiachess.com
+            </a>
+          </li>
+          <li>
+            <strong>The Brain (Chess Commentary):</strong> by NAKST Studio <br />
+            <a href="https://nakststudio.com/" target="_blank" rel="noopener noreferrer">
+              nakststudio.com
+            </a>
+          </li>
+          <li>
+            <strong>All running in your PC:</strong> by Roberto von Schoettler <br />
+            <a href="https://github.com/proveo-ca" target="_blank" rel="noopener noreferrer">
+              github.com/proveo-ca
             </a>
           </li>
         </ul>

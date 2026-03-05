@@ -19,7 +19,8 @@ data class DaemonRequest(
     val humanMoveSan: String = "",
     val aiMove: String = "",
     val fenAfterHuman: String = "",
-    val fen: String = ""
+    val fen: String = "",
+    val fenBefore: String = ""
 )
 
 @Serializable
@@ -29,7 +30,9 @@ data class DaemonResponse(
     val advice: String = "",
     val explanation: String = "",
     val hints: List<String> = emptyList(),
-    val phrases: UiPhrases? = null
+    val phrases: UiPhrases? = null,
+    val chunk: String? = null,
+    val done: Boolean = false
 )
 
 fun main(args: Array<String>) = runBlocking {
@@ -68,12 +71,18 @@ fun main(args: Array<String>) = runBlocking {
                                 DaemonResponse(fen = result.fen, move = result.move)
                             }
                             "advice" -> {
-                                val advice = orchestrator.generateAdvice(req.humanMoveSan, req.aiMove, req.fenAfterHuman)
-                                DaemonResponse(advice = advice)
+                                orchestrator.generateAdviceStream(req.humanMoveSan, req.aiMove, req.fenAfterHuman).collect { chunk ->
+                                    println(json.encodeToString(DaemonResponse(chunk = chunk)))
+                                    System.out.flush()
+                                }
+                                DaemonResponse(done = true)
                             }
                             "explain" -> {
-                                val explanation = orchestrator.generateExplanation(req.fen)
-                                DaemonResponse(explanation = explanation)
+                                orchestrator.generateExplanationStream(req.fenBefore, req.fen).collect { chunk ->
+                                    println(json.encodeToString(DaemonResponse(chunk = chunk)))
+                                    System.out.flush()
+                                }
+                                DaemonResponse(done = true)
                             }
                             else -> DaemonResponse()
                         }

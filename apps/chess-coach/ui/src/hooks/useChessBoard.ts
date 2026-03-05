@@ -20,7 +20,7 @@ export function useChessBoard() {
   const { send, analysis } = useStockfishWorker('/stockfish-18-lite.js');
   const moveExecutor = useMoveExecutor(API_URL, () => send('stop'));
 
-  const isReplaying = () => currentIndex() < fenHistory().length - 1;
+  const isReplaying = () => isTravelling() || currentIndex() < fenHistory().length - 1;
 
   let evalTimeout: number | undefined;
   let hoverEvalSeq = 0;
@@ -43,7 +43,7 @@ export function useChessBoard() {
   createEffect(() => {
     // If the base coach state becomes something "active" (thinking/happy/shocked/sleepy/etc),
     // ensure hover doesn't mask it.
-    if (!canApplyHoverOverride()) {
+    if (!canApplyHoverOverride() && !isTravelling()) {
       clearHoverOverride();
       setCurrentHoverEval(null);
       send('stop');
@@ -110,7 +110,9 @@ export function useChessBoard() {
     setSelectedSquare(null);
     setHoveredSquare(null);
     setValidMoves([]);
-    clearHoverOverride();
+    if (!isTravelling()) {
+      clearHoverOverride();
+    }
     setCurrentHoverEval(null);
     send('stop');
   });

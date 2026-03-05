@@ -1,9 +1,9 @@
 import { Chess } from 'chess.js';
 import { createSignal } from 'solid-js';
-import type { MoveSquares } from '../store/gameState';
+import { type MoveSquares, currentFen, setHoverAdvice, setHoverEmotion } from '../store';
 import { startTravel } from '../store/travelState';
-import { setHoverAdvice, setHoverEmotion } from '../store/coachState';
 import { stockfishService } from '../services/stockfishService';
+import { postExplainStream } from '../services/api';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
@@ -56,20 +56,28 @@ export function useTravelMode(workerPath: string = '/stockfish-18-lite.js') {
 
   const activateTravel = async (blunderFen: string) => {
     setLoading(true);
-    setHoverAdvice('Travelling...');
+    setHoverAdvice('Travelling to the future...');
     setHoverEmotion('thinking');
 
+    // Lock the board immediately so mouse movements don't clear the hover state
+    startTravel([blunderFen], [null]);
+
     // Fire off the explanation request in parallel
-    fetch(`${API_URL}/explain`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fen: blunderFen })
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data.explanation) setHoverAdvice(data.explanation);
-      })
-      .catch(err => console.error('Failed to fetch explanation', err));
+    let fullExplanation = '';
+    let receivedFirstChunk = false;
+    
+    postExplainStream(
+      API_URL,
+      { fenBefore: currentFen(), fenAfter: blunderFen },
+      (chunk) => {
+        if (!receivedFirstChunk) {
+          fullExplanation = ''; // Clear "Travelling..." on first token
+          receivedFirstChunk = true;
+        }
+        fullExplanation += chunk;
+        setHoverAdvice(fullExplanation);
+      }
+    ).catch(err => console.error('Failed to fetch explanation stream', err));
 
     try {
       const pv = await requestPV(blunderFen, 12);

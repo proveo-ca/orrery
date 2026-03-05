@@ -6,6 +6,7 @@ import {isTravelling, travelIndex, travelFenHistory, travelBack, travelForward, 
 import {useHint} from '../hooks/useHint';
 import {Credits} from './Credits';
 import {TurnLabel} from './TurnLabel';
+import {Button} from './common/Button';
 import './Controls.css';
 
 export const BoardActions: Component = () => {
@@ -67,12 +68,12 @@ export const BoardActions: Component = () => {
   return (
     <div class="board-actions">
       <div class="nav-row">
-        <button onClick={handleBack} disabled={atStart() && !isTravelling()}>
+        <Button onClick={handleBack} disabled={atStart() && !isTravelling()}>
           &larr;
-        </button>
-        <button onClick={handleForward} disabled={atLatest()}>
+        </Button>
+        <Button onClick={handleForward} disabled={atLatest()}>
           &rarr;
-        </button>
+        </Button>
       </div>
 
       {(isTravelling() || isReplaying()) && (
@@ -81,15 +82,15 @@ export const BoardActions: Component = () => {
             Move {travelIndex()}/{travelFenHistory().length - 1}
           </span>}
           {isReplaying() && <TurnLabel/>}
-          <button class="back-to-live" onClick={handleBackToLive}>Back to Live</button>
+          <Button class="back-to-live" onClick={handleBackToLive}>Back to Live</Button>
         </div>
       )}
 
       <div class="nav-row">
-        <button onClick={handleHint} disabled={pendingHint() || isReplaying() || isTravelling()}>
+        <Button onClick={handleHint} disabled={pendingHint() || isReplaying() || isTravelling()}>
           {pendingHint() ? 'Thinking...' : 'Hint'}
-        </button>
-        <button onClick={() => setShowCredits(true)} disabled={isReplaying() || isTravelling()}>Credits</button>
+        </Button>
+        <Button onClick={() => setShowCredits(true)} disabled={isReplaying() || isTravelling()}>Credits</Button>
 
         <Credits open={showCredits()} onClose={() => setShowCredits(false)}/>
       </div>

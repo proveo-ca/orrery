@@ -5,7 +5,7 @@ export type MoveRequest = { humanMoveSan: string; fenAfterHuman: string; difficu
 export type MoveResponse = { fen: string; move: string; advice?: string };
 
 export type AdviceRequest = { humanMove: string; aiMove: string; fen: string };
-export type AdviceResponse = { advice: string };
+export type ExplainRequest = { fenBefore: string; fenAfter: string };
 
 export type HelloResponse = {
   model: string;
@@ -46,21 +46,58 @@ export async function postMove(apiUrl: string, request: MoveRequest): Promise<Mo
   return moveResponse.json();
 }
 
-export async function postAdvice(
+export async function postAdviceStream(
   apiUrl: string,
   request: AdviceRequest,
+  onChunk: (chunk: string) => void,
   options?: { signal?: AbortSignal }
-): Promise<AdviceResponse> {
-  const adviceResponse = await fetch(`${apiUrl}/advice`, {
+): Promise<void> {
+  const response = await fetch(`${apiUrl}/advice`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(request),
     signal: options?.signal
   });
 
-  if (!adviceResponse.ok) {
+  if (!response.ok || !response.body) {
     throw new Error('advice request failed');
   }
 
-  return adviceResponse.json();
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  while (true) {
+    const { value, done } = await reader.read();
+    if (value) {
+      onChunk(decoder.decode(value, { stream: true }));
+    }
+    if (done) break;
+  }
+}
+
+export async function postExplainStream(
+  apiUrl: string,
+  request: ExplainRequest,
+  onChunk: (chunk: string) => void,
+  options?: { signal?: AbortSignal }
+): Promise<void> {
+  const response = await fetch(`${apiUrl}/explain`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+    signal: options?.signal
+  });
+
+  if (!response.ok || !response.body) {
+    throw new Error('explain request failed');
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  while (true) {
+    const { value, done } = await reader.read();
+    if (value) {
+      onChunk(decoder.decode(value, { stream: true }));
+    }
+    if (done) break;
+  }
 }

@@ -1,6 +1,6 @@
 import { For, Show } from 'solid-js';
 import type { Component } from 'solid-js';
-import { advice, setAdviceHoveredSquares, hoverBlunder } from '../store/coachState';
+import { advice, setAdviceHoveredSquares, hoverBlunder } from '../store';
 import { isTravelling } from '../store/travelState';
 import './CoachAdvice.css';
 

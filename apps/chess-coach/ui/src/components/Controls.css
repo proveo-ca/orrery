@@ -28,6 +28,7 @@
   margin-bottom: var(--spacing-md);
   justify-content: space-between;
   align-items: center;
+  height: 4rem;
   width: 100%;
 }
 

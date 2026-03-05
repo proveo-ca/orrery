@@ -3,6 +3,7 @@ package api.routes
 import api.models.*
 import api.services.HarnessInvoker
 import api.services.StateReader
+import io.ktor.http.ContentType
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -36,21 +37,23 @@ fun Application.configureRouting(invoker: HarnessInvoker, stateReader: StateRead
         post("/advice") {
             val request = call.receive<AdviceRequest>()
             
-            // Block and wait for the harness to generate advice
-            val advice = invoker.executeAdvice(request.humanMove, request.aiMove, request.fen)
-            
-            // Note: AdviceRequest keeps its own field names (humanMove/aiMove/fen)
-            // because it describes a completed exchange, not a "please apply" request.
-            call.respond(AdviceResponse(advice = advice))
+            call.respondTextWriter(contentType = ContentType.Text.Plain) {
+                invoker.executeAdviceStream(request.humanMove, request.aiMove, request.fen).collect { chunk ->
+                    write(chunk)
+                    flush()
+                }
+            }
         }
 
         post("/explain") {
             val request = call.receive<ExplainRequest>()
             
-            // Ask the LLM why this specific FEN is a blunder
-            val explanation = invoker.executeExplain(request.fen)
-            
-            call.respond(ExplainResponse(explanation = explanation))
+            call.respondTextWriter(contentType = ContentType.Text.Plain) {
+                invoker.executeExplainStream(request.fenBefore, request.fenAfter).collect { chunk ->
+                    write(chunk)
+                    flush()
+                }
+            }
         }
         
         post("/new") {

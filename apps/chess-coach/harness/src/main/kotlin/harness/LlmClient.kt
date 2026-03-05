@@ -6,8 +6,13 @@ import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.request.*
+import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
+import io.ktor.utils.io.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -20,7 +25,8 @@ data class ChatRequest(
     val messages: List<ChatMessage>,
     val stream: Boolean = false,
     val temperature: Double = 0.7,
-    val format: String? = null
+    val format: String? = null,
+    @SerialName("max_tokens") val maxTokens: Int? = null
 )
 
 @Serializable
@@ -28,6 +34,12 @@ data class ChatChoice(val message: ChatMessage)
 
 @Serializable
 data class ChatResponse(val choices: List<ChatChoice>)
+
+@Serializable
+data class ChatChunkChoice(val delta: ChatMessage)
+
+@Serializable
+data class ChatChunkResponse(val choices: List<ChatChunkChoice>)
 
 class LlmClient {
     // Configuration via Environment Variables
@@ -60,7 +72,8 @@ class LlmClient {
         userPrompt: String, 
         model: String = generalModel,
         temperature: Double = 0.7,
-        format: String? = null
+        format: String? = null,
+        maxTokens: Int? = null
     ): String {
         val requestPayload = ChatRequest(
             model = model,
@@ -69,7 +82,8 @@ class LlmClient {
                 ChatMessage(role = "user", content = userPrompt)
             ),
             temperature = temperature,
-            format = format
+            format = format,
+            maxTokens = maxTokens
         )
 
         val response: ChatResponse = client.post("$baseUrl/chat/completions") {
@@ -84,6 +98,52 @@ class LlmClient {
         }.body()
 
         return response.choices.firstOrNull()?.message?.content ?: ""
+    }
+
+    suspend fun promptStream(
+        systemPrompt: String, 
+        userPrompt: String, 
+        model: String = generalModel,
+        temperature: Double = 0.7,
+        maxTokens: Int? = null
+    ): Flow<String> = flow {
+        val requestPayload = ChatRequest(
+            model = model,
+            messages = listOf(
+                ChatMessage(role = "system", content = systemPrompt),
+                ChatMessage(role = "user", content = userPrompt)
+            ),
+            stream = true,
+            temperature = temperature,
+            maxTokens = maxTokens
+        )
+
+        val jsonParser = Json { ignoreUnknownKeys = true }
+
+        client.preparePost("$baseUrl/chat/completions") {
+            contentType(ContentType.Application.Json)
+            if (!apiKey.isNullOrBlank()) {
+                bearerAuth(apiKey)
+            }
+            setBody(requestPayload)
+        }.execute { response ->
+            val channel = response.bodyAsChannel()
+            while (!channel.isClosedForRead) {
+                val line = channel.readUTF8Line() ?: break
+                if (line.startsWith("data: ") && line != "data: [DONE]") {
+                    val jsonStr = line.removePrefix("data: ")
+                    try {
+                        val chunk = jsonParser.decodeFromString<ChatChunkResponse>(jsonStr)
+                        val content = chunk.choices.firstOrNull()?.delta?.content ?: ""
+                        if (content.isNotEmpty()) {
+                            emit(content)
+                        }
+                    } catch (e: Exception) {
+                        // Ignore parse errors for partial/malformed chunks
+                    }
+                }
+            }
+        }
     }
     
     fun close() {

@@ -1,5 +1,6 @@
 package harness
 
+import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -76,7 +77,7 @@ Tag: Good
 BestAlt: ${evalResult.bestMove}
 CP: $cpString"""
         
-        val rawAdvice = llmClient.prompt(adviceSystemPrompt, adviceUserPrompt, llmClient.commentaryModel, temperature = 0.7)
+        val rawAdvice = llmClient.prompt(adviceSystemPrompt, adviceUserPrompt, llmClient.commentaryModel, temperature = 0.7, maxTokens = 150)
         System.err.println("Coach Advice generated.")
         
         // Extract just the commentary part if the model returns the full block
@@ -84,29 +85,87 @@ CP: $cpString"""
         return commentaryMatch?.groupValues?.get(1)?.trim() ?: rawAdvice
     }
 
-    suspend fun generateExplanation(currentFen: String): String {
-        System.err.println("Generating blunder explanation...")
+    suspend fun generateAdviceStream(humanMove: String, aiMove: String, currentFen: String): Flow<String> {
+        System.err.println("Generating coaching advice stream...")
         val evalResult = engineBridge.getEvaluation(currentFen, depth = 15)
         
         val activeColor = currentFen.split(" ").getOrNull(1) ?: "w"
+        val aiColor = if (activeColor == "w") "Black" else "White"
+        val humanColor = if (aiColor == "White") "Black" else "White"
+
+        val adviceSystemPrompt = "Generate professional chess commentary in the specified language. Always use Standard Algebraic Notation (SAN) for moves (e.g., Nf3, e4). For Type=standard use 30–40 words. For Type=explanation, explain the best move briefly (≤50 words). Return exactly: Commentary, Predicted ELO, Verified Classification."
+        
+        val cpString = if (evalResult.isMate) "Mate in ${evalResult.mateIn}" else "${evalResult.cp}->${evalResult.cp} (Δ=0)"
+        val safeHumanMove = if (humanMove.isBlank()) "e4" else humanMove
+
+        val adviceUserPrompt = """LanguageL: English
+LangCode: en
+Type: standard
+FEN: $currentFen
+MoveSAN: $safeHumanMove
+Side: $humanColor
+Actor: human
+Gender: neutral
+Tag: Good
+BestAlt: ${evalResult.bestMove}
+CP: $cpString"""
+        
+        return llmClient.promptStream(adviceSystemPrompt, adviceUserPrompt, llmClient.commentaryModel, temperature = 0.7, maxTokens = 150)
+    }
+
+    suspend fun generateExplanation(fenBefore: String, fenAfter: String): String {
+        System.err.println("Generating blunder explanation...")
+        val evalResult = engineBridge.getEvaluation(fenAfter, depth = 15)
+        
+        val activeColor = fenAfter.split(" ").getOrNull(1) ?: "w"
         val humanColor = if (activeColor == "w") "White" else "Black"
 
-        val explainSystemPrompt = "You are a helpful chess coach. Explain briefly (under 40 words) why the last move resulting in this position is a blunder or mistake. Focus on the immediate tactical problem."
+        val explainSystemPrompt = "You are a chess expert. The user played a move that changed the board from 'Before FEN' to 'After FEN'. This move is a blunder. Explain in exactly ONE short sentence why it is a blunder. Do not provide any formatting, greetings, or extra text."
         
         val cpString = if (evalResult.isMate) "Mate in ${evalResult.mateIn}" else "${evalResult.cp}"
 
-        val explainUserPrompt = """FEN: $currentFen
-Side to move: $humanColor
-Best alternative: ${evalResult.bestMove}
-Current Eval: $cpString"""
+        val explainUserPrompt = """Before FEN: $fenBefore
+After FEN: $fenAfter
+Side to move (after): $humanColor
+Best alternative (after): ${evalResult.bestMove}
+Current Eval (after): $cpString"""
         
-        val rawExplanation = llmClient.prompt(explainSystemPrompt, explainUserPrompt, llmClient.commentaryModel, temperature = 0.7)
+        val rawExplanation = llmClient.prompt(explainSystemPrompt, explainUserPrompt, llmClient.commentaryModel, temperature = 0.7, maxTokens = 60)
         System.err.println("Explanation generated.")
         
         return rawExplanation.trim()
     }
 
+    suspend fun generateExplanationStream(fenBefore: String, fenAfter: String): Flow<String> {
+        System.err.println("Generating blunder explanation stream...")
+        val evalResult = engineBridge.getEvaluation(fenAfter, depth = 15)
+        
+        val activeColor = fenAfter.split(" ").getOrNull(1) ?: "w"
+        val humanColor = if (activeColor == "w") "White" else "Black"
+
+        val explainSystemPrompt = "You are a chess expert. The user played a move that changed the board from 'Before FEN' to 'After FEN'. This move is a blunder. Explain in exactly ONE short sentence why it is a blunder. Do not provide any formatting, greetings, or extra text."
+        
+        val cpString = if (evalResult.isMate) "Mate in ${evalResult.mateIn}" else "${evalResult.cp}"
+
+        val explainUserPrompt = """Before FEN: $fenBefore
+After FEN: $fenAfter
+Side to move (after): $humanColor
+Best alternative (after): ${evalResult.bestMove}
+Current Eval (after): $cpString"""
+        
+        return llmClient.promptStream(explainSystemPrompt, explainUserPrompt, llmClient.commentaryModel, temperature = 0.7, maxTokens = 60)
+    }
+
     suspend fun generateUiPhrases(): UiPhrases {
+        // Warm up the model into VRAM on startup
+        try {
+            System.err.println("Warming up LLM into VRAM...")
+            llmClient.prompt("System", "Ping", llmClient.commentaryModel, maxTokens = 1)
+            System.err.println("LLM Warmup complete.")
+        } catch (e: Exception) {
+            System.err.println("LLM Warmup failed: ${e.message}")
+        }
+
         return UiPhrases(
             thinking = listOf("Hmm...", "Let me think...", "Interesting position...", "Rats...", "What to do..."),
             bestMove = listOf("Great move!", "Excellent!", "I like that.", "Strong play.", "Well done.")

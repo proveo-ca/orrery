@@ -6,6 +6,9 @@ import api.models.HelloPhrases
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.encodeToString
@@ -108,6 +111,38 @@ class HarnessInvoker(private val harnessCommand: String = "./harness/bin/chess-c
         }
     }
 
+    private fun sendDaemonRequestStream(req: DaemonRequest): Flow<String> = flow {
+        daemonMutex.withLock {
+            inFlight.incrementAndGet()
+            try {
+                ensureDaemonStarted()
+                lastUsedAtMs = System.currentTimeMillis()
+
+                val writer = daemonWriter
+                    ?: throw IllegalStateException("Harness daemon writer not available")
+                val reader = daemonReader
+                    ?: throw IllegalStateException("Harness daemon reader not available")
+
+                writer.write(json.encodeToString(req) + "\n")
+                writer.flush()
+
+                while (true) {
+                    val line = reader.readLine() ?: break
+                    val res = json.decodeFromString<DaemonResponse>(line)
+                    if (res.chunk != null) {
+                        emit(res.chunk)
+                    }
+                    if (res.done) {
+                        break
+                    }
+                }
+            } finally {
+                inFlight.decrementAndGet()
+                lastUsedAtMs = System.currentTimeMillis()
+            }
+        }
+    }.flowOn(Dispatchers.IO)
+
     suspend fun executeHello(): HelloPhrases {
         val res = sendDaemonRequest(DaemonRequest(command = "hello"))
         return res.phrases ?: HelloPhrases(emptyList(), emptyList())
@@ -121,16 +156,14 @@ class HarnessInvoker(private val harnessCommand: String = "./harness/bin/chess-c
         return MoveResult(fen = res.fen, move = res.move)
     }
 
-    suspend fun executeAdvice(humanMoveSan: String, aiMove: String, fenAfterHuman: String): String {
-        println("Invoking harness daemon for advice")
-        val res = sendDaemonRequest(DaemonRequest(command = "advice", humanMoveSan = humanMoveSan, aiMove = aiMove, fenAfterHuman = fenAfterHuman))
-        return res.advice
+    fun executeAdviceStream(humanMoveSan: String, aiMove: String, fenAfterHuman: String): Flow<String> {
+        println("Invoking harness daemon for advice stream")
+        return sendDaemonRequestStream(DaemonRequest(command = "advice", humanMoveSan = humanMoveSan, aiMove = aiMove, fenAfterHuman = fenAfterHuman))
     }
 
-    suspend fun executeExplain(fen: String): String {
-        println("Invoking harness daemon for explanation")
-        val res = sendDaemonRequest(DaemonRequest(command = "explain", fen = fen))
-        return res.explanation
+    fun executeExplainStream(fenBefore: String, fenAfter: String): Flow<String> {
+        println("Invoking harness daemon for explanation stream")
+        return sendDaemonRequestStream(DaemonRequest(command = "explain", fenBefore = fenBefore, fen = fenAfter))
     }
 
 }
