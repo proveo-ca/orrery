@@ -1,4 +1,4 @@
-import { createEffect, onMount, onCleanup } from 'solid-js';
+import { onMount, onCleanup } from 'solid-js';
 import type { Component } from 'solid-js';
 import { BoardWrapper } from './components/ChessBoard';
 import { Avatar } from './components/Avatar';
@@ -10,10 +10,11 @@ import { HistoryOverlay } from './components/common/HistoryOverlay';
 import { LightSpeedOverlay } from './components/common/LightSpeedOverlay';
 import { initGlobalLogging, logger } from './utils/logger';
 import { fetchHello } from './services/api';
-import { coachEmotion, hoverBlunder, hoverBlunderFen, setAdvice, setBestMovePhrases, setCoachEmotion, setThinkingPhrases } from './store';
+import { hoverBlunder, hoverBlunderFen, setAdvice, setBestMovePhrases, setCoachEmotion, setThinkingPhrases } from './store';
 import { currentIndex, fenHistory, goForward, clearHoverOverride } from './store';
 import { isTravelling, exitTravel } from './store/travelState';
 import { useTravelMode } from './hooks/useTravelMode';
+import { useInactivityTimers } from './hooks/useInactivityTimers';
 import './theme.css';
 import './App.css';
 
@@ -21,48 +22,9 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
 const App: Component = () => {
   const { activateTravel } = useTravelMode();
-  let sleepyTimer: number | undefined;
-  let sleepingTimer: number | undefined;
+  const { resetInactivityTimers } = useInactivityTimers();
 
   const isReplaying = () => currentIndex() < fenHistory().length - 1;
-
-  const resetInactivityTimers = () => {
-    if (sleepyTimer) clearTimeout(sleepyTimer);
-    if (sleepingTimer) clearTimeout(sleepingTimer);
-
-    // Only wake up if currently sleepy or sleeping
-    if (coachEmotion() === 'sleepy' || coachEmotion() === 'sleeping') {
-      setCoachEmotion('idle');
-    }
-
-    // Don't start sleep timers if she is actively thinking, happy, or shocked
-    if (coachEmotion() !== 'thinking' && coachEmotion() !== 'shocked' && coachEmotion() !== 'happy') {
-      sleepyTimer = window.setTimeout(() => {
-        setCoachEmotion('sleepy');
-      }, 20000);
-
-      sleepingTimer = window.setTimeout(() => {
-        setCoachEmotion('sleeping');
-      }, 30000);
-    }
-  };
-
-  createEffect(() => {
-    const emotion = coachEmotion();
-
-    // When internal state changes back to "idle" (or "watching") without user activity,
-    // restart the inactivity timers so "sleepy/sleeping" can still happen later.
-    if (emotion === 'idle' || emotion === 'watching') {
-      resetInactivityTimers();
-      return;
-    }
-
-    // While actively thinking/happy/shocked, ensure we don't drift into sleepy/sleeping.
-    if (emotion === 'thinking' || emotion === 'shocked' || emotion === 'happy') {
-      if (sleepyTimer) clearTimeout(sleepyTimer);
-      if (sleepingTimer) clearTimeout(sleepingTimer);
-    }
-  });
 
   const handleKeyDown = (e: KeyboardEvent) => {
     resetInactivityTimers();
@@ -87,9 +49,7 @@ const App: Component = () => {
     logger.action('App Mounted');
     
     // Set up global activity listeners
-    window.addEventListener('mousemove', resetInactivityTimers);
     window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('click', resetInactivityTimers);
     
     try {
       const helloData = await fetchHello(API_URL);
@@ -106,11 +66,7 @@ const App: Component = () => {
   });
 
   onCleanup(() => {
-    window.removeEventListener('mousemove', resetInactivityTimers);
     window.removeEventListener('keydown', handleKeyDown);
-    window.removeEventListener('click', resetInactivityTimers);
-    if (sleepyTimer) clearTimeout(sleepyTimer);
-    if (sleepingTimer) clearTimeout(sleepingTimer);
   });
 
   return (
