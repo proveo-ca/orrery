@@ -1,6 +1,6 @@
 import { createPersistedStore } from './createPersistedStore';
 import { colorPref, setActivePlayerColor } from './settingsState';
-import { setAdvice, setCoachEmotion } from './coachState';
+import { setAdvice, dispatchCoachEvent } from './coachState';
 
 const STARTING_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 
@@ -64,5 +64,5 @@ export const resetGame = (fen: string = STARTING_FEN) => {
     setAdvice("New game! You play Black. I'm thinking...");
   }
 
-  setCoachEmotion('happy', 2000);
+  dispatchCoachEvent({ type: 'NEW_GAME' });
 };

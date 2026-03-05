@@ -9,8 +9,9 @@ import { DebugControls, debugHistoryOverlay, debugLightSpeedOverlay } from './co
 import { HistoryOverlay } from './components/common/HistoryOverlay';
 import { LightSpeedOverlay } from './components/common/LightSpeedOverlay';
 import { initGlobalLogging, logger } from './utils/logger';
-import { fetchHello } from './services/api';
-import { setAdvice, setBestMovePhrases, setCoachEmotion, setThinkingPhrases, currentIndex, fenHistory } from './store';
+import { Chess } from 'chess.js';
+import { fetchHello, postMove, postAdviceStream } from './services/api';
+import { setAdvice, setBestMovePhrases, dispatchCoachEvent, setThinkingPhrases, currentIndex, fenHistory, currentFen, activePlayerColor, difficulty, addMoveToHistory } from './store';
 import { isTravelling } from './store/travelState';
 import { useInactivityTimers } from './hooks/useInactivityTimers';
 import { useGlobalShortcuts } from './hooks/useGlobalShortcuts';
@@ -31,15 +32,60 @@ const App: Component = () => {
     
     try {
       const helloData = await fetchHello(API_URL);
-      setAdvice(helloData.greeting);
+      
+      if (fenHistory().length > 1) {
+        setAdvice("Welcome back! Let's continue our game.");
+      } else {
+        setAdvice(helloData.greeting);
+      }
+      
       setThinkingPhrases(helloData.thinking);
       setBestMovePhrases(helloData.bestMove);
-      setCoachEmotion('idle');
+      dispatchCoachEvent({ type: 'APP_READY' });
       resetInactivityTimers();
+
+      // Check if it's the AI's turn to move
+      const current = currentFen();
+      const game = new Chess(current);
+      const turn = current.split(' ')[1];
+      
+      if (!game.isGameOver() && turn !== activePlayerColor()) {
+        dispatchCoachEvent({ type: 'AI_THINKING' });
+        setAdvice("Let me think about my next move...");
+        
+        postMove(API_URL, {
+          humanMoveSan: "",
+          fenAfterHuman: current,
+          difficulty: difficulty()
+        }).then(async (moveData) => {
+          const aiMove = game.move(moveData.move);
+          addMoveToHistory(moveData.fen, { from: aiMove.from, to: aiMove.to });
+          dispatchCoachEvent({ type: 'AI_MOVED' });
+
+          let fullAdvice = '';
+          let receivedFirstChunk = false;
+          await postAdviceStream(
+            API_URL,
+            { humanMove: "", aiMove: moveData.move, fen: moveData.fen },
+            (chunk) => {
+              if (!receivedFirstChunk) {
+                fullAdvice = '';
+                receivedFirstChunk = true;
+              }
+              fullAdvice += chunk;
+              setAdvice(fullAdvice);
+            }
+          );
+        }).catch(err => {
+          logger.error('Failed to execute AI continuation move', err);
+          setAdvice('Error getting my move.');
+          dispatchCoachEvent({ type: 'AI_ERROR' });
+        });
+      }
     } catch (err) {
       logger.error('Failed to fetch /hello', err);
       setAdvice("Hey! I couldn't connect to the server. Is it running?");
-      setCoachEmotion('shocked');
+      dispatchCoachEvent({ type: 'APP_ERROR' });
     }
   });
 

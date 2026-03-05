@@ -38,9 +38,18 @@ fun Application.configureRouting(invoker: HarnessInvoker, stateReader: StateRead
             val request = call.receive<AdviceRequest>()
             
             call.respondTextWriter(contentType = ContentType.Text.Plain) {
+                var isConnected = true
                 invoker.executeAdviceStream(request.humanMove, request.aiMove, request.fen).collect { chunk ->
-                    write(chunk)
-                    flush()
+                    if (isConnected) {
+                        try {
+                            write(chunk)
+                            flush()
+                        } catch (e: Exception) {
+                            // Client aborted the request. Stop writing, but keep 
+                            // collecting to drain the daemon's output pipe.
+                            isConnected = false
+                        }
+                    }
                 }
             }
         }
@@ -49,9 +58,16 @@ fun Application.configureRouting(invoker: HarnessInvoker, stateReader: StateRead
             val request = call.receive<ExplainRequest>()
             
             call.respondTextWriter(contentType = ContentType.Text.Plain) {
+                var isConnected = true
                 invoker.executeExplainStream(request.fenBefore, request.fenAfter).collect { chunk ->
-                    write(chunk)
-                    flush()
+                    if (isConnected) {
+                        try {
+                            write(chunk)
+                            flush()
+                        } catch (e: Exception) {
+                            isConnected = false
+                        }
+                    }
                 }
             }
         }

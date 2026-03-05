@@ -4,13 +4,16 @@ services:
     container_name: gemma_llm
     ports:
       - "11434:11434"
+    environment:
+      - LLM_GENERAL_MODEL=qwen2.5:7b
+      - LLM_COMMENTARY_MODEL=hf.co/NAKSTStudio/chess-gemma-commentary:Q8_0
     volumes:
       - ollama_data:/root/.ollama
     entrypoint: ["/bin/sh", "-c"]
-    command: ["ollama serve & sleep 5 && ollama pull qwen2.5:7b && ollama pull hf.co/NAKSTStudio/chess-gemma-commentary:Q8_0 && wait"]
+    command: ["ollama serve & sleep 5 && ollama pull $$LLM_GENERAL_MODEL && ollama pull $$LLM_COMMENTARY_MODEL && touch /tmp/models_ready && wait"]
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "ollama list | grep -qi 'qwen2.5:7b' && ollama list | grep -qi 'hf.co/NAKSTStudio/chess-gemma-commentary' || exit 1"]
+      test: ["CMD-SHELL", "test -f /tmp/models_ready || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 30

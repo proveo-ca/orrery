@@ -1,6 +1,6 @@
 import { Chess, type Square } from 'chess.js';
 import { createSignal } from 'solid-js';
-import { addMoveToHistory, difficulty, setAdvice, setCoachEmotion, thinkingPhrases, bestMovePhrases } from '../store';
+import { addMoveToHistory, difficulty, setAdvice, dispatchCoachEvent, thinkingPhrases, bestMovePhrases } from '../store';
 import { logger } from '../utils/logger';
 import { postAdviceStream, postMove } from '../services/api';
 
@@ -46,13 +46,13 @@ export function useMoveExecutor(apiUrl: string, stopStockfish: () => void) {
       // Check if human ended the game
       if (gameCopy.isGameOver()) {
         if (gameCopy.isCheckmate()) {
-          setCoachEmotion('shocked');
+          dispatchCoachEvent({ type: 'GAME_OVER', result: 'win' });
           setAdvice("Checkmate! You win!");
         } else if (gameCopy.isThreefoldRepetition()) {
-          setCoachEmotion('sleepy');
+          dispatchCoachEvent({ type: 'GAME_OVER', result: 'draw' });
           setAdvice("Game over — draw by threefold repetition.");
         } else {
-          setCoachEmotion('sleepy');
+          dispatchCoachEvent({ type: 'GAME_OVER', result: 'draw' });
           setAdvice("Game over. It's a draw.");
         }
         return { didMove: true, fenAfterHuman };
@@ -61,9 +61,9 @@ export function useMoveExecutor(apiUrl: string, stopStockfish: () => void) {
       if (params.stockfishBestMove && humanMoveLan === params.stockfishBestMove) {
         const phrases = bestMovePhrases();
         setAdvice(phrases[Math.floor(Math.random() * phrases.length)]);
-        setCoachEmotion('happy'); // Stay happy while waiting for AI move
+        dispatchCoachEvent({ type: 'HUMAN_MOVE_BEST' });
       } else {
-        setCoachEmotion('thinking');
+        dispatchCoachEvent({ type: 'HUMAN_MOVE_NORMAL' });
         const phrases = thinkingPhrases();
         setAdvice(phrases[Math.floor(Math.random() * phrases.length)]);
       }
@@ -73,7 +73,7 @@ export function useMoveExecutor(apiUrl: string, stopStockfish: () => void) {
         moveData = await postMove(apiUrl, { humanMoveSan, fenAfterHuman, difficulty: difficulty() });
       } catch (e) {
         setAdvice('Error communicating with the coach.');
-        setCoachEmotion('shocked', 2000);
+        dispatchCoachEvent({ type: 'AI_ERROR' });
         return { didMove: true, fenAfterHuman };
       }
       
@@ -85,20 +85,20 @@ export function useMoveExecutor(apiUrl: string, stopStockfish: () => void) {
       const finalGame = new Chess(moveData.fen);
       if (finalGame.isGameOver()) {
         if (finalGame.isCheckmate()) {
-          setCoachEmotion('happy');
+          dispatchCoachEvent({ type: 'GAME_OVER', result: 'loss' });
           setAdvice("Checkmate! I win!");
         } else if (finalGame.isThreefoldRepetition()) {
-          setCoachEmotion('sleepy');
+          dispatchCoachEvent({ type: 'GAME_OVER', result: 'draw' });
           setAdvice("Game over — draw by threefold repetition.");
         } else {
-          setCoachEmotion('sleepy');
+          dispatchCoachEvent({ type: 'GAME_OVER', result: 'draw' });
           setAdvice("Game over. It's a draw.");
         }
         return { didMove: true, fenAfterHuman };
       }
 
       // AI moved — switch to idle while advice loads
-      setCoachEmotion('idle');
+      dispatchCoachEvent({ type: 'AI_MOVED' });
 
       const controller = new AbortController();
       setAdviceAbortController(controller);
@@ -122,17 +122,14 @@ export function useMoveExecutor(apiUrl: string, stopStockfish: () => void) {
         );
 
         const adviceLower = fullAdvice.toLowerCase();
-        if (adviceLower.includes('blunder') || adviceLower.includes('mistake')) {
-          setCoachEmotion('shocked', 3000);
-        } else {
-          setCoachEmotion('idle');
-        }
+        const isBlunder = adviceLower.includes('blunder') || adviceLower.includes('mistake');
+        dispatchCoachEvent({ type: 'ADVICE_RECEIVED', isBlunder });
       } catch (err: any) {
         if (err.name === 'AbortError') {
           logger.action('Advice request aborted due to new move.');
         } else {
           setAdvice('Error getting advice.');
-          setCoachEmotion('shocked', 2000);
+          dispatchCoachEvent({ type: 'AI_ERROR' });
         }
       }
 

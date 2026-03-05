@@ -4,7 +4,7 @@ import {
   addMoveToHistory,
   resetGame,
   setAdvice,
-  setCoachEmotion,
+  dispatchCoachEvent,
   activePlayerColor,
   colorPref,
   difficulty,
@@ -29,7 +29,7 @@ export const NewGamePanel: Component = () => {
       // If player is Black, trigger the AI to make the first move
       if (activePlayerColor() === 'b') {
         const thinkingTimeout = window.setTimeout(() => {
-          setCoachEmotion('thinking');
+          dispatchCoachEvent({ type: 'AI_THINKING' });
         }, 3000);
         try {
           const moveData = await postMove(API_URL, {
@@ -42,11 +42,11 @@ export const NewGamePanel: Component = () => {
           const aiMove = aiGame.move(moveData.move);
           addMoveToHistory(moveData.fen, {from: aiMove.from, to: aiMove.to});
           setAdvice(moveData.advice ?? "I've made my move!");
-          setCoachEmotion('happy', 3000);
+          dispatchCoachEvent({ type: 'AI_MOVED' });
         } catch (e) {
           clearTimeout(thinkingTimeout);
           console.error("Failed to get AI's first move", e);
-          setCoachEmotion('shocked', 3000);
+          dispatchCoachEvent({ type: 'AI_ERROR' });
         }
       }
     } catch (e) {
