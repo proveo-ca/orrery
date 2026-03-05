@@ -43,6 +43,15 @@ fun Application.configureRouting(invoker: HarnessInvoker, stateReader: StateRead
             // because it describes a completed exchange, not a "please apply" request.
             call.respond(AdviceResponse(advice = advice))
         }
+
+        post("/explain") {
+            val request = call.receive<ExplainRequest>()
+            
+            // Ask the LLM why this specific FEN is a blunder
+            val explanation = invoker.executeExplain(request.fen)
+            
+            call.respond(ExplainResponse(explanation = explanation))
+        }
         
         post("/new") {
             // Reset the game state files
