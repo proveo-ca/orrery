@@ -3,13 +3,14 @@
   justify-content: center;
   filter: none;
   transition: filter 220ms ease;
+  width: 100%;
 }
 
 .chessboard {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
-  width: 480px;
-  height: 480px;
+  width: var(--board-size);
+  height: var(--board-size);
   border: 4px solid #2c2c2c;
   border-radius: 4px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.3);
@@ -18,8 +19,8 @@
 
 
 .square {
-  width: 60px;
-  height: 60px;
+  width: var(--square-size);
+  height: var(--square-size);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -35,7 +36,7 @@
    ========================================= */
 .coordinate {
   position: absolute;
-  font-size: 12px;
+  font-size: clamp(8px, 2.5vw, 12px);
   font-weight: bold;
   user-select: none;
   z-index: 5;
@@ -101,8 +102,8 @@
 /* Dot for empty valid move */
 .square.valid-move::after {
   content: '';
-  width: 18px;
-  height: 18px;
+  width: 30%;
+  height: 30%;
   background-color: rgba(0, 0, 0, 0.2);
   border-radius: 50%;
 }
@@ -110,32 +111,35 @@
 /* Red ring for capture (kill) */
 .square.capture::after {
   content: '';
-  width: 50px;
-  height: 50px;
+  width: 80%;
+  height: 80%;
   background-color: transparent;
-  border: 5px solid rgba(220, 50, 50, 0.7);
+  border: clamp(3px, 1vw, 5px) solid rgba(220, 50, 50, 0.7);
   border-radius: 50%;
+  box-sizing: border-box;
 }
 
 .last-move-indicator {
   position: absolute;
-  width: 44px;
-  height: 44px;
-  border: 4px solid rgba(0, 128, 0, 0.7);
+  width: 75%;
+  height: 75%;
+  border: clamp(2px, 0.8vw, 4px) solid rgba(0, 128, 0, 0.7);
   border-radius: 50%;
   pointer-events: none;
   z-index: 3;
+  box-sizing: border-box;
 }
 
 /* Blue ring for advice highlight */
 .square.advice-highlight::after {
   content: '';
-  width: 50px;
-  height: 50px;
+  width: 80%;
+  height: 80%;
   background-color: transparent;
-  border: 5px solid #76b3e1;
+  border: clamp(3px, 1vw, 5px) solid #76b3e1;
   border-radius: 50%;
   box-shadow: 0 0 10px rgba(118, 179, 225, 0.5);
+  box-sizing: border-box;
 }
 
 /* =========================================
@@ -163,7 +167,7 @@
   background: rgba(0, 0, 0, 0.85);
   color: #fff;
   padding: 1rem 2rem;
-  font-size: 2rem;
+  font-size: clamp(1.2rem, 5vw, 2rem);
   font-weight: bold;
   text-transform: uppercase;
   letter-spacing: 4px;

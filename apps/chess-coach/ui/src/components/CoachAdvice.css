@@ -9,8 +9,7 @@
   height: 10rem;
   box-sizing: border-box;
   max-height: 16rem;
-  width: 32rem
-
+  width: var(--advice-width);
 }
 
 .coach-panel h3 {
