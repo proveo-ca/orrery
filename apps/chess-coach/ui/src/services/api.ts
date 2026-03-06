@@ -1,6 +1,6 @@
 import type { Difficulty } from '../store/settingsState';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+const API_URL = import.meta.env.VITE_API_URL || window.location.origin;
 
 /** fen is the position AFTER the human move has been applied client-side. */
 export type MoveRequest = { humanMoveSan: string; fenAfterHuman: string; difficulty?: Difficulty };
