@@ -67,6 +67,10 @@ export const BoardWrapper: Component = () => {
                     showFile={rIndex() === 7 && file}
                     onClick={() => board.handleSquareClick(square)}
                     onMouseEnter={() => board.handleSquareHover(square)}
+                    onDragStart={(e) => board.handleDragStart(square, e)}
+                    onDragEnter={(e) => board.handleDragEnter(square, e)}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => board.handleDrop(square, e)}
                     lastMove={lastMove()}
                     isCheck={piece()?.type === 'k' && piece()?.color === turn() && isCheck() && !isCheckmate()}
                     isCheckmate={piece()?.type === 'k' && piece()?.color === turn() && isCheckmate()}

@@ -15,6 +15,10 @@ interface ChessSquareProps {
   showFile: string | false;
   onClick: () => void;
   onMouseEnter: () => void;
+  onDragStart: (e: DragEvent) => void;
+  onDragEnter: (e: DragEvent) => void;
+  onDragOver: (e: DragEvent) => void;
+  onDrop: (e: DragEvent) => void;
   lastMove: MoveSquares | null;
   isCheck: boolean;
   isCheckmate: boolean;
@@ -49,6 +53,9 @@ export const ChessSquare: Component<ChessSquareProps> = (props) => {
       }}
       onClick={props.onClick}
       onMouseEnter={props.onMouseEnter}
+      onDragEnter={props.onDragEnter}
+      onDragOver={props.onDragOver}
+      onDrop={props.onDrop}
     >
       {props.showRank && <span class="coordinate rank-label">{props.showRank}</span>}
       {props.showFile && <span class="coordinate file-label">{props.showFile}</span>}
@@ -60,7 +67,8 @@ export const ChessSquare: Component<ChessSquareProps> = (props) => {
           src={getPieceImg(props.piece.type, props.piece.color)}
           alt={`${props.piece.color} ${props.piece.type}`}
           class="piece"
-          draggable="false"
+          draggable="true"
+          onDragStart={props.onDragStart}
         />
       )}
     </div>

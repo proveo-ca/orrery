@@ -302,6 +302,49 @@ export function useChessBoard() {
     }
   };
 
+  const handleDragStart = (square: Square, e: DragEvent) => {
+    if (isReplaying()) {
+      e.preventDefault();
+      return;
+    }
+    
+    const g = game();
+    const piece = g.get(square);
+    const isPlayerTurn = g.turn() === activePlayerColor();
+    const canTouch = isPlayerTurn && piece?.color === activePlayerColor();
+
+    if (!canTouch) {
+      e.preventDefault();
+      return;
+    }
+
+    if (selectedSquare() !== square) {
+      setSelectedSquare(square);
+      setValidMoves(g.moves({ square, verbose: true }).map((m) => m.to));
+    }
+    
+    e.dataTransfer?.setData('text/plain', square);
+    if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragEnter = (square: Square, e: DragEvent) => {
+    e.preventDefault();
+    if (isReplaying()) return;
+    handleSquareHover(square);
+  };
+
+  const handleDrop = async (square: Square, e: DragEvent) => {
+    e.preventDefault();
+    if (isReplaying()) return;
+    
+    const source = e.dataTransfer?.getData('text/plain') as Square;
+    if (!source || source === square) return;
+
+    if (selectedSquare() === source) {
+      await handleSquareClick(square);
+    }
+  };
+
   const activeGame = () => {
     if (isTravelling()) return new Chess(travelFen());
     return game();
@@ -328,6 +371,9 @@ export function useChessBoard() {
     handleBoardMouseEnter,
     handleBoardMouseLeave,
     handleSquareHover,
-    handleSquareClick
+    handleSquareClick,
+    handleDragStart,
+    handleDragEnter,
+    handleDrop
   };
 }

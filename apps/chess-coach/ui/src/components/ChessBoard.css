@@ -150,7 +150,11 @@
   height: 90%;
   user-select: none;
   z-index: 10;
-  pointer-events: none; /* Let clicks pass through to the square */
+  pointer-events: auto; /* Allow dragging, clicks will bubble up to the square */
+  cursor: grab;
+}
+.piece:active {
+  cursor: grabbing;
 }
 
 /* =========================================
