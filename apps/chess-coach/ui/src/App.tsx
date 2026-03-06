@@ -4,6 +4,7 @@ import { BoardWrapper } from './components/ChessBoard';
 import { CoachAvatar } from './components/CoachAvatar.tsx';
 import { CoachAdvice } from './components/CoachAdvice';
 import { BoardActions } from './components/Controls';
+import { CapturedPieces } from './components/CapturedPieces';
 import { NewGamePanel } from './components/NewGamePanel';
 import { DebugControls, debugHistoryOverlay, debugLightSpeedOverlay } from './components/DebugControls';
 import { HistoryOverlay } from './components/common/HistoryOverlay';
@@ -98,6 +99,7 @@ const App: Component = () => {
 
       <div class="board-area">
         <BoardActions />
+        <CapturedPieces />
         <BoardWrapper />
       </div>
 

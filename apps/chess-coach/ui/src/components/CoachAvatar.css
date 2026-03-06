@@ -239,12 +239,25 @@
 }
 
 /* WATCHING: Player is hovering over the board */
-.cat.watching .eye::after {
+.cat.watching .eye::after,
+.cat.watching--left .eye::after,
+.cat.watching--right .eye::after {
   animation: blink 4s infinite ease-in; /* Keep blinking while watching */
 }
+
 .cat.watching .eye-pupil {
   width: 36%;
   transform: translate(0, 25%); /* Look further down at the board */
+}
+
+.cat.watching--left .eye-pupil {
+  width: 36%;
+  transform: translate(-40%, 25%); /* Look down and left */
+}
+
+.cat.watching--right .eye-pupil {
+  width: 36%;
+  transform: translate(40%, 25%); /* Look down and right */
 }
 
 /* THINKING: API is loading */

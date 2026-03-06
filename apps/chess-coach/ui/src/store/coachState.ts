@@ -4,6 +4,8 @@ import { createStore } from 'solid-js/store';
 export type CoachEmotion =
   | 'idle'
   | 'watching'
+  | 'watching--left'
+  | 'watching--right'
   | 'thinking'
   | 'happy'
   | 'shocked'

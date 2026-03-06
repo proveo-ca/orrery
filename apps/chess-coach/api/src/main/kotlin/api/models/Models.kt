@@ -20,7 +20,7 @@ data class AdviceRequest(val humanMove: String, val aiMove: String, val fen: Str
 data class AdviceResponse(val advice: String)
 
 @Serializable
-data class ExplainRequest(val fenBefore: String, val fenAfter: String)
+data class ExplainRequest(val fenBefore: String, val fenAfter: String, val isBlunder: Boolean = true)
 
 @Serializable
 data class ExplainResponse(val explanation: String)
@@ -54,7 +54,8 @@ data class DaemonRequest(
     val aiMove: String = "",
     val fenAfterHuman: String = "",
     val fen: String = "",
-    val fenBefore: String = ""
+    val fenBefore: String = "",
+    val isBlunder: Boolean = true
 )
 
 @Serializable

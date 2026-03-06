@@ -137,23 +137,38 @@ Current Eval (after blunder): $cpString"""
         return rawExplanation.trim()
     }
 
-    suspend fun generateExplanationStream(fenBefore: String, fenAfter: String): Flow<String> {
-        System.err.println("Generating blunder explanation stream...")
-        val evalResult = engineBridge.getEvaluation(fenAfter, depth = 15)
+    suspend fun generateExplanationStream(fenBefore: String, fenAfter: String, isBlunder: Boolean): Flow<String> {
+        System.err.println("Generating explanation stream (isBlunder=$isBlunder)...")
+        val evalBefore = engineBridge.getEvaluation(fenBefore, depth = 15)
+        val evalAfter = engineBridge.getEvaluation(fenAfter, depth = 15)
         
         val activeColorAfter = fenAfter.split(" ").getOrNull(1) ?: "w"
-        val blunderColor = if (activeColorAfter == "w") "Black" else "White"
-        val punishingColor = if (activeColorAfter == "w") "White" else "Black"
+        val moveColor = if (activeColorAfter == "w") "Black" else "White"
+        val opponentColor = if (activeColorAfter == "w") "White" else "Black"
 
-        val explainSystemPrompt = "You are a chess expert. The player playing $blunderColor just made a move that changed the board from 'Before FEN' to 'After FEN'. This move is a blunder. Explain in exactly ONE short sentence why $blunderColor's move is a blunder. Do not provide any formatting, greetings, or extra text."
+        val explainSystemPrompt = if (isBlunder) {
+            "You are a chess expert. The player playing $moveColor just made a move that changed the board from 'Before FEN' to 'After FEN'. This move is a blunder. Explain in exactly ONE short sentence why $moveColor's move is a blunder. Do not provide any formatting, greetings, or extra text."
+        } else {
+            "You are a chess expert. The player playing $moveColor just made a move that changed the board from 'Before FEN' to 'After FEN'. This is an excellent move. Explain in exactly ONE short sentence why $moveColor's move is strong. Do not provide any formatting, greetings, or extra text."
+        }
         
-        val cpString = if (evalResult.isMate) "Mate in ${evalResult.mateIn}" else "${evalResult.cp}"
+        val cpBefore = if (evalBefore.isMate) "Mate in ${evalBefore.mateIn}" else "${evalBefore.cp}"
+        val cpAfter = if (evalAfter.isMate) "Mate in ${evalAfter.mateIn}" else "${evalAfter.cp}"
 
-        val explainUserPrompt = """Before FEN: $fenBefore
+        val explainUserPrompt = if (isBlunder) {
+            """Before FEN: $fenBefore
 After FEN: $fenAfter
-Blunder played by: $blunderColor
-Best response for $punishingColor: ${evalResult.bestMove}
-Current Eval (after blunder): $cpString"""
+Blunder played by: $moveColor
+Eval Before: $cpBefore
+Eval After: $cpAfter
+Best response for $opponentColor: ${evalAfter.bestMove}"""
+        } else {
+            """Before FEN: $fenBefore
+After FEN: $fenAfter
+Great move played by: $moveColor
+Eval Before: $cpBefore
+Eval After: $cpAfter"""
+        }
         
         return llmClient.promptStream(explainSystemPrompt, explainUserPrompt, llmClient.commentaryModel, temperature = 0.7, maxTokens = 60)
     }

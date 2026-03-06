@@ -68,7 +68,7 @@ export function useTravelMode(workerPath: string = '/stockfish-18-lite.js') {
     
     postExplainStream(
       API_URL,
-      { fenBefore: currentFen(), fenAfter: blunderFen },
+      { fenBefore: currentFen(), fenAfter: blunderFen, isBlunder: true },
       (chunk) => {
         if (!receivedFirstChunk) {
           fullExplanation = ''; // Clear "Travelling..." on first token

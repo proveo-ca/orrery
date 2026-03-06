@@ -5,7 +5,7 @@ export type MoveRequest = { humanMoveSan: string; fenAfterHuman: string; difficu
 export type MoveResponse = { fen: string; move: string; advice?: string };
 
 export type AdviceRequest = { humanMove: string; aiMove: string; fen: string };
-export type ExplainRequest = { fenBefore: string; fenAfter: string };
+export type ExplainRequest = { fenBefore: string; fenAfter: string; isBlunder: boolean };
 
 export type HelloResponse = {
   model: string;

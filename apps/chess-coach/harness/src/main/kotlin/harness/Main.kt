@@ -20,7 +20,8 @@ data class DaemonRequest(
     val aiMove: String = "",
     val fenAfterHuman: String = "",
     val fen: String = "",
-    val fenBefore: String = ""
+    val fenBefore: String = "",
+    val isBlunder: Boolean = true
 )
 
 @Serializable
@@ -78,7 +79,7 @@ fun main(args: Array<String>) = runBlocking {
                                 DaemonResponse(done = true)
                             }
                             "explain" -> {
-                                orchestrator.generateExplanationStream(req.fenBefore, req.fen).collect { chunk ->
+                                orchestrator.generateExplanationStream(req.fenBefore, req.fen, req.isBlunder).collect { chunk ->
                                     println(json.encodeToString(DaemonResponse(chunk = chunk)))
                                     System.out.flush()
                                 }

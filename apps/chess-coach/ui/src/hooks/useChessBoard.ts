@@ -1,6 +1,6 @@
 import { createSignal, createEffect, onCleanup } from 'solid-js';
 import { Chess, type Square } from 'chess.js';
-import { baseAdvice, baseCoachEmotion, clearHoverOverride, setHoverAdvice, setHoverEmotion, setHoverBlunder } from '../store/coachState';
+import { baseAdvice, baseCoachEmotion, clearHoverOverride, setHoverAdvice, setHoverEmotion, setHoverBlunder, type CoachEmotion } from '../store/coachState';
 import { currentFen, currentIndex, fenHistory, moveHistory } from '../store/gameState';
 import { isTravelling, travelFen, travelIndex, travelMoveHistory } from '../store/travelState';
 import { activePlayerColor } from '../store/settingsState';
@@ -28,12 +28,26 @@ export function useChessBoard() {
 
   const canApplyHoverOverride = () => {
     const base = baseCoachEmotion();
-    return base === 'idle' || base === 'watching';
+    return base === 'idle' || base === 'watching' || base === 'watching--left' || base === 'watching--right';
   };
 
-  const applyHoverBaseline = () => {
+  const applyHoverBaseline = (square?: Square) => {
     if (!canApplyHoverOverride()) return;
-    setHoverEmotion('watching');
+    
+    let emotion: CoachEmotion = 'watching';
+    if (square) {
+      const file = square[0];
+      const isFlipped = activePlayerColor() === 'b';
+      
+      // If board is flipped, 'g'/'h' are on the left, 'a'/'b' are on the right
+      const isLeftScreen = isFlipped ? (file === 'g' || file === 'h') : (file === 'a' || file === 'b');
+      const isRightScreen = isFlipped ? (file === 'a' || file === 'b') : (file === 'g' || file === 'h');
+
+      if (isLeftScreen) emotion = 'watching--left';
+      else if (isRightScreen) emotion = 'watching--right';
+    }
+    
+    setHoverEmotion(emotion);
 
     // Hover always overrides advice; baseline override matches current base advice
     // so the UI doesn't "jump" until we have something meaningful to say.
@@ -136,7 +150,7 @@ export function useChessBoard() {
     if (isReplaying()) return;
 
     setHoveredSquare(square);
-    applyHoverBaseline();
+    applyHoverBaseline(square);
 
     if (!canApplyHoverOverride()) {
       setCurrentHoverEval(null);

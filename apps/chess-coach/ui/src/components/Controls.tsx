@@ -1,13 +1,16 @@
 import {createSignal} from 'solid-js';
 import type {Component} from 'solid-js';
-import {currentFen, currentIndex, fenHistory, goBack, goForward} from '../store';
-import {clearHoverOverride} from '../store';
+import {currentFen, currentIndex, fenHistory, goBack, goForward, setAdvice, dispatchCoachEvent, clearHoverOverride} from '../store';
 import {isTravelling, travelIndex, travelFenHistory, travelBack, travelForward, exitTravel} from '../store/travelState';
 import {useHint} from '../hooks/useHint';
 import {Credits} from './Credits';
 import {TurnLabel} from './TurnLabel';
 import {Button} from './common/Button';
+import {postExplainStream} from '../services/api';
+import {Chess} from 'chess.js';
 import './Controls.css';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
 export const BoardActions: Component = () => {
   const [showCredits, setShowCredits] = createSignal(false);
@@ -54,14 +57,55 @@ export const BoardActions: Component = () => {
 
   const handleHint = async () => {
     try {
-      const move = await requestHint(currentFen(), 10);
-      if (!move) {
-        alert('Hint: No best move available.');
+      dispatchCoachEvent({ type: 'AI_THINKING' });
+      const uciMove = await requestHint(currentFen(), 10);
+      
+      if (!uciMove) {
+        setAdvice("I'm not sure what the best move is here.");
+        dispatchCoachEvent({ type: 'AI_MOVED' });
         return;
       }
-      alert(`Hint: Try moving ${move}`);
-    } catch {
-      alert('Hint: Unable to generate a hint right now.');
+
+      // Parse the UCI move (e.g., "e2e4") into SAN (e.g., "e4")
+      const game = new Chess(currentFen());
+      const from = uciMove.slice(0, 2);
+      const to = uciMove.slice(2, 4);
+      const promotion = uciMove.length > 4 ? uciMove[4] : undefined;
+      
+      const moveObj = game.move({ from, to, promotion });
+      if (!moveObj) {
+        setAdvice(`Try moving ${from}-${to}.`);
+        dispatchCoachEvent({ type: 'AI_MOVED' });
+        return;
+      }
+
+      const san = moveObj.san;
+      const fenAfter = game.fen();
+      const prefix = `Try moving ${san}. `;
+      
+      setAdvice(`${prefix}Let me explain why...`);
+
+      let fullExplanation = '';
+      let receivedFirstChunk = false;
+
+      await postExplainStream(
+        API_URL,
+        { fenBefore: currentFen(), fenAfter, isBlunder: false },
+        (chunk) => {
+          if (!receivedFirstChunk) {
+            fullExplanation = '';
+            receivedFirstChunk = true;
+          }
+          fullExplanation += chunk;
+          setAdvice(prefix + fullExplanation);
+        }
+      );
+      
+      dispatchCoachEvent({ type: 'AI_MOVED' });
+    } catch (err) {
+      console.error(err);
+      setAdvice('Unable to generate a hint right now.');
+      dispatchCoachEvent({ type: 'AI_ERROR' });
     }
   };
 
