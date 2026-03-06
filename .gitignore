@@ -8,6 +8,7 @@
 # Kotlin / Java / Build Outputs
 # ==========================================
 *.jar
+!**/gradle-wrapper.jar
 .gradle/
 .kotlin/
 build/

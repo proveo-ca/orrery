@@ -19,7 +19,7 @@ import java.util.Timer
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.concurrent.fixedRateTimer
 
-class HarnessInvoker(private val harnessCommand: String = "./harness/bin/chess-coach-harness") {
+class HarnessInvoker(private val harnessCommand: String = "./harness/bin/harness") {
 
     private val json = Json { ignoreUnknownKeys = true }
 

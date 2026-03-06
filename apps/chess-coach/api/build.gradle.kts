@@ -4,7 +4,7 @@ plugins {
     application
 }
 
-group = "com.proveo.chess"
+group = "ca.proveo.chess"
 version = "1.0-SNAPSHOT"
 
 repositories {
@@ -13,7 +13,7 @@ repositories {
 
 dependencies {
     val ktorVersion = "2.3.11"
-    
+
     // Ktor Server
     implementation("io.ktor:ktor-server-core:$ktorVersion")
     implementation("io.ktor:ktor-server-netty:$ktorVersion")
@@ -22,11 +22,11 @@ dependencies {
     implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
-    
+
     // Coroutines and Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
-    
+
     // Logging
     implementation("ch.qos.logback:logback-classic:1.4.14")
 

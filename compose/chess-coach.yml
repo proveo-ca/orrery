@@ -23,7 +23,7 @@ services:
     build:
       context: ../apps/chess-coach
       dockerfile: Dockerfile
-    container_name: selena_chess_app
+    container_name: chess_coach
     ports:
       - "8080:8080"
     environment:

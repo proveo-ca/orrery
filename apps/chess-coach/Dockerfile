@@ -12,14 +12,17 @@ RUN npm run build
 FROM eclipse-temurin:25-jdk-alpine AS kt-builder
 RUN apk add --no-cache bash
 WORKDIR /workspace
-COPY harness/ ./harness/
-WORKDIR /workspace/harness
-RUN chmod +x gradlew && ./gradlew installDist --no-daemon
 
-WORKDIR /workspace
+# Copy root Gradle wrapper and settings
+COPY gradle/ ./gradle/
+COPY gradlew gradlew.bat settings.gradle.kts ./
+
+# Copy subprojects
+COPY harness/ ./harness/
 COPY api/ ./api/
-WORKDIR /workspace/api
-RUN chmod +x gradlew && ./gradlew installDist --no-daemon
+
+# Build both projects together
+RUN chmod +x gradlew && ./gradlew :api:installDist :harness:installDist --no-daemon
 
 # --- Stage 3: Build lc0 v0.29.0 ---
 FROM ubuntu:20.04 AS lc0-builder
@@ -58,8 +61,8 @@ RUN mkdir -p /app/weights && \
     curl -fL -o /app/weights/maia-2200.pb.gz "https://github.com/CallOn84/LeelaNets/raw/main/Nets/Maia%202200/maia-2200.pb.gz"
 
 # Copy Kotlin binaries
-COPY --from=kt-builder /workspace/harness/build/install/chess-coach-harness ./harness
-COPY --from=kt-builder /workspace/api/build/install/chess-coach-api ./api
+COPY --from=kt-builder /workspace/harness/build/install/harness ./harness
+COPY --from=kt-builder /workspace/api/build/install/api ./api
 
 # Copy Skills directory for Context Injection
 COPY harness/skills ./skills
@@ -70,4 +73,4 @@ COPY --from=ui-builder /ui/dist ./static
 EXPOSE 8080
 
 # Run the API (which now serves the UI too)
-CMD ["./api/bin/chess-coach-api"]
+CMD ["./api/bin/api"]
