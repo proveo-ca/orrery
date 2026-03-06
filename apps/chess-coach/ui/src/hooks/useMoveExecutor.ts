@@ -11,7 +11,7 @@ type ExecuteMoveParams = {
   stockfishBestMove?: string;
 };
 
-export function useMoveExecutor(apiUrl: string, stopStockfish: () => void) {
+export function useMoveExecutor(stopStockfish: () => void) {
   const [adviceAbortController, setAdviceAbortController] = createSignal<AbortController | null>(null);
 
   const abortAdvice = () => {
@@ -70,7 +70,7 @@ export function useMoveExecutor(apiUrl: string, stopStockfish: () => void) {
       
       let moveData: { fen: string; move: string };
       try {
-        moveData = await postMove(apiUrl, { humanMoveSan, fenAfterHuman, difficulty: difficulty() });
+        moveData = await postMove({ humanMoveSan, fenAfterHuman, difficulty: difficulty() });
       } catch (e) {
         setAdvice('Error communicating with the coach.');
         dispatchCoachEvent({ type: 'AI_ERROR' });
@@ -108,7 +108,6 @@ export function useMoveExecutor(apiUrl: string, stopStockfish: () => void) {
         let receivedFirstChunk = false;
 
         await postAdviceStream(
-          apiUrl,
           { humanMove: humanMoveSan, aiMove: moveData.move, fen: moveData.fen },
           (chunk) => {
             if (!receivedFirstChunk) {

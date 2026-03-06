@@ -10,8 +10,6 @@ import {postExplainStream} from '../services/api';
 import {Chess} from 'chess.js';
 import './Controls.css';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
-
 export const BoardActions: Component = () => {
   const [showCredits, setShowCredits] = createSignal(false);
   const {requestHint, pendingHint} = useHint('/stockfish-18-lite.js');
@@ -89,8 +87,7 @@ export const BoardActions: Component = () => {
       let receivedFirstChunk = false;
 
       await postExplainStream(
-        API_URL,
-        { fenBefore: currentFen(), fenAfter, isBlunder: false },
+        { fenBefore: currentFen(), fenAfter, isBlunder: false, moveSan: san },
         (chunk) => {
           if (!receivedFirstChunk) {
             fullExplanation = '';

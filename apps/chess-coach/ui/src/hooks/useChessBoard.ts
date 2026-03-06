@@ -8,8 +8,6 @@ import { logger } from '../utils/logger';
 import { useStockfishWorker } from './useStockfishWorker';
 import { useMoveExecutor } from './useMoveExecutor';
 
-const API_URL = import.meta.env.VITE_API_URL || '';
-
 type HoverEval = { id: number; from: Square; to: Square; fen: string };
 
 export function useChessBoard() {
@@ -18,13 +16,23 @@ export function useChessBoard() {
   const [hoveredSquare, setHoveredSquare] = createSignal<Square | null>(null);
   const [validMoves, setValidMoves] = createSignal<string[]>([]);
   const { send, analysis } = useStockfishWorker('/stockfish-18-lite.js');
-  const moveExecutor = useMoveExecutor(API_URL, () => send('stop'));
+  const moveExecutor = useMoveExecutor(() => send('stop'));
 
   const isReplaying = () => isTravelling() || currentIndex() < fenHistory().length - 1;
 
   let evalTimeout: number | undefined;
   let hoverEvalSeq = 0;
   const [currentHoverEval, setCurrentHoverEval] = createSignal<HoverEval | null>(null);
+  const [humanBestMove, setHumanBestMove] = createSignal<string | null>(null);
+  const [baseEvalScore, setBaseEvalScore] = createSignal<{ kind: 'cp' | 'mate', value: number } | null>(null);
+
+  const resumeBaseAnalysis = () => {
+    const g = game();
+    if (g.turn() === activePlayerColor() && !g.isGameOver() && !isTravelling()) {
+      send(`position fen ${g.fen()}`);
+      send('go depth 12');
+    }
+  };
 
   const canApplyHoverOverride = () => {
     const base = baseCoachEmotion();
@@ -80,25 +88,52 @@ export function useChessBoard() {
     const msg = analysis().lastInfo;
     if (!msg || !msg.score) return;
 
+    const baseScore = baseEvalScore();
+    if (!baseScore) return; // We need the before-score to calculate a delta
+
     // Skip if we already processed this eval's result
     if (evalTarget.id <= lastProcessedEvalId) return;
 
-    const sideToMove = evalTarget.fen.split(' ')[1] || 'w';
-
-    let isBlunder = false;
-    const humanColor = activePlayerColor();
-    const scoreMultiplier = sideToMove === humanColor ? 1 : -1;
-
-    if (msg.score.kind === 'cp') {
-      const cp = msg.score.value * scoreMultiplier;
-      if (cp < -200) isBlunder = true;
-    } else if (msg.score.kind === 'mate') {
-      const mate = msg.score.value * scoreMultiplier;
-      if (mate < 0) isBlunder = true;
+    // Anti-race-condition: Ensure the PV move is legal in the hover position.
+    // If Stockfish sends an info message from a previous search, the PV move 
+    // will almost certainly be illegal in the new FEN.
+    if (!msg.pv || msg.pv.length === 0) {
+      if (msg.score.kind !== 'mate' || msg.score.value !== 0) {
+        return; // Ignore empty PVs unless it's a checkmate (mate 0)
+      }
+    } else {
+      try {
+        const testGame = new Chess(evalTarget.fen);
+        const uci = msg.pv[0];
+        const from = uci.slice(0, 2);
+        const to = uci.slice(2, 4);
+        const promotion = uci.length > 4 ? uci[4] : undefined;
+        const move = testGame.move({ from, to, promotion });
+        if (!move) return; // Stale info message from previous position
+      } catch {
+        return; // Invalid move format
+      }
     }
 
+    // Calculate Human's CP before the move
+    const humanBaseCp = baseScore.kind === 'mate'
+      ? (baseScore.value > 0 ? 10000 : -10000)
+      : baseScore.value;
+
+    // Calculate Human's CP after the move
+    // msg.score is relative to the AI (since it's AI's turn in evalTarget.fen)
+    const humanHoverCp = msg.score.kind === 'mate'
+      ? (msg.score.value > 0 ? -10000 : 10000)
+      : -msg.score.value;
+
+    // A blunder is a move that drops the evaluation by 200+ centipawns
+    const delta = humanHoverCp - humanBaseCp;
+    const isBlunder = delta <= -200;
+
     logger.action(`Hover Eval Result [${evalTarget.from}-${evalTarget.to}]`, { 
-      score: msg.score, 
+      baseScore,
+      hoverScore: msg.score,
+      delta,
       isBlunder 
     });
 
@@ -109,10 +144,15 @@ export function useChessBoard() {
     const piece = game().get(evalTarget.from);
     const pieceName = piece ? `${piece.color}${piece.type}` : 'piece';
 
+    // Generate SAN for the blunder
+    const gCopy = new Chess(currentFen());
+    const m = gCopy.move({ from: evalTarget.from, to: evalTarget.to, promotion: 'q' });
+    const san = m ? m.san : `${evalTarget.from}-${evalTarget.to}`;
+
     lastProcessedEvalId = evalTarget.id;
     setHoverAdvice(`Moving the ${pieceName} to ${evalTarget.to} is a blunder`);
     setHoverEmotion('shocked');
-    setHoverBlunder(true, evalTarget.fen);
+    setHoverBlunder(true, evalTarget.fen, san);
   });
 
   onCleanup(() => {
@@ -124,11 +164,29 @@ export function useChessBoard() {
     setSelectedSquare(null);
     setHoveredSquare(null);
     setValidMoves([]);
+    setHumanBestMove(null);
+    setBaseEvalScore(null);
     if (!isTravelling()) {
       clearHoverOverride();
     }
     setCurrentHoverEval(null);
     send('stop');
+    send('ucinewgame');
+    resumeBaseAnalysis();
+  });
+
+  // Capture the best move and evaluation for the base position
+  createEffect(() => {
+    if (!currentHoverEval()) {
+      const info = analysis().lastInfo;
+      if (info && info.score) {
+        setBaseEvalScore(info.score);
+      }
+      const bm = analysis().lastBestMove;
+      if (bm) {
+        setHumanBestMove(bm.move);
+      }
+    }
   });
 
   const handleBoardMouseEnter = () => {
@@ -144,6 +202,7 @@ export function useChessBoard() {
     setCurrentHoverEval(null);
 
     send('stop');
+    resumeBaseAnalysis();
   };
 
   const handleSquareHover = (square: Square) => {
@@ -188,6 +247,7 @@ export function useChessBoard() {
     } else {
       setCurrentHoverEval(null);
       send('stop');
+      resumeBaseAnalysis();
     }
   };
 
@@ -211,12 +271,11 @@ export function useChessBoard() {
     }
 
     if (selected) {
-      const sfBestMove = analysis().lastBestMove?.raw?.split(' ')[1]; // e.g. "bestmove e2e4" -> "e2e4"
       const result = await moveExecutor.executeMove({
         game: g,
         selected,
         square,
-        stockfishBestMove: sfBestMove
+        stockfishBestMove: humanBestMove() || undefined
       });
 
       if (result.didMove) {

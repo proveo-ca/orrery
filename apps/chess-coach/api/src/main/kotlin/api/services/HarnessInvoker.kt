@@ -161,9 +161,9 @@ class HarnessInvoker(private val harnessCommand: String = "./harness/bin/chess-c
         return sendDaemonRequestStream(DaemonRequest(command = "advice", humanMoveSan = humanMoveSan, aiMove = aiMove, fenAfterHuman = fenAfterHuman))
     }
 
-    fun executeExplainStream(fenBefore: String, fenAfter: String, isBlunder: Boolean): Flow<String> {
-        println("Invoking harness daemon for explanation stream (isBlunder=$isBlunder)")
-        return sendDaemonRequestStream(DaemonRequest(command = "explain", fenBefore = fenBefore, fen = fenAfter, isBlunder = isBlunder))
+    fun executeExplainStream(fenBefore: String, fenAfter: String, isBlunder: Boolean, moveSan: String): Flow<String> {
+        println("Invoking harness daemon for explanation stream (isBlunder=$isBlunder, moveSan=$moveSan)")
+        return sendDaemonRequestStream(DaemonRequest(command = "explain", fenBefore = fenBefore, fen = fenAfter, isBlunder = isBlunder, moveSan = moveSan))
     }
 
 }

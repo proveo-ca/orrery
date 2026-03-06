@@ -59,7 +59,7 @@ fun Application.configureRouting(invoker: HarnessInvoker, stateReader: StateRead
             
             call.respondTextWriter(contentType = ContentType.Text.Plain) {
                 var isConnected = true
-                invoker.executeExplainStream(request.fenBefore, request.fenAfter, request.isBlunder).collect { chunk ->
+                invoker.executeExplainStream(request.fenBefore, request.fenAfter, request.isBlunder, request.moveSan).collect { chunk ->
                     if (isConnected) {
                         try {
                             write(chunk)

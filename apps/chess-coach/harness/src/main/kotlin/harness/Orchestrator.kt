@@ -52,7 +52,7 @@ class Orchestrator(
     }
 
     suspend fun generateAdvice(humanMove: String, aiMove: String, currentFen: String): String {
-        System.err.println("Generating coaching advice...")
+        System.err.println("Generating coaching advice using ${llmClient.commentaryModel}...")
         val evalResult = engineBridge.getEvaluation(currentFen, depth = 15)
         
         val activeColor = currentFen.split(" ").getOrNull(1) ?: "w"
@@ -81,12 +81,12 @@ CP: $cpString"""
         System.err.println("Coach Advice generated.")
         
         // Extract just the commentary part if the model returns the full block
-        val commentaryMatch = Regex("Commentary:\\s*(.*?)(?:\\n|Predicted ELO:|$)", RegexOption.DOT_MATCHES_ALL).find(rawAdvice)
+        val commentaryMatch = Regex("\\s*(.*?)(?:\\n|Predicted ELO:|$)", RegexOption.DOT_MATCHES_ALL).find(rawAdvice)
         return commentaryMatch?.groupValues?.get(1)?.trim() ?: rawAdvice
     }
 
     suspend fun generateAdviceStream(humanMove: String, aiMove: String, currentFen: String): Flow<String> {
-        System.err.println("Generating coaching advice stream...")
+        System.err.println("Generating coaching advice stream using ${llmClient.commentaryModel}...")
         val evalResult = engineBridge.getEvaluation(currentFen, depth = 15)
         
         val activeColor = currentFen.split(" ").getOrNull(1) ?: "w"
@@ -114,7 +114,7 @@ CP: $cpString"""
     }
 
     suspend fun generateExplanation(fenBefore: String, fenAfter: String): String {
-        System.err.println("Generating blunder explanation...")
+        System.err.println("Generating blunder explanation using ${llmClient.commentaryModel}...")
         val evalResult = engineBridge.getEvaluation(fenAfter, depth = 15)
         
         val activeColorAfter = fenAfter.split(" ").getOrNull(1) ?: "w"
@@ -137,8 +137,8 @@ Current Eval (after blunder): $cpString"""
         return rawExplanation.trim()
     }
 
-    suspend fun generateExplanationStream(fenBefore: String, fenAfter: String, isBlunder: Boolean): Flow<String> {
-        System.err.println("Generating explanation stream (isBlunder=$isBlunder)...")
+    suspend fun generateExplanationStream(fenBefore: String, fenAfter: String, isBlunder: Boolean, moveSan: String): Flow<String> {
+        System.err.println("Generating explanation stream (isBlunder=$isBlunder, move=$moveSan) using ${llmClient.commentaryModel}...")
         val evalBefore = engineBridge.getEvaluation(fenBefore, depth = 15)
         val evalAfter = engineBridge.getEvaluation(fenAfter, depth = 15)
         
@@ -147,9 +147,9 @@ Current Eval (after blunder): $cpString"""
         val opponentColor = if (activeColorAfter == "w") "White" else "Black"
 
         val explainSystemPrompt = if (isBlunder) {
-            "You are a chess expert. The player playing $moveColor just made a move that changed the board from 'Before FEN' to 'After FEN'. This move is a blunder. Explain in exactly ONE short sentence why $moveColor's move is a blunder. Do not provide any formatting, greetings, or extra text."
+            "You are a chess expert. The player playing $moveColor just played $moveSan, which is a blunder. Explain in exactly ONE short sentence why $moveSan is a blunder. Do not provide any formatting, greetings, or extra text."
         } else {
-            "You are a chess expert. The player playing $moveColor just made a move that changed the board from 'Before FEN' to 'After FEN'. This is an excellent move. Explain in exactly ONE short sentence why $moveColor's move is strong. Do not provide any formatting, greetings, or extra text."
+            "You are a chess expert. The player playing $moveColor just played $moveSan, which is an excellent move. Explain in exactly ONE short sentence why $moveSan is strong. Do not provide any formatting, greetings, or extra text."
         }
         
         val cpBefore = if (evalBefore.isMate) "Mate in ${evalBefore.mateIn}" else "${evalBefore.cp}"
@@ -158,14 +158,14 @@ Current Eval (after blunder): $cpString"""
         val explainUserPrompt = if (isBlunder) {
             """Before FEN: $fenBefore
 After FEN: $fenAfter
-Blunder played by: $moveColor
+Blunder played: $moveSan (by $moveColor)
 Eval Before: $cpBefore
 Eval After: $cpAfter
 Best response for $opponentColor: ${evalAfter.bestMove}"""
         } else {
             """Before FEN: $fenBefore
 After FEN: $fenAfter
-Great move played by: $moveColor
+Great move played: $moveSan (by $moveColor)
 Eval Before: $cpBefore
 Eval After: $cpAfter"""
         }

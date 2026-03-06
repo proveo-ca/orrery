@@ -5,8 +5,6 @@ import { startTravel } from '../store/travelState';
 import { stockfishService } from '../services/stockfishService';
 import { postExplainStream } from '../services/api';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
-
 /**
  * Requests the best line (PV) from a dedicated Stockfish worker,
  * then plays it out move-by-move to build a fake timeline.
@@ -54,7 +52,7 @@ export function useTravelMode(workerPath: string = '/stockfish-18-lite.js') {
     });
   };
 
-  const activateTravel = async (blunderFen: string) => {
+  const activateTravel = async (blunderFen: string, blunderSan: string) => {
     setLoading(true);
     setHoverAdvice('Travelling to the future...');
     setHoverEmotion('thinking');
@@ -67,8 +65,7 @@ export function useTravelMode(workerPath: string = '/stockfish-18-lite.js') {
     let receivedFirstChunk = false;
     
     postExplainStream(
-      API_URL,
-      { fenBefore: currentFen(), fenAfter: blunderFen, isBlunder: true },
+      { fenBefore: currentFen(), fenAfter: blunderFen, isBlunder: true, moveSan: blunderSan },
       (chunk) => {
         if (!receivedFirstChunk) {
           fullExplanation = ''; // Clear "Travelling..." on first token

@@ -18,12 +18,10 @@ import {Select} from './common/Select';
 import {postNewGame, postMove} from '../services/api';
 import './Controls.css';
 
-const API_URL = import.meta.env.VITE_API_URL || '';
-
 export const NewGamePanel: Component = () => {
   const handleNewGame = async () => {
     try {
-      const data = await postNewGame(API_URL);
+      const data = await postNewGame();
       resetGame(data.fen);
 
       // If player is Black, trigger the AI to make the first move
@@ -32,7 +30,7 @@ export const NewGamePanel: Component = () => {
           dispatchCoachEvent({ type: 'AI_THINKING' });
         }, 3000);
         try {
-          const moveData = await postMove(API_URL, {
+          const moveData = await postMove({
             humanMoveSan: "",
             fenAfterHuman: data.fen,
             difficulty: difficulty()

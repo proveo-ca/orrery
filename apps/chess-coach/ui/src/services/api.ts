@@ -1,11 +1,13 @@
 import type { Difficulty } from '../store/settingsState';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+
 /** fen is the position AFTER the human move has been applied client-side. */
 export type MoveRequest = { humanMoveSan: string; fenAfterHuman: string; difficulty?: Difficulty };
 export type MoveResponse = { fen: string; move: string; advice?: string };
 
 export type AdviceRequest = { humanMove: string; aiMove: string; fen: string };
-export type ExplainRequest = { fenBefore: string; fenAfter: string; isBlunder: boolean };
+export type ExplainRequest = { fenBefore: string; fenAfter: string; isBlunder: boolean; moveSan: string };
 
 export type HelloResponse = {
   model: string;
@@ -16,24 +18,24 @@ export type HelloResponse = {
 
 export type NewGameResponse = { fen: string };
 
-export async function postNewGame(apiUrl: string): Promise<NewGameResponse> {
-  const response = await fetch(`${apiUrl}/new`, { method: 'POST' });
+export async function postNewGame(): Promise<NewGameResponse> {
+  const response = await fetch(`${API_URL}/new`, { method: 'POST' });
   if (!response.ok) {
     throw new Error('new game request failed');
   }
   return response.json();
 }
 
-export async function fetchHello(apiUrl: string): Promise<HelloResponse> {
-  const response = await fetch(`${apiUrl}/hello`);
+export async function fetchHello(): Promise<HelloResponse> {
+  const response = await fetch(`${API_URL}/hello`);
   if (!response.ok) {
     throw new Error('hello request failed');
   }
   return response.json();
 }
 
-export async function postMove(apiUrl: string, request: MoveRequest): Promise<MoveResponse> {
-  const moveResponse = await fetch(`${apiUrl}/move`, {
+export async function postMove(request: MoveRequest): Promise<MoveResponse> {
+  const moveResponse = await fetch(`${API_URL}/move`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(request)
@@ -47,12 +49,11 @@ export async function postMove(apiUrl: string, request: MoveRequest): Promise<Mo
 }
 
 export async function postAdviceStream(
-  apiUrl: string,
   request: AdviceRequest,
   onChunk: (chunk: string) => void,
   options?: { signal?: AbortSignal }
 ): Promise<void> {
-  const response = await fetch(`${apiUrl}/advice`, {
+  const response = await fetch(`${API_URL}/advice`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(request),
@@ -75,12 +76,11 @@ export async function postAdviceStream(
 }
 
 export async function postExplainStream(
-  apiUrl: string,
   request: ExplainRequest,
   onChunk: (chunk: string) => void,
   options?: { signal?: AbortSignal }
 ): Promise<void> {
-  const response = await fetch(`${apiUrl}/explain`, {
+  const response = await fetch(`${API_URL}/explain`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(request),

@@ -18,8 +18,6 @@ import { useGlobalShortcuts } from './hooks/useGlobalShortcuts';
 import './theme.css';
 import './App.css';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
-
 const App: Component = () => {
   useGlobalShortcuts();
 
@@ -30,7 +28,7 @@ const App: Component = () => {
     logger.action('App Mounted');
     
     try {
-      const helloData = await fetchHello(API_URL);
+      const helloData = await fetchHello();
       
       if (fenHistory().length > 1) {
         setAdvice("Welcome back! Let's continue our game.");
@@ -51,7 +49,7 @@ const App: Component = () => {
         dispatchCoachEvent({ type: 'AI_THINKING' });
         setAdvice("Let me think about my next move...");
         
-        postMove(API_URL, {
+        postMove({
           humanMoveSan: "",
           fenAfterHuman: current,
           difficulty: difficulty()
@@ -63,7 +61,6 @@ const App: Component = () => {
           let fullAdvice = '';
           let receivedFirstChunk = false;
           await postAdviceStream(
-            API_URL,
             { humanMove: "", aiMove: moveData.move, fen: moveData.fen },
             (chunk) => {
               if (!receivedFirstChunk) {

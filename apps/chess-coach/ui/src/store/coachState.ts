@@ -28,6 +28,7 @@ type CoachState = {
   // Whether the hover eval detected a blunder (drives "Why?" button)
   hoverBlunder: boolean;
   hoverBlunderFen: string | null;
+  hoverBlunderSan: string | null;
 };
 
 const [coachState, setCoachState] = createStore<CoachState>({
@@ -43,6 +44,7 @@ const [coachState, setCoachState] = createStore<CoachState>({
 
   hoverBlunder: false,
   hoverBlunderFen: null,
+  hoverBlunderSan: null,
 });
 
 // ===== Selectors (UI reads these; hover override wins) =====
@@ -58,6 +60,7 @@ export const bestMovePhrases = () => coachState.bestMovePhrases;
 
 export const hoverBlunder = () => coachState.hoverBlunder;
 export const hoverBlunderFen = () => coachState.hoverBlunderFen;
+export const hoverBlunderSan = () => coachState.hoverBlunderSan;
 
 // ===== Base setters =====
 export const setAdvice = (val: string) => setCoachState('baseAdvice', val);
@@ -70,9 +73,10 @@ export const setBestMovePhrases = (phrases: string[]) => setCoachState('bestMove
 export const setHoverAdvice = (val: string | null) => setCoachState('hoverAdvice', val);
 export const setHoverEmotion = (val: CoachEmotion | null) => setCoachState('hoverCoachEmotion', val);
 
-export const setHoverBlunder = (isBlunder: boolean, fen: string | null = null) => {
+export const setHoverBlunder = (isBlunder: boolean, fen: string | null = null, san: string | null = null) => {
   setCoachState('hoverBlunder', isBlunder);
   setCoachState('hoverBlunderFen', fen);
+  setCoachState('hoverBlunderSan', san);
 };
 
 export const clearHoverOverride = () => {
@@ -81,6 +85,7 @@ export const clearHoverOverride = () => {
     hoverCoachEmotion: null,
     hoverBlunder: false,
     hoverBlunderFen: null,
+    hoverBlunderSan: null,
   });
 };
 
@@ -125,7 +130,9 @@ export const dispatchCoachEvent = (event: CoachEvent) => {
     case 'APP_READY':
     case 'AI_MOVED':
     case 'WAKE_UP':
-      setCoachEmotion('idle');
+      if (coachState.baseCoachEmotion !== 'happy') {
+        setCoachEmotion('idle');
+      }
       break;
     case 'APP_ERROR':
       setCoachEmotion('shocked');
@@ -134,11 +141,14 @@ export const dispatchCoachEvent = (event: CoachEvent) => {
       setCoachEmotion('happy', 2000);
       break;
     case 'HUMAN_MOVE_BEST':
-      setCoachEmotion('happy'); // Stays happy until AI moves
+      setCoachEmotion('happy', 3000);
       break;
     case 'HUMAN_MOVE_NORMAL':
     case 'AI_THINKING':
-      setCoachEmotion('thinking');
+      // Don't overwrite the happy feedback if they just played a great move!
+      if (coachState.baseCoachEmotion !== 'happy') {
+        setCoachEmotion('thinking');
+      }
       break;
     case 'AI_ERROR':
       setCoachEmotion('shocked', 3000);

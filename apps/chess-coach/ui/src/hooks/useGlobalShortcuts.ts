@@ -1,6 +1,6 @@
 // apps/chess-coach/ui/src/hooks/useGlobalShortcuts.ts
 import { onCleanup, onMount } from 'solid-js';
-import { hoverBlunder, hoverBlunderFen, currentIndex, fenHistory, goForward, goBack, clearHoverOverride, coachEmotion, dispatchCoachEvent } from '../store';
+import { hoverBlunder, hoverBlunderFen, hoverBlunderSan, currentIndex, fenHistory, goForward, goBack, clearHoverOverride, coachEmotion, dispatchCoachEvent } from '../store';
 import { isTravelling, exitTravel, travelIndex, travelBack, travelForward } from '../store/travelState';
 import { useTravelMode } from './useTravelMode';
 
@@ -17,7 +17,8 @@ export function useGlobalShortcuts() {
     if (e.code === 'Space' && hoverBlunder() && !isTravelling() && !loading()) {
       e.preventDefault();
       const fen = hoverBlunderFen();
-      if (fen) activateTravel(fen);
+      const san = hoverBlunderSan();
+      if (fen && san) activateTravel(fen, san);
     } else if (e.code === 'Escape') {
       if (isTravelling() || isReplaying()) {
         e.preventDefault();
