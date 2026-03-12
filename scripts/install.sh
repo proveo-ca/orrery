@@ -121,13 +121,14 @@ echo "🎮 Play here: http://localhost:8080"
 TS_IP=$(tailscale ip -4 2>/dev/null || true)
 
 if [ -z "$TS_IP" ]; then
-  echo -e "\n🔎 Tailscale is not running or not installed."
-  echo -e "Please install it from https://tailscale.com/download, log in, and try again.\n"
+  echo -e "\n📱 Want to play from your phone? (Optional)"
+  echo -e "Tailscale is not running or not installed."
+  echo -e "If you want secure remote access to play on your mobile device, install it from https://tailscale.com/download, log in, and run this script again.\n"
 else
   echo -e "\n♟️  Chess Coach - Tailscale Secure Access"
   echo -e "========================================="
   echo -e "1. Install the 'Tailscale' app on your phone."
-  echo -e "2. Log in with the EXACT SAME account you used on this Mac."
+  echo -e "2. Log in with the EXACT SAME account you used on this machine."
   echo -e "3. Ensure the VPN is 'Active' on your phone."
   echo -e "4. Scan this QR code with your phone's camera:\n"
 
