@@ -1,4 +1,6 @@
 @startuml
+!includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+
 package "The Anti-Framework Harness" {
     [Orchestrator\n(The Infinite Loop)] as ORCH
     [Context Manager\n(Tree-sitter/Ranking)] as CTX
@@ -16,7 +18,7 @@ MDL ---> ORCH : "Stream Thoughts/Calls"
 ORCH --> EVAL : "Check Safety/Conf (Multi-Agent Debate)"
 EVAL --> IO : "Execute (if Safe)"
 IO --> ORCH : "Tool Output"
-ORCH -> USER : "Stream Response / Proposal Artifact"
+ORCH -> USER : "Stream Response\n/ Proposal Artifact"
 
 note top of ORCH
   A simple while loop.
