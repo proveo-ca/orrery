@@ -71,5 +71,6 @@ data class DaemonResponse(
     val hints: List<String> = emptyList(),
     val phrases: HelloPhrases? = null,
     val chunk: String? = null,
-    val done: Boolean = false
+    val done: Boolean = false,
+    val error: String? = null
 )

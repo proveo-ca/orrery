@@ -34,7 +34,8 @@ data class DaemonResponse(
     val hints: List<String> = emptyList(),
     val phrases: UiPhrases? = null,
     val chunk: String? = null,
-    val done: Boolean = false
+    val done: Boolean = false,
+    val error: String? = null
 )
 
 fun main(args: Array<String>) = runBlocking {
@@ -93,7 +94,7 @@ fun main(args: Array<String>) = runBlocking {
                     } catch (e: Exception) {
                         System.err.println("Daemon error: ${e.message}")
                         e.printStackTrace()
-                        println("{}")
+                        println(json.encodeToString(DaemonResponse(error = e.message ?: "Unknown error", done = true)))
                         System.out.flush()
                     }
                 }

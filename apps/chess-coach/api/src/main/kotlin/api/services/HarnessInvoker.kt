@@ -102,7 +102,14 @@ class HarnessInvoker(private val harnessCommand: String = "./harness/bin/harness
 
                     val line = reader.readLine()
                         ?: throw IllegalStateException("Harness daemon returned no output")
-                    json.decodeFromString<DaemonResponse>(line)
+                    val res = json.decodeFromString<DaemonResponse>(line)
+                    if (res.error != null) {
+                        throw IllegalStateException("Daemon error: ${res.error}")
+                    }
+                    res
+                } catch (e: Throwable) {
+                    stopDaemon()
+                    throw e
                 } finally {
                     inFlight.decrementAndGet()
                     lastUsedAtMs = System.currentTimeMillis()
@@ -129,6 +136,11 @@ class HarnessInvoker(private val harnessCommand: String = "./harness/bin/harness
                 while (true) {
                     val line = reader.readLine() ?: break
                     val res = json.decodeFromString<DaemonResponse>(line)
+                    
+                    if (res.error != null) {
+                        throw IllegalStateException("Daemon error: ${res.error}")
+                    }
+                    
                     if (res.chunk != null) {
                         emit(res.chunk)
                     }
@@ -136,6 +148,9 @@ class HarnessInvoker(private val harnessCommand: String = "./harness/bin/harness
                         break
                     }
                 }
+            } catch (e: Throwable) {
+                stopDaemon()
+                throw e
             } finally {
                 inFlight.decrementAndGet()
                 lastUsedAtMs = System.currentTimeMillis()
