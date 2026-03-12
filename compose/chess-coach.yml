@@ -4,6 +4,13 @@ services:
     container_name: gemma_llm
     ports:
       - "11434:11434"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
     environment:
       - LLM_GENERAL_MODEL=qwen2.5:7b
       - LLM_COMMENTARY_MODEL=hf.co/NAKSTStudio/chess-gemma-commentary:Q8_0
