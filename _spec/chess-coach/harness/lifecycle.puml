@@ -40,6 +40,8 @@ BRIDGE -> MAIA : getMove(fen, difficulty)
 note over MAIA, LC0
   Maia is a policy network.
   1 node search is sufficient.
+  Uses openings.bin or Temperature
+  for stochastic, varied play.
   No LLM involved in move generation.
 end note
 

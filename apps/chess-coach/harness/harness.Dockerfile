@@ -30,7 +30,7 @@ RUN apt-get update && \
     apt-get install -y software-properties-common && \
     add-apt-repository -y universe && \
     apt-get update && \
-    apt-get install -y bash curl stockfish libopenblas0 zlib1g libstdc++6 libgcc-s1 && \
+    apt-get install -y bash curl stockfish libopenblas0 zlib1g libstdc++6 libgcc-s1 p7zip-full && \
     rm -rf /var/lib/apt/lists/*
 
 # Ubuntu installs games to /usr/games, which is not in the default PATH
@@ -46,7 +46,11 @@ RUN ldconfig
 RUN mkdir -p /app/weights && \
     curl -fL -o /app/weights/maia-1100.pb.gz https://github.com/CSSLab/maia-chess/releases/download/v1.0/maia-1100.pb.gz && \
     curl -fL -o /app/weights/maia-1600.pb.gz https://github.com/CSSLab/maia-chess/releases/download/v1.0/maia-1600.pb.gz && \
-    curl -fL -o /app/weights/maia-2200.pb.gz "https://github.com/CallOn84/LeelaNets/raw/main/Nets/Maia%202200/maia-2200.pb.gz"
+    curl -fL -o /app/weights/maia-2200.pb.gz "https://github.com/CallOn84/LeelaNets/raw/main/Nets/Maia%202200/maia-2200.pb.gz" && \
+    curl -fL -o /tmp/perfect.7z "https://github.com/gmcheems-org/free-opening-books/raw/main/books/multi/Perfect%202021.7z" && \
+    7z e /tmp/perfect.7z "*.bin" -o/app/weights/ -r && \
+    mv /app/weights/*.bin /app/weights/openings.bin && \
+    rm /tmp/perfect.7z
 
 # Copy built harness distribution
 COPY --from=builder /app/build/install/chess-coach-harness ./harness

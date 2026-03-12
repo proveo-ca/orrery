@@ -29,7 +29,7 @@ package "Docker Container (Harness: Chess Coach)" {
 
     package "External Binaries" {
         [Stockfish] as Stockfish
-        [lc0 + Maia Weights] as Lc0
+        [lc0 + Maia Weights + openings.bin] as Lc0
     }
 
     database "State Storage" as State {

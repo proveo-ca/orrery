@@ -21,10 +21,17 @@ class MaiaEngine(
         d.send("go nodes 1") // Maia is a policy network; 1 node is enough
 
         val lines = d.readUntil("bestmove", defaultTimeoutMs)
+        
+        var bestMove = ""
+
         for (line in lines) {
             if (line.startsWith("bestmove")) {
-                return line.substringAfter("bestmove ").substringBefore(" ")
+                bestMove = line.substringAfter("bestmove ").substringBefore(" ").trim()
             }
+        }
+
+        if (bestMove.isNotEmpty()) {
+            return bestMove
         }
         throw IllegalStateException("Maia did not return a bestmove")
     }
@@ -47,6 +54,13 @@ class MaiaEngine(
             defaultTimeoutMs
         )
         d.start()
+
+        // Enable the Polyglot opening book
+        d.send("setoption name OwnBook value true")
+        d.send("setoption name BookFile value $weightsDir/openings.bin")
+
+        // Configure Lc0 for more dynamic/stochastic play
+        d.send("setoption name Temperature value 0.5")
 
         // Wait for neural network to finish loading
         d.send("isready")

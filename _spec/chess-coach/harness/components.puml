@@ -33,6 +33,7 @@ package "External Services" {
 
 database "File System" as FS {
     [game_state.fen]
+    [openings.bin]
 }
 
 ' --- Relationships ---
@@ -57,6 +58,8 @@ note bottom of MAIA
   **Move Generation:**
   Maia (a policy network running on lc0)
   generates the AI move directly.
+  Uses openings.bin for early game variety,
+  and Temperature for stochastic mid-game play.
   No LLM is involved in move selection.
   Stockfish validates legality and
   derives the resulting FEN.
