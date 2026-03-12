@@ -10,12 +10,110 @@ fi
 
 mkdir -p chess-coach-app && cd chess-coach-app
 
-echo "📦 Downloading configuration..."
-# Replace this URL with the Raw URL of the docker-compose.yml from your Gist!
-curl -sSLO "https://gist.githubusercontent.com/schoettler/1f7b37e653a0cd4eb50454b9dca9c530/raw/43f26f47252a0ff49ac2f00abef09ea5d8db0f4d/docker-compose.yml"
+OS="$(uname -s)"
+MODEL_COMMENTARY="hf.co/NAKSTStudio/chess-gemma-commentary:Q8_0"
+
+if [ "$OS" = "Darwin" ]; then
+    echo "🍎 macOS detected. Configuring native Ollama for Metal GPU acceleration..."
+    
+    if ! command -v ollama > /dev/null 2>&1; then
+        echo "📥 Installing Ollama for macOS..."
+        curl -fsSL https://ollama.com/install.sh | sh
+    fi
+
+    # Ensure Ollama is running
+    if ! curl -s http://localhost:11434/api/tags > /dev/null; then
+        echo "🚀 Starting Ollama server in the background..."
+        ollama serve > /dev/null 2>&1 &
+        sleep 5
+    fi
+
+    echo "📥 Pulling LLM models natively: $MODEL_COMMENTARY (this may take a while)..."
+    ollama pull $MODEL_COMMENTARY
+
+    echo "📦 Generating macOS-optimized docker-compose.yml..."
+    cat <<EOF > docker-compose.yml
+services:
+  app:
+    build:
+      context: ../apps/chess-coach
+      dockerfile: Dockerfile
+    container_name: chess_coach
+    ports:
+      - "8080:8080"
+    environment:
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434/v1
+      - LLM_GENERAL_MODEL=$MODEL_GENERAL
+      - LLM_COMMENTARY_MODEL=$MODEL_COMMENTARY
+      - CHESS_STATE_DIR=/data
+    volumes:
+      - chess_state:/data
+    restart: unless-stopped
+
+volumes:
+  chess_state:
+EOF
+
+else
+    echo "🐧 Linux/Windows detected. Configuring Dockerized Ollama with NVIDIA GPU passthrough..."
+    
+    echo "📦 Generating standard docker-compose.yml..."
+    cat <<EOF > docker-compose.yml
+services:
+  llm:
+    image: ollama/ollama:latest
+    container_name: gemma_llm
+    ports:
+      - "11434:11434"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    environment:
+      - LLM_GENERAL_MODEL=$MODEL_GENERAL
+      - LLM_COMMENTARY_MODEL=$MODEL_COMMENTARY
+    volumes:
+      - ollama_data:/root/.ollama
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["ollama serve & sleep 5 && ollama pull \$\$LLM_GENERAL_MODEL && ollama pull \$\$LLM_COMMENTARY_MODEL && touch /tmp/models_ready && wait"]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /tmp/models_ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 15s
+
+  app:
+    build:
+      context: ../apps/chess-coach
+      dockerfile: Dockerfile
+    container_name: chess_coach
+    ports:
+      - "8080:8080"
+    environment:
+      - OLLAMA_BASE_URL=http://gemma_llm:11434/v1
+      - LLM_GENERAL_MODEL=$MODEL_GENERAL
+      - LLM_COMMENTARY_MODEL=$MODEL_COMMENTARY
+      - CHESS_STATE_DIR=/data
+    volumes:
+      - chess_state:/data
+    depends_on:
+      llm:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  ollama_data:
+  chess_state:
+EOF
+fi
 
 echo "🚀 Starting Chess Coach..."
-docker compose up -d
+docker compose up -d --build
 
 echo "✅ Chess Coach is starting up in the background!"
 echo "🎮 Play here: http://localhost:8080"
@@ -23,8 +121,8 @@ echo "🎮 Play here: http://localhost:8080"
 TS_IP=$(tailscale ip -4 2>/dev/null || true)
 
 if [ -z "$TS_IP" ]; then
-  echo -e "\n❌ Tailscale is not running or not installed."
-  echo -e "Please install it from https://tailscale.com/download/mac, log in, and try again.\n"
+  echo -e "\n🔎 Tailscale is not running or not installed."
+  echo -e "Please install it from https://tailscale.com/download, log in, and try again.\n"
 else
   echo -e "\n♟️  Chess Coach - Tailscale Secure Access"
   echo -e "========================================="
