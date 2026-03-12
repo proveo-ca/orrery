@@ -1,4 +1,4 @@
-import { For } from 'solid-js';
+import { For, Show } from 'solid-js';
 import type { Component } from 'solid-js';
 import type { Square } from 'chess.js';
 import { adviceHoveredSquares } from '../store/coachState';
@@ -7,12 +7,13 @@ import { activePlayerColor } from '../store/settingsState';
 import { useChessBoard } from '../hooks/useChessBoard';
 import { Modal } from './common/Modal';
 import { ChessSquare } from './ChessSquare';
+import { EvalBar } from './EvalBar';
 import './ChessBoard.css';
 
 const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 const RANKS = ['8', '7', '6', '5', '4', '3', '2', '1'];
 
-export const BoardWrapper: Component = () => {
+export const ChessBoard: Component = () => {
   const board = useChessBoard();
 
   const displayRanks = () => activePlayerColor() === 'w' ? RANKS : [...RANKS].reverse();
@@ -28,12 +29,16 @@ export const BoardWrapper: Component = () => {
   const turn = () => activeGame().turn();
 
   return (
-    <div 
-      class="chessboard-container"
-      onMouseEnter={board.handleBoardMouseEnter}
-      onMouseLeave={board.handleBoardMouseLeave}
-    >
-      <div class="chessboard">
+    <div class="board-layout-wrapper">
+      <Show when={board.isReplaying()}>
+        <EvalBar score={board.baseEvalScore()} isFlipped={activePlayerColor() === 'b'} />
+      </Show>
+      <div 
+        class="chessboard-container"
+        onMouseEnter={board.handleBoardMouseEnter}
+        onMouseLeave={board.handleBoardMouseLeave}
+      >
+        <div class="chessboard">
         <For each={displayRanks()}>
           {(rank, rIndex) => (
             <For each={displayFiles()}>
@@ -93,6 +98,7 @@ export const BoardWrapper: Component = () => {
           <div>{isCheckmate() ? 'Checkmate' : isStalemate() ? 'Stalemate' : 'Draw'}</div>
         </Modal>
       </div>
+    </div>
     </div>
   );
 };

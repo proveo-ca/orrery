@@ -1,6 +1,6 @@
 import { onMount } from 'solid-js';
 import type { Component } from 'solid-js';
-import { BoardWrapper } from './components/ChessBoard';
+import { ChessBoard } from './components/ChessBoard';
 import { CoachAvatar } from './components/CoachAvatar.tsx';
 import { CoachAdvice } from './components/CoachAdvice';
 import { BoardActions } from './components/Controls';
@@ -97,7 +97,7 @@ const App: Component = () => {
       <div class="board-area">
         <BoardActions />
         <CapturedPieces />
-        <BoardWrapper />
+        <ChessBoard />
       </div>
 
       <div class="footer">

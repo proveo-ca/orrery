@@ -11,6 +11,20 @@ type ExecuteMoveParams = {
   stockfishBestMove?: string;
 };
 
+function getGameOverState(game: Chess, isHumanTurn: boolean) {
+  if (!game.isGameOver()) return null;
+  if (game.isCheckmate()) {
+    return {
+      result: isHumanTurn ? 'win' : 'loss',
+      message: isHumanTurn ? "Checkmate! You win!" : "Checkmate! I win!"
+    } as const;
+  }
+  if (game.isThreefoldRepetition()) {
+    return { result: 'draw', message: "Game over — draw by threefold repetition." } as const;
+  }
+  return { result: 'draw', message: "Game over. It's a draw." } as const;
+}
+
 export function useMoveExecutor(stopStockfish: () => void) {
   const [adviceAbortController, setAdviceAbortController] = createSignal<AbortController | null>(null);
 
@@ -18,6 +32,66 @@ export function useMoveExecutor(stopStockfish: () => void) {
     const controller = adviceAbortController();
     if (controller) controller.abort();
     setAdviceAbortController(null);
+  };
+
+  const _streamAdvice = async (humanMoveSan: string, moveData: { fen: string; move: string }) => {
+    const controller = new AbortController();
+    setAdviceAbortController(controller);
+
+    try {
+      let fullAdvice = '';
+      let receivedFirstChunk = false;
+
+      await postAdviceStream(
+        { humanMove: humanMoveSan, aiMove: moveData.move, fen: moveData.fen },
+        (chunk) => {
+          if (!receivedFirstChunk) {
+            fullAdvice = ''; // Clear the "thinking" phrase on first token
+            receivedFirstChunk = true;
+          }
+          fullAdvice += chunk;
+          setAdvice(fullAdvice);
+        },
+        { signal: controller.signal }
+      );
+
+      const adviceLower = fullAdvice.toLowerCase();
+      const isBlunder = adviceLower.includes('blunder') || adviceLower.includes('mistake');
+      dispatchCoachEvent({ type: 'ADVICE_RECEIVED', isBlunder });
+    } catch (err: any) {
+      if (err.name === 'AbortError') {
+        logger.action('Advice request aborted due to new move.');
+      } else {
+        setAdvice('Error getting advice.');
+        dispatchCoachEvent({ type: 'AI_ERROR' });
+      }
+    }
+  };
+
+  const _processAITurn = async (humanMoveSan: string, fenAfterHuman: string) => {
+    try {
+      const moveData = await postMove({ humanMoveSan, fenAfterHuman, difficulty: difficulty() });
+      
+      const aiGame = new Chess(fenAfterHuman);
+      const aiMove = aiGame.move(moveData.move);
+      addMoveToHistory(moveData.fen, { from: aiMove.from, to: aiMove.to });
+
+      const finalGame = new Chess(moveData.fen);
+      const overState = getGameOverState(finalGame, false);
+      if (overState) {
+        dispatchCoachEvent({ type: 'GAME_OVER', result: overState.result });
+        setAdvice(overState.message);
+        return;
+      }
+
+      dispatchCoachEvent({ type: 'AI_MOVED' });
+      
+      // Kick off advice stream (non-blocking)
+      void _streamAdvice(humanMoveSan, moveData);
+    } catch (e) {
+      setAdvice('Error communicating with the coach.');
+      dispatchCoachEvent({ type: 'AI_ERROR' });
+    }
   };
 
   const executeMove = async (
@@ -43,18 +117,10 @@ export function useMoveExecutor(stopStockfish: () => void) {
       addMoveToHistory(fenAfterHuman, { from: result.from, to: result.to });
       stopStockfish();
 
-      // Check if human ended the game
-      if (gameCopy.isGameOver()) {
-        if (gameCopy.isCheckmate()) {
-          dispatchCoachEvent({ type: 'GAME_OVER', result: 'win' });
-          setAdvice("Checkmate! You win!");
-        } else if (gameCopy.isThreefoldRepetition()) {
-          dispatchCoachEvent({ type: 'GAME_OVER', result: 'draw' });
-          setAdvice("Game over — draw by threefold repetition.");
-        } else {
-          dispatchCoachEvent({ type: 'GAME_OVER', result: 'draw' });
-          setAdvice("Game over. It's a draw.");
-        }
+      const overState = getGameOverState(gameCopy, true);
+      if (overState) {
+        dispatchCoachEvent({ type: 'GAME_OVER', result: overState.result });
+        setAdvice(overState.message);
         return { didMove: true, fenAfterHuman };
       }
       
@@ -68,69 +134,8 @@ export function useMoveExecutor(stopStockfish: () => void) {
         setAdvice(phrases[Math.floor(Math.random() * phrases.length)]);
       }
       
-      let moveData: { fen: string; move: string };
-      try {
-        moveData = await postMove({ humanMoveSan, fenAfterHuman, difficulty: difficulty() });
-      } catch (e) {
-        setAdvice('Error communicating with the coach.');
-        dispatchCoachEvent({ type: 'AI_ERROR' });
-        return { didMove: true, fenAfterHuman };
-      }
-      
-      const aiGame = new Chess(fenAfterHuman);
-      const aiMove = aiGame.move(moveData.move);
-      addMoveToHistory(moveData.fen, { from: aiMove.from, to: aiMove.to });
-
-      // Check if AI ended the game
-      const finalGame = new Chess(moveData.fen);
-      if (finalGame.isGameOver()) {
-        if (finalGame.isCheckmate()) {
-          dispatchCoachEvent({ type: 'GAME_OVER', result: 'loss' });
-          setAdvice("Checkmate! I win!");
-        } else if (finalGame.isThreefoldRepetition()) {
-          dispatchCoachEvent({ type: 'GAME_OVER', result: 'draw' });
-          setAdvice("Game over — draw by threefold repetition.");
-        } else {
-          dispatchCoachEvent({ type: 'GAME_OVER', result: 'draw' });
-          setAdvice("Game over. It's a draw.");
-        }
-        return { didMove: true, fenAfterHuman };
-      }
-
-      // AI moved — switch to idle while advice loads
-      dispatchCoachEvent({ type: 'AI_MOVED' });
-
-      const controller = new AbortController();
-      setAdviceAbortController(controller);
-
-      try {
-        let fullAdvice = '';
-        let receivedFirstChunk = false;
-
-        await postAdviceStream(
-          { humanMove: humanMoveSan, aiMove: moveData.move, fen: moveData.fen },
-          (chunk) => {
-            if (!receivedFirstChunk) {
-              fullAdvice = ''; // Clear the "thinking" phrase on first token
-              receivedFirstChunk = true;
-            }
-            fullAdvice += chunk;
-            setAdvice(fullAdvice);
-          },
-          { signal: controller.signal }
-        );
-
-        const adviceLower = fullAdvice.toLowerCase();
-        const isBlunder = adviceLower.includes('blunder') || adviceLower.includes('mistake');
-        dispatchCoachEvent({ type: 'ADVICE_RECEIVED', isBlunder });
-      } catch (err: any) {
-        if (err.name === 'AbortError') {
-          logger.action('Advice request aborted due to new move.');
-        } else {
-          setAdvice('Error getting advice.');
-          dispatchCoachEvent({ type: 'AI_ERROR' });
-        }
-      }
+      // Trigger AI asynchronously
+      void _processAITurn(humanMoveSan, fenAfterHuman);
 
       return { didMove: true, fenAfterHuman };
     } catch (e) {

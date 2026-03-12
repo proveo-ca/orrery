@@ -121,7 +121,7 @@ echo "🎮 Play here: http://localhost:8080"
 TS_IP=$(tailscale ip -4 2>/dev/null || true)
 
 if [ -z "$TS_IP" ]; then
-  echo -e "\n📱 Want to play from your phone? (Optional)"
+  echo -e "\n📱 Want to play from your phone?"
   echo -e "Tailscale is not running or not installed."
   echo -e "If you want secure remote access to play on your mobile device, install it from https://tailscale.com/download, log in, and run this script again.\n"
 else

@@ -1,17 +1,16 @@
-import { createSignal, createEffect, onCleanup } from 'solid-js';
+import { createSignal, createEffect, onCleanup, createMemo } from 'solid-js';
 import { Chess, type Square } from 'chess.js';
-import { baseAdvice, baseCoachEmotion, clearHoverOverride, setHoverAdvice, setHoverEmotion, setHoverBlunder, type CoachEmotion } from '../store/coachState';
+import { baseAdvice, baseCoachEmotion, clearHoverOverride, setHoverAdvice, setHoverEmotion, type CoachEmotion } from '../store/coachState';
 import { currentFen, currentIndex, fenHistory, moveHistory } from '../store/gameState';
 import { isTravelling, travelFen, travelIndex, travelMoveHistory } from '../store/travelState';
 import { activePlayerColor } from '../store/settingsState';
 import { logger } from '../utils/logger';
 import { useStockfishWorker } from './useStockfishWorker';
 import { useMoveExecutor } from './useMoveExecutor';
-
-type HoverEval = { id: number; from: Square; to: Square; fen: string };
+import { useHoverEvaluator, type HoverEval } from './useHoverEvaluator';
 
 export function useChessBoard() {
-  const [game, setGame] = createSignal(new Chess(currentFen()));
+  const game = createMemo(() => new Chess(currentFen()));
   const [selectedSquare, setSelectedSquare] = createSignal<Square | null>(null);
   const [hoveredSquare, setHoveredSquare] = createSignal<Square | null>(null);
   const [validMoves, setValidMoves] = createSignal<string[]>([]);
@@ -27,8 +26,8 @@ export function useChessBoard() {
   const [baseEvalScore, setBaseEvalScore] = createSignal<{ kind: 'cp' | 'mate', value: number } | null>(null);
 
   const resumeBaseAnalysis = () => {
-    const g = game();
-    if (g.turn() === activePlayerColor() && !g.isGameOver() && !isTravelling()) {
+    const g = activeGame();
+    if (!g.isGameOver() && (g.turn() === activePlayerColor() || isReplaying())) {
       send(`position fen ${g.fen()}`);
       send('go depth 12');
     }
@@ -72,95 +71,23 @@ export function useChessBoard() {
     }
   });
 
-  let lastProcessedEvalId = -1;
-
-  createEffect(() => {
-    if (!canApplyHoverOverride()) return;
-
-    const hovered = hoveredSquare();
-    const selected = selectedSquare();
-    if (!hovered || !selected) return;
-
-    const evalTarget = currentHoverEval();
-    if (!evalTarget) return;
-    if (evalTarget.to !== hovered || evalTarget.from !== selected) return;
-
-    const msg = analysis().lastInfo;
-    if (!msg || !msg.score) return;
-
-    const baseScore = baseEvalScore();
-    if (!baseScore) return; // We need the before-score to calculate a delta
-
-    // Skip if we already processed this eval's result
-    if (evalTarget.id <= lastProcessedEvalId) return;
-
-    // Anti-race-condition: Ensure the PV move is legal in the hover position.
-    // If Stockfish sends an info message from a previous search, the PV move 
-    // will almost certainly be illegal in the new FEN.
-    if (!msg.pv || msg.pv.length === 0) {
-      if (msg.score.kind !== 'mate' || msg.score.value !== 0) {
-        return; // Ignore empty PVs unless it's a checkmate (mate 0)
-      }
-    } else {
-      try {
-        const testGame = new Chess(evalTarget.fen);
-        const uci = msg.pv[0];
-        const from = uci.slice(0, 2);
-        const to = uci.slice(2, 4);
-        const promotion = uci.length > 4 ? uci[4] : undefined;
-        const move = testGame.move({ from, to, promotion });
-        if (!move) return; // Stale info message from previous position
-      } catch {
-        return; // Invalid move format
-      }
-    }
-
-    // Calculate Human's CP before the move
-    const humanBaseCp = baseScore.kind === 'mate'
-      ? (baseScore.value > 0 ? 10000 : -10000)
-      : baseScore.value;
-
-    // Calculate Human's CP after the move
-    // msg.score is relative to the AI (since it's AI's turn in evalTarget.fen)
-    const humanHoverCp = msg.score.kind === 'mate'
-      ? (msg.score.value > 0 ? -10000 : 10000)
-      : -msg.score.value;
-
-    // A blunder is a move that drops the evaluation by 200+ centipawns
-    const delta = humanHoverCp - humanBaseCp;
-    const isBlunder = delta <= -200;
-
-    logger.action(`Hover Eval Result [${evalTarget.from}-${evalTarget.to}]`, { 
-      baseScore,
-      hoverScore: msg.score,
-      delta,
-      isBlunder 
-    });
-
-    if (!isBlunder) return;
-
-    logger.action('Stockfish Hover Blunder Detected', { msg, evalTarget });
-
-    const piece = game().get(evalTarget.from);
-    const pieceName = piece ? `${piece.color}${piece.type}` : 'piece';
-
-    // Generate SAN for the blunder
-    const gCopy = new Chess(currentFen());
-    const m = gCopy.move({ from: evalTarget.from, to: evalTarget.to, promotion: 'q' });
-    const san = m ? m.san : `${evalTarget.from}-${evalTarget.to}`;
-
-    lastProcessedEvalId = evalTarget.id;
-    setHoverAdvice(`Moving the ${pieceName} to ${evalTarget.to} is a blunder`);
-    setHoverEmotion('shocked');
-    setHoverBlunder(true, evalTarget.fen, san);
+  useHoverEvaluator({
+    canApplyHoverOverride,
+    hoveredSquare,
+    selectedSquare,
+    currentHoverEval,
+    analysis,
+    baseEvalScore,
+    game
   });
 
   onCleanup(() => {
     moveExecutor.abortAdvice();
+    clearTimeout(evalTimeout);
   });
 
   createEffect(() => {
-    setGame(new Chess(currentFen()));
+    activeGame().fen();
     setSelectedSquare(null);
     setHoveredSquare(null);
     setValidMoves([]);
@@ -238,7 +165,7 @@ export function useChessBoard() {
 
           send('stop');
           send(`position fen ${gameCopy.fen()}`);
-          send('go depth 8');
+          send('go depth 12');
         } catch (e) {
           setCurrentHoverEval(null);
           send('stop');
@@ -365,6 +292,8 @@ export function useChessBoard() {
     game,
     activeGame,
     lastMove,
+    isReplaying,
+    baseEvalScore,
     selectedSquare,
     hoveredSquare,
     validMoves,

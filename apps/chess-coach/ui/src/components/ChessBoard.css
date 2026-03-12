@@ -1,9 +1,17 @@
+.board-layout-wrapper {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  justify-content: center;
+  align-items: stretch;
+  width: 100%;
+}
+
 .chessboard-container {
   display: flex;
   justify-content: center;
   filter: none;
   transition: filter 220ms ease;
-  width: 100%;
 }
 
 .chessboard {
