@@ -29,7 +29,7 @@ class StockfishService {
           // 3. Watchdog: If we receive ANY message, the worker is alive.
           // Reset the 5s timeout if we are currently expecting something.
           if (this.isSearching) {
-            this.startWatchdog(5000);
+            this.startWatchdog(30000);
           }
 
           // Stop the watchdog when the search or healthcheck completes
@@ -98,7 +98,7 @@ class StockfishService {
     // Start watchdog for commands that expect a response
     if (command.startsWith('go ') || command === 'isready') {
       this.isSearching = true;
-      this.startWatchdog(5000);
+      this.startWatchdog(30000);
     } else if (command === 'stop') {
       this.isSearching = false;
       this.clearWatchdog();
