@@ -36,7 +36,7 @@ if [ "$OS" = "Darwin" ]; then
 services:
   app:
     build:
-      context: ../apps/chess-coach
+      context: ../projects/chess-coach
       dockerfile: Dockerfile
     container_name: chess_coach
     ports:
@@ -89,7 +89,7 @@ services:
 
   app:
     build:
-      context: ../apps/chess-coach
+      context: ../projects/chess-coach
       dockerfile: Dockerfile
     container_name: chess_coach
     ports:

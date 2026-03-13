@@ -1,0 +1,50 @@
+:root {
+  /* Colors - Dark Mode (Default) */
+  --bg-color: #242424;
+  --surface-color: #1a1a1a;
+  --panel-bg: rgba(0, 0, 0, 0.2);
+  --text-color: rgba(255, 255, 255, 0.87);
+  --text-muted: #aaa;
+  --primary-color: #76b3e1;
+  --primary-hover: #646cff;
+  --border-color: #444;
+
+  /* Typography */
+  --font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+
+  /* Spacing & Sizing */
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 2rem;
+  --border-radius-md: 8px;
+
+  /* Mobile First Defaults (< 720px) */
+  --board-size: min(100vw - 2rem, 480px);
+  --square-size: calc(var(--board-size) / 8);
+  --app-max-width: 100%;
+  --header-columns: 1fr; /* Stack avatar and advice vertically */
+  --advice-width: 100%;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg-color: #ffffff;
+    --surface-color: #f9f9f9;
+    --panel-bg: rgba(0, 0, 0, 0.05);
+    --text-color: #213547;
+    --text-muted: #666;
+    --primary-color: #0056b3;
+    --primary-hover: #747bff;
+    --border-color: #ccc;
+  }
+}
+
+/* Desktop Overrides */
+@media (min-width: 720px) {
+  :root {
+    --board-size: 480px;
+    --app-max-width: 720px;
+    --header-columns: 1fr 3fr; /* Avatar left, Advice right */
+    --advice-width: 32rem;
+  }
+}

@@ -1,0 +1,27 @@
+# Git
+.git
+.gitignore
+
+# Node / UI
+**/node_modules
+**/dist
+**/.npm
+**/.tmp
+
+# Kotlin / Gradle
+.gradle
+**/build/
+!harness/build/install/
+!api/build/install/
+**/.gradle/
+**/out/
+**/bin/
+
+# IDEs
+.idea
+*.iml
+.vscode
+
+# OS
+.DS_Store
+Thumbs.db

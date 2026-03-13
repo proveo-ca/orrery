@@ -1,0 +1,16 @@
+.history-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  background: rgba(0, 0, 0, 0);
+  backdrop-filter: none;
+  transition:
+    background 0.25s ease,
+    backdrop-filter 0.25s ease;
+}
+
+.history-overlay.active {
+  background: rgba(0, 0, 0, 0.15);
+  backdrop-filter: grayscale(1) contrast(1.2) brightness(0.9);
+}

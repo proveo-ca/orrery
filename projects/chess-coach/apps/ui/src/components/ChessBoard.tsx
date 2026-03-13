@@ -1,0 +1,121 @@
+import type { Square } from "chess.js";
+import { For, Show } from "solid-js";
+import type { Component } from "solid-js";
+
+import { ChessSquare } from "~/components/ChessSquare";
+import { Modal } from "~/components/common/Modal";
+import { EvalBar } from "~/components/EvalBar";
+import { useChessBoard } from "~/hooks/useChessBoard";
+import { adviceHoveredSquares } from "~/store/coachStore";
+import { activePlayerColor } from "~/store/settingsStore";
+import { isTravelling } from "~/store/travelStore";
+import "~/components/ChessBoard.css";
+
+const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"];
+const RANKS = ["8", "7", "6", "5", "4", "3", "2", "1"];
+
+export const ChessBoard: Component = () => {
+  const board = useChessBoard();
+
+  const displayRanks = () => (activePlayerColor() === "w" ? RANKS : [...RANKS].reverse());
+  const displayFiles = () => (activePlayerColor() === "w" ? FILES : [...FILES].reverse());
+
+  const activeGame = () => board.activeGame();
+  const lastMove = () => board.lastMove();
+
+  const isCheck = () => activeGame().inCheck();
+  const isCheckmate = () => activeGame().isCheckmate();
+  const isStalemate = () => activeGame().isStalemate();
+  const isGameOver = () => !isTravelling() && activeGame().isGameOver();
+  const turn = () => activeGame().turn();
+
+  return (
+    <div class="board-layout-wrapper">
+      <Show when={board.isReplaying()}>
+        <EvalBar
+          score={board.baseEvalScore()}
+          isFlipped={activePlayerColor() === "b"}
+          turn={turn()}
+        />
+      </Show>
+      <div
+        class="chessboard-container"
+        onMouseEnter={board.handleBoardMouseEnter}
+        onMouseLeave={board.handleBoardMouseLeave}
+      >
+        <div class="chessboard">
+          <For each={displayRanks()}>
+            {(rank, rIndex) => (
+              <For each={displayFiles()}>
+                {(file, fIndex) => {
+                  const square = `${file}${rank}` as Square;
+                  const piece = () => activeGame().get(square);
+
+                  const isInvalid = () => {
+                    if (board.hoveredSquare() !== square) return false;
+                    const selected = board.selectedSquare();
+                    if (selected) {
+                      return !board.validMoves().includes(square) && square !== selected;
+                    } else {
+                      const p = piece();
+                      if (!p) return false;
+                      return (
+                        p.color !== activePlayerColor() ||
+                        board.game().turn() !== activePlayerColor()
+                      );
+                    }
+                  };
+
+                  return (
+                    <ChessSquare
+                      square={square}
+                      piece={piece() ?? null}
+                      isLight={(rIndex() + fIndex()) % 2 === 0}
+                      isSelected={board.selectedSquare() === square}
+                      isHovered={board.hoveredSquare() === square}
+                      isValidMove={board.validMoves().includes(square)}
+                      isAdviceHovered={adviceHoveredSquares().includes(square)}
+                      isInvalid={isInvalid()}
+                      showRank={fIndex() === 0 && rank}
+                      showFile={rIndex() === 7 && file}
+                      onClick={() => board.handleSquareClick(square)}
+                      onMouseEnter={() => board.handleSquareHover(square)}
+                      onDragStart={(e) => board.handleDragStart(square, e)}
+                      onDragEnter={(e) => board.handleDragEnter(square, e)}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={(e) => board.handleDrop(square, e)}
+                      lastMove={lastMove()}
+                      isCheck={
+                        piece()?.type === "k" &&
+                        piece()?.color === turn() &&
+                        isCheck() &&
+                        !isCheckmate()
+                      }
+                      isCheckmate={
+                        piece()?.type === "k" && piece()?.color === turn() && isCheckmate()
+                      }
+                      isStalemate={
+                        piece()?.type === "k" && piece()?.color === turn() && isStalemate()
+                      }
+                    />
+                  );
+                }}
+              </For>
+            )}
+          </For>
+
+          <Modal
+            open={isGameOver()}
+            position="absolute"
+            dismissible={false}
+            showCloseButton={false}
+            overlayClass="game-over-overlay"
+            contentClass="game-over-banner"
+          >
+            <div>{isCheckmate() ? "Checkmate" : isStalemate() ? "Stalemate" : "Draw"}</div>
+          </Modal>
+        </div>
+      </div>
+    </div>
+  );
+};

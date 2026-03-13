@@ -1,0 +1,77 @@
+.coach-panel {
+  background: var(--panel-bg);
+  padding: 1rem 1.5rem;
+  border-radius: var(--border-radius-md);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: left;
+  height: 10rem;
+  box-sizing: border-box;
+  max-height: 16rem;
+  width: var(--advice-width);
+}
+
+.coach-panel h3 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  color: var(--primary-color);
+  font-size: 1.1rem;
+  flex-shrink: 0; /* Prevent the title from shrinking */
+}
+
+.coach-panel p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+/* Highlighted chess notation */
+.move-highlight {
+  color: var(--primary-color);
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  font-weight: 600;
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease;
+  padding: 0 2px;
+  border-radius: 3px;
+}
+
+.move-highlight:hover {
+  color: #fff;
+  background-color: rgba(118, 179, 225, 0.3);
+}
+
+.why-hint {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--primary-color);
+  opacity: 0.9;
+  animation: why-pulse 1.5s ease-in-out infinite;
+}
+
+.why-hint kbd {
+  display: inline-block;
+  padding: 0.1rem 0.4rem;
+  font-size: 0.8rem;
+  font-family: inherit;
+  background: rgba(118, 179, 225, 0.2);
+  border: 1px solid rgba(118, 179, 225, 0.5);
+  border-radius: 3px;
+  color: #fff;
+  margin: 0 0.15rem;
+}
+
+@keyframes why-pulse {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}

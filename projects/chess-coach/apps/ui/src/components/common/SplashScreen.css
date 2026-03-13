@@ -1,0 +1,39 @@
+.splash-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--bg-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  color: var(--text-color);
+}
+
+.splash-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+}
+
+.splash-avatar-wrapper {
+  transform: scale(1.5);
+  margin-bottom: 3rem;
+}
+
+/* Override the avatar's internal positioning for the splash screen */
+.splash-avatar-wrapper .cat {
+  position: relative;
+  margin: 0 auto;
+}
+
+.splash-title {
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+}

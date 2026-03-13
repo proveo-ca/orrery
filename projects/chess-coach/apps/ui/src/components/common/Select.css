@@ -1,0 +1,23 @@
+.common-select {
+  border-radius: var(--border-radius-md);
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 0.9rem;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: var(--surface-color);
+  cursor: pointer;
+  transition: border-color 0.25s;
+  color: inherit;
+}
+.common-select:hover:not(:disabled) {
+  border-color: var(--primary-hover);
+}
+.common-select:focus,
+.common-select:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+.common-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
