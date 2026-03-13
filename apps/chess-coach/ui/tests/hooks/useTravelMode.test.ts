@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { useTravelMode } from '../src/hooks/useTravelMode';
-import { stockfishService } from '../src/services/stockfishService';
-import { startTravel } from '../src/store/travelState';
+import { useTravelMode } from '~/hooks/useTravelMode';
+import { stockfishService } from '~/services/stockfishService';
+import { startTravel } from '~/store/travelState';
 
 // Mock the stockfish service
-vi.mock('../src/services/stockfishService', () => ({
+vi.mock('~/services/stockfishService', () => ({
   stockfishService: {
     getWorker: vi.fn(),
     addListener: vi.fn(),
@@ -14,18 +14,18 @@ vi.mock('../src/services/stockfishService', () => ({
 }));
 
 // Mock the API
-vi.mock('../src/services/api', () => ({
+vi.mock('~/services/api', () => ({
   postExplainStream: vi.fn().mockResolvedValue(undefined)
 }));
 
 // Mock the travel state
-vi.mock('../src/store/travelState', () => ({
+vi.mock('~/store/travelState', () => ({
   startTravel: vi.fn(),
   isTravelling: vi.fn().mockReturnValue(true)
 }));
 
 // Mock the general store
-vi.mock('../src/store', () => ({
+vi.mock('~/store', () => ({
   currentFen: vi.fn().mockReturnValue('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'),
   setHoverAdvice: vi.fn(),
   setHoverEmotion: vi.fn(),

@@ -1,18 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createSignal } from 'solid-js';
 import { Chess, type Square } from 'chess.js';
-import { useHoverEvaluator, type HoverEval } from '../../src/hooks/useHoverEvaluator';
+import { useHoverEvaluator, type HoverEval } from '~/hooks/useHoverEvaluator';
 import { renderHookTest } from '../utils/test-effect';
-import * as coachState from '../../src/store/coachState';
+import * as coachState from '~/store/coachState';
 
 // Mock the store setters so we can spy on them
-vi.mock('../../src/store/coachState', () => ({
+vi.mock('~/store/coachState', () => ({
   setHoverAdvice: vi.fn(),
   setHoverEmotion: vi.fn(),
   setHoverBlunder: vi.fn(),
 }));
 
-vi.mock('../../src/store/gameState', () => ({
+vi.mock('~/store/gameState', () => ({
   currentFen: vi.fn(() => 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'),
 }));
 
