@@ -8,6 +8,8 @@ type Props = {
 };
 
 export const Credits: Component<Props> = (props) => {
+  const isWebMode = import.meta.env.VITE_TARGET === 'web';
+
   return (
     <Modal open={props.open} onClose={props.onClose} title="Credits" position="fixed">
       <div class="credits">
@@ -31,9 +33,9 @@ export const Credits: Component<Props> = (props) => {
             </a>
           </li>
           <li>
-            <strong>The Brain (Chess Moves):</strong> by Maia <br />
-            <a href="https://maiachess.com/" target="_blank" rel="noopener noreferrer">
-              maiachess.com
+            <strong>The Brain (Chess Moves):</strong> by Stockfish <br />
+            <a href="https://stockfishchess.org/" target="_blank" rel="noopener noreferrer">
+              stockfishchess.org
             </a>
           </li>
           <li>
@@ -43,7 +45,7 @@ export const Credits: Component<Props> = (props) => {
             </a>
           </li>
           <li>
-            <strong>All running in your PC:</strong> by Roberto von Schoettler <br />
+            <strong>{isWebMode ? 'All running in your browser:' : 'All running in your PC:'}</strong> by Roberto von Schoettler <br />
             <a href="https://github.com/proveo-ca" target="_blank" rel="noopener noreferrer">
               github.com/proveo-ca
             </a>
