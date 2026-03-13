@@ -1,4 +1,5 @@
 .board-layout-wrapper {
+  position: relative;
   display: flex;
   flex-direction: row;
   gap: 16px;

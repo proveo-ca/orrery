@@ -91,10 +91,10 @@ CP: ${cpString}`;
     const cpAfter = evalAfter.isMate ? `Mate in ${evalAfter.mateIn}` : `${evalAfter.cp}`;
 
     const explainUserPrompt = isBlunder
-        ? `Before FEN: ${fenBefore}\nAfter FEN: ${fenAfter}\nBlunder played: ${moveSan} (by ${moveColor})\nEval Before: ${cpBefore}\nEval After: ${cpAfter}\nBest response for ${opponentColor}: ${evalAfter.bestMove}`
-        : `Before FEN: ${fenBefore}\nAfter FEN: ${fenAfter}\nGreat move played: ${moveSan} (by ${moveColor})\nEval Before: ${cpBefore}\nEval After: ${cpAfter}`;
+        ? `Before FEN: ${fenBefore}\nAfter FEN: ${fenAfter}\nBlunder played: ${moveSan} (by ${moveColor})\nEval Before: ${cpBefore}\nEval After: ${cpAfter}\nBest continuation for ${opponentColor}: ${evalAfter.pv}`
+        : `Before FEN: ${fenBefore}\nAfter FEN: ${fenAfter}\nGreat move played: ${moveSan} (by ${moveColor})\nEval Before: ${cpBefore}\nEval After: ${cpAfter}\nBest continuation: ${evalAfter.pv}`;
     
-    yield* this.llmClient.promptStream(explainSystemPrompt, explainUserPrompt, 0.7, 60);
+    yield* this.llmClient.promptStream(explainSystemPrompt, explainUserPrompt, 0.7, 80);
   }
 
   async generateUiPhrases(): Promise<UiPhrases> {

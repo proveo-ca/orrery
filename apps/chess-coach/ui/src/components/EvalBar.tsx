@@ -5,15 +5,25 @@ interface EvalBarProps {
   score?: { kind: 'cp' | 'mate'; value: number } | null;
   isFlipped?: boolean;
   maxPawns?: number;
+  turn?: 'w' | 'b';
 }
 
 export const EvalBar: Component<EvalBarProps> = (props) => {
   const maxPawns = () => props.maxPawns ?? 10;
 
+  // Convert relative score (side to move) to absolute score (White's perspective)
+  const absoluteValue = () => {
+    if (!props.score) return 0;
+    let val = props.score.value;
+    if (props.turn === 'b') val = -val;
+    return val;
+  };
+
   const numericValue = () => {
     if (!props.score) return 0;
-    if (props.score.kind === 'mate') return props.score.value > 0 ? 100 : -100;
-    return props.score.value / 100; // cp to pawns
+    const val = absoluteValue();
+    if (props.score.kind === 'mate') return val > 0 ? 100 : -100;
+    return val / 100; // cp to pawns
   };
 
   // Normalize input: -maxPawns → +maxPawns becomes -1 → +1
@@ -25,12 +35,12 @@ export const EvalBar: Component<EvalBarProps> = (props) => {
 
   const whiteHeight = () => 50 + normalized() * 50; // % from top
   const blackHeight = () => 100 - whiteHeight();
-  const dividerTop = () => (100 - whiteHeight()) + '%';
 
   const displayValue = () => {
     if (!props.score) return '0.0';
-    if (props.score.kind === 'mate') return `M${Math.abs(props.score.value)}`;
-    const v = props.score.value / 100;
+    const val = absoluteValue();
+    if (props.score.kind === 'mate') return val > 0 ? `+M${val}` : `-M${Math.abs(val)}`;
+    const v = val / 100;
     return v > 0 ? `+${v.toFixed(1)}` : v.toFixed(1);
   };
 
@@ -41,20 +51,17 @@ export const EvalBar: Component<EvalBarProps> = (props) => {
   };
 
   return (
-    <div class="eval-container">
-      <div class="eval-bar">
-        <div
-          class="eval-white"
-          style={{ height: `${whiteHeight()}%` }}
-        />
-        <div
-          class="eval-black"
-          style={{ height: `${blackHeight()}%` }}
-        />
-        <div class="eval-divider" style={{ top: dividerTop() }} />
-        <div class="eval-value" style={{ color: valueColor() }}>
-          {displayValue()}
-        </div>
+    <div class="eval-bar">
+      <div
+        class="eval-white"
+        style={{ height: `${whiteHeight()}%` }}
+      />
+      <div
+        class="eval-black"
+        style={{ height: `${blackHeight()}%` }}
+      />
+      <div class="eval-value" style={{ color: valueColor() }}>
+        {displayValue()}
       </div>
     </div>
   );

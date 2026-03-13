@@ -31,7 +31,7 @@ export const ChessBoard: Component = () => {
   return (
     <div class="board-layout-wrapper">
       <Show when={board.isReplaying()}>
-        <EvalBar score={board.baseEvalScore()} isFlipped={activePlayerColor() === 'b'} />
+        <EvalBar score={board.baseEvalScore()} isFlipped={activePlayerColor() === 'b'} turn={turn()} />
       </Show>
       <div 
         class="chessboard-container"

@@ -54,7 +54,8 @@ RUN mkdir -p /app/weights && \
 
 # Download 3-4-5 piece Syzygy tablebases (approx 1GB)
 RUN mkdir -p /app/syzygy && \
-    wget -q -r -np -nd -A "*.rtbw,*.rtbz" https://tablebase.lichess.ovh/tables/standard/3-4-5/ -P /app/syzygy/
+    wget -q -r -np -nd -A "*.rtbw" https://tablebase.lichess.ovh/tables/standard/3-4-5-wdl/ -P /app/syzygy/ && \
+    wget -q -r -np -nd -A "*.rtbz" https://tablebase.lichess.ovh/tables/standard/3-4-5-dtz/ -P /app/syzygy/
 
 ENV SYZYGY_PATH="/app/syzygy"
 

@@ -1,6 +1,6 @@
 import { UciDriver } from './UciDriver.ts';
 
-export type EvalResult = { bestMove: string; cp: number; isMate: boolean; mateIn: number };
+export type EvalResult = { bestMove: string; cp: number; isMate: boolean; mateIn: number; pv: string };
 
 export class StockfishEngine {
   private driver: UciDriver;
@@ -18,9 +18,14 @@ export class StockfishEngine {
     let cp = 0;
     let isMate = false;
     let mateIn = 0;
+    let pv = '';
 
     const lines = await this.driver.readUntil('bestmove', 15000);
     for (const line of lines) {
+      if (line.includes(' pv ')) {
+        const match = line.match(/ pv (.*)/);
+        if (match) pv = match[1].trim();
+      }
       if (line.includes('score cp')) {
         const match = line.match(/score cp (-?\d+)/);
         if (match) cp = parseInt(match[1], 10);
@@ -33,7 +38,7 @@ export class StockfishEngine {
         bestMove = line.split(' ')[1];
       }
     }
-    return { bestMove, cp, isMate, mateIn };
+    return { bestMove, cp, isMate, mateIn, pv };
   }
 
   async getMoveAtElo(fen: string, elo: number): Promise<string> {
