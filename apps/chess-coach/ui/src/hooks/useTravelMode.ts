@@ -17,10 +17,22 @@ export function useTravelMode(workerPath: string = '/stockfish-18-lite.js') {
 
     return new Promise<string[]>((resolve) => {
       let bestPV: string[] = [];
+      let isFlushing = true; // Ignore messages until we see 'readyok'
 
       const handler = (event: MessageEvent) => {
         const raw = event.data;
         if (typeof raw !== 'string') return;
+
+        if (isFlushing) {
+          if (raw === 'readyok') {
+            isFlushing = false;
+            // Now that the queue is flushed, start the actual search
+            stockfishService.send('ucinewgame');
+            stockfishService.send(`position fen ${fen}`);
+            stockfishService.send(`go depth ${depth}`);
+          }
+          return; // Ignore stray 'bestmove' from previous searches
+        }
 
         const tokens = raw.trim().split(/\s+/);
 
@@ -45,10 +57,11 @@ export function useTravelMode(workerPath: string = '/stockfish-18-lite.js') {
       };
 
       stockfishService.addListener(handler);
+      
+      // Stop current search and queue an 'isready' ping.
+      // The worker will output the old 'bestmove' followed by 'readyok'.
       stockfishService.send('stop');
-      stockfishService.send('ucinewgame');
-      stockfishService.send(`position fen ${fen}`);
-      stockfishService.send(`go depth ${depth}`);
+      stockfishService.send('isready');
     });
   };
 
