@@ -1,6 +1,7 @@
 import type { Difficulty } from '../store/settingsState';
 
-const API_URL = import.meta.env.VITE_API_URL;
+const TARGET = import.meta.env.VITE_TARGET;
+const API_URL = import.meta.env.VITE_API_URL || window.location.origin;
 
 /** fen is the position AFTER the human move has been applied client-side. */
 export type MoveRequest = { humanMoveSan: string; fenAfterHuman: string; difficulty?: Difficulty };
@@ -154,9 +155,9 @@ class WebWorkerCoachService implements CoachService {
   }
 }
 
-// Fallback logic: If VITE_API_URL is explicitly set, use the Kotlin backend.
-// Otherwise, default to the 100% in-browser Web Worker engine.
-const activeService: CoachService = API_URL ? new HttpCoachService() : new WebWorkerCoachService();
+// If VITE_TARGET is explicitly 'web', use the 100% in-browser Web Worker engine.
+// Otherwise, default to the Kotlin backend (Desktop/Docker mode).
+const activeService: CoachService = TARGET === 'web' ? new WebWorkerCoachService() : new HttpCoachService();
 
 // Export facade functions to maintain compatibility with existing UI imports
 export const postNewGame = () => activeService.postNewGame();
