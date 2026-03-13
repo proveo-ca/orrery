@@ -1,6 +1,7 @@
 import { Chess, type Square } from "chess.js";
 import { createEffect, createMemo, createSignal, onCleanup } from "solid-js";
 
+import { DEFAULT_STOCKFISH_WORKER_URL } from "~/engine/StockfishEngine.ts";
 import { type HoverEval, useHoverEvaluator } from "~/hooks/useHoverEvaluator";
 import { useMoveExecutor } from "~/hooks/useMoveExecutor";
 import { useStockfishWorker } from "~/hooks/useStockfishWorker";
@@ -22,7 +23,7 @@ export function useChessBoard() {
   const [selectedSquare, setSelectedSquare] = createSignal<Square | null>(null);
   const [hoveredSquare, setHoveredSquare] = createSignal<Square | null>(null);
   const [validMoves, setValidMoves] = createSignal<string[]>([]);
-  const { send, analysis } = useStockfishWorker("/stockfish-18-lite.js");
+  const { send, analysis } = useStockfishWorker(DEFAULT_STOCKFISH_WORKER_URL);
   const moveExecutor = useMoveExecutor(() => send("stop"));
 
   const isReplaying = () => isTravelling() || currentIndex() < fenHistory().length - 1;

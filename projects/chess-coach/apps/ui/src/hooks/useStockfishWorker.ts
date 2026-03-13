@@ -2,6 +2,7 @@ import { createSignal, onCleanup, onMount } from "solid-js";
 
 import { stockfishService } from "~/services/stockfishService";
 import { logger } from "~/utils/logger";
+import {DEFAULT_STOCKFISH_WORKER_URL} from "~/engine/StockfishEngine.ts";
 
 export type StockfishMessage =
   | {
@@ -72,7 +73,7 @@ const parseBestMove = (
   return { type: "bestmove", move, ponder, raw };
 };
 
-export function useStockfishWorker(workerPath: string = "/stockfish-18-lite.js") {
+export function useStockfishWorker(workerPath: string = DEFAULT_STOCKFISH_WORKER_URL) {
   const [analysis, setAnalysis] = createSignal<StockfishAnalysis>({
     last: null,
     lastInfo: null,

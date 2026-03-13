@@ -1,6 +1,7 @@
 import { createSignal, onCleanup, onMount } from "solid-js";
 
 import { stockfishService } from "~/services/stockfishService";
+import {DEFAULT_STOCKFISH_WORKER_URL} from "~/engine/StockfishEngine.ts";
 
 type PendingRequest = {
   resolve: (move: string) => void;
@@ -8,7 +9,7 @@ type PendingRequest = {
   timeoutId: number;
 };
 
-export function useHint(workerPath: string = "/stockfish-18-lite.js") {
+export function useHint(workerPath: string = DEFAULT_STOCKFISH_WORKER_URL) {
   const [pendingHint, setPendingHint] = createSignal(false);
 
   let pending: PendingRequest | null = null;

@@ -5,10 +5,12 @@ import type { Component } from "solid-js";
 import { Button } from "~/components/common/Button";
 import { Credits } from "~/components/Credits";
 import { TurnLabel } from "~/components/TurnLabel";
+import { DEFAULT_STOCKFISH_WORKER_URL } from "~/engine/StockfishEngine.ts";
 import { useHint } from "~/hooks/useHint";
 import { postExplainStream } from "~/services/api";
 import { clearHoverOverride, dispatchCoachEvent, setAdvice } from "~/store/coachStore";
 import { currentFen, currentIndex, fenHistory, goBack, goForward } from "~/store/gameStore";
+import "~/components/Controls.css";
 import {
   exitTravel,
   isTravelling,
@@ -17,11 +19,10 @@ import {
   travelForward,
   travelIndex,
 } from "~/store/travelStore";
-import "~/components/Controls.css";
 
 export const BoardActions: Component = () => {
   const [showCredits, setShowCredits] = createSignal(false);
-  const { requestHint, pendingHint } = useHint("/stockfish-18-lite.js");
+  const { requestHint, pendingHint } = useHint(DEFAULT_STOCKFISH_WORKER_URL);
 
   const atStart = () => (isTravelling() ? travelIndex() === 0 : currentIndex() === 0);
   const atLatest = () =>

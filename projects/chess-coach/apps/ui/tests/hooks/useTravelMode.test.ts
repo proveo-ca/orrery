@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useTravelMode } from "~/hooks/useTravelMode";
 import { stockfishService } from "~/services/stockfishService";
-import { startTravel } from "~/store/travelState";
+import { startTravel } from "~/store/travelStore";
 
 // Mock the stockfish service
 vi.mock("~/services/stockfishService", () => ({

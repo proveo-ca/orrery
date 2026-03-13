@@ -1,12 +1,14 @@
+import { DEFAULT_STOCKFISH_WORKER_URL } from "~/engine/StockfishEngine";
+
 class StockfishService {
   private worker: Worker | null = null;
   private listeners: Set<(event: MessageEvent) => void> = new Set();
-  private workerPath: string = "/stockfish-18-lite.js";
+  private workerPath: string = DEFAULT_STOCKFISH_WORKER_URL;
 
   private watchdogTimer: number | null = null;
   private isSearching: boolean = false;
 
-  getWorker(workerPath: string = "/stockfish-18-lite.js"): Worker {
+  getWorker(workerPath: string = DEFAULT_STOCKFISH_WORKER_URL): Worker {
     this.workerPath = workerPath;
 
     if (!this.worker) {

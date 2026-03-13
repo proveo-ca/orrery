@@ -8,10 +8,12 @@ export type EvalResult = {
   pv: string;
 };
 
+export const DEFAULT_STOCKFISH_WORKER_URL = import.meta.env.BASE_URL + "stockfish-18-lite.js";
+
 export class StockfishEngine {
   private driver: UciDriver;
 
-  constructor(workerUrl: string = "/stockfish-18-lite.js") {
+  constructor(workerUrl: string = DEFAULT_STOCKFISH_WORKER_URL) {
     this.driver = new UciDriver(workerUrl);
     this.driver.send("uci");
   }

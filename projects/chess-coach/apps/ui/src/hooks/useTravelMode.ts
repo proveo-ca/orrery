@@ -6,12 +6,13 @@ import { stockfishService } from "~/services/stockfishService";
 import { setHoverAdvice, setHoverEmotion } from "~/store/coachStore";
 import { type MoveSquares, currentFen } from "~/store/gameStore";
 import { startTravel } from "~/store/travelStore";
+import {DEFAULT_STOCKFISH_WORKER_URL} from "~/engine/StockfishEngine.ts";
 
 /**
  * Requests the best line (PV) from a dedicated Stockfish worker,
  * then plays it out move-by-move to build a fake timeline.
  */
-export function useTravelMode(workerPath: string = "/stockfish-18-lite.js") {
+export function useTravelMode(workerPath: string = DEFAULT_STOCKFISH_WORKER_URL) {
   const [loading, setLoading] = createSignal(false);
 
   const requestPV = (fen: string, depth: number = 12): Promise<string[]> => {

@@ -5,6 +5,10 @@ import oxlintPlugin from "vite-plugin-oxlint";
 import solid from "vite-plugin-solid";
 
 export default defineConfig({
+  base: "/chess/",
+  build: {
+    outDir: "dist/chess",
+  },
   plugins: [
     solid(),
     oxlintPlugin(),
@@ -13,7 +17,7 @@ export default defineConfig({
       configureServer(server) {
         server.middlewares.use((_req, res, next) => {
           res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
-          res.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
+          res.setHeader("Cross-Origin-Embedder-Policy", "credentialless");
           next();
         });
       },
@@ -27,7 +31,7 @@ export default defineConfig({
   server: {
     headers: {
       "Cross-Origin-Opener-Policy": "same-origin",
-      "Cross-Origin-Embedder-Policy": "require-corp",
+      "Cross-Origin-Embedder-Policy": "credentialless",
     },
   },
 });
