@@ -28,7 +28,7 @@ package "Docker Container (Harness: Chess Coach)" {
     }
 
     package "External Binaries" {
-        [Stockfish] as Stockfish
+        [Stockfish + Syzygy Tablebases] as Stockfish
         [lc0 + Maia Weights + openings.bin] as Lc0
     }
 

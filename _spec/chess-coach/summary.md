@@ -30,7 +30,7 @@ To provide a smooth, visual experience while keeping the backend "anti-framework
 4. **The Return:** Once the Bash process exits successfully, Ktor reads the updated `game_state.fen` and returns the new board state to the SolidJS UI.
 
 ## Engine & Notation Details
-- **Stockfish Integration:** Stockfish will be used primarily as a grounding, validation, and hinting mechanism. It validates move legality, evaluates the current position to provide the LLM with tactical context, and serves the top 3 hints when requested by the player.
+- **Stockfish Integration:** Stockfish will be used primarily as a grounding, validation, and hinting mechanism. It validates move legality, evaluates the current position to provide the LLM with tactical context (utilizing 3-4-5 piece Syzygy tablebases for perfect endgame evaluations), and serves the top 3 hints when requested by the player.
 - **Maia & Dynamic Play:** To prevent deterministic, repetitive games, Maia is configured with a Polyglot opening book (`openings.bin`) for varied, standard human openings. In the mid-game, Lc0's `Temperature` setting is used to sample moves probabilistically from the policy network, ensuring stochastic and natural play.
 - **Internal Notation (SAN vs FEN vs UCI):**
   - **FEN (Forsyth-Edwards Notation):** Will be used as the absolute source of truth for the *board state*. It is a complete snapshot.

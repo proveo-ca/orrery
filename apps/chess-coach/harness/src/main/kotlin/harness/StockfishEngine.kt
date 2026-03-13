@@ -5,11 +5,17 @@ package harness
  */
 class StockfishEngine(
     stockfishPath: String = "stockfish",
-    private val defaultTimeoutMs: Long = 15_000L
+    private val defaultTimeoutMs: Long = 15_000L,
+    private val syzygyPath: String? = System.getenv("SYZYGY_PATH")
 ) {
     private val driver = UciDriver(listOf(stockfishPath), defaultTimeoutMs)
 
-    fun start() = driver.start()
+    fun start() {
+        driver.start()
+        if (!syzygyPath.isNullOrBlank()) {
+            driver.send("setoption name SyzygyPath value $syzygyPath")
+        }
+    }
     fun stop() = driver.stop()
     val isRunning: Boolean get() = driver.isRunning
 

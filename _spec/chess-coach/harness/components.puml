@@ -34,6 +34,7 @@ package "External Services" {
 database "File System" as FS {
     [game_state.fen]
     [openings.bin]
+    [syzygy/ (3-4-5 piece)]
 }
 
 ' --- Relationships ---

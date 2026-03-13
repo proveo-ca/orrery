@@ -43,7 +43,7 @@ RUN apt-get update && \
     apt-get install -y software-properties-common && \
     add-apt-repository -y universe && \
     apt-get update && \
-    apt-get install -y bash curl stockfish libopenblas0 zlib1g libstdc++6 libgcc-s1 p7zip-full && \
+    apt-get install -y bash curl wget stockfish libopenblas0 zlib1g libstdc++6 libgcc-s1 p7zip-full && \
     rm -rf /var/lib/apt/lists/*
 
 # Ubuntu installs games to /usr/games, which is not in the default PATH
@@ -63,6 +63,12 @@ RUN mkdir -p /app/weights && \
     7z e /tmp/perfect.7z "*.bin" -o/app/weights/ -r && \
     mv /app/weights/*.bin /app/weights/openings.bin && \
     rm /tmp/perfect.7z
+
+# Download 3-4-5 piece Syzygy tablebases (approx 1GB)
+RUN mkdir -p /app/syzygy && \
+    wget -q -r -np -nd -A "*.rtbw,*.rtbz" https://tablebase.lichess.ovh/tables/standard/3-4-5/ -P /app/syzygy/
+
+ENV SYZYGY_PATH="/app/syzygy"
 
 # Copy Kotlin binaries
 COPY --from=kt-builder /workspace/harness/build/install/harness ./harness
