@@ -5,7 +5,7 @@ export class LlmClient {
   private initPromise: Promise<void> | null = null;
 
   // We use a smaller, fast model suitable for browser inference
-  private modelId = "Llama-3.1-8B-Instruct-q4f32_1-MLC";
+  private modelId = "gemma-2-2b-it-q4f32_1-MLC";
 
   constructor() {
     this.initPromise = this.initEngine();
