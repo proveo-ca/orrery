@@ -4,61 +4,52 @@ skinparam componentStyle rectangle
 
 actor User
 
-package "Docker Container (Harness: Chess Coach)" {
+package "Distribution 1: Cloudflare (Web Mode)" {
+    package "Browser Environment" {
+        [SolidJS UI] as WebUI
+        
+        package "Web Workers" {
+            [Stockfish Worker\n(Hints & Hover)] as WebSFHint
+            [Orchestrator Worker\n(Game Loop)] as WebOrch
+            [Stockfish Worker\n(AI Moves & Eval)] as WebSFAi
+            [WebLLM Worker\n(WebGPU Inference)] as WebLLM
+        }
+    }
+}
+
+package "Distribution 2: Docker Compose (Server Mode)" {
+    package "Browser Environment " {
+        [SolidJS UI] as DockerUI
+        [Stockfish Worker\n(Hints & Hover)] as DockerSFHint
+    }
+
+    package "Docker Containers" {
+        [Ktor Backend API] as Ktor
+        [Kotlin Harness Daemon] as Harness
+        
+        package "Native Binaries" {
+            [Stockfish] as NativeSF
+            [Maia / lc0] as NativeMaia
+        }
+    }
     
-    package "Web UI" {
-        [SolidJS Chessboard] as SolidJS
-        [Stockfish Web Worker\n(stockfish-18-lite.js)] as StockfishWorker
-    }
-
-    package "Ktor Backend Bridge" {
-        [Ktor REST API] as Ktor
-    }
-
-    [Harness Daemon\n(Kotlin CLI)] as Harness
-
-    package "LLM Layer" {
-        [Commentary Agent\n(LlmClient)] as Commentary
-    }
-
-    package "Engine Layer" {
-        [EngineBridge\n(facade)] as Bridge
-        [StockfishEngine] as SFEngine
-        [MaiaEngine] as MaiaEng
-    }
-
-    package "External Binaries" {
-        [Stockfish + Syzygy Tablebases] as Stockfish
-        [lc0 + Maia Weights + openings.bin] as Lc0
-    }
-
-    database "State Storage" as State {
-        [game_state.fen] as FEN
-    }
+    [Ollama Server] as Ollama
 }
 
-package "External Service" {
-    [Ollama LLM Server] as Ollama
-}
+' Web Mode Connections
+User --> WebUI
+WebUI <-> WebSFHint : Local UCI
+WebUI <-> WebOrch : postMessage (Move/Advice)
+WebOrch <-> WebSFAi : UCI
+WebOrch <-> WebLLM : Prompt/Stream
 
-User <---> SolidJS : User Actions / Board render
-SolidJS <-> Ktor : HTTP Requests (Move/Advice/Hello/New)
-SolidJS <-> StockfishWorker : Local UCI (Hint / Hover Eval)
-Ktor ..> State : (Reset only) StateReader for /new
-
-Ktor <--> Harness : JSON-line daemon protocol\n(stdin/stdout)
-
-Harness --> Bridge : Evaluation / Move / Legality
-Bridge --> SFEngine : Eval, legality, FEN derivation
-Bridge --> MaiaEng : AI move selection
-SFEngine --> Stockfish : UCI Protocol
-MaiaEng --> Lc0 : UCI Protocol
-
-Harness --> Commentary : Generate coaching advice
-Commentary --> Ollama : HTTP (OpenAI-compatible API)
-
-Harness --> State : Writes FEN\n(persistence/debug)
-
-User -[hidden]-> SolidJS
+' Docker Mode Connections
+User --> DockerUI
+DockerUI <-> DockerSFHint : Local UCI
+DockerUI <-> Ktor : HTTP REST
+Ktor <-> Harness : JSON-line stdin/stdout
+Harness <-> NativeSF : UCI
+Harness <-> NativeMaia : UCI
+Harness <-> Ollama : HTTP POST
 
 @enduml

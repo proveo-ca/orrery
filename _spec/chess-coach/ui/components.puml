@@ -9,74 +9,55 @@ actor User
 package "SolidJS Frontend (chess-coach-ui)" {
   package "UI Components" {
     [ChessBoard] as BOARD
-    [Controls\n(New Game, Back, Forward, Hint, Credits)] as MENU
+    [Controls] as MENU
     [CoachAdvice Panel] as COACH_PANEL
-    [Avatar] as AVATAR
   }
 
-  package "Hooks (Orchestration)" {
-    [useChessBoard] as USE_CHESS_BOARD
+  package "Hooks & Stores" {
     [useMoveExecutor] as USE_MOVE_EXEC
-    [useHint] as USE_HINT
-    [useStockfishWorker] as USE_STOCKFISH
+    [useHoverEvaluator] as USE_HOVER
+    [gameState / coachState] as STORES
   }
 
-  package "State Management (Stores)" {
-    [gameState\n(FEN History, moveHistory, currentIndex)] as GAME_STATE
-    [coachState\n(base + hover override\nadvice/emotion)] as COACH_STATE
-    [settingsState\n(colorPref, activePlayerColor,\ndifficulty)] as SETTINGS_STATE
+  package "Network / Service Layer (api.ts)" {
+    [API Client Facade] as API_CLIENT
+    [HttpCoachService] as HTTP_SVC
+    [WebWorkerCoachService] as WW_SVC
   }
 
   package "Local Engine Layer" {
-    [Stockfish Web Worker\n(/public/stockfish-18-lite.js)] as STOCKFISH_WORKER
-  }
-
-  package "Network Layer" {
-    [API Client\n(services/api.ts)] as API_CLIENT
+    [Stockfish Worker\n(stockfish-18-lite.js)] as SF_HINT_WORKER
   }
 }
 
-package "Backend" {
-  [Ktor API\n(chess-coach-api)] as KTOR
+package "Distribution 1: Web Workers" {
+    [Orchestrator Worker\n(orchestrator.worker.ts)] as ORCH_WORKER
+    [LLM Worker\n(WebLLM)] as LLM_WORKER
+    [Stockfish Worker\n(AI Moves)] as SF_AI_WORKER
 }
 
-' --- Relationships ---
+package "Distribution 2: Backend" {
+  [Ktor API] as KTOR
+}
 
-User --> BOARD : "Hover/Click squares"
-User --> MENU : "Clicks controls"
+User --> BOARD : "Play move / Hover"
+BOARD --> USE_MOVE_EXEC
+BOARD --> USE_HOVER
 
-BOARD --> USE_CHESS_BOARD : "Board interaction"
-USE_CHESS_BOARD --> GAME_STATE : "Read/write FEN history\nselection/hover state derives from FEN"
-USE_CHESS_BOARD --> SETTINGS_STATE : "Read active color"
-USE_CHESS_BOARD --> COACH_STATE : "Set hover override\n(watching/shocked + text)"
+USE_HOVER <--> SF_HINT_WORKER : "Local Eval (Both Modes)"
 
-USE_CHESS_BOARD --> USE_MOVE_EXEC : "Execute legal move"
-USE_MOVE_EXEC --> API_CLIENT : "POST /move\nPOST /advice"
-API_CLIENT --> KTOR : "HTTP JSON"
+USE_MOVE_EXEC --> API_CLIENT : "postMove / postAdviceStream"
 
-MENU --> GAME_STATE : "Back/Forward (index)"
-MENU --> SETTINGS_STATE : "Color/difficulty"
-MENU --> API_CLIENT : "POST /new\nGET /hello\nPOST /move (first move)"
-MENU --> USE_HINT : "Request hint"
-USE_HINT --> STOCKFISH_WORKER : "UCI: position fen, go depth 10"
-USE_CHESS_BOARD --> USE_STOCKFISH : "Hover eval (go depth 6)\nBest-move baseline"
-USE_STOCKFISH --> STOCKFISH_WORKER : "UCI: position fen, go depth N"
+API_CLIENT --> HTTP_SVC : "If VITE_TARGET != web"
+API_CLIENT --> WW_SVC : "If VITE_TARGET == web"
 
-GAME_STATE --> BOARD : "Reactive FEN update"
-COACH_STATE --> COACH_PANEL : "Reactive advice update"
-COACH_STATE --> AVATAR : "Reactive emotion update"
+HTTP_SVC --> KTOR : "HTTP JSON"
 
-note right of GAME_STATE
-  **Local history:**
-  FEN history is stored client-side.
-  Back/Forward updates currentIndex
-  without hitting the backend.
-end note
+WW_SVC --> ORCH_WORKER : "postMessage"
+ORCH_WORKER --> LLM_WORKER : "Generate Advice (WebGPU)"
+ORCH_WORKER --> SF_AI_WORKER : "UCI Eval / AI Move"
 
-note right of STOCKFISH_WORKER
-  **Local evaluation:**
-  Hint + hover analysis run entirely
-  in the browser via a Web Worker.
-end note
+STORES --> BOARD : "Reactive FEN"
+STORES --> COACH_PANEL : "Reactive Advice"
 
 @enduml
