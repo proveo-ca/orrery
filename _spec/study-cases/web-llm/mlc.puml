@@ -1,0 +1,24 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+title MLC-LLM Compilation Pipeline
+
+node "HuggingFace / Local" {
+  artifact "Raw Model Weights\n(FP16/FP32)" as RawModel
+}
+
+node "MLC-LLM Build Tools" {
+  component "Quantizer" as Quantizer
+  component "TVM Compiler" as TVM
+}
+
+node "Compiled Assets" {
+  artifact "Quantized Weights\n(e.g., q4f32_1)" as QuantWeights
+  artifact "WebGPU Engine\n(.wasm)" as WasmEngine
+}
+
+RawModel --> Quantizer
+Quantizer --> QuantWeights : mlc_llm convert_weight
+
+RawModel --> TVM : Model Architecture
+TVM --> WasmEngine : mlc_llm compile\n(Injects wasm_runtime.bc)
+@enduml

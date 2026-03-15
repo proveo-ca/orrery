@@ -1,5 +1,6 @@
 import { EngineBridge } from "~/engine/EngineBridge";
 import { LlmClient } from "~/engine/LlmClient";
+import { ENGINE_CONFIG } from "~/engine/config";
 
 export type TurnResult = { fen: string; move: string; advice: string };
 export type UiPhrases = { thinking: string[]; bestMove: string[] };
@@ -7,10 +8,10 @@ export type UiPhrases = { thinking: string[]; bestMove: string[] };
 export class Orchestrator {
   private engineBridge = new EngineBridge();
   private llmClient = new LlmClient();
-  private currentFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+  private currentFen = ENGINE_CONFIG.chess.startingFen;
 
   resetGame(): string {
-    this.currentFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    this.currentFen = ENGINE_CONFIG.chess.startingFen;
     return this.currentFen;
   }
 
@@ -25,7 +26,7 @@ export class Orchestrator {
     this.currentFen = fenAfterHuman;
 
     console.log("Evaluating position...");
-    const evalResult = await this.engineBridge.getEvaluation(this.currentFen, 15);
+    const evalResult = await this.engineBridge.getEvaluation(this.currentFen, ENGINE_CONFIG.chess.defaultEvalDepth);
     const evalString = evalResult.isMate
       ? `Mate in ${evalResult.mateIn}`
       : (evalResult.cp / 100.0).toFixed(2);
@@ -56,15 +57,12 @@ export class Orchestrator {
     currentFen: string,
   ): AsyncGenerator<string, void, unknown> {
     console.log("Generating coaching advice stream...");
-    const evalResult = await this.engineBridge.getEvaluation(currentFen, 15);
+    const evalResult = await this.engineBridge.getEvaluation(currentFen, ENGINE_CONFIG.chess.defaultEvalDepth);
 
     const parts = currentFen.split(" ");
     const activeColor = parts[1] || "w";
     const aiColor = activeColor === "w" ? "Black" : "White";
     const humanColor = aiColor === "White" ? "Black" : "White";
-
-    const adviceSystemPrompt =
-      "Generate professional chess commentary in the specified language. Always use Standard Algebraic Notation (SAN) for moves (e.g., Nf3, e4). For Type=standard use 30–40 words. For Type=explanation, explain the best move briefly (≤50 words). Return exactly: Commentary, Predicted ELO, Verified Classification.";
 
     const cpString = evalResult.isMate
       ? `Mate in ${evalResult.mateIn}`
@@ -83,7 +81,7 @@ Tag: Good
 BestAlt: ${evalResult.bestMove}
 CP: ${cpString}`;
 
-    yield* this.llmClient.promptStream(adviceSystemPrompt, adviceUserPrompt, 0.7, 150);
+    yield* this.llmClient.promptStream(ENGINE_CONFIG.llm.systemPrompt, adviceUserPrompt, ENGINE_CONFIG.llm.defaultTemperature, ENGINE_CONFIG.llm.defaultMaxTokens);
   }
 
   async *generateExplanationStream(
@@ -93,35 +91,50 @@ CP: ${cpString}`;
     moveSan: string,
   ): AsyncGenerator<string, void, unknown> {
     console.log(`Generating explanation stream (isBlunder=${isBlunder}, move=${moveSan})...`);
-    const evalBefore = await this.engineBridge.getEvaluation(fenBefore, 15);
-    const evalAfter = await this.engineBridge.getEvaluation(fenAfter, 15);
+    const evalBefore = await this.engineBridge.getEvaluation(fenBefore, ENGINE_CONFIG.chess.defaultEvalDepth);
+    const evalAfter = await this.engineBridge.getEvaluation(fenAfter, ENGINE_CONFIG.chess.defaultEvalDepth);
 
     const partsAfter = fenAfter.split(" ");
     const activeColorAfter = partsAfter[1] || "w";
     const moveColor = activeColorAfter === "w" ? "Black" : "White";
-    const opponentColor = activeColorAfter === "w" ? "White" : "Black";
 
-    const explainSystemPrompt = isBlunder
-      ? `You are a chess expert. The player playing ${moveColor} just played ${moveSan}, which is a blunder. Explain in exactly ONE short sentence why ${moveSan} is a blunder. Do not provide any formatting, greetings, or extra text.`
-      : `You are a chess expert. The player playing ${moveColor} just played ${moveSan}, which is an excellent move. Explain in exactly ONE short sentence why ${moveSan} is strong. Do not provide any formatting, greetings, or extra text.`;
+    // Calculate CP Delta for the prompt
+    const cpB = evalBefore.isMate ? (evalBefore.mateIn! > 0 ? 9999 : -9999) : evalBefore.cp;
+    const cpA = evalAfter.isMate ? (evalAfter.mateIn! > 0 ? 9999 : -9999) : evalAfter.cp;
+    const delta = Math.abs(cpA - cpB);
+    
+    const cpString = evalBefore.isMate || evalAfter.isMate 
+      ? `Mate` 
+      : `${cpB}->${cpA} (Δ=${delta})`;
 
-    const cpBefore = evalBefore.isMate ? `Mate in ${evalBefore.mateIn}` : `${evalBefore.cp}`;
-    const cpAfter = evalAfter.isMate ? `Mate in ${evalAfter.mateIn}` : `${evalAfter.cp}`;
+    let tag = "Good";
+    if (isBlunder) tag = "Blunder";
+    else if (delta > 200) tag = "Mistake";
+    else if (delta > 100) tag = "Inaccuracy";
+    else if (delta < 20) tag = "Best";
 
-    const explainUserPrompt = isBlunder
-      ? `Before FEN: ${fenBefore}\nAfter FEN: ${fenAfter}\nBlunder played: ${moveSan} (by ${moveColor})\nEval Before: ${cpBefore}\nEval After: ${cpAfter}\nBest continuation for ${opponentColor}: ${evalAfter.pv}`
-      : `Before FEN: ${fenBefore}\nAfter FEN: ${fenAfter}\nGreat move played: ${moveSan} (by ${moveColor})\nEval Before: ${cpBefore}\nEval After: ${cpAfter}\nBest continuation: ${evalAfter.pv}`;
+    const explainUserPrompt = `LanguageL: English
+LangCode: en
+Type: explanation
+FEN: ${fenBefore}
+MoveSAN: ${moveSan}
+Side: ${moveColor}
+Actor: human
+Gender: neutral
+Tag: ${tag}
+BestAlt: ${evalBefore.bestMove}
+CP: ${cpString}`;
 
-    yield* this.llmClient.promptStream(explainSystemPrompt, explainUserPrompt, 0.7, 80);
+    yield* this.llmClient.promptStream(ENGINE_CONFIG.llm.systemPrompt, explainUserPrompt, ENGINE_CONFIG.llm.defaultTemperature, ENGINE_CONFIG.llm.defaultMaxTokens);
   }
 
   async generateUiPhrases(): Promise<UiPhrases> {
     try {
       console.log("Warming up LLM into VRAM...");
-      await this.llmClient.prompt("System", "Ping", 0.7, 1);
+      await this.llmClient.prompt("System", "Ping", ENGINE_CONFIG.llm.defaultTemperature, 1);
       console.log("LLM Warmup complete.");
     } catch (e: any) {
-      console.error(`LLM Warmup failed: ${e.message}`);
+      console.error("LLM Warmup failed:", e);
     }
 
     return {

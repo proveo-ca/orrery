@@ -3,8 +3,13 @@ export class UciDriver {
   private messageQueue: string[] = [];
   private resolvers: Array<(line: string) => void> = [];
 
-  constructor(workerUrl: string) {
-    this.worker = new Worker(workerUrl);
+  constructor(workerOrUrl: string | URL | Worker) {
+    if (workerOrUrl instanceof Worker) {
+      this.worker = workerOrUrl;
+    } else {
+      this.worker = new Worker(workerOrUrl);
+    }
+    
     this.worker.onmessage = (e) => {
       const line = e.data as string;
       if (this.resolvers.length > 0) {

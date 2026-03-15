@@ -1,0 +1,17 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+title Neural Network Inference Flow (WebLLM)
+
+actor User
+component "Tokenizer" as Tokenizer
+component "Prefill Phase\n(Process Prompt)" as Prefill
+component "Decode Phase\n(Generate Tokens)" as Decode
+component "Detokenizer" as Detokenizer
+
+User -> Tokenizer : Raw Text Prompt
+Tokenizer -> Prefill : Token IDs
+Prefill -> Decode : KV Cache & Context
+Decode -> Decode : Autoregressive Generation\n(Token by Token)
+Decode -> Detokenizer : New Token ID
+Detokenizer -> User : Streamed Text
+@enduml

@@ -1,0 +1,39 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+title Chess Coach: WebLLM Integration & Linux WebGPU Workaround
+
+package "Vite Dev Server / Cloudflare Pages" {
+  folder "public/models/chess-gemma-commentary-q4f32_1-MLC" {
+    artifact "gemma-3-270m-q4f32_1-webgpu.wasm" as Wasm
+    note right of Wasm
+      **Linux WebGPU Workaround:**
+      Compiled locally to f32 because Brave/Linux
+      Vulkan drivers lack the 'shader-f16' extension
+      required by standard q4f16_1 models.
+    end note
+    
+    folder "resolve/main/" {
+      artifact "mlc-chat-config.json" as Config
+      artifact "params_shard_*.bin" as Weights
+      note right of Config
+        **Version Sync:**
+        wasm_runtime.bc used to compile the .wasm
+        must exactly match the @mlc-ai/web-llm
+        NPM package version (e.g., 0.2.82) to avoid
+        'Stringify' linking errors.
+      end note
+    }
+  }
+}
+
+package "Browser (LlmClient.ts)" {
+  component "Web Worker" as Worker
+  component "WebGPU VRAM" as VRAM
+}
+
+Worker --> Wasm : 1. Load Engine
+Worker --> Config : 2. Load Config (sliding_window_size: -1)
+Worker --> Weights : 3. Stream Weights
+Weights --> VRAM : 4. Load into GPU
+
+@enduml

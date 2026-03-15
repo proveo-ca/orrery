@@ -1,0 +1,25 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+title WebLLM Weights Loading & Sharding
+
+node "Browser Memory" {
+  component "WebLLM Engine" as Engine
+  component "WebGPU VRAM" as VRAM
+}
+
+node "Static Server" {
+  artifact "tensor-cache.json" as CacheMap
+  artifact "params_shard_0.bin" as Shard0
+  artifact "params_shard_1.bin" as Shard1
+  artifact "params_shard_N.bin" as ShardN
+}
+
+Engine --> CacheMap : 1. Fetch mapping
+note right of CacheMap: Maps tensor names to byte offsets\nand specific shard files.
+
+Engine --> Shard0 : 2. Fetch Shard 0
+Engine --> Shard1 : 2. Fetch Shard 1
+Engine --> ShardN : 2. Fetch Shard N
+
+Engine --> VRAM : 3. Load Tensors into GPU
+@enduml

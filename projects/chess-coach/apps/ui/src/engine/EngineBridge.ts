@@ -1,11 +1,12 @@
 import { type EvalResult, StockfishEngine } from "~/engine/StockfishEngine.ts";
+import { MaiaEngine } from "~/engine/MaiaEngine.ts";
 
 export class EngineBridge {
   // Full strength for coaching/evaluations
   private evaluator = new StockfishEngine();
 
-  // Limited strength for playing against the human
-  private player = new StockfishEngine();
+  // Human-like neural network for playing
+  private player = new MaiaEngine();
 
   async getEvaluation(fen: string, depth: number = 15): Promise<EvalResult> {
     return this.evaluator.getEvaluation(fen, depth);
@@ -16,10 +17,11 @@ export class EngineBridge {
   }
 
   async getAiMove(fen: string, difficulty: string): Promise<string> {
-    let elo = 1100;
-    if (difficulty === "advanced") elo = 1600;
-    if (difficulty === "expert") elo = 2200;
+    // Map difficulty to Maia weights files
+    let weightsFile = "maia-1100.pb.gz";
+    if (difficulty === "advanced") weightsFile = "maia-1500.pb.gz";
+    if (difficulty === "expert") weightsFile = "maia-1900.pb.gz";
 
-    return this.player.getMoveAtElo(fen, elo);
+    return this.player.getMove(fen, weightsFile);
   }
 }
