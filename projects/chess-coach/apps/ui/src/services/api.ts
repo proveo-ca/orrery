@@ -3,6 +3,7 @@ import type { Difficulty } from "~/store/settingsStore";
 
 const TARGET = import.meta.env.VITE_TARGET;
 const API_URL = import.meta.env.VITE_API_URL || window.location.origin;
+const DEBUG = import.meta.env.VITE_DEBUG === "true";
 
 /** fen is the position AFTER the human move has been applied client-side. */
 export type MoveRequest = { humanMoveSan: string; fenAfterHuman: string; difficulty?: Difficulty };
@@ -127,6 +128,13 @@ class WebWorkerCoachService implements CoachService {
 
       if (type === "LLM_PROGRESS") {
         setLlmProgress(progress, text);
+        return;
+      }
+
+      if (type === "LLM_DEBUG") {
+        if (DEBUG) {
+          console.warn("[Worker LLM Debug]", e.data.debug);
+        }
         return;
       }
 

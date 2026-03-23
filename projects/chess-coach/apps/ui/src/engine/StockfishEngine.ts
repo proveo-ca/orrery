@@ -77,4 +77,22 @@ export class StockfishEngine {
     }
     return null;
   }
+
+  async getSanForUciMove(fen: string, uciMove: string): Promise<string | null> {
+    this.driver.send(`position fen ${fen}`);
+    this.driver.send("d");
+
+    const lines = await this.driver.readUntil("Checkers:", 5000);
+    for (const line of lines) {
+      const match = line.match(/\b([a-h][1-8][a-h][1-8][nbrq]?)\s*:\s*([^\s].*?)\s*$/i);
+      if (match) {
+        const legalUci = match[1].trim();
+        const san = match[2].trim();
+        if (legalUci === uciMove) {
+          return san;
+        }
+      }
+    }
+    return null;
+  }
 }

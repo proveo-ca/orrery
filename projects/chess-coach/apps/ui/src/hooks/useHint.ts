@@ -1,7 +1,7 @@
 import { createSignal, onCleanup, onMount } from "solid-js";
 
+import { DEFAULT_STOCKFISH_WORKER_URL } from "~/engine/StockfishEngine.ts";
 import { stockfishService } from "~/services/stockfishService";
-import {DEFAULT_STOCKFISH_WORKER_URL} from "~/engine/StockfishEngine.ts";
 
 type PendingRequest = {
   resolve: (move: string) => void;

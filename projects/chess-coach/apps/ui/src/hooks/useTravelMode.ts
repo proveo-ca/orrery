@@ -1,12 +1,12 @@
 import { Chess } from "chess.js";
 import { createSignal } from "solid-js";
 
+import { DEFAULT_STOCKFISH_WORKER_URL } from "~/engine/StockfishEngine.ts";
 import { postExplainStream } from "~/services/api";
 import { stockfishService } from "~/services/stockfishService";
 import { setHoverAdvice, setHoverEmotion } from "~/store/coachStore";
 import { type MoveSquares, currentFen } from "~/store/gameStore";
 import { startTravel } from "~/store/travelStore";
-import {DEFAULT_STOCKFISH_WORKER_URL} from "~/engine/StockfishEngine.ts";
 
 /**
  * Requests the best line (PV) from a dedicated Stockfish worker,

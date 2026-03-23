@@ -1,8 +1,8 @@
 import { createSignal, onCleanup, onMount } from "solid-js";
 
+import { DEFAULT_STOCKFISH_WORKER_URL } from "~/engine/StockfishEngine.ts";
 import { stockfishService } from "~/services/stockfishService";
 import { logger } from "~/utils/logger";
-import {DEFAULT_STOCKFISH_WORKER_URL} from "~/engine/StockfishEngine.ts";
 
 export type StockfishMessage =
   | {

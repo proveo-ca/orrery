@@ -9,7 +9,7 @@ export class UciDriver {
     } else {
       this.worker = new Worker(workerOrUrl);
     }
-    
+
     this.worker.onmessage = (e) => {
       const line = e.data as string;
       if (this.resolvers.length > 0) {

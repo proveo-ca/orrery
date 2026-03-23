@@ -14,7 +14,7 @@ export class MaiaEngine {
     if (this.isReady && this.currentWeights === weightsFile) return;
 
     // Send INIT to worker to load weights into VFS
-    (this.driver as any).worker.postMessage({ type: 'INIT', weightsFile });
+    (this.driver as any).worker.postMessage({ type: "INIT", weightsFile });
     await this.driver.readUntil("readyok", 30000); // Wait for WASM + Weights to load
 
     this.driver.send("uci");
@@ -30,13 +30,13 @@ export class MaiaEngine {
 
   async getMove(fen: string, weightsFile: string): Promise<string> {
     await this.init(weightsFile);
-    
+
     this.driver.send(`position fen ${fen}`);
     this.driver.send("go nodes 1"); // Maia is a policy network, 1 node is enough
-    
+
     const lines = await this.driver.readUntil("bestmove");
-    const bestMoveLine = lines.find(l => l.startsWith("bestmove"));
-    
+    const bestMoveLine = lines.find((l) => l.startsWith("bestmove"));
+
     if (!bestMoveLine) throw new Error("No bestmove found");
     return bestMoveLine.split(" ")[1];
   }

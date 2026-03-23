@@ -1,7 +1,12 @@
 /// <reference lib="webworker" />
-import { Orchestrator } from "~/engine/Orchestrator";
+import { Orchestrator, type LlmDebugEvent } from "~/engine/Orchestrator";
 
-const orchestrator = new Orchestrator();
+const DEBUG = import.meta.env.VITE_DEBUG === "true";
+
+const orchestrator = new Orchestrator((debugEvent: LlmDebugEvent) => {
+  if (!DEBUG) return;
+  self.postMessage({ type: "LLM_DEBUG", debug: debugEvent });
+});
 
 self.addEventListener("message", async (event: MessageEvent) => {
   const { id, type, payload } = event.data;

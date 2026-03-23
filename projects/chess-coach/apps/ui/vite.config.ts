@@ -1,6 +1,6 @@
-import { URL, fileURLToPath } from "node:url";
 import fs from "node:fs";
 import path from "node:path";
+import { URL, fileURLToPath } from "node:url";
 
 import { defineConfig } from "vite";
 import oxlintPlugin from "vite-plugin-oxlint";
@@ -22,12 +22,12 @@ export default defineConfig({
         server.middlewares.use((req, res, next) => {
           res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
           res.setHeader("Cross-Origin-Embedder-Policy", "credentialless");
-          
+
           // Redirect old WebLLM cache requests to the new MLC format
           if (req.url?.includes("ndarray-cache.json")) {
             req.url = req.url.replace("ndarray-cache.json", "tensor-cache.json");
           }
-          
+
           next();
         });
       },

@@ -1,4 +1,5 @@
 import { CreateWebWorkerMLCEngine, type MLCEngineInterface, type AppConfig } from "@mlc-ai/web-llm";
+
 import { ENGINE_CONFIG } from "~/engine/config";
 
 export class LlmClient {
@@ -14,12 +15,23 @@ export class LlmClient {
 
     // Use absolute path with origin to prevent URL construction errors
     // Weights are inside resolve/main/
-    const modelPath = new URL(`/chess/models/${ENGINE_CONFIG.llm.modelId}/resolve/main/`, self.location.href).href;
-    
-    // WASM is at the root of the model folder
-    const wasmPath = new URL(`/chess/models/${ENGINE_CONFIG.llm.modelId}/${ENGINE_CONFIG.llm.wasmUrl}`, self.location.href).href;
+    const modelPath = new URL(
+      `/chess/models/${ENGINE_CONFIG.llm.modelId}/resolve/main/`,
+      self.location.href,
+    ).href;
 
-    // Configure WebLLM to find our locally hosted model weights and the local WASM
+    // WASM is at the root of the model folder
+    const wasmPath = new URL(
+      `/chess/models/${ENGINE_CONFIG.llm.modelId}/${ENGINE_CONFIG.llm.wasmUrl}`,
+      self.location.href,
+    ).href;
+
+    console.log("[LlmClient] Resolved model path:", modelPath);
+    console.log("[LlmClient] Resolved wasm path:", wasmPath);
+
+    // Configure WebLLM to find our locally hosted model weights and the local WASM.
+    // This model uses sliding-window attention, and WebLLM requires only one of
+    // context_window_size or sliding_window_size to be positive.
     const appConfig: AppConfig = {
       model_list: [
         {
@@ -30,11 +42,14 @@ export class LlmClient {
           model_lib: wasmPath,
           model_lib_url: wasmPath,
           overrides: {
-            sliding_window_size: -1
-          }
-        } as any
-      ]
+            context_window_size: -1,
+            attention_sink_size: 0,
+          },
+        } as any,
+      ],
     };
+
+    console.log("[LlmClient] AppConfig model_id:", ENGINE_CONFIG.llm.modelId);
 
     // We use a WebWorker engine so the heavy WebGPU computation doesn't freeze the main thread
     this.engine = await CreateWebWorkerMLCEngine(
@@ -44,7 +59,7 @@ export class LlmClient {
         appConfig,
         initProgressCallback: (progress) => {
           const pct = Math.round(progress.progress * 100);
-          console.log(`[LlmClient] Loading model: ${pct}%`);
+          console.log(`[LlmClient] Loading model: ${pct}% - ${progress.text}`);
           postMessage({ type: "LLM_PROGRESS", progress: pct, text: progress.text });
         },
       },
@@ -60,6 +75,8 @@ export class LlmClient {
   ): Promise<string> {
     await this.initPromise;
     if (!this.engine) throw new Error("LLM Engine not initialized");
+
+    console.log(`[LlmClient] Prompting model: ${ENGINE_CONFIG.llm.modelId}`);
 
     const reply = await this.engine.chat.completions.create({
       messages: [
@@ -81,6 +98,8 @@ export class LlmClient {
   ): AsyncGenerator<string, void, unknown> {
     await this.initPromise;
     if (!this.engine) throw new Error("LLM Engine not initialized");
+
+    console.log(`[LlmClient] Streaming prompt to model: ${ENGINE_CONFIG.llm.modelId}`);
 
     const chunks = await this.engine.chat.completions.create({
       messages: [

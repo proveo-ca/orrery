@@ -1,5 +1,5 @@
-import { type EvalResult, StockfishEngine } from "~/engine/StockfishEngine.ts";
 import { MaiaEngine } from "~/engine/MaiaEngine.ts";
+import { type EvalResult, StockfishEngine } from "~/engine/StockfishEngine.ts";
 
 export class EngineBridge {
   // Full strength for coaching/evaluations
@@ -14,6 +14,10 @@ export class EngineBridge {
 
   async getFenAfterMove(fen: string, uciMove: string): Promise<string | null> {
     return this.evaluator.getFenAfterMove(fen, uciMove);
+  }
+
+  async getSanForUciMove(fen: string, uciMove: string): Promise<string | null> {
+    return this.evaluator.getSanForUciMove(fen, uciMove);
   }
 
   async getAiMove(fen: string, difficulty: string): Promise<string> {

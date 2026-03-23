@@ -38,6 +38,7 @@ services:
       - LLM_GENERAL_MODEL=qwen2.5:7b
       - LLM_COMMENTARY_MODEL=hf.co/NAKSTStudio/chess-gemma-commentary:Q8_0
       - CHESS_STATE_DIR=/data
+      - LLM_DEBUG=true
     volumes:
       - chess_state:/data
     depends_on:

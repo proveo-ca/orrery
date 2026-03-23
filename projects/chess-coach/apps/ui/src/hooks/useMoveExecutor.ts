@@ -72,6 +72,7 @@ export function useMoveExecutor(stopStockfish: () => void) {
       if (err.name === "AbortError") {
         logger.action("Advice request aborted due to new move.");
       } else {
+        logger.error("Advice stream failed", err);
         setAdvice("Error getting advice.");
         dispatchCoachEvent({ type: "AI_ERROR" });
       }
@@ -98,7 +99,8 @@ export function useMoveExecutor(stopStockfish: () => void) {
 
       // Kick off advice stream (non-blocking)
       void _streamAdvice(humanMoveSan, moveData);
-    } catch (e) {
+    } catch (err) {
+      logger.error("Error communicating with the coach", err);
       setAdvice("Error communicating with the coach.");
       dispatchCoachEvent({ type: "AI_ERROR" });
     }

@@ -183,7 +183,8 @@ export function useChessBoard() {
           send("stop");
           send(`position fen ${gameCopy.fen()}`);
           send("go depth 12");
-        } catch (e) {
+        } catch (err) {
+          logger.error("Hover evaluation setup failed", err);
           setCurrentHoverEval(null);
           send("stop");
         }

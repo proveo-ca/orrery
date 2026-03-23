@@ -36,24 +36,22 @@ node_modules/
 .tmp/
 
 # ==========================================
-# Python
+# Weights & Configs
 # ==========================================
-.venv/
-__pycache__/
-.pytest_cache/
+models/**/resolve/
 
 # ==========================================
 # Harness & AI Tools
 # ==========================================
 .aider/
 .aider*
+.cursor/rules/nx-rules.mdc
 
 # ==========================================
-# Nx Workspace & Tooling
+# Monorepo
 # ==========================================
 .nx/cache
 .nx/workspace-data
-.cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
 
 # ==========================================
@@ -61,3 +59,8 @@ __pycache__/
 # ==========================================
 vite.config.*.timestamp*
 vitest.config.*.timestamp*
+
+# ==========================================
+# Misc
+# ==========================================
+ROADMAP.md
