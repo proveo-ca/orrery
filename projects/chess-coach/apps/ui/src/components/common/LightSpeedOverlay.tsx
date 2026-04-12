@@ -1,6 +1,6 @@
 import { createSignal, onMount } from "solid-js";
 
-import "~/components/common/LightSpeedOverlay.css";
+import styles from "~/components/common/LightSpeedOverlay.module.css";
 
 interface LightSpeedOverlayProps {
   active: boolean;
@@ -35,12 +35,12 @@ export const LightSpeedOverlay = (props: LightSpeedOverlayProps) => {
   });
 
   return (
-    <div class="lightspeed-overlay" classList={{ active: props.active }}>
-      <div class="center-glow" />
-      <div class="beams-container">
+    <div class={styles["lightspeed-overlay"]} classList={{ [styles.active]: props.active }}>
+      <div class={styles["center-glow"]} />
+      <div class={styles["beams-container"]}>
         {beams().map((beam) => (
           <div
-            class="beam"
+            class={styles.beam}
             style={{
               "--rot": `${beam.rot}deg`,
               "--delay": `${beam.delay}s`,

@@ -2,6 +2,7 @@ import { Chess } from "chess.js";
 import { Show, onMount } from "solid-js";
 import type { Component } from "solid-js";
 
+import styles from "~/App.module.css";
 import { CapturedPieces } from "~/components/CapturedPieces";
 import { ChessBoard } from "~/components/ChessBoard";
 import { CoachAdvice } from "~/components/CoachAdvice";
@@ -28,9 +29,8 @@ import { isAppReady } from "~/store/coachStore";
 import { addMoveToHistory, currentFen, currentIndex, fenHistory } from "~/store/gameStore";
 import { activePlayerColor, difficulty } from "~/store/settingsStore";
 import { isTravelling } from "~/store/travelStore";
-import { initGlobalLogging, logger } from "~/utils/logger";
 import "~/theme.css";
-import "~/App.css";
+import { initGlobalLogging, logger } from "~/utils/logger";
 
 const App: Component = () => {
   useGlobalShortcuts();
@@ -104,22 +104,22 @@ const App: Component = () => {
     <>
       <SplashScreen />
       <Show when={isAppReady()}>
-        <div class="app-container">
+        <div class={styles["app-container"]}>
           <HistoryOverlay active={debugHistoryOverlay() || (isReplaying() && !isTravelling())} />
           <LightSpeedOverlay active={debugLightSpeedOverlay() || isTravelling()} />
 
-          <div class="coach-header">
+          <div class={styles["coach-header"]}>
             <CoachAvatar />
             <CoachAdvice />
           </div>
 
-          <div class="board-area">
+          <div class={styles["board-area"]}>
             <BoardActions />
             <CapturedPieces />
             <ChessBoard />
           </div>
 
-          <div class="footer">
+          <div class={styles.footer}>
             <NewGamePanel />
           </div>
 

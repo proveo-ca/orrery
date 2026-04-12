@@ -1,26 +1,29 @@
+import clsx from "clsx";
 import type { Component } from "solid-js";
 
+import styles from "~/components/CoachAvatar.module.css";
 import { coachEmotion } from "~/store/coachStore";
-import "~/components/CoachAvatar.css";
+
+export { styles as avatarStyles };
 
 export const CoachAvatar: Component = () => {
   return (
-    <div class={"cat " + coachEmotion()}>
-      <div class="ear ear--left"></div>
-      <div class="ear ear--right"></div>
-      <div class="face">
-        <div class="eye eye--left">
-          <div class="eye-pupil"></div>
+    <div class={clsx(styles.cat, styles[coachEmotion()])}>
+      <div class={clsx(styles.ear, styles["ear--left"])}></div>
+      <div class={clsx(styles.ear, styles["ear--right"])}></div>
+      <div class={styles.face}>
+        <div class={clsx(styles.eye, styles["eye--left"])}>
+          <div class={styles["eye-pupil"]}></div>
         </div>
-        <div class="eye eye--right">
-          <div class="eye-pupil"></div>
+        <div class={clsx(styles.eye, styles["eye--right"])}>
+          <div class={styles["eye-pupil"]}></div>
         </div>
-        <div class="muzzle"></div>
+        <div class={styles.muzzle}></div>
       </div>
-      <div class="zzz-container">
-        <div class="z z-1">Z</div>
-        <div class="z z-2">Z</div>
-        <div class="z z-3">Z</div>
+      <div class={styles["zzz-container"]}>
+        <div class={clsx(styles.z, styles["z-1"])}>Z</div>
+        <div class={clsx(styles.z, styles["z-2"])}>Z</div>
+        <div class={clsx(styles.z, styles["z-3"])}>Z</div>
       </div>
     </div>
   );

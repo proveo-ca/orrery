@@ -1,9 +1,9 @@
 import { For, Show } from "solid-js";
 import type { Component } from "solid-js";
 
+import styles from "~/components/CoachAdvice.module.css";
 import { advice, hoverBlunder, setAdviceHoveredSquares } from "~/store/coachStore";
 import { isTravelling } from "~/store/travelStore";
-import "~/components/CoachAdvice.css";
 
 // Regex to match standard algebraic notation (SAN) and raw squares
 // Matches: e4, Nf3, Bxc6+, O-O, O-O-O, e8=Q
@@ -24,7 +24,7 @@ export const CoachAdvice: Component = () => {
   const parsedAdvice = () => advice().split(CHESS_NOTATION_REGEX);
 
   return (
-    <div class="coach-panel">
+    <div class={styles["coach-panel"]}>
       <h3>Coach Selena</h3>
       <p>
         <For each={parsedAdvice()}>
@@ -32,7 +32,7 @@ export const CoachAdvice: Component = () => {
             if (part.match(CHESS_NOTATION_REGEX)) {
               return (
                 <span
-                  class="move-highlight"
+                  class={styles["move-highlight"]}
                   onMouseEnter={() => handleMouseEnter(part)}
                   onMouseLeave={handleMouseLeave}
                 >
@@ -45,7 +45,7 @@ export const CoachAdvice: Component = () => {
         </For>
       </p>
       <Show when={hoverBlunder() && !isTravelling()}>
-        <span class="why-hint">
+        <span class={styles["why-hint"]}>
           Press <kbd>Space</kbd> — To learn why
         </span>
       </Show>

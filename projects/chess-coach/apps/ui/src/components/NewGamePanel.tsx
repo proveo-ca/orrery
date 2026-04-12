@@ -4,6 +4,7 @@ import type { Component } from "solid-js";
 import { Button } from "~/components/common/Button";
 import { ColorSelector } from "~/components/common/ColorSelector";
 import { Select } from "~/components/common/Select";
+import styles from "~/components/Controls.module.css";
 import { postMove, postNewGame } from "~/services/api";
 import { dispatchCoachEvent, setAdvice } from "~/store/coachStore";
 import { addMoveToHistory, resetGame } from "~/store/gameStore";
@@ -15,7 +16,6 @@ import {
   setColorPref,
   setDifficulty,
 } from "~/store/settingsStore";
-import "~/components/Controls.css";
 
 export const NewGamePanel: Component = () => {
   const handleNewGame = async () => {
@@ -53,10 +53,10 @@ export const NewGamePanel: Component = () => {
   };
 
   return (
-    <div class="new-game-panel">
+    <div class={styles["new-game-panel"]}>
       <ColorSelector value={colorPref()} onChange={setColorPref} />
       <Select
-        class="difficulty-select"
+        class={styles["difficulty-select"]}
         value={difficulty()}
         onChange={(e) => setDifficulty(e.currentTarget.value as Difficulty)}
       >

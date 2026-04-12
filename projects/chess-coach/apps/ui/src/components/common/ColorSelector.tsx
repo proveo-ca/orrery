@@ -1,8 +1,9 @@
+import clsx from "clsx";
 import type { Component } from "solid-js";
 
 import { Button } from "~/components/common/Button";
+import styles from "~/components/common/ColorSelector.module.css";
 import type { PlayerColorPref } from "~/store/settingsStore.ts";
-import "~/components/common/ColorSelector.css";
 
 interface Props {
   value: PlayerColorPref;
@@ -11,17 +12,23 @@ interface Props {
 
 export const ColorSelector: Component<Props> = (props) => {
   return (
-    <div class="color-selector">
-      <Button class={props.value === "w" ? "active" : ""} onClick={() => props.onChange("w")}>
+    <div class={styles["color-selector"]}>
+      <Button
+        class={clsx(props.value === "w" && styles.active)}
+        onClick={() => props.onChange("w")}
+      >
         White
       </Button>
       <Button
-        class={props.value === "random" ? "active" : ""}
+        class={clsx(props.value === "random" && styles.active)}
         onClick={() => props.onChange("random")}
       >
         Random
       </Button>
-      <Button class={props.value === "b" ? "active" : ""} onClick={() => props.onChange("b")}>
+      <Button
+        class={clsx(props.value === "b" && styles.active)}
+        onClick={() => props.onChange("b")}
+      >
         Black
       </Button>
     </div>

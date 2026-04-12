@@ -1,6 +1,6 @@
 import { type Component } from "solid-js";
 
-import "~/components/EvalBar.css";
+import styles from "~/components/EvalBar.module.css";
 
 interface EvalBarProps {
   score?: { kind: "cp" | "mate"; value: number } | null;
@@ -38,8 +38,8 @@ export const EvalBar: Component<EvalBarProps> = (props) => {
   const bottomHeight = () => 50 + normalized() * 50; // % from bottom
   const topHeight = () => 100 - bottomHeight();
 
-  const topColorClass = () => (props.isFlipped ? "eval-white" : "eval-black");
-  const bottomColorClass = () => (props.isFlipped ? "eval-black" : "eval-white");
+  const topColorClass = () => (props.isFlipped ? styles["eval-white"] : styles["eval-black"]);
+  const bottomColorClass = () => (props.isFlipped ? styles["eval-black"] : styles["eval-white"]);
 
   const displayValue = () => {
     if (!props.score) return "0.0";
@@ -56,10 +56,10 @@ export const EvalBar: Component<EvalBarProps> = (props) => {
   };
 
   return (
-    <div class="eval-bar">
+    <div class={styles["eval-bar"]}>
       <div class={topColorClass()} style={{ height: `${topHeight()}%` }} />
       <div class={bottomColorClass()} style={{ height: `${bottomHeight()}%` }} />
-      <div class="eval-value" style={{ color: valueColor() }}>
+      <div class={styles["eval-value"]} style={{ color: valueColor() }}>
         {displayValue()}
       </div>
     </div>

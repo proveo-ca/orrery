@@ -1,6 +1,7 @@
-import "~/components/common/Modal.css";
 import { Show, createEffect, createUniqueId, onCleanup } from "solid-js";
 import type { Component, JSX } from "solid-js";
+
+import styles from "~/components/common/Modal.module.css";
 
 export type ModalPosition = "fixed" | "absolute";
 
@@ -70,10 +71,10 @@ export const Modal: Component<ModalProps> = (props) => {
   return (
     <Show when={props.open}>
       <div
-        class="modal-overlay"
+        class={styles["modal-overlay"]}
         classList={{
-          "modal-overlay--fixed": position() === "fixed",
-          "modal-overlay--absolute": position() === "absolute",
+          [styles["modal-overlay--fixed"]]: position() === "fixed",
+          [styles["modal-overlay--absolute"]]: position() === "absolute",
           ...(props.overlayClass ? { [props.overlayClass]: true } : {}),
         }}
         onClick={() => {
@@ -84,7 +85,7 @@ export const Modal: Component<ModalProps> = (props) => {
           ref={(el) => {
             contentEl = el;
           }}
-          class="modal-content"
+          class={styles["modal-content"]}
           classList={props.contentClass ? { [props.contentClass]: true } : {}}
           role="dialog"
           aria-modal="true"
@@ -93,9 +94,9 @@ export const Modal: Component<ModalProps> = (props) => {
           onClick={(e) => e.stopPropagation()}
         >
           {(props.title || (props.onClose && (props.showCloseButton ?? true))) && (
-            <div class="modal-header">
+            <div class={styles["modal-header"]}>
               {props.title ? (
-                <h2 id={titleId} class="modal-title">
+                <h2 id={titleId} class={styles["modal-title"]}>
                   {props.title}
                 </h2>
               ) : (
@@ -107,7 +108,7 @@ export const Modal: Component<ModalProps> = (props) => {
                   ref={(el) => {
                     closeButtonEl = el;
                   }}
-                  class="modal-close"
+                  class={styles["modal-close"]}
                   type="button"
                   onClick={props.onClose}
                   aria-label="Close modal"
@@ -118,7 +119,7 @@ export const Modal: Component<ModalProps> = (props) => {
             </div>
           )}
 
-          <div class="modal-body">{props.children}</div>
+          <div class={styles["modal-body"]}>{props.children}</div>
         </div>
       </div>
     </Show>

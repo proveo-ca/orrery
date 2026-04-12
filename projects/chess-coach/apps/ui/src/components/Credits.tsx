@@ -1,7 +1,7 @@
 import type { Component } from "solid-js";
 
 import { Modal } from "~/components/common/Modal";
-import "~/components/Credits.css";
+import styles from "~/components/Credits.module.css";
 
 type Props = {
   open: boolean;
@@ -13,7 +13,7 @@ export const Credits: Component<Props> = (props) => {
 
   return (
     <Modal open={props.open} onClose={props.onClose} title="Credits" position="fixed">
-      <div class="credits">
+      <div class={styles.credits}>
         <ul>
           <li>
             <strong>The Cat:</strong> by Johan Mouchet <br />

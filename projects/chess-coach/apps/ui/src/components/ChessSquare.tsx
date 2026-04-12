@@ -1,6 +1,8 @@
 import type { Color, PieceSymbol, Square } from "chess.js";
+import clsx from "clsx";
 import type { Component } from "solid-js";
 
+import styles from "~/components/ChessBoard.module.css";
 import type { MoveSquares } from "~/store/gameStore";
 
 interface ChessSquareProps {
@@ -39,19 +41,19 @@ export const ChessSquare: Component<ChessSquareProps> = (props) => {
   return (
     <div
       classList={{
-        square: true,
-        light: props.isLight,
-        dark: !props.isLight,
-        selected: props.isSelected,
-        "valid-move": props.isValidMove && !isCapture(),
-        capture: isCapture(),
-        hovered: props.isHovered && !props.isInvalid,
-        invalid: props.isInvalid,
-        "advice-highlight": props.isAdviceHovered,
-        "has-piece": !!props.piece,
-        "in-check": props.isCheck,
-        "in-checkmate": props.isCheckmate,
-        "in-stalemate": props.isStalemate,
+        [styles.square]: true,
+        [styles.light]: props.isLight,
+        [styles.dark]: !props.isLight,
+        [styles.selected]: props.isSelected,
+        [styles["valid-move"]]: props.isValidMove && !isCapture(),
+        [styles.capture]: isCapture(),
+        [styles.hovered]: props.isHovered && !props.isInvalid,
+        [styles.invalid]: props.isInvalid,
+        [styles["advice-highlight"]]: props.isAdviceHovered,
+        [styles["has-piece"]]: !!props.piece,
+        [styles["in-check"]]: props.isCheck,
+        [styles["in-checkmate"]]: props.isCheckmate,
+        [styles["in-stalemate"]]: props.isStalemate,
       }}
       onClick={props.onClick}
       onMouseEnter={props.onMouseEnter}
@@ -59,16 +61,20 @@ export const ChessSquare: Component<ChessSquareProps> = (props) => {
       onDragOver={props.onDragOver}
       onDrop={props.onDrop}
     >
-      {props.showRank && <span class="coordinate rank-label">{props.showRank}</span>}
-      {props.showFile && <span class="coordinate file-label">{props.showFile}</span>}
+      {props.showRank && (
+        <span class={clsx(styles.coordinate, styles["rank-label"])}>{props.showRank}</span>
+      )}
+      {props.showFile && (
+        <span class={clsx(styles.coordinate, styles["file-label"])}>{props.showFile}</span>
+      )}
 
-      {isLastMove() && <div class="last-move-indicator"></div>}
+      {isLastMove() && <div class={styles["last-move-indicator"]}></div>}
 
       {props.piece && (
         <img
           src={getPieceImg(props.piece.type, props.piece.color)}
           alt={`${props.piece.color} ${props.piece.type}`}
-          class="piece"
+          class={styles.piece}
           draggable="true"
           onDragStart={props.onDragStart}
         />

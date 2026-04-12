@@ -1,6 +1,6 @@
 import { type Component } from "solid-js";
 
-import "~/components/common/ProgressBar.css";
+import styles from "~/components/common/ProgressBar.module.css";
 
 interface ProgressBarProps {
   progress: number;
@@ -12,11 +12,11 @@ export const ProgressBar: Component<ProgressBarProps> = (props) => {
   const clampedProgress = () => Math.max(0, Math.min(100, props.progress));
 
   return (
-    <div class="progress-wrapper">
-      <div class="progress-container">
-        <div class="progress-bar" style={{ width: `${clampedProgress()}%` }}></div>
+    <div class={styles["progress-wrapper"]}>
+      <div class={styles["progress-container"]}>
+        <div class={styles["progress-bar"]} style={{ width: `${clampedProgress()}%` }}></div>
       </div>
-      {props.text && <p class="progress-text">{props.text}</p>}
+      {props.text && <p class={styles["progress-text"]}>{props.text}</p>}
     </div>
   );
 };

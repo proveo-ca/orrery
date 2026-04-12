@@ -20,6 +20,12 @@
   flex-shrink: 0; /* Prevent the title from shrinking */
 }
 
+@media (--desktop) {
+  .coach-panel h3 {
+    display: none;
+  }
+}
+
 .coach-panel p {
   margin: 0;
   font-size: 0.9rem;

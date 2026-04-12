@@ -3,6 +3,7 @@ import { createSignal } from "solid-js";
 import type { Component } from "solid-js";
 
 import { Button } from "~/components/common/Button";
+import styles from "~/components/Controls.module.css";
 import { Credits } from "~/components/Credits";
 import { TurnLabel } from "~/components/TurnLabel";
 import { DEFAULT_STOCKFISH_WORKER_URL } from "~/engine/StockfishEngine.ts";
@@ -10,7 +11,6 @@ import { useHint } from "~/hooks/useHint";
 import { postExplainStream } from "~/services/api";
 import { clearHoverOverride, dispatchCoachEvent, setAdvice } from "~/store/coachStore";
 import { currentFen, currentIndex, fenHistory, goBack, goForward } from "~/store/gameStore";
-import "~/components/Controls.css";
 import {
   exitTravel,
   isTravelling,
@@ -118,8 +118,8 @@ export const BoardActions: Component = () => {
   };
 
   return (
-    <div class="board-actions">
-      <div class="nav-row">
+    <div class={styles["board-actions"]}>
+      <div class={styles["nav-row"]}>
         <Button onClick={handleBack} disabled={atStart() && !isTravelling()}>
           &larr;
         </Button>
@@ -129,20 +129,20 @@ export const BoardActions: Component = () => {
       </div>
 
       {(isTravelling() || isReplaying()) && (
-        <div class="travel-row">
+        <div class={styles["travel-row"]}>
           {isTravelling() && (
-            <span class="travel-label">
+            <span class={styles["travel-label"]}>
               Move {travelIndex()}/{travelFenHistory().length - 1}
             </span>
           )}
           {isReplaying() && <TurnLabel />}
-          <Button class="back-to-live" onClick={handleBackToLive}>
+          <Button class={styles["back-to-live"]} onClick={handleBackToLive}>
             Back to Live
           </Button>
         </div>
       )}
 
-      <div class="nav-row">
+      <div class={styles["nav-row"]}>
         <Button onClick={handleHint} disabled={pendingHint() || isReplaying() || isTravelling()}>
           {pendingHint() ? "Thinking..." : "Hint"}
         </Button>

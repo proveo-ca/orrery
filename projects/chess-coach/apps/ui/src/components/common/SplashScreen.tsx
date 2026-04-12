@@ -1,9 +1,10 @@
+import clsx from "clsx";
 import { type Component, createEffect, createSignal, Show } from "solid-js";
 
-import { CoachAvatar } from "~/components/CoachAvatar";
+import { CoachAvatar, avatarStyles } from "~/components/CoachAvatar";
 import { ProgressBar } from "~/components/common/ProgressBar";
+import styles from "~/components/common/SplashScreen.module.css";
 import { isAppReady, llmLoadingText, llmProgress } from "~/store/coachStore";
-import "~/components/common/SplashScreen.css";
 
 export const SplashScreen: Component = () => {
   const [mounted, setMounted] = createSignal(true);
@@ -17,20 +18,20 @@ export const SplashScreen: Component = () => {
   return (
     <Show when={mounted()}>
       <div
-        class="splash-screen"
+        class={styles["splash-screen"]}
         style={{
           opacity: isAppReady() ? 0 : 1,
           "pointer-events": isAppReady() ? "none" : "all",
           transition: "opacity 0.5s ease-in-out",
         }}
       >
-        <div class="splash-content">
-          <div class="splash-avatar-wrapper">
-            <div class="cat sleeping">
+        <div class={styles["splash-content"]}>
+          <div class={styles["splash-avatar-wrapper"]}>
+            <div class={clsx(avatarStyles.cat, avatarStyles.sleeping)}>
               <CoachAvatar />
             </div>
           </div>
-          <h2 class="splash-title">Coach Selena is sleeping...</h2>
+          <h2 class={styles["splash-title"]}>Coach Selena is sleeping...</h2>
 
           <ProgressBar progress={llmProgress()} text={llmLoadingText()} />
         </div>

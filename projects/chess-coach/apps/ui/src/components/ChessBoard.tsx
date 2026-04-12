@@ -2,6 +2,7 @@ import type { Square } from "chess.js";
 import { For, Show } from "solid-js";
 import type { Component } from "solid-js";
 
+import styles from "~/components/ChessBoard.module.css";
 import { ChessSquare } from "~/components/ChessSquare";
 import { Modal } from "~/components/common/Modal";
 import { EvalBar } from "~/components/EvalBar";
@@ -9,7 +10,6 @@ import { useChessBoard } from "~/hooks/useChessBoard";
 import { adviceHoveredSquares } from "~/store/coachStore";
 import { activePlayerColor } from "~/store/settingsStore";
 import { isTravelling } from "~/store/travelStore";
-import "~/components/ChessBoard.css";
 
 const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"];
 const RANKS = ["8", "7", "6", "5", "4", "3", "2", "1"];
@@ -30,7 +30,7 @@ export const ChessBoard: Component = () => {
   const turn = () => activeGame().turn();
 
   return (
-    <div class="board-layout-wrapper">
+    <div class={styles["board-layout-wrapper"]}>
       <Show when={board.isReplaying()}>
         <EvalBar
           score={board.baseEvalScore()}
@@ -39,11 +39,11 @@ export const ChessBoard: Component = () => {
         />
       </Show>
       <div
-        class="chessboard-container"
+        class={styles["chessboard-container"]}
         onMouseEnter={board.handleBoardMouseEnter}
         onMouseLeave={board.handleBoardMouseLeave}
       >
-        <div class="chessboard">
+        <div class={styles.chessboard}>
           <For each={displayRanks()}>
             {(rank, rIndex) => (
               <For each={displayFiles()}>
@@ -109,8 +109,8 @@ export const ChessBoard: Component = () => {
             position="absolute"
             dismissible={false}
             showCloseButton={false}
-            overlayClass="game-over-overlay"
-            contentClass="game-over-banner"
+            overlayClass={styles["game-over-overlay"]}
+            contentClass={styles["game-over-banner"]}
           >
             <div>{isCheckmate() ? "Checkmate" : isStalemate() ? "Stalemate" : "Draw"}</div>
           </Modal>
