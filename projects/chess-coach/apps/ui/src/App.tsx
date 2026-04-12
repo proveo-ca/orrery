@@ -1,22 +1,21 @@
 import { Chess } from "chess.js";
-import { Show, onMount } from "solid-js";
+import { Show, createSignal, onMount } from "solid-js";
 import type { Component } from "solid-js";
 
 import styles from "~/App.module.css";
-import { CapturedPieces } from "~/components/CapturedPieces";
+import { OpponentCaptures, PlayerCaptures } from "~/components/CapturedPieces";
 import { ChessBoard } from "~/components/ChessBoard";
-import { CoachAdvice } from "~/components/CoachAdvice";
+import { CoachPanel } from "~/components/CoachPanel.tsx";
 import { CoachAvatar } from "~/components/CoachAvatar.tsx";
 import { HistoryOverlay } from "~/components/common/HistoryOverlay";
 import { LightSpeedOverlay } from "~/components/common/LightSpeedOverlay";
 import { SplashScreen } from "~/components/common/SplashScreen";
-import { BoardActions } from "~/components/Controls";
+import { Sidebar } from "~/components/Sidebar";
 import {
   DebugControls,
   debugHistoryOverlay,
   debugLightSpeedOverlay,
 } from "~/components/DebugControls";
-import { NewGamePanel } from "~/components/NewGamePanel";
 import { useGlobalShortcuts } from "~/hooks/useGlobalShortcuts";
 import { fetchHello, postAdviceStream, postMove } from "~/services/api";
 import {
@@ -25,7 +24,6 @@ import {
   setBestMovePhrases,
   setThinkingPhrases,
 } from "~/store/coachStore";
-import { isAppReady } from "~/store/coachStore";
 import { addMoveToHistory, currentFen, currentIndex, fenHistory } from "~/store/gameStore";
 import { activePlayerColor, difficulty } from "~/store/settingsStore";
 import { isTravelling } from "~/store/travelStore";
@@ -34,6 +32,7 @@ import { initGlobalLogging, logger } from "~/utils/logger";
 
 const App: Component = () => {
   useGlobalShortcuts();
+  const [gameStarted, setGameStarted] = createSignal(false);
 
   const isReplaying = () => currentIndex() < fenHistory().length - 1;
 
@@ -102,25 +101,27 @@ const App: Component = () => {
 
   return (
     <>
-      <SplashScreen />
-      <Show when={isAppReady()}>
+      <SplashScreen onStart={() => setGameStarted(true)} />
+      <Show when={gameStarted()}>
         <div class={styles["app-container"]}>
           <HistoryOverlay active={debugHistoryOverlay() || (isReplaying() && !isTravelling())} />
           <LightSpeedOverlay active={debugLightSpeedOverlay() || isTravelling()} />
 
           <div class={styles["coach-header"]}>
             <CoachAvatar />
-            <CoachAdvice />
           </div>
 
           <div class={styles["board-area"]}>
-            <BoardActions />
-            <CapturedPieces />
-            <ChessBoard />
+            <div class={styles["board-column"]}>
+              <OpponentCaptures />
+              <ChessBoard />
+              <PlayerCaptures />
+            </div>
+            <Sidebar />
           </div>
 
           <div class={styles.footer}>
-            <NewGamePanel />
+            <CoachPanel />
           </div>
 
           <DebugControls />

@@ -1,0 +1,35 @@
+.captures {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+  font-size: 1.2rem;
+  line-height: 1;
+  min-height: 1.4rem;
+}
+
+.captures--left {
+  justify-content: flex-start;
+}
+
+.captures--right {
+  justify-content: flex-end;
+}
+
+.advantage {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 0 4px;
+}
+
+.white-piece {
+  color: #fff;
+}
+
+.black-piece {
+  color: #000;
+  text-shadow:
+    -1px -1px 0 #fff,
+    1px -1px 0 #fff,
+    -1px 1px 0 #fff,
+    1px 1px 0 #fff;
+}

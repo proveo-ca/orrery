@@ -1,4 +1,4 @@
-#root {
+:global(#root) {
   max-width: 1280px;
   margin: 0 auto;
   padding: 1rem;
@@ -10,21 +10,22 @@
 .app-container {
   display: grid;
   grid-template-rows: auto auto auto;
-  gap: 0.5rem;
+  gap: 0.25rem;
   justify-items: center;
   max-width: var(--app-max-width);
   width: 100%;
   margin: 0 auto;
 }
 
-/* Grid layout for the header */
+/* Grid layout for the header — offset to align with board center (not board+sidebar) */
 .coach-header {
   display: grid;
-  grid-template-columns: var(--header-columns);
   gap: 1.5rem;
   align-items: center;
   width: 100%;
   min-height: 8rem;
+  padding-right: var(--sidebar-width);
+  box-sizing: border-box;
 }
 
 .avatar-container {
@@ -41,9 +42,15 @@
 
 .board-area {
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-start;
   width: 100%;
+}
+
+.board-column {
+  display: flex;
+  flex-direction: column;
 }
 
 .footer {

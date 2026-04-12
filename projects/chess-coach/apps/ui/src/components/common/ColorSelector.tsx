@@ -3,6 +3,7 @@ import type { Component } from "solid-js";
 
 import { Button } from "~/components/common/Button";
 import styles from "~/components/common/ColorSelector.module.css";
+import { DiceIcon } from "~/components/icons";
 import type { PlayerColorPref } from "~/store/settingsStore.ts";
 
 interface Props {
@@ -22,8 +23,9 @@ export const ColorSelector: Component<Props> = (props) => {
       <Button
         class={clsx(props.value === "random" && styles.active)}
         onClick={() => props.onChange("random")}
+        aria-label="Random"
       >
-        Random
+        <DiceIcon />
       </Button>
       <Button
         class={clsx(props.value === "b" && styles.active)}

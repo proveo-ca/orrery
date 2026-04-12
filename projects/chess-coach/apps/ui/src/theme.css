@@ -21,7 +21,8 @@
   --border-radius-md: 8px;
 
   /* Mobile First Defaults (< 720px) */
-  --board-size: min(100vw - 2rem, 480px);
+  --sidebar-width: 5rem;
+  --board-size: min(100vw - 2rem - var(--sidebar-width), 480px);
   --square-size: calc(var(--board-size) / 8);
   --app-max-width: 100%;
   --header-columns: 1fr; /* Stack avatar and advice vertically */
@@ -44,6 +45,7 @@
 /* Desktop Overrides */
 @media (--desktop) {
   :root {
+    --sidebar-width: 6rem;
     --board-size: 480px;
     --app-max-width: 720px;
     --header-columns: 1fr 3fr; /* Avatar left, Advice right */

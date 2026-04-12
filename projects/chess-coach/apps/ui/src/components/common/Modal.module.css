@@ -17,10 +17,9 @@
 
 .modal-content {
   background: var(--bg-color);
-  border: 2px solid var(--border-color);
   border-radius: var(--border-radius-md);
   padding: 1.5rem;
-  width: min(420px, calc(100% - 2rem));
+  width: 520px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
   text-align: left;
 }

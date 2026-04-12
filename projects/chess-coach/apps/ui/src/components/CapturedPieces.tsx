@@ -1,5 +1,7 @@
+import clsx from "clsx";
 import { type Component, createMemo } from "solid-js";
 
+import styles from "~/components/CapturedPieces.module.css";
 import { currentFen } from "~/store/gameStore";
 import { activePlayerColor } from "~/store/settingsStore";
 import { isTravelling, travelFen } from "~/store/travelStore";
@@ -32,25 +34,25 @@ const VALUES: Record<string, number> = {
 
 // Use filled shapes for all pieces so we can color them via CSS
 const UNICODE_PIECES: Record<string, string> = {
-  P: "♟",
-  N: "♞",
-  B: "♝",
-  R: "♜",
-  Q: "♛",
-  p: "♟",
-  n: "♞",
-  b: "♝",
-  r: "♜",
-  q: "♛",
+  P: "\u265F",
+  N: "\u265E",
+  B: "\u265D",
+  R: "\u265C",
+  Q: "\u265B",
+  p: "\u265F",
+  n: "\u265E",
+  b: "\u265D",
+  r: "\u265C",
+  q: "\u265B",
 };
 
 // Sort order: Queens first, then Rooks, Bishops, Knights, Pawns
 const SORT_ORDER = ["Q", "R", "B", "N", "P", "q", "r", "b", "n", "p"];
 
-export const CapturedPieces: Component = () => {
+function useCaptureStats() {
   const activeFen = createMemo(() => (isTravelling() ? travelFen() : currentFen()));
 
-  const stats = createMemo(() => {
+  return createMemo(() => {
     const fen = activeFen().split(" ")[0];
     const counts: Record<string, number> = {
       P: 0,
@@ -100,63 +102,50 @@ export const CapturedPieces: Component = () => {
     const aiMat = aiColor === "b" ? blackMat : whiteMat;
     const humanMat = humanColor === "b" ? blackMat : whiteMat;
 
-    const aiAdvantage = aiMat - humanMat;
-    const humanAdvantage = humanMat - aiMat;
-
-    return { aiCaptured, humanCaptured, aiAdvantage, humanAdvantage };
+    return {
+      aiCaptured,
+      humanCaptured,
+      aiAdvantage: aiMat - humanMat,
+      humanAdvantage: humanMat - aiMat,
+    };
   });
+}
 
-  const renderPieces = (pieces: string[]) => {
-    return pieces.map((p) => {
-      const isWhite = p === p.toUpperCase();
-      return (
-        <span
-          style={
-            isWhite
-              ? { color: "#fff" }
-              : {
-                  color: "#000",
-                  "text-shadow":
-                    "-1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff",
-                }
-          }
-        >
-          {UNICODE_PIECES[p]}
-        </span>
-      );
-    });
-  };
+function renderPieces(pieces: string[]) {
+  return pieces.map((p) => {
+    const isWhite = p === p.toUpperCase();
+    return (
+      <span class={isWhite ? styles["white-piece"] : styles["black-piece"]}>
+        {UNICODE_PIECES[p]}
+      </span>
+    );
+  });
+}
+
+/** Opponent's captured pieces — top left of the board */
+export const OpponentCaptures: Component = () => {
+  const stats = useCaptureStats();
 
   return (
-    <div
-      style={{
-        display: "flex",
-        "justify-content": "space-between",
-        width: "100%",
-        "margin-bottom": "8px",
-        "font-size": "1.5rem",
-        "line-height": "1",
-      }}
-    >
-      {/* Left: AI's captures */}
-      <div style={{ display: "flex", gap: "4px", "align-items": "center" }}>
-        <span>{renderPieces(stats().aiCaptured)}</span>
-        {stats().aiAdvantage > 0 && (
-          <span style={{ "font-size": "1rem", "margin-left": "8px", color: "#888" }}>
-            +{stats().aiAdvantage}
-          </span>
-        )}
-      </div>
+    <div class={clsx(styles.captures, styles["captures--left"])}>
+      {renderPieces(stats().aiCaptured)}
+      {stats().aiAdvantage > 0 && (
+        <span class={styles.advantage}>+{stats().aiAdvantage}</span>
+      )}
+    </div>
+  );
+};
 
-      {/* Right: Human's captures */}
-      <div style={{ display: "flex", gap: "4px", "align-items": "center" }}>
-        {stats().humanAdvantage > 0 && (
-          <span style={{ "font-size": "1rem", "margin-right": "8px", color: "#888" }}>
-            +{stats().humanAdvantage}
-          </span>
-        )}
-        <span>{renderPieces(stats().humanCaptured)}</span>
-      </div>
+/** Player's captured pieces — bottom right of the board */
+export const PlayerCaptures: Component = () => {
+  const stats = useCaptureStats();
+
+  return (
+    <div class={clsx(styles.captures, styles["captures--right"])}>
+      {stats().humanAdvantage > 0 && (
+        <span class={styles.advantage}>+{stats().humanAdvantage}</span>
+      )}
+      {renderPieces(stats().humanCaptured)}
     </div>
   );
 };

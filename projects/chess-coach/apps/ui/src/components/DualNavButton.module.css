@@ -1,0 +1,52 @@
+.dual-nav {
+  display: flex;
+  border-radius: var(--border-radius-md);
+  overflow: hidden;
+  border: 1px solid transparent;
+  transition: border-color 0.25s;
+}
+
+.dual-nav:hover {
+  border-color: var(--border-color);
+}
+
+.half {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-color);
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0.4em 0.6em;
+  transition: background-color 0.15s;
+  font-size: 1em;
+}
+
+.half:hover:not(:disabled) {
+  background-color: var(--primary-hover);
+}
+
+.half:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.left {
+  border-right: 1px solid var(--border-color);
+}
+
+/* Inverted state for travelling mode */
+.inverted .half {
+  background: var(--primary-color);
+  color: var(--surface-color);
+}
+
+.inverted .half:hover:not(:disabled) {
+  background-color: var(--primary-hover);
+  color: #fff;
+}
+
+.inverted .left {
+  border-right-color: rgba(0, 0, 0, 0.2);
+}

@@ -6,24 +6,10 @@
   flex-direction: column;
   justify-content: center;
   text-align: left;
-  height: 10rem;
+  height: 8rem;
   box-sizing: border-box;
   max-height: 16rem;
-  width: var(--advice-width);
-}
-
-.coach-panel h3 {
-  margin-top: 0;
-  margin-bottom: 0.5rem;
-  color: var(--primary-color);
-  font-size: 1.1rem;
-  flex-shrink: 0; /* Prevent the title from shrinking */
-}
-
-@media (--desktop) {
-  .coach-panel h3 {
-    display: none;
-  }
+  width: 100%;
 }
 
 .coach-panel p {

@@ -13,7 +13,6 @@
 }
 
 .new-game-panel {
-  border: 2px solid var(--border-color);
   padding: var(--spacing-sm) var(--spacing-md);
   border-radius: var(--border-radius-md);
   display: flex;
@@ -46,4 +45,15 @@
   opacity: 0.8;
   font-size: 0.9rem;
   user-select: none;
+}
+
+.start-btn {
+  background-color: var(--primary-color);
+  color: var(--surface-color);
+  font-weight: 600;
+}
+
+.start-btn:hover:not(:disabled) {
+  background-color: var(--primary-hover);
+  color: #fff;
 }

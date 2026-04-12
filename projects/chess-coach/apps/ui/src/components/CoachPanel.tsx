@@ -10,7 +10,7 @@ import { isTravelling } from "~/store/travelStore";
 const CHESS_NOTATION_REGEX =
   /(\b[KQRBN]?[a-h]?[1-8]?x?[a-h][1-8](?:=[QRBN])?[+#]?\b|\bO-O(?:-O)?\b)/g;
 
-export const CoachAdvice: Component = () => {
+export const CoachPanel: Component = () => {
   const handleMouseEnter = (text: string) => {
     // Extract just the square coordinates (e.g., "f3" from "Nf3")
     const squares = text.match(/[a-h][1-8]/g) || [];
@@ -25,7 +25,6 @@ export const CoachAdvice: Component = () => {
 
   return (
     <div class={styles["coach-panel"]}>
-      <h3>Coach Selena</h3>
       <p>
         <For each={parsedAdvice()}>
           {(part) => {

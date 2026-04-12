@@ -64,7 +64,7 @@ export const NewGamePanel: Component = () => {
         <option value="advanced">Advanced (1600)</option>
         <option value="expert">Expert (2200)</option>
       </Select>
-      <Button onClick={handleNewGame}>New Game</Button>
+      <Button class={styles["start-btn"]} onClick={handleNewGame}>Start</Button>
     </div>
   );
 };
