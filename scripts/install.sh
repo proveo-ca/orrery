@@ -116,7 +116,7 @@ echo "🚀 Starting Chess Coach..."
 docker compose up -d --build
 
 echo "✅ Chess Coach is starting up in the background!"
-echo "🎮 Play here: http://localhost:8080"
+echo "🎮 Play here: http://localhost:8080/chess"
 
 TS_IP=$(tailscale ip -4 2>/dev/null || true)
 

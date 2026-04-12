@@ -4,10 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
     "dev:web": "VITE_TARGET=web vite",
     "dev:desktop": "VITE_API_URL=http://localhost:8080 vite",
-    "build": "tsgo -b && vite build",
     "build:web": "tsgo -b && VITE_TARGET=web vite build",
     "build:desktop": "tsgo -b && vite build",
     "preview": "vite preview",
