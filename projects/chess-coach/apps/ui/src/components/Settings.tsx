@@ -1,5 +1,7 @@
+import { useNavigate } from "@solidjs/router";
 import type { Component } from "solid-js";
 
+import { Button } from "~/components/common/Button";
 import { Modal } from "~/components/common/Modal";
 import { Select } from "~/components/common/Select";
 import { Toggle } from "~/components/common/Toggle";
@@ -20,6 +22,13 @@ type Props = {
 const IDENTITY_OPTIONS: PlayerIdentity[] = ["Human", "Cat", "Dog", "Rat"];
 
 export const Settings: Component<Props> = (props) => {
+  const navigate = useNavigate();
+
+  const handleBackToMenu = () => {
+    props.onClose();
+    navigate("/");
+  };
+
   return (
     <Modal open={props.open} onClose={props.onClose} title="Settings" position="fixed">
       <div class={styles.settings}>
@@ -40,6 +49,11 @@ export const Settings: Component<Props> = (props) => {
         </div>
         <div class={styles.row}>
           <Toggle label="i'm lost" checked={imLost()} onChange={(v) => setImLost(v)} />
+        </div>
+        <div class={styles.row}>
+          <Button class={styles["menu-btn"]} onClick={handleBackToMenu}>
+            Back to main menu
+          </Button>
         </div>
       </div>
     </Modal>

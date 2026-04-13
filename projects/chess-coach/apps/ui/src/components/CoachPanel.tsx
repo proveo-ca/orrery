@@ -1,7 +1,7 @@
 import { For, Show } from "solid-js";
 import type { Component } from "solid-js";
 
-import styles from "~/components/CoachAdvice.module.css";
+import styles from "~/components/CoachPanel.module.css";
 import { advice, hoverBlunder, setAdviceHoveredSquares } from "~/store/coachStore";
 import { isTravelling } from "~/store/travelStore";
 
@@ -26,6 +26,7 @@ export const CoachPanel: Component = () => {
   return (
     <div class={styles["coach-panel"]}>
       <p>
+        <strong>Coach Selena:</strong>{" "}
         <For each={parsedAdvice()}>
           {(part) => {
             if (part.match(CHESS_NOTATION_REGEX)) {

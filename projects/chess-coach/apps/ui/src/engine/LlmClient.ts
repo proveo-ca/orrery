@@ -2,7 +2,31 @@ import { CreateWebWorkerMLCEngine, type MLCEngineInterface, type AppConfig } fro
 
 import { ENGINE_CONFIG } from "~/engine/config";
 
-export class LlmClient {
+/**
+ * Abstraction over the LLM used to produce coaching commentary.
+ *
+ * Implementations:
+ *   - WebLlmClient: runs @mlc-ai/web-llm in a WebWorker (full in-browser LLM).
+ *   - NoopLlmClient: yields nothing. Relies on Orchestrator's existing
+ *     `isLowQualityLlmOutput` fallback path to render static canned strings.
+ */
+export interface LlmClient {
+  prompt(
+    systemPrompt: string,
+    userPrompt: string,
+    temperature?: number,
+    maxTokens?: number,
+  ): Promise<string>;
+
+  promptStream(
+    systemPrompt: string,
+    userPrompt: string,
+    temperature?: number,
+    maxTokens?: number,
+  ): AsyncGenerator<string, void, unknown>;
+}
+
+export class WebLlmClient implements LlmClient {
   private engine: MLCEngineInterface | null = null;
   private initPromise: Promise<void> | null = null;
 
@@ -117,5 +141,23 @@ export class LlmClient {
         yield content;
       }
     }
+  }
+}
+
+/**
+ * No-op LLM. Returns empty strings / yields nothing.
+ *
+ * The Orchestrator's `isLowQualityLlmOutput` check will detect the empty
+ * output and route through `buildFallbackAdvice` / `buildFallbackExplanation`,
+ * producing static canned commentary without any LLM inference.
+ */
+export class NoopLlmClient implements LlmClient {
+  async prompt(): Promise<string> {
+    return "";
+  }
+
+  // eslint-disable-next-line require-yield
+  async *promptStream(): AsyncGenerator<string, void, unknown> {
+    return;
   }
 }

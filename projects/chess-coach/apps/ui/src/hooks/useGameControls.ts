@@ -3,6 +3,7 @@ import { Chess } from "chess.js";
 import { DEFAULT_STOCKFISH_WORKER_URL } from "~/engine/StockfishEngine.ts";
 import { useHint } from "~/hooks/useHint";
 import { postExplainStream } from "~/services/api";
+import { accumulateStream } from "~/services/streamUtils";
 import { clearHoverOverride, dispatchCoachEvent, setAdvice } from "~/store/coachStore";
 import { currentFen, currentIndex, fenHistory, goBack, goForward } from "~/store/gameStore";
 import {
@@ -85,19 +86,11 @@ export const useGameControls = () => {
 
       setAdvice(`${prefix}Let me explain why...`);
 
-      let fullExplanation = "";
-      let receivedFirstChunk = false;
-
-      await postExplainStream(
+      await accumulateStream(
+        postExplainStream,
         { fenBefore: currentFen(), fenAfter, isBlunder: false, moveSan: san },
-        (chunk) => {
-          if (!receivedFirstChunk) {
-            fullExplanation = "";
-            receivedFirstChunk = true;
-          }
-          fullExplanation += chunk;
-          setAdvice(prefix + fullExplanation);
-        },
+        setAdvice,
+        { prefix },
       );
 
       dispatchCoachEvent({ type: "AI_MOVED" });

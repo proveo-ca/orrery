@@ -1,8 +1,10 @@
+import { resolveMode } from "~/services/runtimeMode";
 import { setLlmProgress } from "~/store/coachStore";
 import type { Difficulty } from "~/store/settingsStore";
 
-const TARGET = import.meta.env.VITE_TARGET;
-const API_URL = import.meta.env.VITE_API_URL || window.location.origin;
+const RUNTIME_MODE = resolveMode();
+const API_URL =
+  RUNTIME_MODE.kind === "desktop" ? RUNTIME_MODE.apiUrl : window.location.origin;
 const DEBUG = import.meta.env.VITE_DEBUG === "true";
 
 /** fen is the position AFTER the human move has been applied client-side. */
@@ -191,10 +193,12 @@ class WebWorkerCoachService implements CoachService {
   }
 }
 
-// If VITE_TARGET is explicitly 'web', use the 100% in-browser Web Worker engine.
-// Otherwise, default to the Kotlin backend (Desktop/Docker mode).
+// Mode branching: "desktop" uses the Kotlin backend via HTTP; every other
+// mode (web-full, web-no-llm) runs the in-browser Web Worker engine. The
+// worker itself decides whether to use a real LLM or a noop based on the
+// same resolveMode() result — see orchestrator.worker.ts.
 const activeService: CoachService =
-  TARGET === "web" ? new WebWorkerCoachService() : new HttpCoachService();
+  RUNTIME_MODE.kind === "desktop" ? new HttpCoachService() : new WebWorkerCoachService();
 
 // Export facade functions to maintain compatibility with existing UI imports
 export const postNewGame = () => activeService.postNewGame();

@@ -1,6 +1,7 @@
 import { ENGINE_CONFIG } from "~/engine/config";
 import { EngineBridge } from "~/engine/EngineBridge";
-import { LlmClient } from "~/engine/LlmClient";
+import { fallbackAdvice, fallbackExplanation } from "~/engine/fallbackCommentary";
+import type { LlmClient } from "~/engine/LlmClient";
 import {
   buildPromptFromAnalysis,
   createMoveAnalysis,
@@ -35,11 +36,12 @@ const DEBUG_ENABLED = import.meta.env.VITE_DEBUG === "true";
 
 export class Orchestrator {
   private engineBridge = new EngineBridge();
-  private llmClient = new LlmClient();
+  private llmClient: LlmClient;
   private currentFen = ENGINE_CONFIG.chess.startingFen;
   private onDebug?: (event: LlmDebugEvent) => void;
 
-  constructor(onDebug?: (event: LlmDebugEvent) => void) {
+  constructor(llmClient: LlmClient, onDebug?: (event: LlmDebugEvent) => void) {
+    this.llmClient = llmClient;
     this.onDebug = onDebug;
   }
 
@@ -139,7 +141,7 @@ export class Orchestrator {
     let usedFallback = false;
 
     if (isLowQualityLlmOutput(finalCommentary)) {
-      finalCommentary = this.buildFallbackAdvice(safeHumanMove);
+      finalCommentary = fallbackAdvice(safeHumanMove);
       usedFallback = true;
     }
 
@@ -220,7 +222,7 @@ export class Orchestrator {
     let usedFallback = false;
 
     if (isLowQualityLlmOutput(finalText)) {
-      finalText = this.buildFallbackExplanation(
+      finalText = fallbackExplanation(
         analysis.tag,
         analysis.bestAlt,
         analysis.bestAltMatchesMove,
@@ -249,48 +251,6 @@ export class Orchestrator {
     }
 
     yield finalText;
-  }
-
-  private buildFallbackAdvice(moveSan: string): string {
-    return `Good move—${moveSan} improves your position and keeps your pieces active.`;
-  }
-
-  private buildFallbackExplanation(
-    tag: string,
-    bestMove: string,
-    bestAltMatchesMove: boolean,
-  ): string {
-    const hasAlternative = bestMove.trim() !== "";
-
-    if (tag === "Blunder") {
-      return hasAlternative
-        ? `This move will be a blunder; ${bestMove} will be a much stronger alternative.`
-        : "This move will be a blunder because it will allow serious tactical or positional problems.";
-    }
-
-    if (tag === "Mistake") {
-      return hasAlternative
-        ? `This move will be inaccurate; ${bestMove} will be a cleaner and stronger idea.`
-        : "This move will be a mistake because it will be less accurate than the strongest continuation.";
-    }
-
-    if (tag === "Inaccuracy") {
-      return hasAlternative
-        ? `This move will be slightly less precise; ${bestMove} will improve the position more efficiently.`
-        : "This move will be slightly less precise and will miss a more efficient improvement.";
-    }
-
-    if (
-      bestAltMatchesMove ||
-      tag === "Best" ||
-      tag === "Good" ||
-      tag === "Book" ||
-      tag === "Brilliant"
-    ) {
-      return "This will be a strong move, improving activity, coordination, and overall position.";
-    }
-
-    return "This move will help improve activity and coordination.";
   }
 
   async generateUiPhrases(): Promise<UiPhrases> {

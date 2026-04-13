@@ -4,6 +4,7 @@ import { createSignal } from "solid-js";
 import { DEFAULT_STOCKFISH_WORKER_URL } from "~/engine/StockfishEngine.ts";
 import { UciDriver } from "~/engine/UciDriver.ts";
 import { postExplainStream } from "~/services/api";
+import { accumulateStream } from "~/services/streamUtils";
 import { setHoverAdvice, setHoverEmotion } from "~/store/coachStore";
 import { type MoveSquares, currentFen } from "~/store/gameStore";
 import { startTravel } from "~/store/travelStore";
@@ -44,19 +45,10 @@ export function useTravelMode(workerPath: string = DEFAULT_STOCKFISH_WORKER_URL)
     startTravel([blunderFen], [null]);
 
     // Fire off the explanation request in parallel
-    let fullExplanation = "";
-    let receivedFirstChunk = false;
-
-    postExplainStream(
+    accumulateStream(
+      postExplainStream,
       { fenBefore: currentFen(), fenAfter: blunderFen, isBlunder: true, moveSan: blunderSan },
-      (chunk) => {
-        if (!receivedFirstChunk) {
-          fullExplanation = ""; // Clear "Travelling..." on first token
-          receivedFirstChunk = true;
-        }
-        fullExplanation += chunk;
-        setHoverAdvice(fullExplanation);
-      },
+      setHoverAdvice,
     ).catch((err) => console.error("Failed to fetch explanation stream", err));
 
     const driver = new UciDriver(workerPath);

@@ -1,0 +1,55 @@
+{
+  "advice": [
+    "Good move—{moveSan} improves your position and keeps your pieces active.",
+    "Nice choice—{moveSan} maintains solid piece coordination.",
+    "Solid play—{moveSan} develops your position efficiently."
+  ],
+  "explanation": {
+    "blunder": {
+      "withAlternative": [
+        "This move will be a blunder; {bestMove} will be a much stronger alternative.",
+        "This looks like a blunder here; {bestMove} would be a far cleaner choice.",
+        "That's a blunder; {bestMove} would have held the position together."
+      ],
+      "noAlternative": [
+        "This move will be a blunder because it will allow serious tactical or positional problems.",
+        "This drops into a blunder—it opens up serious tactical weaknesses.",
+        "A blunder: the position is going to suffer real tactical damage after this."
+      ]
+    },
+    "mistake": {
+      "withAlternative": [
+        "This move will be inaccurate; {bestMove} will be a cleaner and stronger idea.",
+        "That's a mistake here; {bestMove} is a clearer and sharper continuation.",
+        "An imprecise choice; {bestMove} would have been the cleaner path."
+      ],
+      "noAlternative": [
+        "This move will be a mistake because it will be less accurate than the strongest continuation.",
+        "A mistake in this position—it's measurably weaker than the sharpest continuation.",
+        "This falls short of the best line and loses accuracy compared to what was available."
+      ]
+    },
+    "inaccuracy": {
+      "withAlternative": [
+        "This move will be slightly less precise; {bestMove} will improve the position more efficiently.",
+        "A small inaccuracy; {bestMove} handles the position more cleanly.",
+        "Slightly imprecise; {bestMove} makes more of the position."
+      ],
+      "noAlternative": [
+        "This move will be slightly less precise and will miss a more efficient improvement.",
+        "A minor inaccuracy—there was a subtly better way to improve the position.",
+        "Slightly off the mark; the position offered a more efficient improvement."
+      ]
+    },
+    "strong": [
+      "This will be a strong move, improving activity, coordination, and overall position.",
+      "A strong move—piece activity and coordination both improve here.",
+      "Well played; this move strengthens activity and keeps the pieces harmonious."
+    ],
+    "default": [
+      "This move will help improve activity and coordination.",
+      "This keeps the pieces active and well-coordinated.",
+      "A reasonable move that maintains piece activity and coordination."
+    ]
+  }
+}

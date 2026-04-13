@@ -1,9 +1,14 @@
 /// <reference lib="webworker" />
+import { type LlmClient, NoopLlmClient, WebLlmClient } from "~/engine/LlmClient";
 import { Orchestrator, type LlmDebugEvent } from "~/engine/Orchestrator";
+import { resolveMode } from "~/services/runtimeMode";
 
 const DEBUG = import.meta.env.VITE_DEBUG === "true";
 
-const orchestrator = new Orchestrator((debugEvent: LlmDebugEvent) => {
+const mode = resolveMode();
+const llmClient: LlmClient = mode.kind === "web-full" ? new WebLlmClient() : new NoopLlmClient();
+
+const orchestrator = new Orchestrator(llmClient, (debugEvent: LlmDebugEvent) => {
   if (!DEBUG) return;
   self.postMessage({ type: "LLM_DEBUG", debug: debugEvent });
 });

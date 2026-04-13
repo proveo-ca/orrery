@@ -6,6 +6,7 @@ import type { ParentComponent } from "solid-js";
 import { LoadingOverlay } from "~/components/common/LoadingOverlay";
 import { useGlobalShortcuts } from "~/hooks/useGlobalShortcuts";
 import { fetchHello, postAdviceStream, postMove } from "~/services/api";
+import { accumulateStream } from "~/services/streamUtils";
 import {
   dispatchCoachEvent,
   isAppReady,
@@ -65,18 +66,10 @@ const App: ParentComponent = (props) => {
             addMoveToHistory(moveData.fen, { from: aiMove.from, to: aiMove.to });
             dispatchCoachEvent({ type: "AI_MOVED" });
 
-            let fullAdvice = "";
-            let receivedFirstChunk = false;
-            await postAdviceStream(
+            await accumulateStream(
+              postAdviceStream,
               { humanMove: "", aiMove: moveData.move, fen: moveData.fen },
-              (chunk) => {
-                if (!receivedFirstChunk) {
-                  fullAdvice = "";
-                  receivedFirstChunk = true;
-                }
-                fullAdvice += chunk;
-                setAdvice(fullAdvice);
-              },
+              setAdvice,
             );
           })
           .catch((err) => {

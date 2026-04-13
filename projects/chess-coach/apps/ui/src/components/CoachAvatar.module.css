@@ -6,7 +6,7 @@
   position: relative;
   height: 6rem;
   width: 6.78rem; /* 6rem * 1.13 to maintain aspect ratio */
-  margin: 0 auto;
+  margin: 2rem auto 0;
   z-index: 1;
 }
 

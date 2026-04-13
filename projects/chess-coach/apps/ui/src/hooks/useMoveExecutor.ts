@@ -2,6 +2,7 @@ import { Chess, type Square } from "chess.js";
 import { createSignal } from "solid-js";
 
 import { postAdviceStream, postMove } from "~/services/api";
+import { accumulateStream } from "~/services/streamUtils";
 import {
   bestMovePhrases,
   dispatchCoachEvent,
@@ -49,19 +50,10 @@ export function useMoveExecutor(stopStockfish: () => void) {
     setAdviceAbortController(controller);
 
     try {
-      let fullAdvice = "";
-      let receivedFirstChunk = false;
-
-      await postAdviceStream(
+      const fullAdvice = await accumulateStream(
+        postAdviceStream,
         { humanMove: humanMoveSan, aiMove: moveData.move, fen: moveData.fen },
-        (chunk) => {
-          if (!receivedFirstChunk) {
-            fullAdvice = ""; // Clear the "thinking" phrase on first token
-            receivedFirstChunk = true;
-          }
-          fullAdvice += chunk;
-          setAdvice(fullAdvice);
-        },
+        setAdvice,
         { signal: controller.signal },
       );
 
