@@ -6,11 +6,26 @@ import type { Component } from "solid-js";
 import { Modal } from "~/components/common/Modal";
 import { Credits } from "~/components/Credits";
 import { DualNavButton } from "~/components/DualNavButton";
-import { CheckIcon, HamburgerIcon, HintIcon, PlusCircleIcon, StarIcon } from "~/components/icons";
+import {
+  CheckIcon,
+  CogIcon,
+  HamburgerIcon,
+  HintIcon,
+  PlusCircleIcon,
+  StarIcon,
+} from "~/components/icons";
 import styles from "~/components/MobileDrawer.module.css";
 import { NewGamePanel } from "~/components/NewGamePanel";
+import { Settings } from "~/components/Settings";
 import { useGameControls } from "~/hooks/useGameControls";
-import { setShowCredits, setShowNewGame, showCredits, showNewGame } from "~/store/coachStore";
+import {
+  setShowCredits,
+  setShowNewGame,
+  setShowSettings,
+  showCredits,
+  showNewGame,
+  showSettings,
+} from "~/store/coachStore";
 import { isTravelling, travelFenHistory, travelIndex } from "~/store/travelStore.ts";
 
 export const MobileDrawer: Component = () => {
@@ -128,6 +143,18 @@ export const MobileDrawer: Component = () => {
           >
             <StarIcon />
           </button>
+
+          <button
+            class={styles["icon-btn"]}
+            onClick={() => {
+              setOpen(false);
+              setShowSettings(true);
+            }}
+            disabled={isReplaying() || isTravelling()}
+            aria-label="Settings"
+          >
+            <CogIcon />
+          </button>
         </div>
       </div>
 
@@ -141,6 +168,7 @@ export const MobileDrawer: Component = () => {
       </Modal>
 
       <Credits open={showCredits()} onClose={() => setShowCredits(false)} />
+      <Settings open={showSettings()} onClose={() => setShowSettings(false)} />
     </div>
   );
 };

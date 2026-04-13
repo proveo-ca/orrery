@@ -4,11 +4,25 @@ import type { Component } from "solid-js";
 import { Modal } from "~/components/common/Modal";
 import { Credits } from "~/components/Credits";
 import { DualNavButton } from "~/components/DualNavButton";
-import { CheckIcon, HintIcon, PlusCircleIcon, StarIcon } from "~/components/icons";
+import {
+  CheckIcon,
+  CogIcon,
+  HintIcon,
+  PlusCircleIcon,
+  StarIcon,
+} from "~/components/icons";
 import { NewGamePanel } from "~/components/NewGamePanel";
+import { Settings } from "~/components/Settings";
 import styles from "~/components/Sidebar.module.css";
 import { useGameControls } from "~/hooks/useGameControls";
-import { setShowCredits, setShowNewGame, showCredits, showNewGame } from "~/store/coachStore";
+import {
+  setShowCredits,
+  setShowNewGame,
+  setShowSettings,
+  showCredits,
+  showNewGame,
+  showSettings,
+} from "~/store/coachStore";
 import { isTravelling, travelFenHistory, travelIndex } from "~/store/travelStore.ts";
 
 export const Sidebar: Component = () => {
@@ -71,6 +85,15 @@ export const Sidebar: Component = () => {
         <StarIcon />
       </button>
 
+      <button
+        class={styles["icon-btn"]}
+        onClick={() => setShowSettings(true)}
+        disabled={isReplaying() || isTravelling()}
+        aria-label="Settings"
+      >
+        <CogIcon />
+      </button>
+
       <Modal
         open={showNewGame()}
         onClose={() => setShowNewGame(false)}
@@ -81,6 +104,7 @@ export const Sidebar: Component = () => {
       </Modal>
 
       <Credits open={showCredits()} onClose={() => setShowCredits(false)} />
+      <Settings open={showSettings()} onClose={() => setShowSettings(false)} />
     </div>
   );
 };

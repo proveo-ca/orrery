@@ -39,6 +39,26 @@
 }
 
 /* Menu phase */
+.identity-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 280px;
+  margin-bottom: 1.25rem;
+}
+
+.identity-label {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-color);
+  white-space: nowrap;
+}
+
+.identity-row select {
+  flex: 1;
+}
+
 .menu-options {
   display: flex;
   flex-direction: column;

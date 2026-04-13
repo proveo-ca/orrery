@@ -2,16 +2,12 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  background: var(--panel-bg);
-  padding: 8px 16px;
   border-radius: 20px;
 }
 
 .toggle-label {
   font-weight: 500;
   font-size: 0.95rem;
-  min-width: 110px; /* Keeps the toggle from jumping when text changes */
-  text-align: right;
 }
 
 .switch {

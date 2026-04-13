@@ -5,6 +5,8 @@ import type { Component } from "solid-js";
 import { Button } from "~/components/common/Button";
 import styles from "~/components/Controls.module.css";
 import { Credits } from "~/components/Credits";
+import { CogIcon } from "~/components/icons";
+import { Settings } from "~/components/Settings";
 import { TurnLabel } from "~/components/TurnLabel";
 import { DEFAULT_STOCKFISH_WORKER_URL } from "~/engine/StockfishEngine.ts";
 import { useHint } from "~/hooks/useHint";
@@ -22,6 +24,7 @@ import {
 
 export const BoardActions: Component = () => {
   const [showCredits, setShowCredits] = createSignal(false);
+  const [showSettings, setShowSettings] = createSignal(false);
   const { requestHint, pendingHint } = useHint(DEFAULT_STOCKFISH_WORKER_URL);
 
   const atStart = () => (isTravelling() ? travelIndex() === 0 : currentIndex() === 0);
@@ -150,7 +153,18 @@ export const BoardActions: Component = () => {
           Credits
         </Button>
 
+        <Button
+          onClick={() => setShowSettings(true)}
+          disabled={isReplaying() || isTravelling()}
+          class={styles["settings-btn"]}
+          aria-label="Settings"
+        >
+          <CogIcon />
+          <span class={styles["settings-btn-label"]}>Settings</span>
+        </Button>
+
         <Credits open={showCredits()} onClose={() => setShowCredits(false)} />
+        <Settings open={showSettings()} onClose={() => setShowSettings(false)} />
       </div>
     </div>
   );

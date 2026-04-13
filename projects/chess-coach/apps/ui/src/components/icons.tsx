@@ -147,6 +147,25 @@ export const HamburgerIcon: Component<IconProps> = (props) => {
   );
 };
 
+export const CogIcon: Component<IconProps> = (props) => {
+  const s = () => props.size ?? 20;
+  return (
+    <svg
+      width={s()}
+      height={s()}
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.4"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path d="M11.4 1.5 L11.7 3.7 L12.9 4.2 L14.7 2.9 L16.3 4.5 L15 6.3 L15.5 7.5 L17.7 7.8 L17.7 12.2 L15.5 12.5 L15 13.7 L16.3 15.5 L14.7 17.1 L12.9 15.8 L11.7 16.3 L11.4 18.5 L8.6 18.5 L8.3 16.3 L7.1 15.8 L5.3 17.1 L3.7 15.5 L5 13.7 L4.5 12.5 L2.3 12.2 L2.3 7.8 L4.5 7.5 L5 6.3 L3.7 4.5 L5.3 2.9 L7.1 4.2 L8.3 3.7 L8.6 1.5 Z" />
+      <circle cx="10" cy="10" r="2.5" />
+    </svg>
+  );
+};
+
 export const ArrowRightIcon: Component<IconProps> = (props) => {
   const s = () => props.size ?? 20;
   return (

@@ -9,7 +9,11 @@ import { Modal } from "~/components/common/Modal";
 import { EvalBar } from "~/components/EvalBar";
 import { useChessBoard } from "~/hooks/useChessBoard";
 import { adviceHoveredSquares, setShowNewGame } from "~/store/coachStore";
-import { activePlayerColor } from "~/store/settingsStore";
+import {
+  activePlayerColor,
+  opponentPieceSet,
+  playerPieceSet,
+} from "~/store/settingsStore";
 import { isTravelling } from "~/store/travelStore";
 
 const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"];
@@ -67,10 +71,17 @@ export const ChessBoard: Component = () => {
                     }
                   };
 
+                  const squarePieceSet = () => {
+                    const p = piece();
+                    if (!p) return playerPieceSet();
+                    return p.color === activePlayerColor() ? playerPieceSet() : opponentPieceSet();
+                  };
+
                   return (
                     <ChessSquare
                       square={square}
                       piece={piece() ?? null}
+                      pieceSet={squarePieceSet()}
                       isLight={(rIndex() + fIndex()) % 2 === 0}
                       isSelected={board.selectedSquare() === square}
                       isHovered={board.hoveredSquare() === square}

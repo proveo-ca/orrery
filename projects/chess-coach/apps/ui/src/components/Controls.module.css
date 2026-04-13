@@ -63,3 +63,19 @@
   background-color: var(--primary-hover);
   color: #fff;
 }
+
+.settings-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.settings-btn-label {
+  display: inline;
+}
+
+@media (max-width: 479px) {
+  .settings-btn-label {
+    display: none;
+  }
+}

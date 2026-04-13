@@ -76,6 +76,7 @@ export const isAppReady = () => coachState.isAppReady;
 
 export const [showNewGame, setShowNewGame] = createSignal(false);
 export const [showCredits, setShowCredits] = createSignal(false);
+export const [showSettings, setShowSettings] = createSignal(false);
 
 // ===== Base setters =====
 export const setAdvice = (val: string) => setCoachState("baseAdvice", val);

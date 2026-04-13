@@ -4,10 +4,12 @@ import type { Component } from "solid-js";
 
 import styles from "~/components/ChessBoard.module.css";
 import type { MoveSquares } from "~/store/gameStore";
+import type { PieceSet } from "~/store/settingsStore";
 
 interface ChessSquareProps {
   square: Square;
   piece: { type: PieceSymbol; color: Color } | null;
+  pieceSet: PieceSet;
   isLight: boolean;
   isSelected: boolean;
   isHovered: boolean;
@@ -28,9 +30,9 @@ interface ChessSquareProps {
   isStalemate: boolean;
 }
 
-const getPieceImg = (type: PieceSymbol, color: Color) => {
+const getPieceImg = (type: PieceSymbol, color: Color, pieceSet: PieceSet) => {
   const piece = type.toUpperCase();
-  return `/chess/pieces/cburnett/${color}${piece}.svg`;
+  return `/chess/pieces/${pieceSet}/${color}${piece}.svg`;
 };
 
 export const ChessSquare: Component<ChessSquareProps> = (props) => {
@@ -72,7 +74,7 @@ export const ChessSquare: Component<ChessSquareProps> = (props) => {
 
       {props.piece && (
         <img
-          src={getPieceImg(props.piece.type, props.piece.color)}
+          src={getPieceImg(props.piece.type, props.piece.color, props.pieceSet)}
           alt={`${props.piece.color} ${props.piece.type}`}
           class={styles.piece}
           draggable="true"
