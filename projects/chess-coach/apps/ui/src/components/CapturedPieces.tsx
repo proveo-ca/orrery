@@ -129,9 +129,7 @@ export const OpponentCaptures: Component = () => {
   return (
     <div class={clsx(styles.captures, styles["captures--left"])}>
       {renderPieces(stats().aiCaptured)}
-      {stats().aiAdvantage > 0 && (
-        <span class={styles.advantage}>+{stats().aiAdvantage}</span>
-      )}
+      {stats().aiAdvantage > 0 && <span class={styles.advantage}>+{stats().aiAdvantage}</span>}
     </div>
   );
 };

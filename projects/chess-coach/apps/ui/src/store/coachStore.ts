@@ -1,6 +1,5 @@
-import { createEffect, createRoot } from "solid-js";
+import { createEffect, createRoot, createSignal } from "solid-js";
 import { createStore } from "solid-js/store";
-
 export type CoachEmotion =
   | "idle"
   | "watching"
@@ -74,6 +73,9 @@ export const hoverBlunderSan = () => coachState.hoverBlunderSan;
 export const llmProgress = () => coachState.llmProgress;
 export const llmLoadingText = () => coachState.llmLoadingText;
 export const isAppReady = () => coachState.isAppReady;
+
+export const [showNewGame, setShowNewGame] = createSignal(false);
+export const [showCredits, setShowCredits] = createSignal(false);
 
 // ===== Base setters =====
 export const setAdvice = (val: string) => setCoachState("baseAdvice", val);

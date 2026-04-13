@@ -6,7 +6,7 @@ import { ColorSelector } from "~/components/common/ColorSelector";
 import { Select } from "~/components/common/Select";
 import styles from "~/components/Controls.module.css";
 import { postMove, postNewGame } from "~/services/api";
-import { dispatchCoachEvent, setAdvice } from "~/store/coachStore";
+import { dispatchCoachEvent, setAdvice, setShowNewGame } from "~/store/coachStore";
 import { addMoveToHistory, resetGame } from "~/store/gameStore";
 import {
   type Difficulty,
@@ -49,6 +49,8 @@ export const NewGamePanel: Component = () => {
     } catch (e) {
       console.error("Failed to start new game", e);
       resetGame(); // Fallback to local reset
+    } finally {
+      setShowNewGame(false);
     }
   };
 
@@ -64,7 +66,9 @@ export const NewGamePanel: Component = () => {
         <option value="advanced">Advanced (1600)</option>
         <option value="expert">Expert (2200)</option>
       </Select>
-      <Button class={styles["start-btn"]} onClick={handleNewGame}>Start</Button>
+      <Button class={styles["start-btn"]} onClick={handleNewGame}>
+        Start
+      </Button>
     </div>
   );
 };

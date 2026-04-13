@@ -1,7 +1,6 @@
+import { useNavigate } from "@solidjs/router";
 import clsx from "clsx";
 import type { Component } from "solid-js";
-
-import { useNavigate } from "@solidjs/router";
 
 import { CoachAvatar } from "~/components/CoachAvatar";
 import styles from "~/components/common/SplashScreen.module.css";

@@ -4,10 +4,11 @@ import type { Component } from "solid-js";
 
 import styles from "~/components/ChessBoard.module.css";
 import { ChessSquare } from "~/components/ChessSquare";
+import { Button } from "~/components/common/Button";
 import { Modal } from "~/components/common/Modal";
 import { EvalBar } from "~/components/EvalBar";
 import { useChessBoard } from "~/hooks/useChessBoard";
-import { adviceHoveredSquares } from "~/store/coachStore";
+import { adviceHoveredSquares, setShowNewGame } from "~/store/coachStore";
 import { activePlayerColor } from "~/store/settingsStore";
 import { isTravelling } from "~/store/travelStore";
 
@@ -112,7 +113,10 @@ export const ChessBoard: Component = () => {
             overlayClass={styles["game-over-overlay"]}
             contentClass={styles["game-over-banner"]}
           >
-            <div>{isCheckmate() ? "Checkmate" : isStalemate() ? "Stalemate" : "Draw"}</div>
+            <div class={styles.result}>
+              {isCheckmate() ? "Checkmate" : isStalemate() ? "Stalemate" : "Draw"}
+            </div>
+            <Button onClick={() => setShowNewGame(true)}>Another game?</Button>
           </Modal>
         </div>
       </div>

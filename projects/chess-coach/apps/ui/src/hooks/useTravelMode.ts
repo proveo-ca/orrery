@@ -15,8 +15,11 @@ import { startTravel } from "~/store/travelStore";
 export function useTravelMode(workerPath: string = DEFAULT_STOCKFISH_WORKER_URL) {
   const [loading, setLoading] = createSignal(false);
 
-  const getBestUci = async (driver: UciDriver, fen: string, depth: number = 12): Promise<string> => {
-
+  const getBestUci = async (
+    driver: UciDriver,
+    fen: string,
+    depth: number = 12,
+  ): Promise<string> => {
     driver.send("ucinewgame");
     driver.send(`position fen ${fen}`);
     driver.send(`go depth ${depth}`);
@@ -26,7 +29,7 @@ export function useTravelMode(workerPath: string = DEFAULT_STOCKFISH_WORKER_URL)
       if (line.startsWith("bestmove")) {
         const tokens = line.trim().split(/\s+/);
         const uci = tokens[1];
-        return (uci && uci !== "(none)") ? uci : "";
+        return uci && uci !== "(none)" ? uci : "";
       }
     }
     return "";

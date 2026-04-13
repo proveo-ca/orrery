@@ -187,7 +187,6 @@
   background: rgba(0, 0, 0, 0.85);
   color: #fff;
   padding: 1rem 2rem;
-  font-size: clamp(1.2rem, 5vw, 2rem);
   font-weight: bold;
   text-transform: uppercase;
   letter-spacing: 4px;
@@ -195,6 +194,14 @@
   border-radius: 8px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  justify-content: center;
+
+  .result {
+    font-size: clamp(1.2rem, 5vw, 2rem);
+  }
 }
 
 .square.in-check {

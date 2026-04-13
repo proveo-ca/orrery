@@ -16,10 +16,9 @@ vi.mock("~/store", () => ({
 vi.mock("~/engine/UciDriver", () => ({
   UciDriver: vi.fn(function (this: any) {
     this.send = vi.fn();
-    this.readUntil = vi.fn().mockResolvedValue([
-      "info depth 12 pv e7e5 g1f3 b8c6",
-      "bestmove e7e5 ponder g1f3",
-    ]);
+    this.readUntil = vi
+      .fn()
+      .mockResolvedValue(["info depth 12 pv e7e5 g1f3 b8c6", "bestmove e7e5 ponder g1f3"]);
     this.stop = vi.fn();
   }),
 }));
@@ -43,9 +42,6 @@ describe("useTravelMode", () => {
     expect(startTravel).toHaveBeenCalledTimes(2);
     const finalCall = vi.mocked(startTravel).mock.calls[1];
     expect(finalCall[0]).toHaveLength(2);
-    expect(finalCall[1]).toEqual([
-      null,
-      { from: "e7", to: "e5" },
-    ]);
+    expect(finalCall[1]).toEqual([null, { from: "e7", to: "e5" }]);
   });
 });

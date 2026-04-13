@@ -1,8 +1,7 @@
+import { useLocation } from "@solidjs/router";
 import { Chess } from "chess.js";
 import { Show, createEffect, onMount } from "solid-js";
 import type { ParentComponent } from "solid-js";
-
-import { useLocation } from "@solidjs/router";
 
 import { LoadingOverlay } from "~/components/common/LoadingOverlay";
 import { useGlobalShortcuts } from "~/hooks/useGlobalShortcuts";

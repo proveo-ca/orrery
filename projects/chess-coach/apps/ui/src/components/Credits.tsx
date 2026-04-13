@@ -29,7 +29,11 @@ export const Credits: Component<Props> = (props) => {
           </li>
           <li>
             <strong>The Pieces:</strong> by Colin M.L. Burnett (via Lichess) <br />
-            <a href="https://github.com/lichess-org/lila/tree/master/public/piece/cburnett" target="_blank" rel="noopener noreferrer">
+            <a
+              href="https://github.com/lichess-org/lila/tree/master/public/piece/cburnett"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               github.com/lichess-org/lila
             </a>
           </li>

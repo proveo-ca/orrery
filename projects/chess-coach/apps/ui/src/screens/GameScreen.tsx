@@ -7,13 +7,13 @@ import { CoachAvatar } from "~/components/CoachAvatar.tsx";
 import { CoachPanel } from "~/components/CoachPanel.tsx";
 import { HistoryOverlay } from "~/components/common/HistoryOverlay";
 import { LightSpeedOverlay } from "~/components/common/LightSpeedOverlay";
-import { MobileDrawer } from "~/components/MobileDrawer";
-import { Sidebar } from "~/components/Sidebar";
 import {
   DebugControls,
   debugHistoryOverlay,
   debugLightSpeedOverlay,
 } from "~/components/DebugControls";
+import { MobileDrawer } from "~/components/MobileDrawer";
+import { Sidebar } from "~/components/Sidebar";
 import { currentIndex, fenHistory } from "~/store/gameStore";
 import { isTravelling } from "~/store/travelStore";
 
@@ -21,7 +21,9 @@ export const GameScreen: Component = () => {
   const isReplaying = () => currentIndex() < fenHistory().length - 1;
 
   return (
-    <div classList={{ [styles["app-container"]]: true, highlight: (isTravelling() || isReplaying()) }}>
+    <div
+      classList={{ [styles["app-container"]]: true, highlight: isTravelling() || isReplaying() }}
+    >
       <HistoryOverlay active={debugHistoryOverlay() || (isReplaying() && !isTravelling())} />
       <LightSpeedOverlay active={debugLightSpeedOverlay() || isTravelling()} />
 
