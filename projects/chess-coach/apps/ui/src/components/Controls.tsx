@@ -1,4 +1,4 @@
-import { createSignal } from "solid-js";
+import { Show, createSignal } from "solid-js";
 import type { Component } from "solid-js";
 
 import { Button } from "~/components/common/Button";
@@ -8,6 +8,7 @@ import { CogIcon } from "~/components/icons";
 import { Settings } from "~/components/Settings";
 import { TurnLabel } from "~/components/TurnLabel";
 import { useGameControls } from "~/hooks/useGameControls";
+import { capabilities } from "~/store/capabilitiesStore";
 import { isTravelling, travelFenHistory, travelIndex } from "~/store/travelStore";
 
 export const BoardActions: Component = () => {
@@ -50,9 +51,11 @@ export const BoardActions: Component = () => {
       )}
 
       <div class={styles["nav-row"]}>
-        <Button onClick={handleHint} disabled={pendingHint() || isReplaying() || isTravelling()}>
-          {pendingHint() ? "Thinking..." : "Hint"}
-        </Button>
+        <Show when={capabilities().hint}>
+          <Button onClick={handleHint} disabled={pendingHint() || isReplaying() || isTravelling()}>
+            {pendingHint() ? "Thinking..." : "Hint"}
+          </Button>
+        </Show>
         <Button onClick={() => setShowCredits(true)} disabled={isReplaying() || isTravelling()}>
           Credits
         </Button>

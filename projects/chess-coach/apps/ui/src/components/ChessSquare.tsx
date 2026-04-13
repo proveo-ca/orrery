@@ -15,6 +15,7 @@ interface ChessSquareProps {
   isHovered: boolean;
   isValidMove: boolean;
   isAdviceHovered: boolean;
+  isBestMove: boolean;
   isInvalid: boolean;
   showRank: string | false;
   showFile: string | false;
@@ -52,6 +53,7 @@ export const ChessSquare: Component<ChessSquareProps> = (props) => {
         [styles.hovered]: props.isHovered && !props.isInvalid,
         [styles.invalid]: props.isInvalid,
         [styles["advice-highlight"]]: props.isAdviceHovered,
+        [styles["best-move-highlight"]]: props.isBestMove,
         [styles["has-piece"]]: !!props.piece,
         [styles["in-check"]]: props.isCheck,
         [styles["in-checkmate"]]: props.isCheckmate,

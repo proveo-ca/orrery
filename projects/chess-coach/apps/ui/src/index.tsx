@@ -4,8 +4,9 @@ import { render } from "solid-js/web";
 
 import "~/index.css";
 import App from "~/App.tsx";
-import { GameScreen } from "~/screens/GameScreen";
-import { LanPlaceholder } from "~/screens/LanPlaceholder";
+import { AnalysisScreen } from "~/screens/AnalysisScreen";
+import { CoachScreen } from "~/screens/CoachScreen";
+import { LanScreen } from "~/screens/LanScreen.tsx";
 import { MenuScreen } from "~/screens/MenuScreen";
 
 const root = document.getElementById("root");
@@ -28,9 +29,9 @@ render(
   () => (
     <Router base={base} root={App}>
       <Route path="/" component={MenuScreen} />
-      <Route path="/selena" component={GameScreen} />
-      <Route path="/analysis" component={GameScreen} />
-      <Route path="/lan" component={LanPlaceholder} />
+      <Route path="/selena" component={CoachScreen} />
+      <Route path="/analysis" component={AnalysisScreen} />
+      <Route path="/lan" component={LanScreen} />
     </Router>
   ),
   root!,

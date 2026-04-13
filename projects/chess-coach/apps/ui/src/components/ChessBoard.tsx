@@ -8,6 +8,7 @@ import { Button } from "~/components/common/Button";
 import { Modal } from "~/components/common/Modal";
 import { EvalBar } from "~/components/EvalBar";
 import { useChessBoard } from "~/hooks/useChessBoard";
+import { capabilities } from "~/store/capabilitiesStore";
 import { adviceHoveredSquares, setShowNewGame } from "~/store/coachStore";
 import {
   activePlayerColor,
@@ -36,7 +37,7 @@ export const ChessBoard: Component = () => {
 
   return (
     <div class={styles["board-layout-wrapper"]}>
-      <Show when={board.isReplaying()}>
+      <Show when={board.isReplaying() || capabilities().evalBarAlwaysVisible}>
         <EvalBar
           score={board.baseEvalScore()}
           isFlipped={activePlayerColor() === "b"}
@@ -87,6 +88,7 @@ export const ChessBoard: Component = () => {
                       isHovered={board.hoveredSquare() === square}
                       isValidMove={board.validMoves().includes(square)}
                       isAdviceHovered={adviceHoveredSquares().includes(square)}
+                      isBestMove={board.bestMoveSquares().includes(square)}
                       isInvalid={isInvalid()}
                       showRank={fIndex() === 0 && rank}
                       showFile={rIndex() === 7 && file}

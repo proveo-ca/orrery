@@ -13,6 +13,7 @@ import {
   setHoverAdvice,
   setHoverEmotion,
 } from "~/store/coachStore";
+import { capabilities } from "~/store/capabilitiesStore";
 import { currentFen, currentIndex, fenHistory, moveHistory } from "~/store/gameStore";
 import { activePlayerColor } from "~/store/settingsStore";
 import { isTravelling, travelFen, travelIndex, travelMoveHistory } from "~/store/travelStore";
@@ -26,7 +27,12 @@ export function useChessBoard() {
   const { send, analysis } = useStockfishWorker(DEFAULT_STOCKFISH_WORKER_URL);
   const moveExecutor = useMoveExecutor(() => send("stop"));
 
-  const isReplaying = () => isTravelling() || currentIndex() < fenHistory().length - 1;
+  // When historyBranching is enabled, past-history positions are fully
+  // editable (moves branch), so we never enter the "replaying" state that
+  // locks input / shows overlays.
+  const isReplaying = () =>
+    !capabilities().historyBranching &&
+    (isTravelling() || currentIndex() < fenHistory().length - 1);
 
   let evalTimeout: number | undefined;
   let hoverEvalSeq = 0;
@@ -39,10 +45,20 @@ export function useChessBoard() {
 
   const resumeBaseAnalysis = () => {
     const g = activeGame();
-    if (!g.isGameOver() && (g.turn() === activePlayerColor() || isReplaying())) {
+    if (g.isGameOver()) return;
+    if (capabilities().continuousAnalysis || g.turn() === activePlayerColor() || isReplaying()) {
       send(`position fen ${g.fen()}`);
       send("go depth 12");
     }
+  };
+
+  // When showBestMove is enabled, highlight the best move's from/to
+  // squares continuously.
+  const bestMoveSquares = (): string[] => {
+    if (!capabilities().showBestMove) return [];
+    const uci = humanBestMove();
+    if (!uci || uci.length < 4) return [];
+    return [uci.slice(0, 2), uci.slice(2, 4)];
   };
 
   const canApplyHoverOverride = () => {
@@ -233,8 +249,9 @@ export function useChessBoard() {
       }
     }
 
-    const isPlayerTurn = g.turn() === activePlayerColor();
-    const canTouch = isPlayerTurn && pieceOnSquare?.color === activePlayerColor();
+    const canTouch = capabilities().freeColorControl
+      ? pieceOnSquare?.color === g.turn()
+      : g.turn() === activePlayerColor() && pieceOnSquare?.color === activePlayerColor();
 
     if (canTouch) {
       setSelectedSquare(square);
@@ -255,8 +272,9 @@ export function useChessBoard() {
 
     const g = game();
     const piece = g.get(square);
-    const isPlayerTurn = g.turn() === activePlayerColor();
-    const canTouch = isPlayerTurn && piece?.color === activePlayerColor();
+    const canTouch = capabilities().freeColorControl
+      ? piece?.color === g.turn()
+      : g.turn() === activePlayerColor() && piece?.color === activePlayerColor();
 
     if (!canTouch) {
       e.preventDefault();
@@ -312,6 +330,7 @@ export function useChessBoard() {
     lastMove,
     isReplaying,
     baseEvalScore,
+    bestMoveSquares,
     selectedSquare,
     hoveredSquare,
     validMoves,

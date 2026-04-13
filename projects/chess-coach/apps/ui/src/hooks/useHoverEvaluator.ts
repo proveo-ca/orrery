@@ -2,6 +2,7 @@ import { Chess, type Square } from "chess.js";
 import { createEffect } from "solid-js";
 
 import type { StockfishAnalysis } from "~/hooks/useStockfishWorker";
+import { capabilities } from "~/store/capabilitiesStore";
 import { setHoverAdvice, setHoverBlunder, setHoverEmotion } from "~/store/coachStore";
 import { currentFen } from "~/store/gameStore";
 import { logger } from "~/utils/logger";
@@ -24,6 +25,9 @@ export function useHoverEvaluator(props: UseHoverEvaluatorProps) {
   let lastProcessedEvalId = -1;
 
   createEffect(() => {
+    // Screens without blunder detection (Solo Analysis) skip the coach
+    // reaction and travel trigger entirely.
+    if (!capabilities().blunderDetection) return;
     if (!props.canApplyHoverOverride()) return;
 
     const hovered = props.hoveredSquare();

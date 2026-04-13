@@ -1,3 +1,4 @@
+import { capabilities } from "~/store/capabilitiesStore";
 import { createPersistedStore } from "~/store/createPersistedStore";
 
 export type PlayerColorPref = "w" | "b" | "random";
@@ -29,8 +30,15 @@ export const playerIdentity = () => settingsState.playerIdentity;
 export const imLost = () => settingsState.imLost;
 export const playerPieceSet = (): PieceSet =>
   settingsState.imLost ? "cburnett" : IDENTITY_TO_PIECE_SET[settingsState.playerIdentity];
-export const opponentPieceSet = (): PieceSet =>
-  settingsState.imLost ? "cburnett" : DEFAULT_OPPONENT_PIECE_SET;
+export const opponentPieceSet = (): PieceSet => {
+  if (settingsState.imLost) return "cburnett";
+  // When the screen lets the player drive both sides (Solo Analysis),
+  // render the opponent with the player's piece set too.
+  if (capabilities().opponentUsesPlayerPieceSet) {
+    return IDENTITY_TO_PIECE_SET[settingsState.playerIdentity];
+  }
+  return DEFAULT_OPPONENT_PIECE_SET;
+};
 
 export const setColorPref = (val: PlayerColorPref) => setSettingsState("colorPref", val);
 export const setActivePlayerColor = (val: "w" | "b") => setSettingsState("activePlayerColor", val);

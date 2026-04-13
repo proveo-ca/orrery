@@ -15,6 +15,7 @@ import { NewGamePanel } from "~/components/NewGamePanel";
 import { Settings } from "~/components/Settings";
 import styles from "~/components/Sidebar.module.css";
 import { useGameControls } from "~/hooks/useGameControls";
+import { capabilities } from "~/store/capabilitiesStore";
 import {
   setShowCredits,
   setShowNewGame,
@@ -36,6 +37,7 @@ export const Sidebar: Component = () => {
     handleForward,
     handleBackToLive,
     handleHint,
+    handleNewGame,
   } = controls;
 
   return (
@@ -63,16 +65,18 @@ export const Sidebar: Component = () => {
 
       <div class={styles.divider} />
 
-      <button
-        class={styles["icon-btn"]}
-        onClick={handleHint}
-        disabled={pendingHint() || isReplaying() || isTravelling()}
-        aria-label="Get a hint"
-      >
-        <HintIcon />
-      </button>
+      <Show when={capabilities().hint}>
+        <button
+          class={styles["icon-btn"]}
+          onClick={handleHint}
+          disabled={pendingHint() || isReplaying() || isTravelling()}
+          aria-label="Get a hint"
+        >
+          <HintIcon />
+        </button>
+      </Show>
 
-      <button class={styles["icon-btn"]} onClick={() => setShowNewGame(true)} aria-label="New game">
+      <button class={styles["icon-btn"]} onClick={handleNewGame} aria-label="New game">
         <PlusCircleIcon />
       </button>
 

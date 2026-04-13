@@ -4,8 +4,21 @@ import { DEFAULT_STOCKFISH_WORKER_URL } from "~/engine/StockfishEngine.ts";
 import { useHint } from "~/hooks/useHint";
 import { postExplainStream } from "~/services/api";
 import { accumulateStream } from "~/services/streamUtils";
-import { clearHoverOverride, dispatchCoachEvent, setAdvice } from "~/store/coachStore";
-import { currentFen, currentIndex, fenHistory, goBack, goForward } from "~/store/gameStore";
+import { capabilities } from "~/store/capabilitiesStore";
+import {
+  clearHoverOverride,
+  dispatchCoachEvent,
+  setAdvice,
+  setShowNewGame,
+} from "~/store/coachStore";
+import {
+  currentFen,
+  currentIndex,
+  fenHistory,
+  goBack,
+  goForward,
+  resetGame,
+} from "~/store/gameStore";
 import {
   exitTravel,
   isTravelling,
@@ -24,7 +37,8 @@ export const useGameControls = () => {
       ? travelIndex() === travelFenHistory().length - 1
       : currentIndex() === fenHistory().length - 1;
 
-  const isReplaying = () => currentIndex() < fenHistory().length - 1;
+  const isReplaying = () =>
+    !capabilities().historyBranching && currentIndex() < fenHistory().length - 1;
 
   const handleBack = () => {
     if (isTravelling()) {
@@ -55,6 +69,17 @@ export const useGameControls = () => {
       goForward();
     }
     clearHoverOverride();
+  };
+
+  // Screens with an AI opponent need the NewGamePanel (color + difficulty +
+  // server handshake). Screens without one (Solo Analysis) just reset the
+  // board's FEN in place — no modal, no network call.
+  const handleNewGame = () => {
+    if (capabilities().aiOpponent) {
+      setShowNewGame(true);
+    } else {
+      resetGame();
+    }
   };
 
   const handleHint = async () => {
@@ -110,5 +135,6 @@ export const useGameControls = () => {
     handleForward,
     handleBackToLive,
     handleHint,
+    handleNewGame,
   };
 };

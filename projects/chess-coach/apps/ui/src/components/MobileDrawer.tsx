@@ -8,7 +8,6 @@ import { Credits } from "~/components/Credits";
 import { DualNavButton } from "~/components/DualNavButton";
 import {
   CheckIcon,
-  CogIcon,
   HamburgerIcon,
   HintIcon,
   PlusCircleIcon,
@@ -16,15 +15,14 @@ import {
 } from "~/components/icons";
 import styles from "~/components/MobileDrawer.module.css";
 import { NewGamePanel } from "~/components/NewGamePanel";
-import { Settings } from "~/components/Settings";
+import { SettingsPanel } from "~/components/Settings";
 import { useGameControls } from "~/hooks/useGameControls";
+import { capabilities } from "~/store/capabilitiesStore";
 import {
   setShowCredits,
   setShowNewGame,
-  setShowSettings,
   showCredits,
   showNewGame,
-  showSettings,
 } from "~/store/coachStore";
 import { isTravelling, travelFenHistory, travelIndex } from "~/store/travelStore.ts";
 
@@ -41,11 +39,17 @@ export const MobileDrawer: Component = () => {
     handleForward,
     handleBackToLive,
     handleHint: baseHandleHint,
+    handleNewGame: baseHandleNewGame,
   } = controls;
 
   const handleHint = () => {
     setOpen(false);
     baseHandleHint();
+  };
+
+  const handleNewGame = () => {
+    setOpen(false);
+    baseHandleNewGame();
   };
 
   return (
@@ -112,23 +116,18 @@ export const MobileDrawer: Component = () => {
 
         <p class={styles["section-title"]}>Controls</p>
         <div class={styles["controls-row"]}>
-          <button
-            class={styles["icon-btn"]}
-            onClick={handleHint}
-            disabled={pendingHint() || isReplaying() || isTravelling()}
-            aria-label="Get a hint"
-          >
-            <HintIcon />
-          </button>
+          <Show when={capabilities().hint}>
+            <button
+              class={styles["icon-btn"]}
+              onClick={handleHint}
+              disabled={pendingHint() || isReplaying() || isTravelling()}
+              aria-label="Get a hint"
+            >
+              <HintIcon />
+            </button>
+          </Show>
 
-          <button
-            class={styles["icon-btn"]}
-            onClick={() => {
-              setOpen(false);
-              setShowNewGame(true);
-            }}
-            aria-label="New game"
-          >
+          <button class={styles["icon-btn"]} onClick={handleNewGame} aria-label="New game">
             <PlusCircleIcon />
           </button>
 
@@ -143,19 +142,12 @@ export const MobileDrawer: Component = () => {
           >
             <StarIcon />
           </button>
-
-          <button
-            class={styles["icon-btn"]}
-            onClick={() => {
-              setOpen(false);
-              setShowSettings(true);
-            }}
-            disabled={isReplaying() || isTravelling()}
-            aria-label="Settings"
-          >
-            <CogIcon />
-          </button>
         </div>
+
+        <div class={styles.divider} />
+
+        <p class={styles["section-title"]}>Settings</p>
+        <SettingsPanel onDismiss={() => setOpen(false)} />
       </div>
 
       <Modal
@@ -168,7 +160,6 @@ export const MobileDrawer: Component = () => {
       </Modal>
 
       <Credits open={showCredits()} onClose={() => setShowCredits(false)} />
-      <Settings open={showSettings()} onClose={() => setShowSettings(false)} />
     </div>
   );
 };

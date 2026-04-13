@@ -1,6 +1,7 @@
 import { onCleanup, onMount } from "solid-js";
 
 import { useTravelMode } from "~/hooks/useTravelMode";
+import { capabilities } from "~/store/capabilitiesStore";
 import {
   clearHoverOverride,
   coachEmotion,
@@ -26,9 +27,16 @@ export function useGlobalShortcuts() {
       dispatchCoachEvent({ type: "WAKE_UP" });
     }
 
-    const isReplaying = () => currentIndex() < fenHistory().length - 1;
+    const isReplaying = () =>
+      !capabilities().historyBranching && currentIndex() < fenHistory().length - 1;
 
-    if (e.code === "Space" && hoverBlunder() && !isTravelling() && !loading()) {
+    if (
+      e.code === "Space" &&
+      capabilities().travel &&
+      hoverBlunder() &&
+      !isTravelling() &&
+      !loading()
+    ) {
       e.preventDefault();
       const fen = hoverBlunderFen();
       const san = hoverBlunderSan();

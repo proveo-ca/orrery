@@ -9,6 +9,7 @@ import {
   setAdvice,
   thinkingPhrases,
 } from "~/store/coachStore";
+import { capabilities } from "~/store/capabilitiesStore";
 import { addMoveToHistory } from "~/store/gameStore";
 import { difficulty } from "~/store/settingsStore";
 import { logger } from "~/utils/logger";
@@ -120,6 +121,12 @@ export function useMoveExecutor(stopStockfish: () => void) {
 
       addMoveToHistory(fenAfterHuman, { from: result.from, to: result.to });
       stopStockfish();
+
+      // Screens without an AI opponent (Solo Analysis) just apply the move;
+      // no AI response, no coach advice.
+      if (!capabilities().aiOpponent) {
+        return { didMove: true, fenAfterHuman };
+      }
 
       const overState = getGameOverState(gameCopy, true);
       if (overState) {

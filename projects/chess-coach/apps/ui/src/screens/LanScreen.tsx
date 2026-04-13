@@ -3,7 +3,7 @@ import type { Component } from "solid-js";
 
 import styles from "~/components/common/SplashScreen.module.css";
 
-export const LanPlaceholder: Component = () => {
+export const LanScreen: Component = () => {
   return (
     <div class={styles["splash-content"]}>
       <h2 class={styles["splash-title"]}>Play LAN</h2>

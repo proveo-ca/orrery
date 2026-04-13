@@ -158,6 +158,31 @@
   box-sizing: border-box;
 }
 
+/* Green star for the continuously-displayed best move in Solo Analysis mode.
+   Sits at z-index: 2 (behind the piece at z-index: 10) so on the FROM
+   square the piece covers the star center and on an empty TO square the
+   star is fully visible. Explicitly overrides width/height/background/
+   border-radius so the earlier `.valid-move::after` dot rule (which also
+   targets ::after when both classes are present) doesn't shrink or
+   re-skin the star. */
+.square.best-move-highlight::after {
+  content: "★";
+  width: 100%;
+  height: 100%;
+  background: none;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(2rem, 6vw, 3rem);
+  font-weight: bold;
+  color: rgba(125, 209, 125, 0.85);
+  text-shadow: 0 0 6px rgba(125, 209, 125, 0.5);
+  line-height: 1;
+}
+
 /* =========================================
    Pieces
    ========================================= */
