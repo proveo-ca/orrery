@@ -1,3 +1,4 @@
+@custom-media --sm-up (min-width: 480px);
 @custom-media --desktop (min-width: 720px);
 
 :root {
@@ -20,9 +21,9 @@
   --spacing-lg: 2rem;
   --border-radius-md: 8px;
 
-  /* Mobile First Defaults (< 720px) */
-  --sidebar-width: 5rem;
-  --board-size: min(100vw - 2rem - var(--sidebar-width), 480px);
+  /* Extra-small defaults (< 480px): no sidebar */
+  --sidebar-width: 0px;
+  --board-size: min(100vw - 2rem, 480px);
   --square-size: calc(var(--board-size) / 8);
   --app-max-width: 100%;
   --header-columns: 1fr; /* Stack avatar and advice vertically */
@@ -39,6 +40,14 @@
     --primary-color: #0056b3;
     --primary-hover: #747bff;
     --border-color: #ccc;
+  }
+}
+
+/* Small+ (>= 480px): sidebar visible */
+@media (--sm-up) {
+  :root {
+    --sidebar-width: 5rem;
+    --board-size: min(100vw - 2rem - var(--sidebar-width), 480px);
   }
 }
 

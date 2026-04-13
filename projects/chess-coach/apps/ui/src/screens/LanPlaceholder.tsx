@@ -1,0 +1,17 @@
+import type { Component } from "solid-js";
+
+import { A } from "@solidjs/router";
+
+import styles from "~/components/common/SplashScreen.module.css";
+
+export const LanPlaceholder: Component = () => {
+  return (
+    <div class={styles["splash-content"]}>
+      <h2 class={styles["splash-title"]}>Play LAN</h2>
+      <p class={styles["coming-soon"]}>Coming soon!</p>
+      <A href="/" class={styles["menu-btn"]} style={{ "margin-top": "1rem", "text-align": "center" }}>
+        Back to Menu
+      </A>
+    </div>
+  );
+};

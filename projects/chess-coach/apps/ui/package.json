@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@mlc-ai/web-llm": "^0.2.82",
+    "@solidjs/router": "^0.16.1",
     "chess.js": "^1.0.0-beta.8",
     "clsx": "^2.1.1",
     "solid-js": "^1.9.10"

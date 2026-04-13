@@ -1,40 +1,34 @@
 import { Chess } from "chess.js";
-import { Show, createSignal, onMount } from "solid-js";
-import type { Component } from "solid-js";
+import { Show, createEffect, onMount } from "solid-js";
+import type { ParentComponent } from "solid-js";
 
-import styles from "~/App.module.css";
-import { OpponentCaptures, PlayerCaptures } from "~/components/CapturedPieces";
-import { ChessBoard } from "~/components/ChessBoard";
-import { CoachPanel } from "~/components/CoachPanel.tsx";
-import { CoachAvatar } from "~/components/CoachAvatar.tsx";
-import { HistoryOverlay } from "~/components/common/HistoryOverlay";
-import { LightSpeedOverlay } from "~/components/common/LightSpeedOverlay";
-import { SplashScreen } from "~/components/common/SplashScreen";
-import { Sidebar } from "~/components/Sidebar";
-import {
-  DebugControls,
-  debugHistoryOverlay,
-  debugLightSpeedOverlay,
-} from "~/components/DebugControls";
+import { useLocation } from "@solidjs/router";
+
+import { LoadingOverlay } from "~/components/common/LoadingOverlay";
 import { useGlobalShortcuts } from "~/hooks/useGlobalShortcuts";
 import { fetchHello, postAdviceStream, postMove } from "~/services/api";
 import {
   dispatchCoachEvent,
+  isAppReady,
   setAdvice,
   setBestMovePhrases,
   setThinkingPhrases,
 } from "~/store/coachStore";
-import { addMoveToHistory, currentFen, currentIndex, fenHistory } from "~/store/gameStore";
+import { addMoveToHistory, currentFen, fenHistory } from "~/store/gameStore";
 import { activePlayerColor, difficulty } from "~/store/settingsStore";
-import { isTravelling } from "~/store/travelStore";
 import "~/theme.css";
 import { initGlobalLogging, logger } from "~/utils/logger";
 
-const App: Component = () => {
-  useGlobalShortcuts();
-  const [gameStarted, setGameStarted] = createSignal(false);
+const ROUTE_STORAGE_KEY = "chess-coach:last-route";
 
-  const isReplaying = () => currentIndex() < fenHistory().length - 1;
+const App: ParentComponent = (props) => {
+  useGlobalShortcuts();
+
+  const location = useLocation();
+  createEffect(() => {
+    void location.pathname; // reactive tracking
+    localStorage.setItem(ROUTE_STORAGE_KEY, window.location.pathname);
+  });
 
   onMount(async () => {
     initGlobalLogging();
@@ -101,32 +95,8 @@ const App: Component = () => {
 
   return (
     <>
-      <SplashScreen onStart={() => setGameStarted(true)} />
-      <Show when={gameStarted()}>
-        <div class={styles["app-container"]}>
-          <HistoryOverlay active={debugHistoryOverlay() || (isReplaying() && !isTravelling())} />
-          <LightSpeedOverlay active={debugLightSpeedOverlay() || isTravelling()} />
-
-          <div class={styles["coach-header"]}>
-            <CoachAvatar />
-          </div>
-
-          <div class={styles["board-area"]}>
-            <div class={styles["board-column"]}>
-              <OpponentCaptures />
-              <ChessBoard />
-              <PlayerCaptures />
-            </div>
-            <Sidebar />
-          </div>
-
-          <div class={styles.footer}>
-            <CoachPanel />
-          </div>
-
-          <DebugControls />
-        </div>
-      </Show>
+      <LoadingOverlay />
+      <Show when={isAppReady()}>{props.children}</Show>
     </>
   );
 };

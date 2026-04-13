@@ -21,6 +21,12 @@
   justify-content: center;
 }
 
+@media (max-width: 479px) {
+  .new-game-panel {
+    flex-direction: column;
+  }
+}
+
 .board-actions {
   display: flex;
   gap: var(--spacing-sm);

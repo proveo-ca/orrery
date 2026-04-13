@@ -50,3 +50,8 @@
 .inverted .left {
   border-right-color: rgba(0, 0, 0, 0.2);
 }
+
+:global(.highlight) .dual-nav {
+  z-index: 1000;
+  position: relative;
+}

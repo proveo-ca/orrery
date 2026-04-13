@@ -30,7 +30,7 @@ interface ChessSquareProps {
 
 const getPieceImg = (type: PieceSymbol, color: Color) => {
   const piece = type.toUpperCase();
-  return `https://raw.githubusercontent.com/lichess-org/lila/master/public/piece/cburnett/${color}${piece}.svg`;
+  return `/chess/pieces/cburnett/${color}${piece}.svg`;
 };
 
 export const ChessSquare: Component<ChessSquareProps> = (props) => {

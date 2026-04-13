@@ -28,15 +28,21 @@ export const Credits: Component<Props> = (props) => {
             </a>
           </li>
           <li>
+            <strong>The Pieces:</strong> by Colin M.L. Burnett (via Lichess) <br />
+            <a href="https://github.com/lichess-org/lila/tree/master/public/piece/cburnett" target="_blank" rel="noopener noreferrer">
+              github.com/lichess-org/lila
+            </a>
+          </li>
+          <li>
             <strong>The Eval Engine:</strong> by Stockfish <br />
             <a href="https://stockfishchess.org/" target="_blank" rel="noopener noreferrer">
               stockfishchess.org
             </a>
           </li>
           <li>
-            <strong>The Brain (Chess Moves):</strong> by Stockfish <br />
-            <a href="https://stockfishchess.org/" target="_blank" rel="noopener noreferrer">
-              stockfishchess.org
+            <strong>The Brain (Chess Moves):</strong> by Maia <br />
+            <a href="https://maiachess.com/" target="_blank" rel="noopener noreferrer">
+              maiachess.com
             </a>
           </li>
           <li>

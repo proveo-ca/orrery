@@ -23,8 +23,8 @@ export class EngineBridge {
   async getAiMove(fen: string, difficulty: string): Promise<string> {
     // Map difficulty to Maia weights files
     let weightsFile = "maia-1100.pb.gz";
-    if (difficulty === "advanced") weightsFile = "maia-1500.pb.gz";
-    if (difficulty === "expert") weightsFile = "maia-1900.pb.gz";
+    if (difficulty === "advanced") weightsFile = "maia-1600.pb.gz";
+    if (difficulty === "expert") weightsFile = "maia-2200.pb.gz";
 
     return this.player.getMove(fen, weightsFile);
   }

@@ -74,6 +74,17 @@ export const DiceIcon: Component<IconProps> = (props) => {
   );
 };
 
+export const HamburgerIcon: Component<IconProps> = (props) => {
+  const s = () => props.size ?? 20;
+  return (
+    <svg width={s()} height={s()} viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <line x1="3" y1="5" x2="17" y2="5" />
+      <line x1="3" y1="10" x2="17" y2="10" />
+      <line x1="3" y1="15" x2="17" y2="15" />
+    </svg>
+  );
+};
+
 export const ArrowRightIcon: Component<IconProps> = (props) => {
   const s = () => props.size ?? 20;
   return (

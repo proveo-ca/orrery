@@ -441,3 +441,8 @@
   transform: rotate(45deg);
   top: -20%;
 }
+
+:global(.highlight) .cat {
+  z-index: 1000;
+  position: relative;
+}
