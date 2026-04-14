@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45">
+    <g stroke="#222" stroke-linecap="round" stroke-linejoin="round"
+       stroke-width="1.5">
+        <!-- Base skirt ring -->
+        <ellipse fill="#444" cx="22.5" cy="39" rx="20" ry="5"/>
+        <!-- Dome front face (curved band, darker) -->
+        <path fill="#777" d="M2 36 Q2 24 22.5 20 Q43 24 43 36 Q43 39 22.5 41 Q2 39 2 36z"/>
+        <!-- Dome top surface (lighter, higher) -->
+        <ellipse fill="#999" cx="22.5" cy="21" rx="17" ry="6"/>
+        <!-- Building front -->
+        <rect fill="#333" x="16" y="35" width="12" height="8" rx="1.5"/>
+        <!-- Building lights (red) -->
+        <rect fill="#c44" x="18" y="36" width="2" height="2" rx="0.3"/>
+        <rect fill="#c44" x="22" y="36" width="2" height="2" rx="0.3"/>
+        <rect fill="#c44" x="26" y="36" width="2" height="2" rx="0.3"/>
+        <rect fill="#c44" x="18" y="40" width="2" height="2" rx="0.3"/>
+        <rect fill="#c44" x="22" y="40" width="2" height="2" rx="0.3"/>
+        <rect fill="#c44" x="26" y="40" width="2" height="2" rx="0.3"/>
+        <!-- Top row (smaller, on dome shoulder) -->
+        <rect fill="#a22" x="7" y="21" width="5" height="6" rx="1"/>
+        <rect fill="#a22" x="33" y="21" width="5" height="6" rx="1"/>
+        <!-- Red disc platform on dome top -->
+        <ellipse fill="#a22" cx="22.5" cy="16" rx="9" ry="4.5"/>
+        <ellipse fill="#c33" cx="22.5" cy="15" rx="8" ry="3.5"/>
+    </g>
+</svg>

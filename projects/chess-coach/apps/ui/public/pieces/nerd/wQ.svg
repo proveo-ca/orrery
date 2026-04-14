@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45">
+    <g stroke="#222" stroke-linecap="round" stroke-linejoin="round"
+       stroke-width="1.5">
+        <!-- Shadow -->
+        <ellipse fill="#666" cx="22.5" cy="42" rx="14" ry="2" stroke="none" opacity="0.3"/>
+        <!-- Narrow central spine/fuselage -->
+        <rect fill="#999" x="16" y="19" width="13" height="16" rx="1"/>
+        <line x1="16" y1="30" x2="29" y2="30" stroke="#888" stroke-width="0.8"/>
+        <!-- Blue crew cabin panels -->
+        <rect fill="#38f" x="17" y="22" width="4" height="5" rx="0.5"/>
+        <rect fill="#38f" x="24" y="22" width="4" height="5" rx="0.5"/>
+        <!-- Side pylons connecting to engine pods -->
+        <path fill="#999" d="M16 24 L6 22 L6 26z"/>
+        <path fill="#999" d="M29 24 L39 22 L39 26z"/>
+        <!-- BIG oval engine pods (solid, no inner oval) -->
+        <ellipse fill="#888" cx="5" cy="28" rx="4.5" ry="9"/>
+        <ellipse fill="#888" cx="40" cy="28" rx="4.5" ry="9"/>
+        <!-- Engine pod front caps -->
+        <ellipse fill="#777" cx="5" cy="20" rx="3" ry="1.5"/>
+        <ellipse fill="#777" cx="40" cy="20" rx="3" ry="1.5"/>
+        <!-- Rear exhaust glow -->
+        <ellipse fill="#4af" cx="22.5" cy="40" rx="4" ry="1.5" stroke="none" opacity="0.4"/>
+        <!-- Wide hammerhead front bar -->
+        <rect fill="#aaa" x="8" y="26" width="29" height="7" rx="1.5"/>
+        <!-- Bridge windows on hammerhead -->
+        <rect fill="#38f" x="15" y="28" width="15" height="3" rx="0.5"/>
+    </g>
+</svg>

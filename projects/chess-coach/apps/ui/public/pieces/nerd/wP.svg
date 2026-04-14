@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45">
+    <g stroke="#222" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+       transform="translate(2.25,2.25) scale(0.9)"><!-- Carbot Marine (white) --><!-- Stubby legs -->
+        <path fill="#3b7dd8" d="M16 38 Q16 41 18 41 L20 41 Q21 41 21 39 L21 36z"/>
+        <path fill="#3b7dd8" d="M24 36 L24 39 Q24 41 25 41 L27 41 Q29 41 29 38z"/><!-- Tiny blue blob body -->
+        <ellipse fill="#3b7dd8" cx="22.5" cy="34" rx="8" ry="5"/><!-- Shoulder circle -->
+        <circle fill="#3b7dd8" cx="15" cy="31" r="2.5"/>
+        <circle fill="#3b7dd8" cx="30" cy="31" r="2.5"/><!-- HUGE white dome helmet -->
+        <ellipse fill="#eee" cx="22.5" cy="22" rx="13" ry="14"/><!-- Helmet shine -->
+        <path fill="#fff" stroke="none" d="M16 14 Q18 10 24 11 Q20 10 16 14z"/><!-- Dark visor/gun block -->
+        <rect fill="#444" x="8" y="24" width="16" height="9" rx="2"/><!-- Gun barrel -->
+        <path fill="#555" d="M8 26 L4 26 L4 30 L8 30z"/>
+    </g>
+</svg>
