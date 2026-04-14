@@ -43,15 +43,7 @@
   }
 }
 
-/* Small+ (>= 480px): sidebar visible */
-@media (--sm-up) {
-  :root {
-    --sidebar-width: 5rem;
-    --board-size: min(100vw - 2rem - var(--sidebar-width), 480px);
-  }
-}
-
-/* Desktop Overrides */
+/* Desktop (>= 720px): sidebar visible */
 @media (--desktop) {
   :root {
     --sidebar-width: 6rem;

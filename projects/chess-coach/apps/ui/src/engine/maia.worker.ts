@@ -17,6 +17,10 @@ class AsyncQueue {
 }
 const mainQueue = new AsyncQueue();
 
+// Pending weights data — written to VFS once the runtime is ready.
+let pendingWeightsFile: string | null = null;
+let pendingWeightsData: Uint8Array | null = null;
+
 var Module: any = {
   // Point Emscripten to our clean wrapper file for its pthreads
   mainScriptUrlOrBlob: "/chess/web-engine/lc0-wrapper.js",
@@ -33,6 +37,11 @@ var Module: any = {
   },
   queue: mainQueue,
   onRuntimeInitialized: () => {
+    if (pendingWeightsFile && pendingWeightsData) {
+      Module.FS.writeFile(pendingWeightsFile, pendingWeightsData);
+      pendingWeightsFile = null;
+      pendingWeightsData = null;
+    }
     lc0Ready = true;
     postMessage("readyok");
   },
@@ -48,11 +57,8 @@ self.onmessage = async (e) => {
       const response = await fetch(`/chess/web-engine/${msg.weightsFile}`);
       const buffer = await response.arrayBuffer();
 
-      Module.preRun = [
-        () => {
-          Module.FS.writeFile(msg.weightsFile, new Uint8Array(buffer));
-        },
-      ];
+      pendingWeightsFile = msg.weightsFile;
+      pendingWeightsData = new Uint8Array(buffer);
 
       importScripts("/chess/web-engine/lc0.js");
     } catch (err) {
