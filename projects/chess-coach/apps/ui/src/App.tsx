@@ -47,36 +47,38 @@ const App: ParentComponent = (props) => {
       setBestMovePhrases(helloData.bestMove);
       dispatchCoachEvent({ type: "APP_READY" });
 
-      // Check if it's the AI's turn to move
-      const current = currentFen();
-      const game = new Chess(current);
-      const turn = current.split(" ")[1];
+      // Check if it's the AI's turn to move (only on the coach screen)
+      if (window.location.pathname.endsWith("/selena")) {
+        const current = currentFen();
+        const game = new Chess(current);
+        const turn = current.split(" ")[1];
 
-      if (!game.isGameOver() && turn !== activePlayerColor()) {
-        dispatchCoachEvent({ type: "AI_THINKING" });
-        setAdvice("Let me think about my next move...");
+        if (!game.isGameOver() && turn !== activePlayerColor()) {
+          dispatchCoachEvent({ type: "AI_THINKING" });
+          setAdvice("Let me think about my next move...");
 
-        postMove({
-          humanMoveSan: "",
-          fenAfterHuman: current,
-          difficulty: difficulty(),
-        })
-          .then(async (moveData) => {
-            const aiMove = game.move(moveData.move);
-            addMoveToHistory(moveData.fen, { from: aiMove.from, to: aiMove.to });
-            dispatchCoachEvent({ type: "AI_MOVED" });
-
-            await accumulateStream(
-              postAdviceStream,
-              { humanMove: "", aiMove: moveData.move, fen: moveData.fen },
-              setAdvice,
-            );
+          postMove({
+            humanMoveSan: "",
+            fenAfterHuman: current,
+            difficulty: difficulty(),
           })
-          .catch((err) => {
-            logger.error("Failed to execute AI continuation move", err);
-            setAdvice("Error getting my move.");
-            dispatchCoachEvent({ type: "AI_ERROR" });
-          });
+            .then(async (moveData) => {
+              const aiMove = game.move(moveData.move);
+              addMoveToHistory(moveData.fen, { from: aiMove.from, to: aiMove.to });
+              dispatchCoachEvent({ type: "AI_MOVED" });
+
+              await accumulateStream(
+                postAdviceStream,
+                { humanMove: "", aiMove: moveData.move, fen: moveData.fen },
+                setAdvice,
+              );
+            })
+            .catch((err) => {
+              logger.error("Failed to execute AI continuation move", err);
+              setAdvice("Error getting my move.");
+              dispatchCoachEvent({ type: "AI_ERROR" });
+            });
+        }
       }
     } catch (err) {
       logger.error("Failed to fetch /hello", err);

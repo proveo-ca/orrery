@@ -50,7 +50,7 @@ self.onmessage = async (e) => {
 
       Module.preRun = [
         () => {
-          (self as any).FS.writeFile(msg.weightsFile, new Uint8Array(buffer));
+          Module.FS.writeFile(msg.weightsFile, new Uint8Array(buffer));
         },
       ];
 
