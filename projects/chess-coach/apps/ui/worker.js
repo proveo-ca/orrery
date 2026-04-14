@@ -18,7 +18,7 @@ export default {
 
     const newResponse = new Response(response.body, response);
     newResponse.headers.set("Cross-Origin-Opener-Policy", "same-origin");
-    newResponse.headers.set("Cross-Origin-Embedder-Policy", "credentialless");
+    newResponse.headers.set("Cross-Origin-Embedder-Policy", "require-corp");
 
     // Prevent Cloudflare from treating .gz weight files as pre-compressed content
     if (isGzAsset) {

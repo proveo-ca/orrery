@@ -9,16 +9,24 @@ export default defineConfig({
     headless: true,
   },
   webServer: {
-    command: "VITE_TARGET=web npm run dev:web",
+    command: "VITE_TARGET=web npm run dev:web:vite",
     cwd: "../ui",
     url: "http://localhost:5173/chess/",
     reuseExistingServer: true,
     timeout: 30_000,
   },
   projects: [
+    { name: "chromium", use: { browserName: "chromium" } },
+    { name: "webkit", use: { browserName: "webkit" } },
+    { name: "firefox", use: { browserName: "firefox" } },
     {
-      name: "chromium",
-      use: { browserName: "chromium" },
+      name: "brave",
+      use: {
+        browserName: "chromium",
+        launchOptions: {
+          args: ["--disable-features=BraveShieldsV2"],
+        },
+      },
     },
   ],
 });

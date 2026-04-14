@@ -21,7 +21,7 @@ export default defineConfig({
       configureServer(server) {
         server.middlewares.use((req, res, next) => {
           res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
-          res.setHeader("Cross-Origin-Embedder-Policy", "credentialless");
+          res.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
 
           // Prevent Vite from adding content-encoding: gzip to .pb.gz weight files.
           // These are gzip DATA (not transfer-encoding); the browser would silently
@@ -65,7 +65,7 @@ export default defineConfig({
   server: {
     headers: {
       "Cross-Origin-Opener-Policy": "same-origin",
-      "Cross-Origin-Embedder-Policy": "credentialless",
+      "Cross-Origin-Embedder-Policy": "require-corp",
     },
   },
 });
