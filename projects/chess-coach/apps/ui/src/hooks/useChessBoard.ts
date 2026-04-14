@@ -52,13 +52,14 @@ export function useChessBoard() {
     }
   };
 
-  // When showBestMove is enabled, highlight the best move's from/to
-  // squares continuously.
-  const bestMoveSquares = (): string[] => {
-    if (!capabilities().showBestMove) return [];
+  // When showBestMove is enabled, expose the best move's from/to squares
+  // so the board can draw a single arrow from FROM to TO. Null when the
+  // capability is off or no best move is known yet.
+  const bestMoveArrow = (): { from: Square; to: Square } | null => {
+    if (!capabilities().showBestMove) return null;
     const uci = humanBestMove();
-    if (!uci || uci.length < 4) return [];
-    return [uci.slice(0, 2), uci.slice(2, 4)];
+    if (!uci || uci.length < 4) return null;
+    return { from: uci.slice(0, 2) as Square, to: uci.slice(2, 4) as Square };
   };
 
   const canApplyHoverOverride = () => {
@@ -135,16 +136,24 @@ export function useChessBoard() {
     resumeBaseAnalysis();
   });
 
-  // Capture the best move and evaluation for the base position
+  // Capture the current best move (pv[0]) and evaluation for the base
+  // position. Per UCI spec, `bestmove` is emitted in response to BOTH
+  // `go`-completion AND `stop` — the stop-response variant carries the
+  // shallow best-so-far of an aborted search and arrives asynchronously
+  // after our outgoing-position clear in `useStockfishWorker.send`, which
+  // is why reading `lastBestMove.move` surfaces the stale `a2a3`/`a7a6`
+  // until the current `go depth 12` fully completes. By contrast,
+  // `info ... pv <move>...` is only emitted by the currently-running
+  // `go`, so `info.pv[0]` is always scoped to the current position.
+  // Keep this reading `pv[0]` — do not switch back to `lastBestMove`.
   createEffect(() => {
     if (!currentHoverEval()) {
       const info = analysis().lastInfo;
       if (info && info.score) {
         setBaseEvalScore(info.score);
       }
-      const bm = analysis().lastBestMove;
-      if (bm) {
-        setHumanBestMove(bm.move);
+      if (info && info.pv && info.pv.length > 0) {
+        setHumanBestMove(info.pv[0]);
       }
     }
   });
@@ -330,7 +339,7 @@ export function useChessBoard() {
     lastMove,
     isReplaying,
     baseEvalScore,
-    bestMoveSquares,
+    bestMoveArrow,
     selectedSquare,
     hoveredSquare,
     validMoves,

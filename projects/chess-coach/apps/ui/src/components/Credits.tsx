@@ -28,7 +28,7 @@ export const Credits: Component<Props> = (props) => {
             </a>
           </li>
           <li>
-            <strong>The Pieces:</strong> by Colin M.L. Burnett (via Lichess) <br />
+            <strong>The (Human) Pieces:</strong> by Colin M.L. Burnett (via Lichess) <br />
             <a
               href="https://github.com/lichess-org/lila/tree/master/public/piece/cburnett"
               target="_blank"

@@ -1,8 +1,18 @@
+import { Chess } from "chess.js";
 import { For, Show } from "solid-js";
 import type { Component } from "solid-js";
 
 import styles from "~/components/CoachPanel.module.css";
-import { advice, hoverBlunder, setAdviceHoveredSquares } from "~/store/coachStore";
+import { useTravelMode } from "~/hooks/useTravelMode";
+import {
+  advice,
+  hoverBlunder,
+  hoverBlunderFen,
+  hoverBlunderSan,
+  setAdviceArrow,
+  setAdviceHoveredSquares,
+} from "~/store/coachStore";
+import { currentFen } from "~/store/gameStore";
 import { isTravelling } from "~/store/travelStore";
 
 // Regex to match standard algebraic notation (SAN) and raw squares
@@ -11,14 +21,51 @@ const CHESS_NOTATION_REGEX =
   /(\b[KQRBN]?[a-h]?[1-8]?x?[a-h][1-8](?:=[QRBN])?[+#]?\b|\bO-O(?:-O)?\b)/g;
 
 export const CoachPanel: Component = () => {
-  const handleMouseEnter = (text: string) => {
-    // Extract just the square coordinates (e.g., "f3" from "Nf3")
-    const squares = text.match(/[a-h][1-8]/g) || [];
-    setAdviceHoveredSquares(squares);
+  const { activateTravel, loading } = useTravelMode();
+
+  const handleWhyTap = () => {
+    if (loading()) return;
+    const fen = hoverBlunderFen();
+    const san = hoverBlunderSan();
+    if (fen && san) activateTravel(fen, san);
   };
 
-  const handleMouseLeave = () => {
+  let activeTapSan = "";
+
+  const highlightSan = (text: string) => {
+    const squares = text.match(/[a-h][1-8]/g) || [];
+    setAdviceHoveredSquares(squares);
+
+    // Resolve the SAN to from→to so ChessBoard can draw an arrow.
+    try {
+      const game = new Chess(currentFen());
+      const match = game.moves({ verbose: true }).find((m) => m.san === text);
+      if (match) {
+        setAdviceArrow({ from: match.from, to: match.to });
+      } else {
+        setAdviceArrow(null);
+      }
+    } catch {
+      setAdviceArrow(null);
+    }
+  };
+
+  const clearHighlight = () => {
     setAdviceHoveredSquares([]);
+    setAdviceArrow(null);
+    activeTapSan = "";
+  };
+
+  const handleMouseEnter = (text: string) => highlightSan(text);
+  const handleMouseLeave = () => clearHighlight();
+
+  const handleTap = (text: string) => {
+    if (activeTapSan === text) {
+      clearHighlight();
+    } else {
+      activeTapSan = text;
+      highlightSan(text);
+    }
   };
 
   const parsedAdvice = () => advice().split(CHESS_NOTATION_REGEX);
@@ -35,6 +82,7 @@ export const CoachPanel: Component = () => {
                   class={styles["move-highlight"]}
                   onMouseEnter={() => handleMouseEnter(part)}
                   onMouseLeave={handleMouseLeave}
+                  onClick={() => handleTap(part)}
                 >
                   {part}
                 </span>
@@ -45,8 +93,11 @@ export const CoachPanel: Component = () => {
         </For>
       </p>
       <Show when={hoverBlunder() && !isTravelling()}>
-        <span class={styles["why-hint"]}>
-          Press <kbd>Space</kbd> — To learn why
+        <span class={styles["why-hint"]} onClick={handleWhyTap}>
+          <span class={styles["why-desktop"]}>
+            Press <kbd>Space</kbd> — To learn why
+          </span>
+          <span class={styles["why-mobile"]}>Tap here — To learn why</span>
         </span>
       </Show>
     </div>

@@ -1,13 +1,36 @@
 import { UciDriver } from "~/engine/UciDriver";
 
+/**
+ * Wrapper around the Maia (lc0) WASM chess engine running in a Web Worker.
+ *
+ * lc0.wasm can crash with unrecoverable RuntimeErrors (unaligned memory
+ * access, stack overflow) that leave the worker in a zombie state. Every
+ * subsequent UCI command goes unanswered, so `readUntil` hangs until
+ * timeout. To recover, `getMove` catches any failure, terminates the
+ * corrupted worker, spins up a fresh one, re-initialises it with the
+ * current weights, and retries the move request once.
+ */
 export class MaiaEngine {
   private driver: UciDriver;
   private isReady = false;
   private currentWeights = "";
 
   constructor() {
-    const worker = new Worker(new URL("./maia.worker.ts", import.meta.url));
-    this.driver = new UciDriver(worker);
+    this.driver = this.createDriver();
+  }
+
+  private createDriver(): UciDriver {
+    return new UciDriver(
+      new Worker(new URL("./maia.worker.ts", import.meta.url)),
+    );
+  }
+
+  private restart() {
+    console.warn("[MaiaEngine] Restarting worker after error...");
+    this.driver.stop(); // terminates the zombie worker
+    this.driver = this.createDriver();
+    this.isReady = false;
+    this.currentWeights = "";
   }
 
   async init(weightsFile: string) {
@@ -28,13 +51,31 @@ export class MaiaEngine {
     this.currentWeights = weightsFile;
   }
 
+  /**
+   * Get a move from the Maia engine. If the worker crashes (WASM
+   * RuntimeError, stack overflow, etc.), restarts it and retries once.
+   * A second failure propagates to the caller.
+   */
   async getMove(fen: string, weightsFile: string): Promise<string> {
+    try {
+      return await this.executeGetMove(fen, weightsFile);
+    } catch (err) {
+      console.warn("[MaiaEngine] getMove failed, restarting:", err);
+      this.restart();
+      return this.executeGetMove(fen, weightsFile);
+    }
+  }
+
+  private async executeGetMove(fen: string, weightsFile: string): Promise<string> {
     await this.init(weightsFile);
 
     this.driver.send(`position fen ${fen}`);
     this.driver.send("go nodes 1"); // Maia is a policy network, 1 node is enough
 
-    const lines = await this.driver.readUntil("bestmove");
+    // 5 s timeout — `go nodes 1` should return near-instantly. If it
+    // doesn't, the worker is dead and we should fail fast so `getMove`
+    // can restart and retry.
+    const lines = await this.driver.readUntil("bestmove", 5000);
     const bestMoveLine = lines.find((l) => l.startsWith("bestmove"));
 
     if (!bestMoveLine) throw new Error("No bestmove found");

@@ -1,28 +1,36 @@
 ## Usage
 
 ```bash
-$ npm install # or pnpm install or yarn install
+npm install
 ```
-
-### Learn more on the [Solid Website](https://solidjs.com) and come chat with us on our [Discord](https://discord.com/invite/solidjs)
 
 ## Available Scripts
 
-In the project directory, you can run:
+### Development
 
-### `npm run dev`
+```bash
+npm run dev:web       # Web mode (in-browser engine, no backend)
+npm run dev:desktop   # Desktop mode (expects Kotlin backend on :8080)
+```
 
-Runs the app in the development mode.<br>
-Open [http://localhost:5173](http://localhost:5173) to view it in the browser.
+### Build
 
-### `npm run build`
+```bash
+npm run build:web      # Production build for Cloudflare (VITE_TARGET=web)
+npm run build:desktop  # Production build for desktop (needs VITE_API_URL)
+```
 
-Builds the app for production to the `dist` folder.<br>
-It correctly bundles Solid in production mode and optimizes the build for the best performance.
+### Preview
 
-The build is minified and the filenames include the hashes.<br>
-Your app is ready to be deployed!
+```bash
+npm run preview        # Vite static preview of last build
+npm run preview:cf     # Build + preview with Wrangler (matches CF behavior)
+```
 
-## Deployment
+### Deploy
 
-Learn more about deploying your application with the [documentations](https://vite.dev/guide/static-deploy.html)
+```bash
+npm run deploy         # Build + deploy to Cloudflare Pages via Wrangler
+```
+
+This runs `build:web` then `wrangler deploy`, which pushes the `dist/` folder to Cloudflare using the config in `wrangler.toml`.

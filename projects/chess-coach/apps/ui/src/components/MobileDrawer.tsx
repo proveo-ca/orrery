@@ -44,7 +44,7 @@ export const MobileDrawer: Component = () => {
 
   const handleHint = () => {
     setOpen(false);
-    baseHandleHint();
+    void baseHandleHint();
   };
 
   const handleNewGame = () => {
@@ -54,9 +54,21 @@ export const MobileDrawer: Component = () => {
 
   return (
     <div class={styles["mobile-only"]}>
-      <button class={styles["hamburger-btn"]} onClick={() => setOpen(true)} aria-label="Open menu">
-        <HamburgerIcon />
-      </button>
+      <div class={styles["top-left-nav"]}>
+        <button class={styles["hamburger-btn"]} onClick={() => setOpen(true)} aria-label="Open menu">
+          <HamburgerIcon />
+        </button>
+        <Show when={capabilities().hint}>
+          <button
+            class={styles["icon-btn"]}
+            onClick={handleHint}
+            disabled={pendingHint() || isReplaying() || isTravelling()}
+            aria-label="Get a hint"
+          >
+            <HintIcon />
+          </button>
+        </Show>
+      </div>
 
       <div class={styles["top-right-nav"]}>
         <DualNavButton
@@ -106,27 +118,19 @@ export const MobileDrawer: Component = () => {
           >
             Solo Analysis
           </button>
+          <span class={styles["coming-soon"]}>Coming soon!</span>
+          <button class={styles["menu-btn"]} disabled>
+            Learn to Play
+          </button>
           <button class={styles["menu-btn"]} disabled>
             Play LAN
           </button>
-          <span class={styles["coming-soon"]}>Coming soon!</span>
         </div>
 
-        <div class={styles.divider} />
+        <div class={styles.divider}/>
 
         <p class={styles["section-title"]}>Controls</p>
         <div class={styles["controls-row"]}>
-          <Show when={capabilities().hint}>
-            <button
-              class={styles["icon-btn"]}
-              onClick={handleHint}
-              disabled={pendingHint() || isReplaying() || isTravelling()}
-              aria-label="Get a hint"
-            >
-              <HintIcon />
-            </button>
-          </Show>
-
           <button class={styles["icon-btn"]} onClick={handleNewGame} aria-label="New game">
             <PlusCircleIcon />
           </button>

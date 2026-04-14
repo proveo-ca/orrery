@@ -8,10 +8,15 @@ const DEBUG = import.meta.env.VITE_DEBUG === "true";
 const mode = resolveMode();
 const llmClient: LlmClient = mode.kind === "web-full" ? new WebLlmClient() : new NoopLlmClient();
 
-const orchestrator = new Orchestrator(llmClient, (debugEvent: LlmDebugEvent) => {
-  if (!DEBUG) return;
-  self.postMessage({ type: "LLM_DEBUG", debug: debugEvent });
-});
+const skipFallback = mode.kind === "web-no-llm";
+const orchestrator = new Orchestrator(
+  llmClient,
+  (debugEvent: LlmDebugEvent) => {
+    if (!DEBUG) return;
+    self.postMessage({ type: "LLM_DEBUG", debug: debugEvent });
+  },
+  { skipFallback },
+);
 
 self.addEventListener("message", async (event: MessageEvent) => {
   const { id, type, payload } = event.data;

@@ -1,7 +1,8 @@
-import type { Square } from "chess.js";
-import { For, Show } from "solid-js";
+import type { Color, PieceSymbol, Square } from "chess.js";
+import { For, Show, createEffect, createSignal } from "solid-js";
 import type { Component } from "solid-js";
 
+import { ChessBoardArrow } from "~/components/ChessBoardArrow.tsx";
 import styles from "~/components/ChessBoard.module.css";
 import { ChessSquare } from "~/components/ChessSquare";
 import { Button } from "~/components/common/Button";
@@ -9,7 +10,7 @@ import { Modal } from "~/components/common/Modal";
 import { EvalBar } from "~/components/EvalBar";
 import { useChessBoard } from "~/hooks/useChessBoard";
 import { capabilities } from "~/store/capabilitiesStore";
-import { adviceHoveredSquares, setShowNewGame } from "~/store/coachStore";
+import { adviceArrow, adviceHoveredSquares, setShowNewGame } from "~/store/coachStore";
 import {
   activePlayerColor,
   opponentPieceSet,
@@ -19,6 +20,15 @@ import { isTravelling } from "~/store/travelStore";
 
 const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"];
 const RANKS = ["8", "7", "6", "5", "4", "3", "2", "1"];
+
+
+const getPieceImg = (type: PieceSymbol, color: Color, pieceSet: string) =>
+  `/chess/pieces/${pieceSet}/${color}${type.toUpperCase()}.svg`;
+
+const squareFromTouch = (touch: Touch): Square | null => {
+  const el = document.elementFromPoint(touch.clientX, touch.clientY);
+  return ((el?.closest("[data-square]") as HTMLElement | null)?.dataset.square as Square) ?? null;
+};
 
 export const ChessBoard: Component = () => {
   const board = useChessBoard();
@@ -35,6 +45,79 @@ export const ChessBoard: Component = () => {
   const isGameOver = () => !isTravelling() && activeGame().isGameOver();
   const turn = () => activeGame().turn();
 
+  // ── Touch-drag (mobile) ──────────────────────────────────────────────
+  const [touchDrag, setTouchDrag] = createSignal<{
+    from: Square;
+    piece: { type: PieceSymbol; color: Color };
+    pieceSet: string;
+    x: number;
+    y: number;
+  } | null>(null);
+  let lastTouchSquare: Square | null = null;
+
+  const handleTouchStart = (e: TouchEvent) => {
+    const touch = e.touches[0];
+    if (!touch) return;
+    const sq = squareFromTouch(touch);
+    if (!sq || board.isReplaying()) return;
+
+    const g = board.game();
+    const piece = g.get(sq);
+    if (!piece) return;
+
+    const canTouch = capabilities().freeColorControl
+      ? piece.color === g.turn()
+      : g.turn() === activePlayerColor() && piece.color === activePlayerColor();
+    if (!canTouch) return;
+
+    e.preventDefault();
+
+    // Select the piece (sets selectedSquare + validMoves inside the hook)
+    board.handleSquareClick(sq);
+
+    const pSet = piece.color === activePlayerColor() ? playerPieceSet() : opponentPieceSet();
+    setTouchDrag({ from: sq, piece, pieceSet: pSet, x: touch.clientX, y: touch.clientY });
+    lastTouchSquare = sq;
+  };
+
+  const handleTouchMove = (e: TouchEvent) => {
+    if (!touchDrag()) return;
+    e.preventDefault();
+    const touch = e.touches[0];
+    if (!touch) return;
+
+    setTouchDrag((prev) => (prev ? { ...prev, x: touch.clientX, y: touch.clientY } : null));
+
+    const sq = squareFromTouch(touch);
+    if (sq && sq !== lastTouchSquare) {
+      board.handleSquareHover(sq);
+      lastTouchSquare = sq;
+    }
+  };
+
+  const handleTouchEnd = (e: TouchEvent) => {
+    if (!touchDrag()) return;
+    const touch = e.changedTouches[0];
+    const target = touch ? squareFromTouch(touch) : null;
+
+    if (target && target !== touchDrag()!.from) {
+      board.handleSquareClick(target);
+    }
+
+    setTouchDrag(null);
+    lastTouchSquare = null;
+    board.handleBoardMouseLeave();
+  };
+
+  // Cancel any in-flight touch drag when the board enters replay or travel
+  // — the piece snaps back to its original square.
+  createEffect(() => {
+    if ((board.isReplaying() || isTravelling()) && touchDrag()) {
+      setTouchDrag(null);
+      lastTouchSquare = null;
+    }
+  });
+
   return (
     <div class={styles["board-layout-wrapper"]}>
       <Show when={board.isReplaying() || capabilities().evalBarAlwaysVisible}>
@@ -49,7 +132,12 @@ export const ChessBoard: Component = () => {
         onMouseEnter={board.handleBoardMouseEnter}
         onMouseLeave={board.handleBoardMouseLeave}
       >
-        <div class={styles.chessboard}>
+        <div
+          class={styles.chessboard}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
           <For each={displayRanks()}>
             {(rank, rIndex) => (
               <For each={displayFiles()}>
@@ -88,7 +176,7 @@ export const ChessBoard: Component = () => {
                       isHovered={board.hoveredSquare() === square}
                       isValidMove={board.validMoves().includes(square)}
                       isAdviceHovered={adviceHoveredSquares().includes(square)}
-                      isBestMove={board.bestMoveSquares().includes(square)}
+                      isDragging={touchDrag()?.from === square}
                       isInvalid={isInvalid()}
                       showRank={fIndex() === 0 && rank}
                       showFile={rIndex() === 7 && file}
@@ -117,6 +205,29 @@ export const ChessBoard: Component = () => {
               </For>
             )}
           </For>
+
+          <Show when={board.bestMoveArrow()}>
+            {(arrow) => (
+              <ChessBoardArrow from={arrow().from} to={arrow().to} color="#7dd17d" id="best-move-arrow-head" />
+            )}
+          </Show>
+
+          <Show when={adviceArrow()}>
+            {(arrow) => (
+              <ChessBoardArrow from={arrow().from} to={arrow().to} color="#76b3e1" id="advice-arrow-head" />
+            )}
+          </Show>
+
+          <Show when={touchDrag()}>
+            {(drag) => (
+              <img
+                src={getPieceImg(drag().piece.type, drag().piece.color, drag().pieceSet)}
+                alt=""
+                class={styles["touch-ghost"]}
+                style={{ left: `${drag().x}px`, top: `${drag().y}px` }}
+              />
+            )}
+          </Show>
 
           <Modal
             open={isGameOver()}

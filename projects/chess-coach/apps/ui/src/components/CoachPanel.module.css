@@ -44,6 +44,20 @@
   color: var(--primary-color);
   opacity: 0.9;
   animation: why-pulse 1.5s ease-in-out infinite;
+  cursor: pointer;
+}
+
+.why-mobile {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  .why-desktop {
+    display: none;
+  }
+  .why-mobile {
+    display: inline;
+  }
 }
 
 .why-hint kbd {

@@ -47,6 +47,9 @@ export const MenuScreen: Component = () => {
           Solo Analysis
         </button>
         <button class={styles["menu-btn"]} disabled>
+          Learn to Play
+        </button>
+        <button class={styles["menu-btn"]} disabled>
           Play LAN
         </button>
         <span class={styles["coming-soon"]}>Coming soon!</span>

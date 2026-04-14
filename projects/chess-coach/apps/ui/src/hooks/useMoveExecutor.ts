@@ -11,8 +11,35 @@ import {
 } from "~/store/coachStore";
 import { capabilities } from "~/store/capabilitiesStore";
 import { addMoveToHistory } from "~/store/gameStore";
-import { difficulty } from "~/store/settingsStore";
+import { type PlayerIdentity, difficulty, playerIdentity } from "~/store/settingsStore";
 import { logger } from "~/utils/logger";
+
+const QUEEN_CAPTURE_PHRASES: Record<PlayerIdentity, string[]> = {
+  Human: [
+    "I am the real Queen.",
+    "That other Queen was too ugly anyway.",
+    "The best piece, but not all is lost.",
+    "Goodbye, Your Majesty. I won't miss you.",
+  ],
+  Cat: [
+    "An honorable fight, your Highness.",
+    "I guess I'm the new Lioness now.",
+    "Miscalculated zoomies.",
+    "She fought well, but I had all my nine lives.",
+  ],
+  Dog: [
+    "The moon is sad today.",
+    "Fierce battle, respect.",
+    "I'll remember her in the moonlight.",
+    "The bravest. Almost got me.",
+  ],
+  Rat: [
+    "The legendary Kugaan Jaad is mine.",
+    "Hopefully the Haida people will understand me.",
+    "Sorry King Capy, no more Queen.",
+    "Too strong for that undeserving army.",
+  ],
+};
 
 type ExecuteMoveParams = {
   game: Chess;
@@ -85,6 +112,14 @@ export function useMoveExecutor(stopStockfish: () => void) {
       if (overState) {
         dispatchCoachEvent({ type: "GAME_OVER", result: overState.result });
         setAdvice(overState.message);
+        return;
+      }
+
+      // Easter egg: Selena captures the Queen
+      if (aiMove.captured === "q") {
+        const phrases = QUEEN_CAPTURE_PHRASES[playerIdentity()];
+        setAdvice(phrases[Math.floor(Math.random() * phrases.length)]);
+        dispatchCoachEvent({ type: "HUMAN_MOVE_BEST" }); // triggers "happy" emotion
         return;
       }
 

@@ -3,6 +3,7 @@ import { Chess } from "chess.js";
 import { DEFAULT_STOCKFISH_WORKER_URL } from "~/engine/StockfishEngine.ts";
 import { useHint } from "~/hooks/useHint";
 import { postExplainStream } from "~/services/api";
+import { resolveMode } from "~/services/runtimeMode";
 import { accumulateStream } from "~/services/streamUtils";
 import { capabilities } from "~/store/capabilitiesStore";
 import {
@@ -109,14 +110,18 @@ export const useGameControls = () => {
       const fenAfter = game.fen();
       const prefix = `Try moving ${san}. `;
 
-      setAdvice(`${prefix}Let me explain why...`);
+      if (resolveMode().kind === "web-no-llm") {
+        setAdvice(`Try moving ${san}.`);
+      } else {
+        setAdvice(`${prefix}Let me explain why...`);
 
-      await accumulateStream(
-        postExplainStream,
-        { fenBefore: currentFen(), fenAfter, isBlunder: false, moveSan: san },
-        setAdvice,
-        { prefix },
-      );
+        await accumulateStream(
+          postExplainStream,
+          { fenBefore: currentFen(), fenAfter, isBlunder: false, moveSan: san },
+          setAdvice,
+          { prefix },
+        );
+      }
 
       dispatchCoachEvent({ type: "AI_MOVED" });
     } catch (err) {

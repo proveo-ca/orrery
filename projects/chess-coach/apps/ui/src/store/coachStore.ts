@@ -21,6 +21,7 @@ type CoachState = {
   hoverCoachEmotion: CoachEmotion | null;
 
   adviceHoveredSquares: string[];
+  adviceArrow: { from: string; to: string } | null;
   thinkingPhrases: string[];
   bestMovePhrases: string[];
 
@@ -43,6 +44,7 @@ const [coachState, setCoachState] = createStore<CoachState>({
   hoverCoachEmotion: null,
 
   adviceHoveredSquares: [],
+  adviceArrow: null as { from: string; to: string } | null,
   thinkingPhrases: ["Hmm..."],
   bestMovePhrases: ["Great move!"],
 
@@ -63,6 +65,7 @@ export const baseCoachEmotion = () => coachState.baseCoachEmotion;
 export const coachEmotion = () => coachState.hoverCoachEmotion ?? coachState.baseCoachEmotion;
 
 export const adviceHoveredSquares = () => coachState.adviceHoveredSquares;
+export const adviceArrow = () => coachState.adviceArrow;
 export const thinkingPhrases = () => coachState.thinkingPhrases;
 export const bestMovePhrases = () => coachState.bestMovePhrases;
 
@@ -82,6 +85,8 @@ export const [showSettings, setShowSettings] = createSignal(false);
 export const setAdvice = (val: string) => setCoachState("baseAdvice", val);
 export const setAdviceHoveredSquares = (squares: string[]) =>
   setCoachState("adviceHoveredSquares", squares);
+export const setAdviceArrow = (arrow: { from: string; to: string } | null) =>
+  setCoachState("adviceArrow", arrow);
 
 export const setThinkingPhrases = (phrases: string[]) => setCoachState("thinkingPhrases", phrases);
 export const setBestMovePhrases = (phrases: string[]) => setCoachState("bestMovePhrases", phrases);
@@ -225,4 +230,24 @@ createRoot(() => {
       }, 40000);
     }
   });
+});
+
+// ===== Focus Wake-Up =====
+// When the user returns to the browser window (tab focus), wake the coach
+// after a short delay. Without this, mouse-only interaction never wakes
+// her and hover blunder detection stays dead after the sleep timer fires.
+let focusWakeTimer: number | undefined;
+
+window.addEventListener("focus", () => {
+  clearTimeout(focusWakeTimer);
+  focusWakeTimer = window.setTimeout(() => {
+    const current = coachEmotion();
+    if (current === "sleepy" || current === "sleeping") {
+      dispatchCoachEvent({ type: "WAKE_UP" });
+    }
+  }, 1200);
+});
+
+window.addEventListener("blur", () => {
+  clearTimeout(focusWakeTimer);
 });

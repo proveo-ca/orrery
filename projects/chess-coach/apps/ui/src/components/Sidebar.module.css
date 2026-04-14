@@ -56,14 +56,14 @@
   gap: 0.25rem;
 }
 
+:global(.highlight) .travel-section > .icon-btn {
+  z-index: 1000;
+  position: relative;
+}
+
 .move-counter {
   font-size: 0.7rem;
   color: var(--text-muted);
   line-height: 1;
   text-align: center;
-}
-
-:global(.highlight) .icon-btn {
-  z-index: 1000;
-  position: relative;
 }
