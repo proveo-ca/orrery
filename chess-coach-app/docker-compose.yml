@@ -1,0 +1,19 @@
+services:
+  app:
+    build:
+      context: ../projects/chess-coach
+      dockerfile: Dockerfile
+    container_name: chess_coach
+    ports:
+      - "8080:8080"
+    environment:
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434/v1
+      - LLM_GENERAL_MODEL=
+      - LLM_COMMENTARY_MODEL=hf.co/NAKSTStudio/chess-gemma-commentary:Q8_0
+      - CHESS_STATE_DIR=/data
+    volumes:
+      - chess_state:/data
+    restart: unless-stopped
+
+volumes:
+  chess_state:

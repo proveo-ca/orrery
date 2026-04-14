@@ -23,6 +23,18 @@ export default defineConfig({
           res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
           res.setHeader("Cross-Origin-Embedder-Policy", "credentialless");
 
+          // Prevent Vite from adding content-encoding: gzip to .pb.gz weight files.
+          // These are gzip DATA (not transfer-encoding); the browser would silently
+          // decompress them, breaking lc0's internal gzip reader.
+          if (req.url?.match(/\/web-engine\/.*\.gz$/)) {
+            const origSetHeader = res.setHeader.bind(res);
+            res.setHeader = (name: string, value: any) => {
+              if (name.toLowerCase() === "content-encoding") return res;
+              return origSetHeader(name, value);
+            };
+            res.removeHeader("Content-Encoding");
+          }
+
           // Redirect old WebLLM cache requests to the new MLC format
           if (req.url?.includes("ndarray-cache.json")) {
             req.url = req.url.replace("ndarray-cache.json", "tensor-cache.json");

@@ -1,4 +1,3 @@
-import { Chess } from "chess.js";
 import type { Component } from "solid-js";
 
 import { Button } from "~/components/common/Button";
@@ -7,7 +6,7 @@ import { Select } from "~/components/common/Select";
 import styles from "~/components/Controls.module.css";
 import { postMove, postNewGame } from "~/services/api";
 import { dispatchCoachEvent, setAdvice, setShowNewGame } from "~/store/coachStore";
-import { addMoveToHistory, resetGame } from "~/store/gameStore";
+import { addMoveSan, resetGame } from "~/store/gameStore";
 import {
   type Difficulty,
   activePlayerColor,
@@ -35,9 +34,7 @@ export const NewGamePanel: Component = () => {
             difficulty: difficulty(),
           });
           clearTimeout(thinkingTimeout);
-          const aiGame = new Chess(data.fen);
-          const aiMove = aiGame.move(moveData.move);
-          addMoveToHistory(moveData.fen, { from: aiMove.from, to: aiMove.to });
+          addMoveSan(moveData.move);
           setAdvice(moveData.advice ?? "I've made my move!");
           dispatchCoachEvent({ type: "AI_MOVED" });
         } catch (e) {

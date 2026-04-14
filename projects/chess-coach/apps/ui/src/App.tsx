@@ -1,5 +1,4 @@
 import { useLocation } from "@solidjs/router";
-import { Chess } from "chess.js";
 import { Show, createEffect, onMount } from "solid-js";
 import type { ParentComponent } from "solid-js";
 
@@ -14,7 +13,7 @@ import {
   setBestMovePhrases,
   setThinkingPhrases,
 } from "~/store/coachStore";
-import { addMoveToHistory, currentFen, fenHistory } from "~/store/gameStore";
+import { addMoveSan, currentFen, fenHistory, game } from "~/store/gameStore";
 import { activePlayerColor, difficulty } from "~/store/settingsStore";
 import "~/theme.css";
 import { initGlobalLogging, logger } from "~/utils/logger";
@@ -49,22 +48,20 @@ const App: ParentComponent = (props) => {
 
       // Check if it's the AI's turn to move (only on the coach screen)
       if (window.location.pathname.endsWith("/selena")) {
-        const current = currentFen();
-        const game = new Chess(current);
-        const turn = current.split(" ")[1];
+        const g = game();
+        const turn = currentFen().split(" ")[1];
 
-        if (!game.isGameOver() && turn !== activePlayerColor()) {
+        if (!g.isGameOver() && turn !== activePlayerColor()) {
           dispatchCoachEvent({ type: "AI_THINKING" });
           setAdvice("Let me think about my next move...");
 
           postMove({
             humanMoveSan: "",
-            fenAfterHuman: current,
+            fenAfterHuman: currentFen(),
             difficulty: difficulty(),
           })
             .then(async (moveData) => {
-              const aiMove = game.move(moveData.move);
-              addMoveToHistory(moveData.fen, { from: aiMove.from, to: aiMove.to });
+              addMoveSan(moveData.move);
               dispatchCoachEvent({ type: "AI_MOVED" });
 
               await accumulateStream(

@@ -1,0 +1,10 @@
+{
+  "name": "chess-coach",
+  "private": true,
+  "scripts": {
+    "e2e:web-no-llm": "npm test --prefix apps/e2e",
+    "e2e:desktop": "echo 'TODO: desktop e2e tests'",
+    "deploy:web-no-llm": "npm run deploy --prefix apps/ui",
+    "deploy:desktop": "echo 'TODO: desktop deployment'"
+  }
+}

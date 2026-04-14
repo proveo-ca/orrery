@@ -1,4 +1,4 @@
-import { Chess, type Square } from "chess.js";
+import { type Chess, type Square } from "chess.js";
 import { createSignal } from "solid-js";
 
 import { postAdviceStream, postMove } from "~/services/api";
@@ -10,7 +10,7 @@ import {
   thinkingPhrases,
 } from "~/store/coachStore";
 import { capabilities } from "~/store/capabilitiesStore";
-import { addMoveToHistory } from "~/store/gameStore";
+import { addMove, addMoveSan, game as gameFromStore, isThreefoldRepetition } from "~/store/gameStore";
 import { type PlayerIdentity, difficulty, playerIdentity } from "~/store/settingsStore";
 import { logger } from "~/utils/logger";
 
@@ -48,18 +48,21 @@ type ExecuteMoveParams = {
   stockfishBestMove?: string;
 };
 
-function getGameOverState(game: Chess, isHumanTurn: boolean) {
-  if (!game.isGameOver()) return null;
-  if (game.isCheckmate()) {
+function getGameOverState(isHumanTurn: boolean) {
+  const g = gameFromStore();
+  if (g.isCheckmate()) {
     return {
       result: isHumanTurn ? "win" : "loss",
       message: isHumanTurn ? "Checkmate! You win!" : "Checkmate! I win!",
     } as const;
   }
-  if (game.isThreefoldRepetition()) {
+  if (isThreefoldRepetition()) {
     return { result: "draw", message: "Game over — draw by threefold repetition." } as const;
   }
-  return { result: "draw", message: "Game over. It's a draw." } as const;
+  if (g.isGameOver()) {
+    return { result: "draw", message: "Game over. It's a draw." } as const;
+  }
+  return null;
 }
 
 export function useMoveExecutor(stopStockfish: () => void) {
@@ -103,12 +106,9 @@ export function useMoveExecutor(stopStockfish: () => void) {
     try {
       const moveData = await postMove({ humanMoveSan, fenAfterHuman, difficulty: difficulty() });
 
-      const aiGame = new Chess(fenAfterHuman);
-      const aiMove = aiGame.move(moveData.move);
-      addMoveToHistory(moveData.fen, { from: aiMove.from, to: aiMove.to });
+      const aiMove = addMoveSan(moveData.move);
 
-      const finalGame = new Chess(moveData.fen);
-      const overState = getGameOverState(finalGame, false);
+      const overState = getGameOverState(false);
       if (overState) {
         dispatchCoachEvent({ type: "GAME_OVER", result: overState.result });
         setAdvice(overState.message);
@@ -143,18 +143,14 @@ export function useMoveExecutor(stopStockfish: () => void) {
     if (!move) return { didMove: false };
 
     try {
-      const gameCopy = new Chess(game.fen());
-      const result = gameCopy.move({ from: selected, to: square, promotion: "q" });
-
-      if (!result) return { didMove: false };
+      const result = addMove({ from: selected, to: square, promotion: "q" });
 
       abortAdvice();
 
       const humanMoveSan = result.san;
-      const humanMoveLan = result.lan; // e.g. "e2e4"
-      const fenAfterHuman = gameCopy.fen();
+      const humanMoveLan = result.lan;
+      const fenAfterHuman = result.after;
 
-      addMoveToHistory(fenAfterHuman, { from: result.from, to: result.to });
       stopStockfish();
 
       // Screens without an AI opponent (Solo Analysis) just apply the move;
@@ -163,7 +159,7 @@ export function useMoveExecutor(stopStockfish: () => void) {
         return { didMove: true, fenAfterHuman };
       }
 
-      const overState = getGameOverState(gameCopy, true);
+      const overState = getGameOverState(true);
       if (overState) {
         dispatchCoachEvent({ type: "GAME_OVER", result: overState.result });
         setAdvice(overState.message);

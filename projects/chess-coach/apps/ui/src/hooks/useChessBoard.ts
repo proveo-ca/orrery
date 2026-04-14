@@ -14,13 +14,23 @@ import {
   setHoverEmotion,
 } from "~/store/coachStore";
 import { capabilities } from "~/store/capabilitiesStore";
-import { currentFen, currentIndex, fenHistory, moveHistory } from "~/store/gameStore";
+import { currentFen, currentIndex, fenHistory, game as latestGame, moveHistory } from "~/store/gameStore";
 import { activePlayerColor } from "~/store/settingsStore";
 import { isTravelling, travelFen, travelIndex, travelMoveHistory } from "~/store/travelStore";
 import { logger } from "~/utils/logger";
 
 export function useChessBoard() {
-  const game = createMemo(() => new Chess(currentFen()));
+  // When viewing the latest position, return the authoritative instance
+  // (full history for isGameOver/isThreefoldRepetition). When viewing a
+  // past position, a short-lived instance from the FEN is fine for rendering.
+  // equals: false — the authoritative instance is mutated in-place, so
+  // reference equality would hide state changes from SolidJS.
+  const game = createMemo(() => {
+    const idx = currentIndex();
+    const total = latestGame().history().length;
+    if (idx === total) return latestGame();
+    return new Chess(currentFen());
+  }, undefined, { equals: false });
   const [selectedSquare, setSelectedSquare] = createSignal<Square | null>(null);
   const [hoveredSquare, setHoveredSquare] = createSignal<Square | null>(null);
   const [validMoves, setValidMoves] = createSignal<string[]>([]);
