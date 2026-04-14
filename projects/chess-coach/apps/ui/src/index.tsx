@@ -13,8 +13,16 @@ const root = document.getElementById("root");
 
 // Rehydrate last route from localStorage
 const ROUTE_STORAGE_KEY = "chess-coach:last-route";
-const savedRoute = localStorage.getItem(ROUTE_STORAGE_KEY);
+let savedRoute = localStorage.getItem(ROUTE_STORAGE_KEY);
 const base = "/chess";
+
+// Fix corrupted routes with duplicate base prefixes (e.g. /chess/chess/chess/selena)
+if (savedRoute) {
+  while (savedRoute.startsWith(base + base)) {
+    savedRoute = savedRoute.slice(base.length);
+  }
+  localStorage.setItem(ROUTE_STORAGE_KEY, savedRoute);
+}
 
 if (
   savedRoute &&

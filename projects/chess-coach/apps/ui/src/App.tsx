@@ -26,7 +26,7 @@ const App: ParentComponent = (props) => {
   const location = useLocation();
   createEffect(() => {
     const path = location.pathname;
-    localStorage.setItem(ROUTE_STORAGE_KEY, "/chess" + path);
+    localStorage.setItem(ROUTE_STORAGE_KEY, path);
   });
 
   onMount(async () => {
