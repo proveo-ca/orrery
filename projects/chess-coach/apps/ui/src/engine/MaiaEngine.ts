@@ -43,7 +43,9 @@ export class MaiaEngine {
     this.driver.send("uci");
     await this.driver.readUntil("uciok");
 
-    this.driver.send(`setoption name WeightsFile value ${weightsFile}`);
+    // Worker pre-decompresses .gz → .pb for VFS compatibility
+    const vfsName = weightsFile.replace(/\.gz$/, "");
+    this.driver.send(`setoption name WeightsFile value ${vfsName}`);
     this.driver.send("isready");
     await this.driver.readUntil("readyok");
 
