@@ -187,6 +187,7 @@ export const ChessBoard: Component = () => {
                       onDragOver={(e) => e.preventDefault()}
                       onDrop={(e) => board.handleDrop(square, e)}
                       lastMove={lastMove()}
+                      flipped={activePlayerColor() === "b"}
                       isCheck={
                         piece()?.type === "k" &&
                         piece()?.color === turn() &&

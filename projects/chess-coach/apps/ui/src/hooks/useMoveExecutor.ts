@@ -7,6 +7,8 @@ import {
   bestMovePhrases,
   dispatchCoachEvent,
   setAdvice,
+  setAdviceArrow,
+  setAdviceHoveredSquares,
   thinkingPhrases,
 } from "~/store/coachStore";
 import { capabilities } from "~/store/capabilitiesStore";
@@ -146,6 +148,8 @@ export function useMoveExecutor(stopStockfish: () => void) {
       const result = addMove({ from: selected, to: square, promotion: "q" });
 
       abortAdvice();
+      setAdviceArrow(null);
+      setAdviceHoveredSquares([]);
 
       const humanMoveSan = result.san;
       const humanMoveLan = result.lan;

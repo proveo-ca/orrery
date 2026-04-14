@@ -1,10 +1,23 @@
 import type { Color, PieceSymbol, Square } from "chess.js";
 import clsx from "clsx";
+import { createEffect, on } from "solid-js";
 import type { Component } from "solid-js";
 
 import styles from "~/components/ChessBoard.module.css";
 import type { MoveSquares } from "~/store/gameStore";
 import type { PieceSet } from "~/store/settingsStore";
+
+/** Grid-square offset from `from` to `to`, accounting for board flip. */
+function squareOffset(
+  from: string,
+  to: string,
+  flipped: boolean,
+): { dx: number; dy: number } {
+  const fileDiff = from.charCodeAt(0) - to.charCodeAt(0);
+  const rankDiff = Number(to[1]) - Number(from[1]);
+  const sign = flipped ? -1 : 1;
+  return { dx: sign * fileDiff, dy: sign * rankDiff };
+}
 
 interface ChessSquareProps {
   square: Square;
@@ -26,6 +39,7 @@ interface ChessSquareProps {
   onDragOver: (e: DragEvent) => void;
   onDrop: (e: DragEvent) => void;
   lastMove: MoveSquares | null;
+  flipped: boolean;
   isCheck: boolean;
   isCheckmate: boolean;
   isStalemate: boolean;
@@ -40,6 +54,28 @@ export const ChessSquare: Component<ChessSquareProps> = (props) => {
   const isCapture = () => props.isValidMove && !!props.piece;
   const isLastMove = () =>
     props.lastMove?.from === props.square || props.lastMove?.to === props.square;
+
+  let pieceRef: HTMLImageElement | undefined;
+
+  // Animate the piece sliding from its origin square whenever lastMove changes.
+  // `on(..., { defer: true })` skips the initial run so we only animate actual moves.
+  createEffect(
+    on(
+      () => props.lastMove,
+      (move) => {
+        if (!move || move.to !== props.square || !pieceRef || props.isDragging) return;
+        const { dx, dy } = squareOffset(move.from, move.to, props.flipped);
+        pieceRef.style.transform = `translate(${dx * 100}%, ${dy * 100}%)`;
+        pieceRef.style.transition = "none";
+        requestAnimationFrame(() => {
+          if (!pieceRef) return;
+          pieceRef.style.transition = "transform 150ms ease-out";
+          pieceRef.style.transform = "translate(0, 0)";
+        });
+      },
+      { defer: true },
+    ),
+  );
 
   return (
     <div
@@ -77,6 +113,7 @@ export const ChessSquare: Component<ChessSquareProps> = (props) => {
 
       {props.piece && (
         <img
+          ref={pieceRef}
           src={getPieceImg(props.piece.type, props.piece.color, props.pieceSet)}
           alt={`${props.piece.color} ${props.piece.type}`}
           class={styles.piece}

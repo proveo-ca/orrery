@@ -25,8 +25,8 @@ const App: ParentComponent = (props) => {
 
   const location = useLocation();
   createEffect(() => {
-    void location.pathname; // reactive tracking
-    localStorage.setItem(ROUTE_STORAGE_KEY, window.location.pathname);
+    const path = location.pathname;
+    localStorage.setItem(ROUTE_STORAGE_KEY, "/chess" + path);
   });
 
   onMount(async () => {

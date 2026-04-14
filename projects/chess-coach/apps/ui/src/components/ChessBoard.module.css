@@ -25,6 +25,7 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   position: relative;
   touch-action: none;
+  overflow: hidden; /* clip pieces sliding outside the board edge */
 }
 
 .square {
@@ -179,6 +180,7 @@
   width: 90%;
   height: 90%;
   user-select: none;
+  position: relative;
   z-index: 10;
   pointer-events: auto; /* Allow dragging, clicks will bubble up to the square */
   cursor: grab;
@@ -231,6 +233,7 @@
 
   .result {
     font-size: clamp(1.2rem, 5vw, 2rem);
+    padding-bottom: 2rem;
   }
 }
 
