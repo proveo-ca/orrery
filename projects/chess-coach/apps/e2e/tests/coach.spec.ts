@@ -41,4 +41,46 @@ test.describe("Coach (web-no-llm)", () => {
     );
     await expect(selenaMove.first()).toBeVisible({ timeout: 30_000 });
   });
+
+  test("blunder detection: hovering Qxf7 flags the move as a blunder", async ({ page }) => {
+    // Pre-load a position where 1.e4 e5 2.Qh5 Nc6 has been played.
+    // White queen on h5, white to move. Qxf7+ is a classic blunder —
+    // queen captures a pawn but the undefended queen is lost to Kxf7.
+    //
+    // (Qc3 from the starting position isn't reachable by the queen in one move
+    // and c3→f7 isn't a queen line, so this uses the chess-sensible equivalent.)
+    await page.goto("/");
+    await page.evaluate(() => {
+      localStorage.clear();
+      localStorage.setItem(
+        "chess_coach_game_state",
+        JSON.stringify({
+          pgn: "1. e4 e5 2. Qh5 Nc6",
+          currentIndex: 4,
+          startingFen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        }),
+      );
+    });
+    await page.reload();
+
+    await expect(page.getByText("Play with Selena")).toBeVisible({ timeout: 15_000 });
+    await page.getByText("Play with Selena").click();
+    await expect(page).toHaveURL(/\/selena/);
+
+    // Confirm the pre-loaded position: white queen on h5, black knight on c6.
+    const h5 = page.locator("[data-square='h5']");
+    const c6 = page.locator("[data-square='c6']");
+    await expect(h5.locator("img[alt='w q']")).toBeVisible({ timeout: 15_000 });
+    await expect(c6.locator("img[alt='b n']")).toBeVisible();
+
+    // Tap the queen — f7 becomes a legal (capture) destination.
+    await h5.click();
+    const f7 = page.locator("[data-square='f7']");
+    await expect(f7).toHaveAttribute("class", /capture/, { timeout: 5_000 });
+
+    // Hover f7 — after the 150ms debounce and Stockfish eval, the coach
+    // should flag the move as a blunder (shocked emotion + "blunder" advice).
+    await f7.hover();
+    await expect(page.getByText(/blunder/i)).toBeVisible({ timeout: 15_000 });
+  });
 });

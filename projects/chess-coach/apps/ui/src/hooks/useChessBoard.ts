@@ -1,5 +1,5 @@
 import { Chess, type Square } from "chess.js";
-import { createEffect, createMemo, createSignal, onCleanup } from "solid-js";
+import { createEffect, createMemo, createSignal, onCleanup, untrack } from "solid-js";
 
 import { DEFAULT_STOCKFISH_WORKER_URL } from "~/engine/StockfishEngine.ts";
 import { type HoverEval, useHoverEvaluator } from "~/hooks/useHoverEvaluator";
@@ -156,9 +156,10 @@ export function useChessBoard() {
     if (!isTravelling()) {
       clearHoverOverride();
 
-      // Keep pendingTravel alive when the board just arrived at the blunder
-      // position (mobile drop flow) — clear it once the game moves on.
-      const pending = pendingTravel();
+      // untrack: reading pendingTravel() reactively here would cause this
+      // effect to re-fire on blunder detection (when useHoverEvaluator sets
+      // pendingTravel), clobbering selectedSquare / validMoves mid-drag.
+      const pending = untrack(pendingTravel);
       if (pending) {
         const posNow = fen.split(" ").slice(0, 2).join(" ");
         const posBlunder = pending.blunderFen.split(" ").slice(0, 2).join(" ");
