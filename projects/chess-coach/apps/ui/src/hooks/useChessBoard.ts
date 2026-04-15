@@ -1,4 +1,4 @@
-import { Chess, type Square } from "chess.js";
+import { Chess, type Color, type Square } from "chess.js";
 import { createEffect, createMemo, createSignal, onCleanup, untrack } from "solid-js";
 
 import { DEFAULT_STOCKFISH_WORKER_URL } from "~/engine/StockfishEngine.ts";
@@ -26,7 +26,12 @@ import {
   game as latestGame,
   moveHistory,
 } from "~/store/gameStore";
-import { activePlayerColor } from "~/store/settingsStore";
+import {
+  type PieceSet,
+  activePlayerColor,
+  opponentPieceSet,
+  playerPieceSet,
+} from "~/store/settingsStore";
 import { isTravelling, travelFen, travelIndex, travelMoveHistory } from "~/store/travelStore";
 import { logger } from "~/utils/logger";
 
@@ -49,6 +54,37 @@ export function useChessBoard() {
   const [selectedSquare, setSelectedSquare] = createSignal<Square | null>(null);
   const [hoveredSquare, setHoveredSquare] = createSignal<Square | null>(null);
   const [validMoves, setValidMoves] = createSignal<string[]>([]);
+
+  // Promotion modal state. When a move would promote a pawn, we pause the
+  // move execution and surface the pawn's color / piece-set so the UI can
+  // render the picker; the resolver is held here and invoked by the UI's
+  // select/cancel handlers. Cancelling resolves with `null` and
+  // moveExecutor returns cancelled:true so selection is preserved.
+  type PromotionPiece = "q" | "r" | "b" | "n";
+  const [pendingPromotion, setPendingPromotion] = createSignal<{
+    color: Color;
+    pieceSet: PieceSet;
+    resolve: (piece: PromotionPiece | null) => void;
+  } | null>(null);
+
+  const requestPromotion = (color: Color, pieceSet: PieceSet) =>
+    new Promise<PromotionPiece | null>((resolve) => {
+      setPendingPromotion({ color, pieceSet, resolve });
+    });
+
+  const resolvePromotion = (piece: PromotionPiece) => {
+    const p = pendingPromotion();
+    if (!p) return;
+    p.resolve(piece);
+    setPendingPromotion(null);
+  };
+
+  const cancelPromotion = () => {
+    const p = pendingPromotion();
+    if (!p) return;
+    p.resolve(null);
+    setPendingPromotion(null);
+  };
   const { send, analysis } = useStockfishWorker(DEFAULT_STOCKFISH_WORKER_URL);
   const moveExecutor = useMoveExecutor(() => send("stop"));
 
@@ -283,6 +319,13 @@ export function useChessBoard() {
         selected,
         square,
         stockfishBestMove: humanBestMove() || undefined,
+        onPromotionRequired: () => {
+          const piece = g.get(selected);
+          if (!piece) return Promise.resolve(null);
+          const pieceSet =
+            piece.color === activePlayerColor() ? playerPieceSet() : opponentPieceSet();
+          return requestPromotion(piece.color, pieceSet);
+        },
       });
 
       if (result.didMove) {
@@ -293,6 +336,10 @@ export function useChessBoard() {
         setCurrentHoverEval(null);
         return;
       }
+
+      // Promotion was cancelled — leave selection intact so the user can
+      // retry the same move or pick a new square.
+      if (result.cancelled) return;
     }
 
     const canTouch = capabilities().freeColorControl
@@ -437,6 +484,9 @@ export function useChessBoard() {
     selectedSquare,
     hoveredSquare,
     validMoves,
+    pendingPromotion,
+    resolvePromotion,
+    cancelPromotion,
     handleBoardMouseEnter,
     handleBoardMouseLeave,
     handleSquareHover,

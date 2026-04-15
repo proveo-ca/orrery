@@ -48,11 +48,19 @@ const QUEEN_CAPTURE_PHRASES: Record<PlayerIdentity, string[]> = {
   ],
 };
 
+type PromotionPiece = "q" | "r" | "b" | "n";
+
 type ExecuteMoveParams = {
   game: Chess;
   selected: Square;
   square: Square;
   stockfishBestMove?: string;
+  /**
+   * Called when the pending move is a pawn promotion so the caller can
+   * prompt the user to pick a piece. Resolving with `null` cancels the
+   * move (executeMove returns `{ didMove: false, cancelled: true }`).
+   */
+  onPromotionRequired?: () => Promise<PromotionPiece | null>;
 };
 
 function getGameOverState(isHumanTurn: boolean) {
@@ -143,14 +151,27 @@ export function useMoveExecutor(stopStockfish: () => void) {
 
   const executeMove = async (
     params: ExecuteMoveParams,
-  ): Promise<{ didMove: boolean; fenAfterHuman?: string }> => {
-    const { game, selected, square } = params;
+  ): Promise<{ didMove: boolean; fenAfterHuman?: string; cancelled?: boolean }> => {
+    const { game, selected, square, onPromotionRequired } = params;
 
     const move = game.moves({ square: selected, verbose: true }).find((m) => m.to === square);
     if (!move) return { didMove: false };
 
+    // chess.js emits one entry per promotion target (q/r/b/n) for the same
+    // from→to pair, so `move.promotion` on any match is enough to flag the
+    // move as a promotion. Ask the caller to pick a piece; default to queen
+    // only when no resolver is wired (keeps tests / non-UI callers working).
+    let promotion: PromotionPiece = "q";
+    if (move.promotion) {
+      if (onPromotionRequired) {
+        const choice = await onPromotionRequired();
+        if (!choice) return { didMove: false, cancelled: true };
+        promotion = choice;
+      }
+    }
+
     try {
-      const result = addMove({ from: selected, to: square, promotion: "q" });
+      const result = addMove({ from: selected, to: square, promotion });
 
       abortAdvice();
       setAdviceArrow(null);

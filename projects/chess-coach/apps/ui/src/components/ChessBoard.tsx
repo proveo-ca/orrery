@@ -8,6 +8,7 @@ import { ChessSquare } from "~/components/ChessSquare";
 import { Button } from "~/components/common/Button";
 import { Modal } from "~/components/common/Modal";
 import { EvalBar } from "~/components/EvalBar";
+import { PromotionModal } from "~/components/PromotionModal";
 import { useChessBoard } from "~/hooks/useChessBoard";
 import { capabilities } from "~/store/capabilitiesStore";
 import { adviceArrow, adviceHoveredSquares, setShowNewGame } from "~/store/coachStore";
@@ -257,6 +258,12 @@ export const ChessBoard: Component = () => {
             </div>
             <Button onClick={() => setShowNewGame(true)}>Another game?</Button>
           </Modal>
+
+          <PromotionModal
+            pending={board.pendingPromotion()}
+            onSelect={board.resolvePromotion}
+            onCancel={board.cancelPromotion}
+          />
         </div>
       </div>
     </div>

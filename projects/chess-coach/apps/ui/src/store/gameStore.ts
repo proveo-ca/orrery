@@ -193,6 +193,20 @@ export const resignGame = () => {
   setAdvice("You resigned. Another game?");
 };
 
+/**
+ * Replace the board with a FEN position without firing NEW_GAME / advice
+ * side effects. Used by the Analysis screen's "Load from FEN" input.
+ * Throws when `fen` is malformed (chess.js validates on construction).
+ */
+export const loadFen = (fen: string) => {
+  const next = new Chess(fen);
+  _game = next;
+  _startingFen = fen;
+  _setCurrentIndex(0);
+  _setIsResigned(false);
+  _bump();
+};
+
 export const resetGame = (fen: string = STARTING_FEN) => {
   _game = new Chess(fen);
   _startingFen = fen;

@@ -1,0 +1,34 @@
+.choices {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.choice {
+  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 6px;
+  cursor: pointer;
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease,
+    transform 120ms ease;
+}
+
+.choice:hover,
+.choice:focus-visible {
+  border-color: rgba(118, 179, 225, 0.9);
+  background-color: rgba(118, 179, 225, 0.12);
+  transform: scale(1.04);
+  outline: none;
+}
+
+.pieceImg {
+  width: clamp(48px, 14vw, 72px);
+  height: clamp(48px, 14vw, 72px);
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
+}

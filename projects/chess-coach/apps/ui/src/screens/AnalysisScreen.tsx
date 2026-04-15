@@ -5,6 +5,7 @@ import styles from "~/App.module.css";
 import { OpponentCaptures, PlayerCaptures } from "~/components/CapturedPieces";
 import { ChessBoard } from "~/components/ChessBoard";
 import { DebugControls } from "~/components/DebugControls";
+import { FenLoader } from "~/components/FenLoader";
 import { MobileDrawer } from "~/components/MobileDrawer";
 import { Sidebar } from "~/components/Sidebar";
 import { ANALYSIS_CAPABILITIES, setCapabilities } from "~/store/capabilitiesStore";
@@ -28,6 +29,7 @@ export const AnalysisScreen: Component = () => {
 
   return (
     <div class={styles["app-container"]}>
+      <FenLoader />
       <div class={styles["board-area"]}>
         <div class={styles["board-column"]}>
           <OpponentCaptures />
