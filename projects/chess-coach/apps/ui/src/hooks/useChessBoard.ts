@@ -19,6 +19,7 @@ import {
   setHoverEmotion,
 } from "~/store/coachStore";
 import {
+  type MoveSquares,
   currentFen,
   currentIndex,
   fenHistory,
@@ -360,8 +361,11 @@ export function useChessBoard() {
 
   const lastMove = () => {
     if (isTravelling()) {
+      // travelMoveHistory is 1-based: moves[0] is a `null` placeholder for
+      // the starting fen, and moves[i] is the move that led to fens[i].
+      // So at travelIndex=N, the last move is moves[N], NOT moves[N-1].
       const idx = travelIndex();
-      if (idx > 0) return travelMoveHistory()[idx - 1];
+      if (idx > 0) return travelMoveHistory()[idx] ?? null;
       return null;
     }
     const idx = currentIndex();
@@ -369,10 +373,64 @@ export function useChessBoard() {
     return null;
   };
 
+  // Animation driver, decoupled from the last-move indicator.
+  //
+  // The indicator highlights the move that *led to* the current position.
+  // The animation needs to reflect the direction of motion: a backward
+  // travel step animates the piece sliding back (to → from), while
+  // lastMove still points at the earlier move that happens to share the
+  // current position. If we animated off lastMove during backward travel,
+  // the piece on the earlier move's to-square (which was already sitting
+  // there) would replay its arrival, and the piece that actually moved
+  // back would teleport.
+  const [animatedMove, setAnimatedMove] = createSignal<MoveSquares | null>(null);
+  let prevTravelIdx = 0;
+  let wasTravelling = false;
+
+  createEffect(() => {
+    if (!isTravelling()) {
+      // Just exited travel → skip animation for the jump back to latest.
+      // Normal play → animate the natural last move.
+      const justExited = wasTravelling;
+      wasTravelling = false;
+      prevTravelIdx = 0;
+      if (justExited) {
+        setAnimatedMove(null);
+      } else {
+        const idx = currentIndex();
+        setAnimatedMove(idx > 0 ? (moveHistory()[idx - 1] ?? null) : null);
+      }
+      return;
+    }
+
+    const idx = travelIndex();
+    const moves = travelMoveHistory();
+
+    if (!wasTravelling) {
+      // Entering travel mode — don't animate the jump to idx 0.
+      wasTravelling = true;
+      prevTravelIdx = idx;
+      setAnimatedMove(null);
+      return;
+    }
+
+    // travelMoveHistory is 1-based (see lastMove comment): moves[i] is the
+    // move that led to fens[i]. Forward step to idx applied moves[idx];
+    // backward step from prevTravelIdx undid moves[prevTravelIdx].
+    if (idx > prevTravelIdx) {
+      setAnimatedMove(moves[idx] ?? null);
+    } else if (idx < prevTravelIdx) {
+      const undone = moves[prevTravelIdx];
+      setAnimatedMove(undone ? { from: undone.to, to: undone.from } : null);
+    }
+    prevTravelIdx = idx;
+  });
+
   return {
     game,
     activeGame,
     lastMove,
+    animatedMove,
     isReplaying,
     baseEvalScore,
     bestMoveArrow,

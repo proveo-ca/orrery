@@ -35,6 +35,7 @@ interface ChessSquareProps {
   onDragOver: (e: DragEvent) => void;
   onDrop: (e: DragEvent) => void;
   lastMove: MoveSquares | null;
+  animatedMove: MoveSquares | null;
   flipped: boolean;
   isCheck: boolean;
   isCheckmate: boolean;
@@ -53,21 +54,26 @@ export const ChessSquare: Component<ChessSquareProps> = (props) => {
 
   let pieceRef: HTMLImageElement | undefined;
 
-  // Animate the piece sliding from its origin square whenever lastMove changes.
-  // `on(..., { defer: true })` skips the initial run so we only animate actual moves.
+  // Animate the piece sliding from its origin square whenever animatedMove
+  // changes. `on(..., { defer: true })` skips the initial run so we only
+  // animate actual moves. Forcing a synchronous layout via `offsetWidth`
+  // between the two transform writes is load-bearing: without it, the
+  // browser coalesces both style changes before the next paint and the
+  // transition silently collapses — the piece just pops to its final
+  // square with no motion. This was the cause of player-side moves not
+  // animating (Selena's moves happened to work only because the HTTP
+  // delay let a paint slip in between the mount and the effect firing).
   createEffect(
     on(
-      () => props.lastMove,
+      () => props.animatedMove,
       (move) => {
         if (!move || move.to !== props.square || !pieceRef || props.isDragging) return;
         const { dx, dy } = squareOffset(move.from, move.to, props.flipped);
-        pieceRef.style.transform = `translate(${dx * 100}%, ${dy * 100}%)`;
         pieceRef.style.transition = "none";
-        requestAnimationFrame(() => {
-          if (!pieceRef) return;
-          pieceRef.style.transition = "transform 150ms ease-out";
-          pieceRef.style.transform = "translate(0, 0)";
-        });
+        pieceRef.style.transform = `translate(${dx * 100}%, ${dy * 100}%)`;
+        void pieceRef.offsetWidth;
+        pieceRef.style.transition = "transform 150ms ease-out";
+        pieceRef.style.transform = "translate(0, 0)";
       },
       { defer: true },
     ),

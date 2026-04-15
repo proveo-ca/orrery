@@ -34,6 +34,7 @@ export const ChessBoard: Component = () => {
 
   const activeGame = () => board.activeGame();
   const lastMove = () => board.lastMove();
+  const animatedMove = () => board.animatedMove();
 
   const isCheck = () => activeGame().inCheck();
   const isCheckmate = () => activeGame().isCheckmate();
@@ -183,6 +184,7 @@ export const ChessBoard: Component = () => {
                       onDragOver={(e) => e.preventDefault()}
                       onDrop={(e) => board.handleDrop(square, e)}
                       lastMove={lastMove()}
+                      animatedMove={animatedMove()}
                       flipped={activePlayerColor() === "b"}
                       isCheck={
                         piece()?.type === "k" &&
