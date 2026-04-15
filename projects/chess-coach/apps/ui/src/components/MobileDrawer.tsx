@@ -3,46 +3,51 @@ import clsx from "clsx";
 import { Show, createSignal } from "solid-js";
 import type { Component } from "solid-js";
 
-import { Modal } from "~/components/common/Modal";
-import { Credits } from "~/components/Credits";
-import { DualNavButton } from "~/components/DualNavButton";
+import { Divider } from "~/components/common/Divider";
+import { IconButton } from "~/components/common/IconButton";
 import {
   CheckIcon,
+  FlagIcon,
   HamburgerIcon,
   HintIcon,
   PlusCircleIcon,
   StarIcon,
-} from "~/components/icons";
+} from "~/components/common/icons";
+import { Label } from "~/components/common/Label";
+import { MenuButton } from "~/components/common/MenuButton";
+import { Modal } from "~/components/common/Modal";
+import { Credits } from "~/components/Credits";
+import { DualNavButton } from "~/components/DualNavButton";
 import styles from "~/components/MobileDrawer.module.css";
 import { NewGamePanel } from "~/components/NewGamePanel";
 import { SettingsPanel } from "~/components/Settings";
 import { useGameControls } from "~/hooks/useGameControls";
+import { useHintSparkle } from "~/hooks/useHintSparkle";
 import { capabilities } from "~/store/capabilitiesStore";
-import {
-  setShowCredits,
-  setShowNewGame,
-  showCredits,
-  showNewGame,
-} from "~/store/coachStore";
+import { setShowCredits, setShowNewGame, showCredits, showNewGame } from "~/store/coachStore";
 import { isTravelling, travelFenHistory, travelIndex } from "~/store/travelStore.ts";
 
 export const MobileDrawer: Component = () => {
   const navigate = useNavigate();
   const [open, setOpen] = createSignal(false);
+  const { hintSparkleClass, dismissHintSparkle } = useHintSparkle();
   const controls = useGameControls();
   const {
     atStart,
     atLatest,
     isReplaying,
+    isResigned,
     pendingHint,
     handleBack,
     handleForward,
     handleBackToLive,
     handleHint: baseHandleHint,
     handleNewGame: baseHandleNewGame,
+    handleResign: baseHandleResign,
   } = controls;
 
   const handleHint = () => {
+    dismissHintSparkle();
     setOpen(false);
     void baseHandleHint();
   };
@@ -52,21 +57,45 @@ export const MobileDrawer: Component = () => {
     baseHandleNewGame();
   };
 
+  const handleResign = () => {
+    setOpen(false);
+    baseHandleResign();
+  };
+
   return (
     <div class={styles["mobile-only"]}>
       <div class={styles["top-left-nav"]}>
-        <button class={styles["hamburger-btn"]} onClick={() => setOpen(true)} aria-label="Open menu">
+        <IconButton
+          class={styles.hamburger}
+          label="Menu"
+          labelPosition="bottom"
+          onClick={() => setOpen(true)}
+          aria-label="Open menu"
+        >
           <HamburgerIcon />
-        </button>
+        </IconButton>
         <Show when={capabilities().hint}>
-          <button
-            class={styles["icon-btn"]}
+          <IconButton
+            label="Hint"
+            labelPosition="bottom"
+            class={hintSparkleClass()}
             onClick={handleHint}
             disabled={pendingHint() || isReplaying() || isTravelling()}
             aria-label="Get a hint"
           >
             <HintIcon />
-          </button>
+          </IconButton>
+        </Show>
+        <Show when={capabilities().aiOpponent}>
+          <IconButton
+            label="Resign"
+            labelPosition="bottom"
+            onClick={handleResign}
+            disabled={isReplaying() || isTravelling() || isResigned()}
+            aria-label="Resign"
+          >
+            <FlagIcon />
+          </IconButton>
         </Show>
       </div>
 
@@ -77,18 +106,19 @@ export const MobileDrawer: Component = () => {
           backDisabled={atStart() && !isTravelling()}
           forwardDisabled={atLatest()}
           inverted={isTravelling() || isReplaying()}
+          label={isTravelling() ? "Timeline" : "History"}
         />
 
         <Show when={isTravelling()}>
-          <span class={styles["travel-info"]}>
+          <Label class={styles["travel-info"]}>
             {travelIndex()}/{travelFenHistory().length - 1}
-          </span>
+          </Label>
         </Show>
 
         <Show when={isTravelling() || isReplaying()}>
-          <button class={styles["icon-btn"]} onClick={handleBackToLive} aria-label="Back to live">
+          <IconButton onClick={handleBackToLive} aria-label="Back to live">
             <CheckIcon />
-          </button>
+          </IconButton>
         </Show>
       </div>
 
@@ -98,45 +128,41 @@ export const MobileDrawer: Component = () => {
       />
 
       <div class={clsx(styles.drawer, open() && styles["drawer--open"])}>
-        <p class={styles["section-title"]}>Menu</p>
+        <Label variant="section">Menu</Label>
         <div class={styles["menu-list"]}>
-          <button
-            class={styles["menu-btn"]}
+          <MenuButton
             onClick={() => {
               setOpen(false);
               navigate("/selena");
             }}
           >
             Play with Selena
-          </button>
-          <button
-            class={styles["menu-btn"]}
+          </MenuButton>
+          <MenuButton
             onClick={() => {
               setOpen(false);
               navigate("/analysis");
             }}
           >
             Solo Analysis
-          </button>
-          <span class={styles["coming-soon"]}>Coming soon!</span>
-          <button class={styles["menu-btn"]} disabled>
-            Learn to Play
-          </button>
-          <button class={styles["menu-btn"]} disabled>
-            Play LAN
-          </button>
+          </MenuButton>
+          <Label variant="caption" class={styles["coming-soon"]}>
+            Coming soon!
+          </Label>
+          <MenuButton disabled>Learn to Play</MenuButton>
+          <MenuButton disabled>Play LAN</MenuButton>
         </div>
 
-        <div class={styles.divider}/>
+        <Divider />
 
-        <p class={styles["section-title"]}>Controls</p>
+        <Label variant="section">Controls</Label>
         <div class={styles["controls-row"]}>
-          <button class={styles["icon-btn"]} onClick={handleNewGame} aria-label="New game">
+          <IconButton label="New Game" onClick={handleNewGame} aria-label="New game">
             <PlusCircleIcon />
-          </button>
+          </IconButton>
 
-          <button
-            class={styles["icon-btn"]}
+          <IconButton
+            label="Credits"
             onClick={() => {
               setOpen(false);
               setShowCredits(true);
@@ -145,12 +171,12 @@ export const MobileDrawer: Component = () => {
             aria-label="Credits"
           >
             <StarIcon />
-          </button>
+          </IconButton>
         </div>
 
-        <div class={styles.divider} />
+        <Divider />
 
-        <p class={styles["section-title"]}>Settings</p>
+        <Label variant="section">Settings</Label>
         <SettingsPanel onDismiss={() => setOpen(false)} />
       </div>
 

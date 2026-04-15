@@ -74,9 +74,8 @@ export const CoachScreen: Component = () => {
       >
         <p>{unsupportedReason()}</p>
         <p>
-          Please try <strong>Chrome</strong>, <strong>Brave</strong>,{" "}
-          <strong>Safari</strong>, <strong>Edge</strong>, or{" "}
-          <strong>Firefox</strong> for the best experience.
+          Please try <strong>Chrome</strong>, <strong>Brave</strong>, <strong>Safari</strong>,{" "}
+          <strong>Edge</strong>, or <strong>Firefox</strong> for the best experience.
         </p>
         <details>
           <summary style={{ "font-size": "0.8rem", cursor: "pointer", color: "#999" }}>

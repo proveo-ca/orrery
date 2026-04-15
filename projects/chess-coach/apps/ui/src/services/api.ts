@@ -3,8 +3,7 @@ import { setLlmProgress } from "~/store/coachStore";
 import type { Difficulty } from "~/store/settingsStore";
 
 const RUNTIME_MODE = resolveMode();
-const API_URL =
-  RUNTIME_MODE.kind === "desktop" ? RUNTIME_MODE.apiUrl : window.location.origin;
+const API_URL = RUNTIME_MODE.kind === "desktop" ? RUNTIME_MODE.apiUrl : window.location.origin;
 const DEBUG = import.meta.env.VITE_DEBUG === "true";
 
 /** fen is the position AFTER the human move has been applied client-side. */

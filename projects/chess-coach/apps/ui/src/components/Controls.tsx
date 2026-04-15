@@ -2,9 +2,10 @@ import { Show, createSignal } from "solid-js";
 import type { Component } from "solid-js";
 
 import { Button } from "~/components/common/Button";
+import { CogIcon } from "~/components/common/icons";
+import { Label } from "~/components/common/Label";
 import styles from "~/components/Controls.module.css";
 import { Credits } from "~/components/Credits";
-import { CogIcon } from "~/components/icons";
 import { Settings } from "~/components/Settings";
 import { TurnLabel } from "~/components/TurnLabel";
 import { useGameControls } from "~/hooks/useGameControls";
@@ -39,9 +40,9 @@ export const BoardActions: Component = () => {
       {(isTravelling() || isReplaying()) && (
         <div class={styles["travel-row"]}>
           {isTravelling() && (
-            <span class={styles["travel-label"]}>
+            <Label>
               Move {travelIndex()}/{travelFenHistory().length - 1}
-            </span>
+            </Label>
           )}
           {isReplaying() && <TurnLabel />}
           <Button class={styles["back-to-live"]} onClick={handleBackToLive}>

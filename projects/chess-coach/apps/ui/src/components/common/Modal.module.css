@@ -46,23 +46,11 @@
   width: 36px;
   height: 36px;
   padding: 0;
-  margin: 0;
-  border-radius: 8px;
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
   font-size: 22px;
   line-height: 1;
-
   background: transparent;
-  border: 1px solid var(--border-color);
+  border-color: var(--border-color);
   color: var(--text-color);
-}
-
-.modal-close:hover {
-  border-color: var(--primary-hover);
 }
 
 .modal-body {

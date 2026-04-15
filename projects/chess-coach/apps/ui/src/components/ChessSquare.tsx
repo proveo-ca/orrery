@@ -8,11 +8,7 @@ import type { MoveSquares } from "~/store/gameStore";
 import type { PieceSet } from "~/store/settingsStore";
 
 /** Grid-square offset from `from` to `to`, accounting for board flip. */
-function squareOffset(
-  from: string,
-  to: string,
-  flipped: boolean,
-): { dx: number; dy: number } {
+function squareOffset(from: string, to: string, flipped: boolean): { dx: number; dy: number } {
   const fileDiff = from.charCodeAt(0) - to.charCodeAt(0);
   const rankDiff = Number(to[1]) - Number(from[1]);
   const sign = flipped ? -1 : 1;

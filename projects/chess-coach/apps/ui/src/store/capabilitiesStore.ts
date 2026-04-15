@@ -10,19 +10,19 @@ import { createSignal } from "solid-js";
  */
 export type ScreenCapabilities = {
   // UI affordances
-  hint: boolean;                       // show hint button
-  travel: boolean;                     // space-bar time-travel on blunders
-  evalBarAlwaysVisible: boolean;       // eval bar visible during live play
+  hint: boolean; // show hint button
+  travel: boolean; // space-bar time-travel on blunders
+  evalBarAlwaysVisible: boolean; // eval bar visible during live play
 
   // Engine / coach behavior
-  aiOpponent: boolean;                 // AI responds + advice after human move
-  blunderDetection: boolean;           // hover blunder detection + shocked emotion
-  continuousAnalysis: boolean;         // stockfish runs even when not player's turn
-  showBestMove: boolean;               // continuous best-move highlight overlay
+  aiOpponent: boolean; // AI responds + advice after human move
+  blunderDetection: boolean; // hover blunder detection + shocked emotion
+  continuousAnalysis: boolean; // stockfish runs even when not player's turn
+  showBestMove: boolean; // continuous best-move highlight overlay
 
   // Board interaction
-  historyBranching: boolean;           // past-history moves branch instead of lock UI
-  freeColorControl: boolean;           // can touch any color on its turn
+  historyBranching: boolean; // past-history moves branch instead of lock UI
+  freeColorControl: boolean; // can touch any color on its turn
 
   // Visual
   opponentUsesPlayerPieceSet: boolean; // both sides render with player's piece set
@@ -54,5 +54,4 @@ export const ANALYSIS_CAPABILITIES: ScreenCapabilities = {
   opponentUsesPlayerPieceSet: true,
 };
 
-export const [capabilities, setCapabilities] =
-  createSignal<ScreenCapabilities>(COACH_CAPABILITIES);
+export const [capabilities, setCapabilities] = createSignal<ScreenCapabilities>(COACH_CAPABILITIES);

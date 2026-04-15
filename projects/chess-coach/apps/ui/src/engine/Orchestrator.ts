@@ -234,11 +234,7 @@ export class Orchestrator {
       if (this.skipFallback) {
         return;
       }
-      finalText = fallbackExplanation(
-        analysis.tag,
-        analysis.bestAlt,
-        analysis.bestAltMatchesMove,
-      );
+      finalText = fallbackExplanation(analysis.tag, analysis.bestAlt, analysis.bestAltMatchesMove);
       usedFallback = true;
     }
 

@@ -2,8 +2,8 @@ import type { Color, PieceSymbol, Square } from "chess.js";
 import { For, Show, createEffect, createSignal } from "solid-js";
 import type { Component } from "solid-js";
 
-import { ChessBoardArrow } from "~/components/ChessBoardArrow.tsx";
 import styles from "~/components/ChessBoard.module.css";
+import { ChessBoardArrow } from "~/components/ChessBoardArrow.tsx";
 import { ChessSquare } from "~/components/ChessSquare";
 import { Button } from "~/components/common/Button";
 import { Modal } from "~/components/common/Modal";
@@ -11,16 +11,12 @@ import { EvalBar } from "~/components/EvalBar";
 import { useChessBoard } from "~/hooks/useChessBoard";
 import { capabilities } from "~/store/capabilitiesStore";
 import { adviceArrow, adviceHoveredSquares, setShowNewGame } from "~/store/coachStore";
-import {
-  activePlayerColor,
-  opponentPieceSet,
-  playerPieceSet,
-} from "~/store/settingsStore";
+import { isResigned } from "~/store/gameStore";
+import { activePlayerColor, opponentPieceSet, playerPieceSet } from "~/store/settingsStore";
 import { isTravelling } from "~/store/travelStore";
 
 const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"];
 const RANKS = ["8", "7", "6", "5", "4", "3", "2", "1"];
-
 
 const getPieceImg = (type: PieceSymbol, color: Color, pieceSet: string) =>
   `/chess/pieces/${pieceSet}/${color}${type.toUpperCase()}.svg`;
@@ -42,7 +38,7 @@ export const ChessBoard: Component = () => {
   const isCheck = () => activeGame().inCheck();
   const isCheckmate = () => activeGame().isCheckmate();
   const isStalemate = () => activeGame().isStalemate();
-  const isGameOver = () => !isTravelling() && activeGame().isGameOver();
+  const isGameOver = () => !isTravelling() && (activeGame().isGameOver() || isResigned());
   const turn = () => activeGame().turn();
 
   // ── Touch-drag (mobile) ──────────────────────────────────────────────
@@ -209,13 +205,23 @@ export const ChessBoard: Component = () => {
 
           <Show when={board.bestMoveArrow()}>
             {(arrow) => (
-              <ChessBoardArrow from={arrow().from} to={arrow().to} color="#7dd17d" id="best-move-arrow-head" />
+              <ChessBoardArrow
+                from={arrow().from}
+                to={arrow().to}
+                color="#7dd17d"
+                id="best-move-arrow-head"
+              />
             )}
           </Show>
 
           <Show when={adviceArrow()}>
             {(arrow) => (
-              <ChessBoardArrow from={arrow().from} to={arrow().to} color="#76b3e1" id="advice-arrow-head" />
+              <ChessBoardArrow
+                from={arrow().from}
+                to={arrow().to}
+                color="#76b3e1"
+                id="advice-arrow-head"
+              />
             )}
           </Show>
 
@@ -239,7 +245,13 @@ export const ChessBoard: Component = () => {
             contentClass={styles["game-over-banner"]}
           >
             <div class={styles.result}>
-              {isCheckmate() ? "Checkmate" : isStalemate() ? "Stalemate" : "Draw"}
+              {isResigned()
+                ? "Resignation"
+                : isCheckmate()
+                  ? "Checkmate"
+                  : isStalemate()
+                    ? "Stalemate"
+                    : "Draw"}
             </div>
             <Button onClick={() => setShowNewGame(true)}>Another game?</Button>
           </Modal>

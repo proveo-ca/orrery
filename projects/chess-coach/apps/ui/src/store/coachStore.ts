@@ -30,6 +30,11 @@ type CoachState = {
   hoverBlunderFen: string | null;
   hoverBlunderSan: string | null;
 
+  // Survives clearHoverOverride so mobile users can tap "Why?" after dropping
+  // the piece. Stores the pre-blunder FEN because currentFen() will have
+  // advanced once the blunder move is made.
+  pendingTravel: { blunderFen: string; blunderSan: string; fenBefore: string } | null;
+
   // Loading state
   llmProgress: number;
   llmLoadingText: string;
@@ -51,6 +56,7 @@ const [coachState, setCoachState] = createStore<CoachState>({
   hoverBlunder: false,
   hoverBlunderFen: null,
   hoverBlunderSan: null,
+  pendingTravel: null,
 
   llmProgress: 0,
   llmLoadingText: "Waking up...",
@@ -72,6 +78,7 @@ export const bestMovePhrases = () => coachState.bestMovePhrases;
 export const hoverBlunder = () => coachState.hoverBlunder;
 export const hoverBlunderFen = () => coachState.hoverBlunderFen;
 export const hoverBlunderSan = () => coachState.hoverBlunderSan;
+export const pendingTravel = () => coachState.pendingTravel;
 
 export const llmProgress = () => coachState.llmProgress;
 export const llmLoadingText = () => coachState.llmLoadingText;
@@ -110,6 +117,12 @@ export const setHoverBlunder = (
   setCoachState("hoverBlunderFen", fen);
   setCoachState("hoverBlunderSan", san);
 };
+
+export const setPendingTravel = (
+  val: { blunderFen: string; blunderSan: string; fenBefore: string } | null,
+) => setCoachState("pendingTravel", val);
+
+export const clearPendingTravel = () => setCoachState("pendingTravel", null);
 
 export const clearHoverOverride = () => {
   setCoachState({

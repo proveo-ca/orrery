@@ -166,6 +166,26 @@ export const CogIcon: Component<IconProps> = (props) => {
   );
 };
 
+export const FlagIcon: Component<IconProps> = (props) => {
+  const s = () => props.size ?? 20;
+  return (
+    <svg
+      width={s()}
+      height={s()}
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <line x1="4" y1="3" x2="4" y2="17" />
+      <path d="M4 3 L15 3 L12 7 L15 11 L4 11" fill="currentColor" opacity="0.3" />
+      <path d="M4 3 L15 3 L12 7 L15 11 L4 11" />
+    </svg>
+  );
+};
+
 export const ArrowRightIcon: Component<IconProps> = (props) => {
   const s = () => props.size ?? 20;
   return (

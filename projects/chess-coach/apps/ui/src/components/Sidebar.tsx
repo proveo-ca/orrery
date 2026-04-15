@@ -1,20 +1,25 @@
 import { Show } from "solid-js";
 import type { Component } from "solid-js";
 
-import { Modal } from "~/components/common/Modal";
-import { Credits } from "~/components/Credits";
-import { DualNavButton } from "~/components/DualNavButton";
+import { Divider } from "~/components/common/Divider";
+import { IconButton } from "~/components/common/IconButton";
 import {
   CheckIcon,
   CogIcon,
+  FlagIcon,
   HintIcon,
   PlusCircleIcon,
   StarIcon,
-} from "~/components/icons";
+} from "~/components/common/icons";
+import { Label } from "~/components/common/Label";
+import { Modal } from "~/components/common/Modal";
+import { Credits } from "~/components/Credits";
+import { DualNavButton } from "~/components/DualNavButton";
 import { NewGamePanel } from "~/components/NewGamePanel";
 import { Settings } from "~/components/Settings";
 import styles from "~/components/Sidebar.module.css";
 import { useGameControls } from "~/hooks/useGameControls";
+import { useHintSparkle } from "~/hooks/useHintSparkle";
 import { capabilities } from "~/store/capabilitiesStore";
 import {
   setShowCredits,
@@ -27,18 +32,26 @@ import {
 import { isTravelling, travelFenHistory, travelIndex } from "~/store/travelStore.ts";
 
 export const Sidebar: Component = () => {
+  const { hintSparkleClass, dismissHintSparkle } = useHintSparkle();
   const controls = useGameControls();
   const {
     atStart,
     atLatest,
     isReplaying,
+    isResigned,
     pendingHint,
     handleBack,
     handleForward,
     handleBackToLive,
-    handleHint,
+    handleHint: baseHandleHint,
     handleNewGame,
+    handleResign,
   } = controls;
+
+  const handleHint = () => {
+    dismissHintSparkle();
+    baseHandleHint();
+  };
 
   return (
     <div class={styles.sidebar}>
@@ -48,55 +61,68 @@ export const Sidebar: Component = () => {
         backDisabled={atStart() && !isTravelling()}
         forwardDisabled={atLatest()}
         inverted={isTravelling() || isReplaying()}
+        label={isTravelling() ? "Timeline" : isReplaying() ? "History" : undefined}
       />
 
       <Show when={isTravelling() || isReplaying()}>
         <div class={styles["travel-section"]}>
           <Show when={isTravelling()}>
-            <span class={styles["move-counter"]}>
+            <Label variant="caption" class={styles["move-counter"]}>
               {travelIndex()}/{travelFenHistory().length - 1}
-            </span>
+            </Label>
           </Show>
-          <button class={styles["icon-btn"]} onClick={handleBackToLive} aria-label="Back to live">
+          <IconButton onClick={handleBackToLive} aria-label="Back to live">
             <CheckIcon />
-          </button>
+          </IconButton>
         </div>
       </Show>
 
-      <div class={styles.divider} />
+      <Divider class={styles.divider} />
 
       <Show when={capabilities().hint}>
-        <button
-          class={styles["icon-btn"]}
+        <IconButton
+          label="Hint"
+          class={hintSparkleClass()}
           onClick={handleHint}
           disabled={pendingHint() || isReplaying() || isTravelling()}
           aria-label="Get a hint"
         >
           <HintIcon />
-        </button>
+        </IconButton>
       </Show>
 
-      <button class={styles["icon-btn"]} onClick={handleNewGame} aria-label="New game">
-        <PlusCircleIcon />
-      </button>
+      <Show when={capabilities().aiOpponent}>
+        <IconButton
+          label="Resign"
+          onClick={handleResign}
+          disabled={isReplaying() || isTravelling() || isResigned()}
+          aria-label="Resign"
+        >
+          <FlagIcon />
+        </IconButton>
+      </Show>
 
-      <button
-        class={styles["icon-btn"]}
+      <IconButton label="New Game" onClick={handleNewGame} aria-label="New game">
+        <PlusCircleIcon />
+      </IconButton>
+
+      <IconButton
+        label="Credits"
         onClick={() => setShowCredits(true)}
         disabled={isReplaying() || isTravelling()}
         aria-label="Credits"
       >
         <StarIcon />
-      </button>
+      </IconButton>
 
-      <button
-        class={styles["icon-btn"]}
+      <IconButton
+        label="Settings"
         onClick={() => setShowSettings(true)}
         disabled={isReplaying() || isTravelling()}
         aria-label="Settings"
       >
         <CogIcon />
-      </button>
+      </IconButton>
 
       <Modal
         open={showNewGame()}

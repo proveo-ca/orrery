@@ -3,6 +3,7 @@ import { createSignal } from "solid-js";
 
 import { postAdviceStream, postMove } from "~/services/api";
 import { accumulateStream } from "~/services/streamUtils";
+import { capabilities } from "~/store/capabilitiesStore";
 import {
   bestMovePhrases,
   dispatchCoachEvent,
@@ -11,8 +12,12 @@ import {
   setAdviceHoveredSquares,
   thinkingPhrases,
 } from "~/store/coachStore";
-import { capabilities } from "~/store/capabilitiesStore";
-import { addMove, addMoveSan, game as gameFromStore, isThreefoldRepetition } from "~/store/gameStore";
+import {
+  addMove,
+  addMoveSan,
+  game as gameFromStore,
+  isThreefoldRepetition,
+} from "~/store/gameStore";
 import { type PlayerIdentity, difficulty, playerIdentity } from "~/store/settingsStore";
 import { logger } from "~/utils/logger";
 

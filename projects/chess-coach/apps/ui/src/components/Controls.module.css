@@ -25,6 +25,11 @@
   .new-game-panel {
     flex-direction: column;
   }
+
+  .new-game-panel > select,
+  .new-game-panel > button {
+    width: 100%;
+  }
 }
 
 .board-actions {
@@ -45,12 +50,6 @@
 .board-actions button:disabled {
   opacity: 0.4;
   cursor: not-allowed;
-}
-
-.turn-label {
-  opacity: 0.8;
-  font-size: 0.9rem;
-  user-select: none;
 }
 
 .start-btn {

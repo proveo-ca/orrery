@@ -13,6 +13,8 @@ export type MoveSquares = { from: string; to: string };
 let _game = new Chess();
 let _startingFen = STARTING_FEN;
 
+const [_isResigned, _setIsResigned] = createSignal(false);
+
 // Version signal — bumped after every mutation to trigger SolidJS reactivity.
 const [_version, _setVersion] = createSignal(0);
 
@@ -137,14 +139,12 @@ export const isThreefoldRepetition = (): boolean => {
   return _game.isThreefoldRepetition();
 };
 
+export const isResigned = (): boolean => _isResigned();
+
 // ── Mutations ───────────────────────────────────────────────────────────
 
 /** Apply a move by square coordinates. Handles branching when viewing past. */
-export const addMove = (move: {
-  from: string;
-  to: string;
-  promotion?: string;
-}): Move => {
+export const addMove = (move: { from: string; to: string; promotion?: string }): Move => {
   // Branch: undo moves beyond the current view position
   const total = _game.history().length;
   const viewIdx = _currentIndex();
@@ -187,10 +187,17 @@ export const goForward = () => {
   }
 };
 
+export const resignGame = () => {
+  _setIsResigned(true);
+  dispatchCoachEvent({ type: "GAME_OVER", result: "loss" });
+  setAdvice("You resigned. Another game?");
+};
+
 export const resetGame = (fen: string = STARTING_FEN) => {
   _game = new Chess(fen);
   _startingFen = fen;
   _setCurrentIndex(0);
+  _setIsResigned(false);
   _bump();
 
   // Resolve random color

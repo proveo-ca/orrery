@@ -1,7 +1,8 @@
 import { Show, createMemo } from "solid-js";
 import type { Component } from "solid-js";
 
-import styles from "~/components/Controls.module.css";
+import { Label } from "~/components/common/Label";
+import styles from "~/components/TurnLabel.module.css";
 import { currentFen, currentIndex, fenHistory } from "~/store/gameStore";
 import { isTravelling } from "~/store/travelStore";
 
@@ -17,7 +18,7 @@ export const TurnLabel: Component = () => {
 
   return (
     <Show when={!isTravelling() && isReplaying()}>
-      <div class={styles["turn-label"]}>{memoizedLabel()}</div>
+      <Label class={styles["turn-label"]}>{memoizedLabel()}</Label>
     </Show>
   );
 };

@@ -1,6 +1,7 @@
 import { Show, createEffect, createUniqueId, onCleanup } from "solid-js";
 import type { Component, JSX } from "solid-js";
 
+import { Button } from "~/components/common/Button";
 import styles from "~/components/common/Modal.module.css";
 
 export type ModalPosition = "fixed" | "absolute";
@@ -104,7 +105,7 @@ export const Modal: Component<ModalProps> = (props) => {
               )}
 
               {props.onClose && (props.showCloseButton ?? true) && (
-                <button
+                <Button
                   ref={(el) => {
                     closeButtonEl = el;
                   }}
@@ -114,7 +115,7 @@ export const Modal: Component<ModalProps> = (props) => {
                   aria-label="Close modal"
                 >
                   <span aria-hidden="true">×</span>
-                </button>
+                </Button>
               )}
             </div>
           )}

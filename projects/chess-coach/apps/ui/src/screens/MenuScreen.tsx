@@ -1,15 +1,12 @@
 import { useNavigate } from "@solidjs/router";
-import clsx from "clsx";
 import type { Component } from "solid-js";
 
 import { CoachAvatar } from "~/components/CoachAvatar";
+import { Label } from "~/components/common/Label";
+import { MenuButton } from "~/components/common/MenuButton";
 import { Select } from "~/components/common/Select";
 import styles from "~/components/common/SplashScreen.module.css";
-import {
-  playerIdentity,
-  setPlayerIdentity,
-  type PlayerIdentity,
-} from "~/store/settingsStore";
+import { playerIdentity, setPlayerIdentity, type PlayerIdentity } from "~/store/settingsStore";
 
 const IDENTITY_OPTIONS: PlayerIdentity[] = ["Human", "Cat", "Dog", "Rat"];
 
@@ -37,22 +34,15 @@ export const MenuScreen: Component = () => {
         </Select>
       </div>
       <div class={styles["menu-options"]}>
-        <button
-          class={clsx(styles["menu-btn"], styles["menu-btn--primary"])}
-          onClick={() => navigate("/selena")}
-        >
+        <MenuButton primary onClick={() => navigate("/selena")}>
           Play with Selena
-        </button>
-        <button class={styles["menu-btn"]} onClick={() => navigate("/analysis")}>
-          Solo Analysis
-        </button>
-        <button class={styles["menu-btn"]} disabled>
-          Learn to Play
-        </button>
-        <button class={styles["menu-btn"]} disabled>
-          Play LAN
-        </button>
-        <span class={styles["coming-soon"]}>Coming soon!</span>
+        </MenuButton>
+        <MenuButton onClick={() => navigate("/analysis")}>Solo Analysis</MenuButton>
+        <MenuButton disabled>Learn to Play</MenuButton>
+        <MenuButton disabled>Play LAN</MenuButton>
+        <Label variant="caption" class={styles["coming-soon"]}>
+          Coming soon!
+        </Label>
       </div>
     </div>
   );

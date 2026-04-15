@@ -38,10 +38,14 @@ var Module: any = {
   },
   queue: mainQueue,
   onRuntimeInitialized: () => {
-    console.log(`[Maia Worker] onRuntimeInitialized: file=${pendingWeightsFile}, size=${pendingWeightsData?.length}`);
+    console.log(
+      `[Maia Worker] onRuntimeInitialized: file=${pendingWeightsFile}, size=${pendingWeightsData?.length}`,
+    );
     if (pendingWeightsFile && pendingWeightsData) {
       Module.FS.writeFile(pendingWeightsFile, pendingWeightsData);
-      console.log(`[Maia Worker] Wrote ${pendingWeightsData.length} bytes to VFS as ${pendingWeightsFile}`);
+      console.log(
+        `[Maia Worker] Wrote ${pendingWeightsData.length} bytes to VFS as ${pendingWeightsFile}`,
+      );
       pendingWeightsFile = null;
       pendingWeightsData = null;
     }
@@ -61,7 +65,9 @@ self.onmessage = async (e) => {
       console.log(`[Maia Worker] Fetching weights from: ${fetchUrl}`);
 
       const response = await fetch(fetchUrl);
-      console.log(`[Maia Worker] Fetch response: status=${response.status}, content-type=${response.headers.get("content-type")}, content-encoding=${response.headers.get("content-encoding")}, content-length=${response.headers.get("content-length")}`);
+      console.log(
+        `[Maia Worker] Fetch response: status=${response.status}, content-type=${response.headers.get("content-type")}, content-encoding=${response.headers.get("content-encoding")}, content-length=${response.headers.get("content-length")}`,
+      );
 
       if (!response.ok) {
         throw new Error(`Fetch failed: ${response.status} ${response.statusText}`);
@@ -69,11 +75,20 @@ self.onmessage = async (e) => {
 
       const buffer = await response.arrayBuffer();
       const bytes = new Uint8Array(buffer);
-      const magic = bytes.length >= 2 ? `0x${bytes[0].toString(16).padStart(2, "0")} 0x${bytes[1].toString(16).padStart(2, "0")}` : "too short";
-      const first16 = Array.from(bytes.slice(0, 16)).map(b => `0x${b.toString(16).padStart(2, "0")}`).join(" ");
+      const magic =
+        bytes.length >= 2
+          ? `0x${bytes[0].toString(16).padStart(2, "0")} 0x${bytes[1].toString(16).padStart(2, "0")}`
+          : "too short";
+      const first16 = Array.from(bytes.slice(0, 16))
+        .map((b) => `0x${b.toString(16).padStart(2, "0")}`)
+        .join(" ");
       const clHeader = response.headers.get("content-length");
-      console.log(`[Maia Worker] Content-Length header: ${clHeader}, actual arrayBuffer size: ${buffer.byteLength}, match: ${clHeader === String(buffer.byteLength)}`);
-      console.log(`[Maia Worker] Weights loaded: ${buffer.byteLength} bytes, magic=${magic} (expect 0x1f 0x8b for gzip)`);
+      console.log(
+        `[Maia Worker] Content-Length header: ${clHeader}, actual arrayBuffer size: ${buffer.byteLength}, match: ${clHeader === String(buffer.byteLength)}`,
+      );
+      console.log(
+        `[Maia Worker] Weights loaded: ${buffer.byteLength} bytes, magic=${magic} (expect 0x1f 0x8b for gzip)`,
+      );
       console.log(`[Maia Worker] First 16 bytes: ${first16}`);
 
       // Detect if we got HTML back (SPA fallback)
@@ -109,7 +124,9 @@ self.onmessage = async (e) => {
         }
         // Use .pb extension so lc0 treats it as raw protobuf
         finalName = msg.weightsFile.replace(/\.gz$/, "");
-        console.log(`[Maia Worker] Decompressed: ${bytes.length} → ${finalBytes.length} bytes, VFS name: ${finalName}`);
+        console.log(
+          `[Maia Worker] Decompressed: ${bytes.length} → ${finalBytes.length} bytes, VFS name: ${finalName}`,
+        );
       }
 
       if (lc0Loaded && Module.FS) {

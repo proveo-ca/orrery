@@ -1,0 +1,19 @@
+.label {
+  color: var(--text-muted);
+  line-height: 1;
+}
+
+.muted {
+  font-size: 0.8rem;
+}
+
+.caption {
+  font-size: 0.7rem;
+}
+
+.section {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+}

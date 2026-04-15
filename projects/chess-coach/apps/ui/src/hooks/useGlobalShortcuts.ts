@@ -9,6 +9,7 @@ import {
   hoverBlunder,
   hoverBlunderFen,
   hoverBlunderSan,
+  pendingTravel,
 } from "~/store/coachStore";
 import { currentIndex, fenHistory, goBack, goForward } from "~/store/gameStore";
 import {
@@ -30,17 +31,19 @@ export function useGlobalShortcuts() {
     const isReplaying = () =>
       !capabilities().historyBranching && currentIndex() < fenHistory().length - 1;
 
+    const pending = pendingTravel();
     if (
       e.code === "Space" &&
       capabilities().travel &&
-      hoverBlunder() &&
+      (hoverBlunder() || pending) &&
       !isTravelling() &&
       !loading()
     ) {
       e.preventDefault();
-      const fen = hoverBlunderFen();
-      const san = hoverBlunderSan();
-      if (fen && san) activateTravel(fen, san);
+      const fen = hoverBlunderFen() ?? pending?.blunderFen;
+      const san = hoverBlunderSan() ?? pending?.blunderSan;
+      const fenBefore = pending?.fenBefore;
+      if (fen && san) activateTravel(fen, san, fenBefore);
     } else if (e.code === "Escape") {
       if (isTravelling() || isReplaying()) {
         e.preventDefault();

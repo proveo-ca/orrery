@@ -20,9 +20,7 @@ export class MaiaEngine {
   }
 
   private createDriver(): UciDriver {
-    return new UciDriver(
-      new Worker(new URL("./maia.worker.ts", import.meta.url)),
-    );
+    return new UciDriver(new Worker(new URL("./maia.worker.ts", import.meta.url)));
   }
 
   private restart() {
@@ -46,7 +44,7 @@ export class MaiaEngine {
     // Worker pre-decompresses .gz → .pb for VFS compatibility
     const vfsName = weightsFile.replace(/\.gz$/, "");
     this.driver.send(`setoption name WeightsFile value ${vfsName}`);
-    this.driver.send("setoption name Temperature value 0.9");
+    this.driver.send("setoption name Temperature value 0.5");
     this.driver.send("setoption name TempDecayMoves value 20");
     this.driver.send("isready");
     await this.driver.readUntil("readyok");

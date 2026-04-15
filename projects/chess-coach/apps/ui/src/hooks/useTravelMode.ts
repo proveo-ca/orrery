@@ -5,7 +5,7 @@ import { DEFAULT_STOCKFISH_WORKER_URL } from "~/engine/StockfishEngine.ts";
 import { UciDriver } from "~/engine/UciDriver.ts";
 import { postExplainStream } from "~/services/api";
 import { accumulateStream } from "~/services/streamUtils";
-import { setHoverAdvice, setHoverEmotion } from "~/store/coachStore";
+import { clearPendingTravel, setHoverAdvice, setHoverEmotion } from "~/store/coachStore";
 import { type MoveSquares, currentFen } from "~/store/gameStore";
 import { startTravel } from "~/store/travelStore";
 
@@ -36,18 +36,21 @@ export function useTravelMode(workerPath: string = DEFAULT_STOCKFISH_WORKER_URL)
     return "";
   };
 
-  const activateTravel = async (blunderFen: string, blunderSan: string) => {
+  const activateTravel = async (blunderFen: string, blunderSan: string, fenBefore?: string) => {
     setLoading(true);
+    clearPendingTravel();
     setHoverAdvice("Travelling to the future...");
     setHoverEmotion("thinking");
 
     // Lock the board immediately so mouse movements don't clear the hover state
     startTravel([blunderFen], [null]);
 
-    // Fire off the explanation request in parallel
+    // Fire off the explanation request in parallel — use the caller-supplied
+    // fenBefore when the blunder move has already been made (mobile drop flow).
+    const preFen = fenBefore ?? currentFen();
     accumulateStream(
       postExplainStream,
-      { fenBefore: currentFen(), fenAfter: blunderFen, isBlunder: true, moveSan: blunderSan },
+      { fenBefore: preFen, fenAfter: blunderFen, isBlunder: true, moveSan: blunderSan },
       setHoverAdvice,
     ).catch((err) => console.error("Failed to fetch explanation stream", err));
 

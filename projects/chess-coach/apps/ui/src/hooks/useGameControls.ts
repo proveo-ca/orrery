@@ -10,6 +10,8 @@ import {
   clearHoverOverride,
   dispatchCoachEvent,
   setAdvice,
+  setAdviceArrow,
+  setAdviceHoveredSquares,
   setShowNewGame,
 } from "~/store/coachStore";
 import {
@@ -18,7 +20,9 @@ import {
   fenHistory,
   goBack,
   goForward,
+  isResigned,
   resetGame,
+  resignGame,
 } from "~/store/gameStore";
 import {
   exitTravel,
@@ -83,6 +87,10 @@ export const useGameControls = () => {
     }
   };
 
+  const handleResign = () => {
+    resignGame();
+  };
+
   const handleHint = async () => {
     try {
       dispatchCoachEvent({ type: "AI_THINKING" });
@@ -95,6 +103,7 @@ export const useGameControls = () => {
       }
 
       const game = new Chess(currentFen());
+      const gameInProgress = !game.isGameOver() && !isResigned();
       const from = uciMove.slice(0, 2);
       const to = uciMove.slice(2, 4);
       const promotion = uciMove.length > 4 ? uciMove[4] : undefined;
@@ -109,6 +118,13 @@ export const useGameControls = () => {
       const san = moveObj.san;
       const fenAfter = game.fen();
       const prefix = `Try moving ${san}. `;
+
+      // Highlight the hint move on the board while the game is in progress
+      if (gameInProgress) {
+        const squares = san.match(/[a-h][1-8]/g) || [];
+        setAdviceHoveredSquares(squares);
+        setAdviceArrow({ from: moveObj.from, to: moveObj.to });
+      }
 
       if (resolveMode().kind === "web-no-llm") {
         setAdvice(`Try moving ${san}.`);
@@ -135,11 +151,13 @@ export const useGameControls = () => {
     atStart,
     atLatest,
     isReplaying,
+    isResigned,
     pendingHint,
     handleBack,
     handleForward,
     handleBackToLive,
     handleHint,
     handleNewGame,
+    handleResign,
   };
 };

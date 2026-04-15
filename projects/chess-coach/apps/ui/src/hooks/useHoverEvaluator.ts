@@ -3,7 +3,12 @@ import { createEffect } from "solid-js";
 
 import type { StockfishAnalysis } from "~/hooks/useStockfishWorker";
 import { capabilities } from "~/store/capabilitiesStore";
-import { setHoverAdvice, setHoverBlunder, setHoverEmotion } from "~/store/coachStore";
+import {
+  setHoverAdvice,
+  setHoverBlunder,
+  setHoverEmotion,
+  setPendingTravel,
+} from "~/store/coachStore";
 import { currentFen } from "~/store/gameStore";
 import { logger } from "~/utils/logger";
 
@@ -100,5 +105,6 @@ export function useHoverEvaluator(props: UseHoverEvaluatorProps) {
     setHoverAdvice(`Moving the ${pieceName} to ${evalTarget.to} is a blunder`);
     setHoverEmotion("shocked");
     setHoverBlunder(true, evalTarget.fen, san);
+    setPendingTravel({ blunderFen: evalTarget.fen, blunderSan: san, fenBefore: currentFen() });
   });
 }

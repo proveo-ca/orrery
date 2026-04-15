@@ -5,16 +5,26 @@ import { DEFAULT_STOCKFISH_WORKER_URL } from "~/engine/StockfishEngine.ts";
 import { type HoverEval, useHoverEvaluator } from "~/hooks/useHoverEvaluator";
 import { useMoveExecutor } from "~/hooks/useMoveExecutor";
 import { useStockfishWorker } from "~/hooks/useStockfishWorker";
+import { capabilities } from "~/store/capabilitiesStore";
 import {
   type CoachEmotion,
   baseAdvice,
   baseCoachEmotion,
   clearHoverOverride,
+  clearPendingTravel,
+  pendingTravel,
+  setAdviceArrow,
+  setAdviceHoveredSquares,
   setHoverAdvice,
   setHoverEmotion,
 } from "~/store/coachStore";
-import { capabilities } from "~/store/capabilitiesStore";
-import { currentFen, currentIndex, fenHistory, game as latestGame, moveHistory } from "~/store/gameStore";
+import {
+  currentFen,
+  currentIndex,
+  fenHistory,
+  game as latestGame,
+  moveHistory,
+} from "~/store/gameStore";
 import { activePlayerColor } from "~/store/settingsStore";
 import { isTravelling, travelFen, travelIndex, travelMoveHistory } from "~/store/travelStore";
 import { logger } from "~/utils/logger";
@@ -25,12 +35,16 @@ export function useChessBoard() {
   // past position, a short-lived instance from the FEN is fine for rendering.
   // equals: false — the authoritative instance is mutated in-place, so
   // reference equality would hide state changes from SolidJS.
-  const game = createMemo(() => {
-    const idx = currentIndex();
-    const total = latestGame().history().length;
-    if (idx === total) return latestGame();
-    return new Chess(currentFen());
-  }, undefined, { equals: false });
+  const game = createMemo(
+    () => {
+      const idx = currentIndex();
+      const total = latestGame().history().length;
+      if (idx === total) return latestGame();
+      return new Chess(currentFen());
+    },
+    undefined,
+    { equals: false },
+  );
   const [selectedSquare, setSelectedSquare] = createSignal<Square | null>(null);
   const [hoveredSquare, setHoveredSquare] = createSignal<Square | null>(null);
   const [validMoves, setValidMoves] = createSignal<string[]>([]);
@@ -131,14 +145,25 @@ export function useChessBoard() {
   });
 
   createEffect(() => {
-    activeGame().fen();
+    const fen = activeGame().fen();
     setSelectedSquare(null);
     setHoveredSquare(null);
     setValidMoves([]);
     setHumanBestMove(null);
     setBaseEvalScore(null);
+    setAdviceHoveredSquares([]);
+    setAdviceArrow(null);
     if (!isTravelling()) {
       clearHoverOverride();
+
+      // Keep pendingTravel alive when the board just arrived at the blunder
+      // position (mobile drop flow) — clear it once the game moves on.
+      const pending = pendingTravel();
+      if (pending) {
+        const posNow = fen.split(" ").slice(0, 2).join(" ");
+        const posBlunder = pending.blunderFen.split(" ").slice(0, 2).join(" ");
+        if (posNow !== posBlunder) clearPendingTravel();
+      }
     }
     setCurrentHoverEval(null);
     send("stop");

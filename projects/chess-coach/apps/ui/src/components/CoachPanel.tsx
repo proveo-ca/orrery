@@ -9,6 +9,7 @@ import {
   hoverBlunder,
   hoverBlunderFen,
   hoverBlunderSan,
+  pendingTravel,
   setAdviceArrow,
   setAdviceHoveredSquares,
 } from "~/store/coachStore";
@@ -25,9 +26,11 @@ export const CoachPanel: Component = () => {
 
   const handleWhyTap = () => {
     if (loading()) return;
-    const fen = hoverBlunderFen();
-    const san = hoverBlunderSan();
-    if (fen && san) activateTravel(fen, san);
+    const pending = pendingTravel();
+    const fen = hoverBlunderFen() ?? pending?.blunderFen;
+    const san = hoverBlunderSan() ?? pending?.blunderSan;
+    const fenBefore = pending?.fenBefore;
+    if (fen && san) activateTravel(fen, san, fenBefore);
   };
 
   let activeTapSan = "";
@@ -92,7 +95,7 @@ export const CoachPanel: Component = () => {
           }}
         </For>
       </p>
-      <Show when={hoverBlunder() && !isTravelling()}>
+      <Show when={(hoverBlunder() || pendingTravel()) && !isTravelling()}>
         <span class={styles["why-hint"]} onClick={handleWhyTap}>
           <span class={styles["why-desktop"]}>
             Press <kbd>Space</kbd> — To learn why

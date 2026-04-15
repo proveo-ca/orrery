@@ -1,3 +1,19 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.label {
+  font-size: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  line-height: 1;
+  white-space: nowrap;
+}
+
 .dual-nav {
   display: flex;
   border-radius: var(--border-radius-md);
@@ -14,11 +30,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 40px;
+  height: 40px;
   background: var(--surface-color);
   border: none;
   color: inherit;
   cursor: pointer;
-  padding: 0.4em 0.6em;
+  padding: 0;
   transition: background-color 0.15s;
   font-size: 1em;
 }

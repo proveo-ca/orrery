@@ -1,0 +1,24 @@
+.menu-btn {
+  width: 100%;
+  height: auto;
+  padding: 0.7em 1.2em;
+  font-size: 0.95rem;
+  text-align: left;
+  border-color: var(--border-color);
+}
+
+.menu-btn:disabled {
+  opacity: 0.4;
+}
+
+.menu-btn--primary {
+  background-color: var(--primary-color);
+  color: var(--surface-color);
+  border-color: transparent;
+  font-weight: 600;
+}
+
+.menu-btn--primary:hover:not(:disabled) {
+  background-color: var(--primary-hover);
+  color: #fff;
+}

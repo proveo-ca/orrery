@@ -3,7 +3,7 @@ import type { Component } from "solid-js";
 
 import { Button } from "~/components/common/Button";
 import styles from "~/components/common/ColorSelector.module.css";
-import { DiceIcon } from "~/components/icons";
+import { DiceIcon } from "~/components/common/icons";
 import type { PlayerColorPref } from "~/store/settingsStore.ts";
 
 interface Props {
