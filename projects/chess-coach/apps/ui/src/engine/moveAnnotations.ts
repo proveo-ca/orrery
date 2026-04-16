@@ -1,8 +1,9 @@
 import type { MoveRecord } from "~/store/gameHistoryStore";
 
 export const BLUNDER_THRESHOLD_CP = -200;
+export const INACCURACY_THRESHOLD_CP = -50;
 
-export type AnnotationTag = "best" | "blunder" | "hint" | "forced";
+export type AnnotationTag = "best" | "blunder" | "inaccuracy" | "hint" | "forced";
 
 /**
  * Pure annotation resolver. Combines the stored move records with
@@ -17,6 +18,7 @@ export function resolveAnnotations(
   moves: MoveRecord[],
   cpDeltas: (number | null)[],
   wasBestMoves: boolean[],
+  bestMoveUcis: (string | null)[] = [],
 ): AnnotationTag[][] {
   const tags: AnnotationTag[][] = moves.map(() => []);
 
@@ -40,6 +42,8 @@ export function resolveAnnotations(
       tags[i].push("best");
     } else if (isBlunder) {
       tags[i].push("blunder");
+    } else if (cp != null && cp <= INACCURACY_THRESHOLD_CP && !best && bestMoveUcis[i]) {
+      tags[i].push("inaccuracy");
     }
 
     if (m.hasPressedHint) tags[i].push("hint");

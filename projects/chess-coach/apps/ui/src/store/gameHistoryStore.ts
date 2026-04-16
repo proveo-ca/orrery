@@ -1,4 +1,5 @@
 import { polyglotHashFromPgn } from "~/engine/polyglotZobrist";
+import { deleteAnalysisCache } from "~/hooks/useGameAnalysis";
 import { createPersistedStore } from "~/store/createPersistedStore";
 
 export type MoveRecord = {
@@ -132,10 +133,12 @@ export const finalizeGame = (result: GameResult, pgn: string) => {
     endedAt: new Date().toISOString(),
   };
 
-  setState((s) => ({
-    games: [finalized, ...s.games.filter((g) => g.id !== polyglotId)].slice(0, MAX_GAMES),
-    inProgress: null,
-  }));
+  setState((s) => {
+    const kept = [finalized, ...s.games.filter((g) => g.id !== polyglotId)];
+    const evicted = kept.slice(MAX_GAMES);
+    for (const g of evicted) deleteAnalysisCache(g.id);
+    return { games: kept.slice(0, MAX_GAMES), inProgress: null };
+  });
 };
 
 export const discardInProgress = () => {

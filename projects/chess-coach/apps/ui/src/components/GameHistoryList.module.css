@@ -3,9 +3,11 @@
   gap: 0.5rem;
   overflow-x: auto;
   padding: 0.5rem;
-  max-width: var(--board-size, 640px);
+  padding-right: calc(0.5rem + var(--sidebar-width));
+  max-width: calc(var(--board-size, 640px) + var(--sidebar-width));
   margin: 0 auto 0.5rem;
   scrollbar-width: thin;
+  box-sizing: border-box;
 }
 
 .empty {

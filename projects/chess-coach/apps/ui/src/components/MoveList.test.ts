@@ -59,4 +59,24 @@ describe("resolveAnnotations", () => {
     const tags = resolveAnnotations([human()], [null], [true]);
     expect(tags[0]).toEqual([]);
   });
+
+  it("tags an inaccuracy (cpDelta <= -50 and > -200, not best, bestMoveUci present)", () => {
+    const tags = resolveAnnotations([human()], [-80], [false], ["e2e4"]);
+    expect(tags[0]).toEqual(["inaccuracy"]);
+  });
+
+  it("does NOT tag inaccuracy when move was the best move", () => {
+    const tags = resolveAnnotations([human()], [-80], [true], ["e2e4"]);
+    expect(tags[0]).toEqual(["best"]);
+  });
+
+  it("does NOT tag inaccuracy when bestMoveUci is missing", () => {
+    const tags = resolveAnnotations([human()], [-80], [false], [null]);
+    expect(tags[0]).toEqual([]);
+  });
+
+  it("blunder takes precedence over inaccuracy", () => {
+    const tags = resolveAnnotations([human()], [-250], [false], ["e2e4"]);
+    expect(tags[0]).toEqual(["blunder"]);
+  });
 });

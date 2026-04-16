@@ -6,15 +6,17 @@ import { setAdviceArrow } from "~/store/coachStore";
 import { currentIndex, fenHistory } from "~/store/gameStore";
 
 /**
- * Side-effect hook: when the board is viewing a blunder ply, fire a Stockfish
- * search on the pre-blunder position and display the best-move arrow. Clears
- * the arrow when navigating away.
+ * Side-effect hook: when the board is viewing a blunder or inaccuracy ply,
+ * display the engine's best-move arrow on the board.
  *
- * Decoupled from MoveList so the arrow works even if the move list isn't
- * mounted (e.g., on a mobile layout that hides the list but still shows the
- * board).
+ * For inaccuracies the best move is read directly from the cached
+ * `bestMoveUcis` (no extra Stockfish call). For blunders the cached UCI is
+ * also used when available; falls back to a live `requestHint` otherwise.
  */
-export function useBlunderArrow(annotations: () => AnnotationTag[][]) {
+export function useBlunderArrow(
+  annotations: () => AnnotationTag[][],
+  bestMoveUcis: () => (string | null)[],
+) {
   const { requestHint, stopHint } = useHint();
 
   createEffect(
@@ -27,8 +29,23 @@ export function useBlunderArrow(annotations: () => AnnotationTag[][]) {
         if (idx <= 0) return;
         const plyIndex = idx - 1;
         const tags = annotations()[plyIndex];
-        if (!tags || (!tags.includes("blunder") && !tags.includes("forced"))) return;
+        if (!tags) return;
 
+        const isBlunder = tags.includes("blunder") || tags.includes("forced");
+        const isInaccuracy = tags.includes("inaccuracy");
+        if (!isBlunder && !isInaccuracy) return;
+
+        // Try cached best-move first (always available for inaccuracies,
+        // usually available for blunders once analysis is complete).
+        const cachedUci = bestMoveUcis()[plyIndex];
+        if (cachedUci && cachedUci.length >= 4) {
+          setAdviceArrow({ from: cachedUci.slice(0, 2), to: cachedUci.slice(2, 4) });
+          return;
+        }
+
+        // Fallback: live Stockfish search (blunders only — inaccuracies
+        // require a cached UCI so they never reach here).
+        if (!isBlunder) return;
         const fens = fenHistory();
         const fenBefore = fens[plyIndex];
         if (!fenBefore) return;

@@ -37,6 +37,12 @@ const TagIcon: Component<{ tag: AnnotationTag }> = (props) => {
           <CoachEmotionIcon emotion="shocked" title="forced" />
         </span>
       );
+    case "inaccuracy":
+      return (
+        <span class={`${styles.tag} ${styles["tag--inaccuracy"]}`} title="Inaccuracy">
+          <CoachEmotionIcon emotion="thinking" title="inaccuracy" />
+        </span>
+      );
     case "hint":
       return (
         <span class={`${styles.tag} ${styles["tag--hint"]}`} title="Hint used">
@@ -73,11 +79,6 @@ const PlyCell: Component<{
         {formatCp(props.cpDelta)}
       </span>
     )}
-    {!props.move.isAI && props.move.hasPressedHint && (
-      <span class={styles["hint-badge"]} title="Hint used">
-        <HintIcon size={14} />
-      </span>
-    )}
     <span class={styles.tags}>
       <For each={props.tags}>{(tag) => <TagIcon tag={tag} />}</For>
     </span>
@@ -96,12 +97,12 @@ export const MoveList: Component<Props> = (props) => {
     const g = props.game;
     if (!g) return [];
     const a = gameAnalysis();
-    return resolveAnnotations(g.moves, a.cpDeltas, a.wasBestMoves);
+    return resolveAnnotations(g.moves, a.cpDeltas, a.wasBestMoves, a.bestMoveUcis);
   };
   const rows = () => (props.game ? pairMovesIntoRows(props.game.moves, props.game.startingFen) : []);
   const activePly = () => currentIndex() - 1;
 
-  useBlunderArrow(annotations);
+  useBlunderArrow(annotations, () => gameAnalysis().bestMoveUcis);
 
   const jump = (plyIndex: number) => {
     if (plyIndex < 0) return;
