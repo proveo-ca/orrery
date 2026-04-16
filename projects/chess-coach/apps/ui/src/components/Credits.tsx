@@ -1,7 +1,9 @@
+import { Show } from "solid-js";
 import type { Component } from "solid-js";
 
 import { Modal } from "~/components/common/Modal";
 import styles from "~/components/Credits.module.css";
+import { capabilities } from "~/store/capabilitiesStore";
 
 type Props = {
   open: boolean;
@@ -49,12 +51,14 @@ export const Credits: Component<Props> = (props) => {
               maiachess.com
             </a>
           </li>
-          <li>
-            <strong>The Brain (Chess Commentary):</strong> by NAKST Studio <br />
-            <a href="https://nakststudio.com/" target="_blank" rel="noopener noreferrer">
-              nakststudio.com
-            </a>
-          </li>
+          <Show when={capabilities().commentary}>
+            <li>
+              <strong>The Brain (Chess Commentary):</strong> by NAKST Studio <br />
+              <a href="https://nakststudio.com/" target="_blank" rel="noopener noreferrer">
+                nakststudio.com
+              </a>
+            </li>
+          </Show>
           <li>
             <strong>
               {isWebMode ? "All running in your browser:" : "All running in your PC:"}

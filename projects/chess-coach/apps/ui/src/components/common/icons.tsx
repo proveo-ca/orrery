@@ -186,6 +186,44 @@ export const FlagIcon: Component<IconProps> = (props) => {
   );
 };
 
+export const SearchIcon: Component<IconProps> = (props) => {
+  const s = () => props.size ?? 20;
+  return (
+    <svg
+      width={s()}
+      height={s()}
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <circle cx="9" cy="9" r="5" />
+      <line x1="13" y1="13" x2="17" y2="17" />
+    </svg>
+  );
+};
+
+export const BookIcon: Component<IconProps> = (props) => {
+  const s = () => props.size ?? 20;
+  return (
+    <svg
+      width={s()}
+      height={s()}
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path d="M2 4 C2 4 5 3 10 5 C15 3 18 4 18 4 L18 16 C18 16 15 15 10 17 C5 15 2 16 2 16 Z" />
+      <line x1="10" y1="5" x2="10" y2="17" />
+    </svg>
+  );
+};
+
 export const ArrowRightIcon: Component<IconProps> = (props) => {
   const s = () => props.size ?? 20;
   return (

@@ -20,6 +20,7 @@
   --spacing-md: 1rem;
   --spacing-lg: 2rem;
   --border-radius-md: 8px;
+  --avatar-height: 8rem;
 
   /* Extra-small defaults (< 480px): no sidebar */
   --sidebar-width: 0px;
@@ -40,6 +41,13 @@
     --primary-color: #0056b3;
     --primary-hover: #747bff;
     --border-color: #ccc;
+  }
+}
+
+/* Clear MobileDrawer fixed nav on mobile screens. */
+@media (max-width: 719px) {
+  .mobile-nav-clear {
+    padding-top: var(--avatar-height);
   }
 }
 

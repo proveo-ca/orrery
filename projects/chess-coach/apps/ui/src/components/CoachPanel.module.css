@@ -6,7 +6,7 @@
   flex-direction: column;
   justify-content: center;
   text-align: left;
-  height: 8rem;
+  height: var(--avatar-height);
   box-sizing: border-box;
   max-height: 16rem;
   width: 100%;

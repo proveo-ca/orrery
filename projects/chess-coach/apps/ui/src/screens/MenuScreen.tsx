@@ -6,6 +6,8 @@ import { Label } from "~/components/common/Label";
 import { MenuButton } from "~/components/common/MenuButton";
 import { Select } from "~/components/common/Select";
 import styles from "~/components/common/SplashScreen.module.css";
+import { Credits } from "~/components/Credits";
+import { setShowCredits, showCredits } from "~/store/coachStore";
 import { gameHistory } from "~/store/gameHistoryStore";
 import { playerIdentity, setPlayerIdentity, type PlayerIdentity } from "~/store/settingsStore";
 
@@ -48,6 +50,10 @@ export const MenuScreen: Component = () => {
           Coming soon!
         </Label>
       </div>
+      <MenuButton class={styles["credits-btn"]} onClick={() => setShowCredits(true)}>
+        Credits
+      </MenuButton>
+      <Credits open={showCredits()} onClose={() => setShowCredits(false)} />
     </div>
   );
 };

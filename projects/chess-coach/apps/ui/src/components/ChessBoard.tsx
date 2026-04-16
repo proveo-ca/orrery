@@ -136,6 +136,7 @@ export const ChessBoard: Component = () => {
       >
         <div
           class={styles.chessboard}
+          onContextMenu={(e) => e.preventDefault()}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
@@ -264,11 +265,11 @@ export const ChessBoard: Component = () => {
               <Button primary onClick={() => setShowNewGame(true)}>
                 Another Game
               </Button>
-              {gameHistory().length > 0 && (
+              <Show when={gameHistory().length > 0}>
                 <Button primary href={`/review/${gameHistory()[0].id}`}>
                   Review Game
                 </Button>
-              )}
+              </Show>
             </div>
           </Modal>
 

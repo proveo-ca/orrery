@@ -1,14 +1,18 @@
+import { useLocation } from "@solidjs/router";
 import { Show } from "solid-js";
 import type { Component } from "solid-js";
 
+import { CoachEmotionIcon } from "~/components/CoachEmotionIcon";
 import { Divider } from "~/components/common/Divider";
 import { IconButton } from "~/components/common/IconButton";
 import {
+  BookIcon,
   CheckIcon,
   CogIcon,
   FlagIcon,
   HintIcon,
   PlusCircleIcon,
+  SearchIcon,
   StarIcon,
 } from "~/components/common/icons";
 import { Label } from "~/components/common/Label";
@@ -32,7 +36,11 @@ import {
 import { resetGame } from "~/store/gameStore";
 import { isTravelling, travelFenHistory, travelIndex } from "~/store/travelStore.ts";
 
+const isRoute = (pathname: string, route: string) =>
+  pathname.endsWith(route) || pathname.includes(route + "/");
+
 export const Sidebar: Component = () => {
+  const location = useLocation();
   const { hintSparkleClass, dismissHintSparkle } = useHintSparkle();
   const controls = useGameControls();
   const {
@@ -124,6 +132,38 @@ export const Sidebar: Component = () => {
         aria-label="Settings"
       >
         <CogIcon />
+      </IconButton>
+
+      <Divider class={styles.divider} />
+
+      <IconButton
+        label="Coach"
+        href="/selena"
+        primary={isRoute(location.pathname, "/selena")}
+        disabled={isRoute(location.pathname, "/selena")}
+        aria-label="Coach"
+      >
+        <CoachEmotionIcon emotion="happy" />
+      </IconButton>
+
+      <IconButton
+        label="Analysis"
+        href="/analysis"
+        primary={isRoute(location.pathname, "/analysis")}
+        disabled={isRoute(location.pathname, "/analysis")}
+        aria-label="Analysis"
+      >
+        <SearchIcon />
+      </IconButton>
+
+      <IconButton
+        label="Review"
+        href="/review"
+        primary={isRoute(location.pathname, "/review")}
+        disabled={isRoute(location.pathname, "/review")}
+        aria-label="Review"
+      >
+        <BookIcon />
       </IconButton>
 
       <Modal

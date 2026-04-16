@@ -3,18 +3,26 @@ import type { Component } from "solid-js";
 import { Button } from "~/components/common/Button";
 import { ColorSelector } from "~/components/common/ColorSelector";
 import { Select } from "~/components/common/Select";
+import { Toggle } from "~/components/common/Toggle";
 import styles from "~/components/Controls.module.css";
 import { postMove, postNewGame } from "~/services/api";
 import { dispatchCoachEvent, setAdvice, setShowNewGame } from "~/store/coachStore";
 import { addMoveSan, resetGame } from "~/store/gameStore";
 import {
   type Difficulty,
+  type PlayerIdentity,
   activePlayerColor,
   colorPref,
   difficulty,
+  imLost,
+  playerIdentity,
   setColorPref,
   setDifficulty,
+  setImLost,
+  setPlayerIdentity,
 } from "~/store/settingsStore";
+
+const IDENTITY_OPTIONS: PlayerIdentity[] = ["Human", "Cat", "Dog", "Rat"];
 
 export const NewGamePanel: Component = () => {
   const handleNewGame = async () => {
@@ -63,6 +71,16 @@ export const NewGamePanel: Component = () => {
         <option value="advanced">Advanced (1600)</option>
         <option value="expert">Expert (2200)</option>
       </Select>
+      <Select
+        value={playerIdentity()}
+        onChange={(e) => setPlayerIdentity(e.currentTarget.value as PlayerIdentity)}
+        disabled={imLost()}
+      >
+        {IDENTITY_OPTIONS.map((id) => (
+          <option value={id}>{id}</option>
+        ))}
+      </Select>
+      <Toggle label="i'm lost" checked={imLost()} onChange={(v) => setImLost(v)} />
       <Button class={styles["start-btn"]} onClick={handleNewGame}>
         Start
       </Button>

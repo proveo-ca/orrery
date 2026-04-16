@@ -25,7 +25,7 @@ export const FenLoader: Component = () => {
 
   return (
     <>
-      <div class={styles.wrapper}>
+      <div class={`${styles.wrapper} mobile-nav-clear`}>
         <input
           type="text"
           class={styles.input}

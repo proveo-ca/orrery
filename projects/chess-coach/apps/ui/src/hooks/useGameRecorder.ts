@@ -31,10 +31,14 @@ export const markHintPressed = () => setHintPressedForNextMove(true);
  */
 export function useGameRecorder() {
   // ---------- Mount-time backfill ----------
+  // Start a record if none exists and the game isn't over. This covers:
+  // - Fresh first game (history empty, no NEW_GAME event yet)
+  // - Restored in-progress game (history non-empty, backfill moves)
   const g = gameFromStore();
   const history = g.history({ verbose: true });
-  if (!inProgressGame() && history.length > 0 && !g.isGameOver()) {
-    startNewRecord(crypto.randomUUID(), STARTING_FEN_FALLBACK, activePlayerColor(), difficulty());
+  if (!inProgressGame() && !g.isGameOver()) {
+    const startingFen = history.length > 0 ? STARTING_FEN_FALLBACK : g.fen();
+    startNewRecord(crypto.randomUUID(), startingFen, activePlayerColor(), difficulty());
     for (const m of history) {
       pushMove({
         san: m.san,

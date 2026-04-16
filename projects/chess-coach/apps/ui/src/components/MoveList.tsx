@@ -1,8 +1,8 @@
-import { For, Show } from "solid-js";
+import { For, Show, onCleanup, onMount } from "solid-js";
 import type { Component } from "solid-js";
 
 import { CoachEmotionIcon } from "~/components/CoachEmotionIcon";
-import { HintIcon } from "~/components/common/icons";
+import { ChevronLeftIcon, ChevronRightIcon, HintIcon } from "~/components/common/icons";
 import styles from "~/components/MoveList.module.css";
 import {
   type AnnotationTag,
@@ -12,8 +12,9 @@ import {
 } from "~/engine/moveAnnotations";
 import { useBlunderArrow } from "~/hooks/useBlunderArrow";
 import { useGameAnalysis } from "~/hooks/useGameAnalysis";
+import { useMoveListPagination } from "~/hooks/useMoveListPagination";
 import type { GameRecord, MoveRecord } from "~/store/gameHistoryStore";
-import { currentIndex, setViewIndex } from "~/store/gameStore";
+import { setViewIndex } from "~/store/gameStore";
 
 // ── Presentational sub-components ──────────────────────────────────────
 
@@ -100,7 +101,10 @@ export const MoveList: Component<Props> = (props) => {
     return resolveAnnotations(g.moves, a.cpDeltas, a.wasBestMoves, a.bestMoveUcis);
   };
   const rows = () => (props.game ? pairMovesIntoRows(props.game.moves, props.game.startingFen) : []);
-  const activePly = () => currentIndex() - 1;
+  const {
+    activePly, activePage, totalPages, visibleRows,
+    goToStart, goToEnd, goToPrev, goToNext,
+  } = useMoveListPagination(rows);
 
   useBlunderArrow(annotations, () => gameAnalysis().bestMoveUcis);
 
@@ -109,13 +113,54 @@ export const MoveList: Component<Props> = (props) => {
     setViewIndex(plyIndex + 1);
   };
 
+  // Swipe left/right for page navigation on mobile.
+  let wrapperRef: HTMLDivElement | undefined;
+  let touchStartX = 0;
+
+  const onTouchStart = (e: TouchEvent) => { touchStartX = e.touches[0].clientX; };
+  const onTouchEnd = (e: TouchEvent) => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 50) {
+      if (dx < 0) goToNext();
+      else goToPrev();
+    }
+  };
+
+  onMount(() => {
+    wrapperRef?.addEventListener("touchstart", onTouchStart, { passive: true });
+    wrapperRef?.addEventListener("touchend", onTouchEnd, { passive: true });
+  });
+  onCleanup(() => {
+    wrapperRef?.removeEventListener("touchstart", onTouchStart);
+    wrapperRef?.removeEventListener("touchend", onTouchEnd);
+  });
+
   return (
-    <div class={styles.wrapper} aria-label="Move list">
+    <div ref={wrapperRef} class={`${styles.wrapper} mobile-nav-clear`} aria-label="Move list">
       <Show
         when={props.game && props.game.moves.length > 0}
         fallback={<div class={styles.empty}>No moves recorded.</div>}
       >
-        <For each={rows()}>
+        <Show when={totalPages() > 1}>
+          <div class={styles["page-nav"]}>
+            <button class={styles["page-btn"]} onClick={goToStart} disabled={activePage() === 0} aria-label="First page">
+              <ChevronLeftIcon size={14} /><ChevronLeftIcon size={14} />
+            </button>
+            <button class={styles["page-btn"]} onClick={goToPrev} disabled={activePage() === 0} aria-label="Previous page">
+              <ChevronLeftIcon size={14} />
+            </button>
+            <span class={styles["page-indicator"]}>
+              {activePage() + 1} / {totalPages()}
+            </span>
+            <button class={styles["page-btn"]} onClick={goToNext} disabled={activePage() >= totalPages() - 1} aria-label="Next page">
+              <ChevronRightIcon size={14} />
+            </button>
+            <button class={styles["page-btn"]} onClick={goToEnd} disabled={activePage() >= totalPages() - 1} aria-label="Last page">
+              <ChevronRightIcon size={14} /><ChevronRightIcon size={14} />
+            </button>
+          </div>
+        </Show>
+        <For each={visibleRows()}>
           {(row) => (
             <div class={styles.row}>
               <span class={styles.turn}>{row.turn}.</span>

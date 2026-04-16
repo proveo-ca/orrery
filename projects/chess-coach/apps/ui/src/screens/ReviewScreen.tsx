@@ -1,5 +1,5 @@
 import { useParams } from "@solidjs/router";
-import { Show, createEffect, createMemo, on, onCleanup, onMount } from "solid-js";
+import { Show, createEffect, createMemo, on } from "solid-js";
 import type { Component } from "solid-js";
 
 import styles from "~/App.module.css";
@@ -23,26 +23,22 @@ import { loadGame } from "~/store/gameStore";
 export const ReviewScreen: Component = () => {
   const params = useParams<{ id?: string }>();
 
-  onMount(() => {
-    setCapabilities(REVIEW_CAPABILITIES);
-    document.getElementById("root")?.classList.add(styles["analysis-padding"]);
-  });
-  onCleanup(() => {
-    document.getElementById("root")?.classList.remove(styles["analysis-padding"]);
-  });
-
   const activeGame = createMemo(() => {
     const id = params.id;
     if (!id) return null;
-    // Depend on gameHistory() so the memo refreshes when the list changes.
     void gameHistory();
     return getGameById(id);
   });
 
-  // Replay the selected game into gameStore *only* when the route's id
-  // actually changes. Using `on(() => params.id, ...)` with an explicit id
-  // dependency prevents re-firing when getGameById's internal store reads
-  // re-subscribe and cause a reactive ripple on every navigation click.
+  // Capabilities track whether a game is active.
+  createEffect(() => {
+    setCapabilities(
+      activeGame() ? { ...REVIEW_CAPABILITIES, historyNav: true } : REVIEW_CAPABILITIES,
+    );
+  });
+
+  // Load the selected game into the game store.
+  // defer: false so it runs on initial mount (not just on subsequent changes).
   createEffect(
     on(
       () => params.id,
@@ -56,24 +52,36 @@ export const ReviewScreen: Component = () => {
           console.error("Failed to load saved game", err);
         }
       },
+      { defer: false },
     ),
   );
 
   return (
     <div class={styles["app-container"]}>
-      <GameHistoryList activeId={params.id} />
-
       <Show
         when={activeGame()}
         fallback={
-          <div style={{ color: "rgba(255,255,255,0.6)", padding: "2rem", "text-align": "center", display: "flex", "flex-direction": "column", "align-items": "center", gap: "1rem" }}>
-            <span>{params.id ? "Game not found. Pick one above." : "Pick a game above to review."}</span>
-            <Button href="/">Back to Main Menu</Button>
-          </div>
+          <>
+            <div />
+            <div class={styles["board-area"]}>
+              <GameHistoryList activeId={params.id} />
+              <Sidebar />
+            </div>
+            <div class={styles.footer}>
+              <div style={{ color: "rgba(255,255,255,0.6)", padding: "2rem", "text-align": "center", display: "flex", "flex-direction": "column", "align-items": "center", gap: "1rem" }}>
+                <span>{params.id ? "Game not found. Pick one above." : "Pick a game above to review."}</span>
+                <Button href="/">Back to Main Menu</Button>
+              </div>
+            </div>
+          </>
         }
       >
         {(g) => (
           <>
+            <div class={`${styles["sidebar-inset"]} mobile-nav-clear`}>
+              <Button href="/review">Back to recent games</Button>
+            </div>
+
             <div class={styles["board-area"]}>
               <div class={styles["board-column"]}>
                 <OpponentCaptures />

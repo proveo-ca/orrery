@@ -1,4 +1,4 @@
-import { onCleanup, onMount } from "solid-js";
+import { onMount } from "solid-js";
 import type { Component } from "solid-js";
 
 import styles from "~/App.module.css";
@@ -21,10 +21,6 @@ import { ANALYSIS_CAPABILITIES, setCapabilities } from "~/store/capabilitiesStor
 export const AnalysisScreen: Component = () => {
   onMount(() => {
     setCapabilities(ANALYSIS_CAPABILITIES);
-    document.getElementById("root")?.classList.add(styles["analysis-padding"]);
-  });
-  onCleanup(() => {
-    document.getElementById("root")?.classList.remove(styles["analysis-padding"]);
   });
 
   return (

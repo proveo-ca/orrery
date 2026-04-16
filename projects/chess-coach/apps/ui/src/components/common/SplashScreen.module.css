@@ -23,8 +23,7 @@
 }
 
 .splash-avatar-wrapper {
-  transform: scale(1.5);
-  margin-bottom: 3rem;
+  margin: 1.5rem auto;
 }
 
 /* Override the avatar's internal positioning for the splash screen */
@@ -72,4 +71,10 @@
   font-size: 0.75rem;
   margin-top: -0.4rem;
   text-align: center;
+}
+
+.credits-btn {
+  margin-top: 1.5rem;
+  opacity: 0.7;
+  font-size: 0.85rem;
 }

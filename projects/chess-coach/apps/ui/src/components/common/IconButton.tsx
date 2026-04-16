@@ -1,10 +1,10 @@
 import clsx from "clsx";
-import { type JSX, Show, splitProps } from "solid-js";
+import { Show, splitProps } from "solid-js";
 
-import { Button } from "~/components/common/Button";
+import { Button, type ButtonProps } from "~/components/common/Button";
 import styles from "~/components/common/IconButton.module.css";
 
-export interface IconButtonProps extends JSX.ButtonHTMLAttributes<HTMLButtonElement> {
+export interface IconButtonProps extends ButtonProps {
   label?: string;
   labelPosition?: "top" | "bottom";
 }

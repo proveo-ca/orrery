@@ -80,17 +80,6 @@ export const MobileDrawer: Component = () => {
             <HintIcon />
           </IconButton>
         </Show>
-        <Show when={capabilities().aiOpponent}>
-          <IconButton
-            label="Resign"
-            labelPosition="bottom"
-            onClick={handleResign}
-            disabled={isReplaying() || isTravelling() || isResigned()}
-            aria-label="Resign"
-          >
-            <FlagIcon />
-          </IconButton>
-        </Show>
         <Show when={!capabilities().aiOpponent && !capabilities().readOnly}>
           <IconButton
             label="New Game"
@@ -103,28 +92,30 @@ export const MobileDrawer: Component = () => {
         </Show>
       </div>
 
-      <div class={styles["top-right-nav"]}>
-        <DualNavButton
-          onBack={handleBack}
-          onForward={handleForward}
-          backDisabled={atStart() && !isTravelling()}
-          forwardDisabled={atLatest()}
-          inverted={isTravelling() || isReplaying()}
-          label={isTravelling() ? "Timeline" : "History"}
-        />
+      <Show when={capabilities().historyNav}>
+        <div class={styles["top-right-nav"]}>
+          <DualNavButton
+            onBack={handleBack}
+            onForward={handleForward}
+            backDisabled={atStart() && !isTravelling()}
+            forwardDisabled={atLatest()}
+            inverted={isTravelling() || isReplaying()}
+            label={isTravelling() ? "Timeline" : "History"}
+          />
 
-        <Show when={isTravelling()}>
-          <Label class={styles["travel-info"]}>
-            {travelIndex()}/{travelFenHistory().length - 1}
-          </Label>
-        </Show>
+          <Show when={isTravelling()}>
+            <Label class={styles["travel-info"]}>
+              {travelIndex()}/{travelFenHistory().length - 1}
+            </Label>
+          </Show>
 
-        <Show when={isTravelling() || isReplaying()}>
-          <IconButton onClick={handleBackToLive} aria-label="Back to live">
-            <CheckIcon />
-          </IconButton>
-        </Show>
-      </div>
+          <Show when={isTravelling() || isReplaying()}>
+            <IconButton onClick={handleBackToLive} aria-label="Back to live">
+              <CheckIcon />
+            </IconButton>
+          </Show>
+        </div>
+      </Show>
 
       <div
         class={clsx(styles.backdrop, open() && styles["backdrop--open"])}
@@ -158,6 +149,16 @@ export const MobileDrawer: Component = () => {
 
         <Label variant="section">Controls</Label>
         <div class={styles["controls-row"]}>
+          <Show when={capabilities().aiOpponent}>
+            <IconButton
+              label="Resign"
+              onClick={handleResign}
+              disabled={isReplaying() || isTravelling() || isResigned()}
+              aria-label="Resign"
+            >
+              <FlagIcon />
+            </IconButton>
+          </Show>
           <IconButton
             label="Credits"
             onClick={() => {

@@ -19,16 +19,26 @@ export function useBlunderArrow(
 ) {
   const { requestHint, stopHint } = useHint();
 
+  // Track currentIndex, annotations, AND bestMoveUcis so the arrow updates
+  // when progressive analysis catches up to the viewed ply (not just on
+  // navigation). Without this, navigating to a blunder before analysis
+  // reaches it would silently miss the arrow because `on(currentIndex)`
+  // alone never re-fires when the annotation data arrives later.
   createEffect(
     on(
-      () => currentIndex(),
-      (idx) => {
-        setAdviceArrow(null);
-        stopHint();
+      [() => currentIndex(), annotations, bestMoveUcis],
+      ([idx, annots, bestMoves], prev) => {
+        const indexChanged = !prev || prev[0] !== idx;
+
+        // Only clear arrow / cancel in-flight hint when the user navigated.
+        if (indexChanged) {
+          setAdviceArrow(null);
+          stopHint();
+        }
 
         if (idx <= 0) return;
         const plyIndex = idx - 1;
-        const tags = annotations()[plyIndex];
+        const tags = annots[plyIndex];
         if (!tags) return;
 
         const isBlunder = tags.includes("blunder") || tags.includes("forced");
@@ -37,15 +47,17 @@ export function useBlunderArrow(
 
         // Try cached best-move first (always available for inaccuracies,
         // usually available for blunders once analysis is complete).
-        const cachedUci = bestMoveUcis()[plyIndex];
+        const cachedUci = bestMoves[plyIndex];
         if (cachedUci && cachedUci.length >= 4) {
+          stopHint();
           setAdviceArrow({ from: cachedUci.slice(0, 2), to: cachedUci.slice(2, 4) });
           return;
         }
 
-        // Fallback: live Stockfish search (blunders only — inaccuracies
-        // require a cached UCI so they never reach here).
-        if (!isBlunder) return;
+        // Fallback: live Stockfish search (blunders only, only on navigation —
+        // if analysis is still running it will eventually provide the cached
+        // UCI and the effect will re-fire via the tracked bestMoveUcis).
+        if (!isBlunder || !indexChanged) return;
         const fens = fenHistory();
         const fenBefore = fens[plyIndex];
         if (!fenBefore) return;

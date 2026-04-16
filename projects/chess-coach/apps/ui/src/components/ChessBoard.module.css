@@ -182,6 +182,7 @@
 .piece {
   width: 90%;
   height: 90%;
+  -webkit-touch-callout: none;
   user-select: none;
   position: relative;
   z-index: 10;

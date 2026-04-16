@@ -4,7 +4,7 @@
   align-items: stretch;
   width: 100%;
   max-width: var(--board-size, 640px);
-  margin: 0 auto 0.75rem;
+  margin: 1.25rem auto 0.5rem;
 }
 
 .input {

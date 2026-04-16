@@ -6,13 +6,9 @@
   box-sizing: border-box;
 }
 
-.analysis-padding {
-  padding: 1.25rem;
-}
-
 .app-container {
   display: grid;
-  grid-template-rows: auto auto auto;
+  grid-template-rows: var(--avatar-height) auto auto;
   gap: 0.25rem;
   justify-items: center;
   max-width: var(--app-max-width);
@@ -20,13 +16,20 @@
   margin: 0 auto;
 }
 
+@media (max-width: 719px) {
+  .app-container {
+    grid-template-rows: 12rem auto minmax(var(--avatar-height), auto);
+  }
+}
+
+
 /* Grid layout for the header — offset to align with board center (not board+sidebar) */
 .coach-header {
   display: grid;
   gap: 1.5rem;
   align-items: center;
   width: 100%;
-  min-height: 8rem;
+  min-height: var(--avatar-height);
   padding-right: var(--sidebar-width);
   box-sizing: border-box;
 }
@@ -54,6 +57,13 @@
 .board-column {
   display: flex;
   flex-direction: column;
+}
+
+/* Offset content to align with the board center (not board+sidebar). */
+.sidebar-inset {
+  width: 100%;
+  padding-right: var(--sidebar-width);
+  box-sizing: border-box;
 }
 
 .footer {
