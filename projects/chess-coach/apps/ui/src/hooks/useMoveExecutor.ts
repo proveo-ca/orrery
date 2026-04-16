@@ -18,6 +18,20 @@ import {
   game as gameFromStore,
   isThreefoldRepetition,
 } from "~/store/gameStore";
+
+/**
+ * Emitted once per committed human move. Module-level so passive consumers
+ * (the game recorder) can subscribe without being wired into the executor.
+ */
+export const [lastHumanMoveInfo, setLastHumanMoveInfo] = createSignal<{
+  san: string;
+  lan: string;
+} | null>(null);
+
+/** Emitted once per committed AI move. */
+export const [lastAIMoveInfo, setLastAIMoveInfo] = createSignal<{
+  san: string;
+} | null>(null);
 import { type PlayerIdentity, difficulty, playerIdentity } from "~/store/settingsStore";
 import { logger } from "~/utils/logger";
 
@@ -122,6 +136,7 @@ export function useMoveExecutor(stopStockfish: () => void) {
       const moveData = await postMove({ humanMoveSan, fenAfterHuman, difficulty: difficulty() });
 
       const aiMove = addMoveSan(moveData.move);
+      setLastAIMoveInfo({ san: aiMove.san });
 
       const overState = getGameOverState(false);
       if (overState) {
@@ -180,8 +195,13 @@ export function useMoveExecutor(stopStockfish: () => void) {
       const humanMoveSan = result.san;
       const humanMoveLan = result.lan;
       const fenAfterHuman = result.after;
+      const wasBestMove = !!(
+        params.stockfishBestMove && humanMoveLan === params.stockfishBestMove
+      );
 
       stopStockfish();
+
+      setLastHumanMoveInfo({ san: humanMoveSan, lan: humanMoveLan });
 
       // Screens without an AI opponent (Solo Analysis) just apply the move;
       // no AI response, no coach advice.
@@ -196,7 +216,7 @@ export function useMoveExecutor(stopStockfish: () => void) {
         return { didMove: true, fenAfterHuman };
       }
 
-      if (params.stockfishBestMove && humanMoveLan === params.stockfishBestMove) {
+      if (wasBestMove) {
         const phrases = bestMovePhrases();
         setAdvice(phrases[Math.floor(Math.random() * phrases.length)]);
         dispatchCoachEvent({ type: "HUMAN_MOVE_BEST" });

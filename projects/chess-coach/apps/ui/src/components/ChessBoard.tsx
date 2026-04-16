@@ -12,6 +12,7 @@ import { PromotionModal } from "~/components/PromotionModal";
 import { useChessBoard } from "~/hooks/useChessBoard";
 import { capabilities } from "~/store/capabilitiesStore";
 import { adviceArrow, adviceHoveredSquares, setShowNewGame } from "~/store/coachStore";
+import { gameHistory } from "~/store/gameHistoryStore";
 import { isResigned } from "~/store/gameStore";
 import { activePlayerColor, opponentPieceSet, playerPieceSet } from "~/store/settingsStore";
 import { isTravelling } from "~/store/travelStore";
@@ -40,7 +41,10 @@ export const ChessBoard: Component = () => {
   const isCheck = () => activeGame().inCheck();
   const isCheckmate = () => activeGame().isCheckmate();
   const isStalemate = () => activeGame().isStalemate();
-  const isGameOver = () => !isTravelling() && (activeGame().isGameOver() || isResigned());
+  const isGameOver = () =>
+    capabilities().aiOpponent &&
+    !isTravelling() &&
+    (activeGame().isGameOver() || isResigned());
   const turn = () => activeGame().turn();
 
   // ── Touch-drag (mobile) ──────────────────────────────────────────────
@@ -57,7 +61,7 @@ export const ChessBoard: Component = () => {
     const touch = e.touches[0];
     if (!touch) return;
     const sq = squareFromTouch(touch);
-    if (!sq || board.isReplaying()) return;
+    if (!sq || board.isReplaying() || capabilities().readOnly) return;
 
     const g = board.game();
     const piece = g.get(sq);
@@ -247,7 +251,7 @@ export const ChessBoard: Component = () => {
             overlayClass={styles["game-over-overlay"]}
             contentClass={styles["game-over-banner"]}
           >
-            <div class={styles.result}>
+            <h1 class={styles.result}>
               {isResigned()
                 ? "Resignation"
                 : isCheckmate()
@@ -255,8 +259,17 @@ export const ChessBoard: Component = () => {
                   : isStalemate()
                     ? "Stalemate"
                     : "Draw"}
+            </h1>
+            <div class={styles["game-over-actions"]}>
+              <Button primary onClick={() => setShowNewGame(true)}>
+                Another Game
+              </Button>
+              {gameHistory().length > 0 && (
+                <Button primary href={`/review/${gameHistory()[0].id}`}>
+                  Review Game
+                </Button>
+              )}
             </div>
-            <Button onClick={() => setShowNewGame(true)}>Another game?</Button>
           </Modal>
 
           <PromotionModal

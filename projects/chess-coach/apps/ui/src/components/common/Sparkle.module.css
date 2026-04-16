@@ -4,7 +4,7 @@
 }
 
 .sparkle::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: -2px;
   border-radius: inherit;

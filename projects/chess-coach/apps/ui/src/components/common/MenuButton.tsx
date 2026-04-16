@@ -6,13 +6,16 @@ import styles from "~/components/common/MenuButton.module.css";
 
 export interface MenuButtonProps extends JSX.ButtonHTMLAttributes<HTMLButtonElement> {
   primary?: boolean;
+  href?: string;
 }
 
 export function MenuButton(props: MenuButtonProps) {
-  const [local, others] = splitProps(props, ["class", "children", "primary"]);
+  const [local, others] = splitProps(props, ["class", "children", "primary", "href"]);
   return (
     <Button
-      class={clsx(styles["menu-btn"], local.primary && styles["menu-btn--primary"], local.class)}
+      primary={local.primary}
+      href={local.href}
+      class={clsx(styles["menu-btn"], local.class)}
       {...others}
     >
       {local.children}

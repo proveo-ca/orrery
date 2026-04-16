@@ -1,4 +1,3 @@
-import { useNavigate } from "@solidjs/router";
 import clsx from "clsx";
 import { Show, createSignal } from "solid-js";
 import type { Component } from "solid-js";
@@ -25,10 +24,11 @@ import { useGameControls } from "~/hooks/useGameControls";
 import { useHintSparkle } from "~/hooks/useHintSparkle";
 import { capabilities } from "~/store/capabilitiesStore";
 import { setShowCredits, setShowNewGame, showCredits, showNewGame } from "~/store/coachStore";
+import { gameHistory } from "~/store/gameHistoryStore";
+import { resetGame } from "~/store/gameStore";
 import { isTravelling, travelFenHistory, travelIndex } from "~/store/travelStore.ts";
 
 export const MobileDrawer: Component = () => {
-  const navigate = useNavigate();
   const [open, setOpen] = createSignal(false);
   const { hintSparkleClass, dismissHintSparkle } = useHintSparkle();
   const controls = useGameControls();
@@ -42,7 +42,6 @@ export const MobileDrawer: Component = () => {
     handleForward,
     handleBackToLive,
     handleHint: baseHandleHint,
-    handleNewGame: baseHandleNewGame,
     handleResign: baseHandleResign,
   } = controls;
 
@@ -50,11 +49,6 @@ export const MobileDrawer: Component = () => {
     dismissHintSparkle();
     setOpen(false);
     void baseHandleHint();
-  };
-
-  const handleNewGame = () => {
-    setOpen(false);
-    baseHandleNewGame();
   };
 
   const handleResign = () => {
@@ -97,6 +91,16 @@ export const MobileDrawer: Component = () => {
             <FlagIcon />
           </IconButton>
         </Show>
+        <Show when={!capabilities().aiOpponent && !capabilities().readOnly}>
+          <IconButton
+            label="New Game"
+            labelPosition="bottom"
+            onClick={() => resetGame()}
+            aria-label="New game"
+          >
+            <PlusCircleIcon />
+          </IconButton>
+        </Show>
       </div>
 
       <div class={styles["top-right-nav"]}>
@@ -130,21 +134,18 @@ export const MobileDrawer: Component = () => {
       <div class={clsx(styles.drawer, open() && styles["drawer--open"])}>
         <Label variant="section">Menu</Label>
         <div class={styles["menu-list"]}>
-          <MenuButton
-            onClick={() => {
-              setOpen(false);
-              navigate("/selena");
-            }}
-          >
+          <MenuButton primary href="/selena" onClick={() => setOpen(false)}>
             Play with Selena
           </MenuButton>
-          <MenuButton
-            onClick={() => {
-              setOpen(false);
-              navigate("/analysis");
-            }}
-          >
+          <MenuButton href="/analysis" onClick={() => setOpen(false)}>
             Solo Analysis
+          </MenuButton>
+          <MenuButton
+            href="/review"
+            onClick={() => setOpen(false)}
+            disabled={gameHistory().length === 0}
+          >
+            Review
           </MenuButton>
           <Label variant="caption" class={styles["coming-soon"]}>
             Coming soon!
@@ -157,10 +158,6 @@ export const MobileDrawer: Component = () => {
 
         <Label variant="section">Controls</Label>
         <div class={styles["controls-row"]}>
-          <IconButton label="New Game" onClick={handleNewGame} aria-label="New game">
-            <PlusCircleIcon />
-          </IconButton>
-
           <IconButton
             label="Credits"
             onClick={() => {

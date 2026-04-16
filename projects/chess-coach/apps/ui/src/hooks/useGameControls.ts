@@ -1,18 +1,28 @@
 import { Chess } from "chess.js";
+import { createSignal } from "solid-js";
 
 import { DEFAULT_STOCKFISH_WORKER_URL } from "~/engine/StockfishEngine.ts";
+import { markHintPressed } from "~/hooks/useGameRecorder";
 import { useHint } from "~/hooks/useHint";
 import { postExplainStream } from "~/services/api";
 import { resolveMode } from "~/services/runtimeMode";
 import { accumulateStream } from "~/services/streamUtils";
 import { capabilities } from "~/store/capabilitiesStore";
+
+/**
+ * Set by `handleHint` once Stockfish returns a UCI hint. Consumed (and
+ * cleared) by the game recorder when the human's next move is committed
+ * so it can mark that move `isHintUsed`. Module-level so it is shared
+ * across every `useGameControls` instance (Sidebar + MobileDrawer both
+ * mount one).
+ */
+export const [pendingHintUci, setPendingHintUci] = createSignal<string | null>(null);
 import {
   clearHoverOverride,
   dispatchCoachEvent,
   setAdvice,
   setAdviceArrow,
   setAdviceHoveredSquares,
-  setShowNewGame,
 } from "~/store/coachStore";
 import {
   currentFen,
@@ -21,7 +31,6 @@ import {
   goBack,
   goForward,
   isResigned,
-  resetGame,
   resignGame,
 } from "~/store/gameStore";
 import {
@@ -76,23 +85,15 @@ export const useGameControls = () => {
     clearHoverOverride();
   };
 
-  // Screens with an AI opponent need the NewGamePanel (color + difficulty +
-  // server handshake). Screens without one (Solo Analysis) just reset the
-  // board's FEN in place — no modal, no network call.
-  const handleNewGame = () => {
-    if (capabilities().aiOpponent) {
-      setShowNewGame(true);
-    } else {
-      resetGame();
-    }
-  };
-
   const handleResign = () => {
     resignGame();
   };
 
   const handleHint = async () => {
     try {
+      // Mark hint pressed immediately so the recorder flags the next move.
+      markHintPressed();
+
       dispatchCoachEvent({ type: "AI_THINKING" });
       const uciMove = await requestHint(currentFen(), 10);
 
@@ -101,6 +102,9 @@ export const useGameControls = () => {
         dispatchCoachEvent({ type: "AI_MOVED" });
         return;
       }
+
+      // Also stash the UCI for legacy "hint followed" tracking.
+      setPendingHintUci(uciMove);
 
       const game = new Chess(currentFen());
       const gameInProgress = !game.isGameOver() && !isResigned();
@@ -157,7 +161,6 @@ export const useGameControls = () => {
     handleForward,
     handleBackToLive,
     handleHint,
-    handleNewGame,
     handleResign,
   };
 };

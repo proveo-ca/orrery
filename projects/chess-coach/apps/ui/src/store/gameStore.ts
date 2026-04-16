@@ -30,6 +30,13 @@ function _bump() {
   _persist();
 }
 
+/** Trigger reactivity without writing to localStorage. Used by loadFen /
+ *  loadGame so ephemeral screen loads don't overwrite the coach's saved game. */
+function _notify() {
+  _setCachedHistory(_game.history({ verbose: true }));
+  _setVersion((v) => v + 1);
+}
+
 // ── Persistence ─────────────────────────────────────────────────────────
 function _persist() {
   try {
@@ -39,6 +46,7 @@ function _persist() {
         pgn: _game.pgn(),
         currentIndex: _currentIndex(),
         startingFen: _startingFen,
+        isResigned: _isResigned(),
       }),
     );
   } catch (e) {
@@ -63,6 +71,7 @@ function _restore() {
       if (typeof parsed.currentIndex === "number") {
         _setCurrentIndex(Math.min(parsed.currentIndex, _game.history().length));
       }
+      if (parsed.isResigned) _setIsResigned(true);
     } else if (parsed.fenHistory) {
       // Legacy format — replay FEN transitions to rebuild history
       _migrateFromLegacy(parsed.fenHistory, parsed.currentIndex ?? 0);
@@ -102,6 +111,20 @@ function _migrateFromLegacy(fens: string[], index: number) {
 
 // Hydrate on module load
 _restore();
+
+/**
+ * Re-read the coach's game from localStorage. Call on CoachScreen mount so
+ * navigating back from Review / Analysis restores the live game instead of
+ * whatever those screens loaded into gameStore.
+ */
+export const restoreGame = () => {
+  _game = new Chess();
+  _startingFen = STARTING_FEN;
+  _setCurrentIndex(0);
+  _setIsResigned(false);
+  _restore();
+  _setVersion((v) => v + 1);
+};
 
 // ── Derived accessors ───────────────────────────────────────────────────
 
@@ -179,6 +202,13 @@ export const goBack = () => {
   }
 };
 
+/** Jump the view cursor to an arbitrary ply, clamped to [0, history length]. */
+export const setViewIndex = (index: number) => {
+  const total = _game.history().length;
+  _setCurrentIndex(Math.max(0, Math.min(index, total)));
+  _persist();
+};
+
 export const goForward = () => {
   _version(); // reactive read
   if (_currentIndex() < _game.history().length) {
@@ -189,6 +219,7 @@ export const goForward = () => {
 
 export const resignGame = () => {
   _setIsResigned(true);
+  _persist();
   dispatchCoachEvent({ type: "GAME_OVER", result: "loss" });
   setAdvice("You resigned. Another game?");
 };
@@ -204,7 +235,22 @@ export const loadFen = (fen: string) => {
   _startingFen = fen;
   _setCurrentIndex(0);
   _setIsResigned(false);
-  _bump();
+  _notify(); // ephemeral — don't overwrite the coach's saved game
+};
+
+/**
+ * Replay a stored game into gameStore (PGN + startingFen), parking the view
+ * cursor at the starting position so the user can step forward through the
+ * move history. Used by ReviewScreen. Throws if the PGN is malformed.
+ */
+export const loadGame = (args: { pgn: string; startingFen: string }) => {
+  const next = new Chess(args.startingFen);
+  next.loadPgn(args.pgn);
+  _game = next;
+  _startingFen = args.startingFen;
+  _setCurrentIndex(0);
+  _setIsResigned(false);
+  _notify(); // ephemeral — don't overwrite the coach's saved game
 };
 
 export const resetGame = (fen: string = STARTING_FEN) => {

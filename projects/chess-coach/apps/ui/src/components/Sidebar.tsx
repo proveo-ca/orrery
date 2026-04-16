@@ -29,6 +29,7 @@ import {
   showNewGame,
   showSettings,
 } from "~/store/coachStore";
+import { resetGame } from "~/store/gameStore";
 import { isTravelling, travelFenHistory, travelIndex } from "~/store/travelStore.ts";
 
 export const Sidebar: Component = () => {
@@ -44,7 +45,6 @@ export const Sidebar: Component = () => {
     handleForward,
     handleBackToLive,
     handleHint: baseHandleHint,
-    handleNewGame,
     handleResign,
   } = controls;
 
@@ -102,9 +102,11 @@ export const Sidebar: Component = () => {
         </IconButton>
       </Show>
 
-      <IconButton label="New Game" onClick={handleNewGame} aria-label="New game">
-        <PlusCircleIcon />
-      </IconButton>
+      <Show when={!capabilities().aiOpponent && !capabilities().readOnly}>
+        <IconButton label="New Game" onClick={() => resetGame()} aria-label="New game">
+          <PlusCircleIcon />
+        </IconButton>
+      </Show>
 
       <IconButton
         label="Credits"

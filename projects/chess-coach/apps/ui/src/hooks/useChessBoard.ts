@@ -248,7 +248,7 @@ export function useChessBoard() {
   };
 
   const handleSquareHover = (square: Square) => {
-    if (isReplaying()) return;
+    if (isReplaying() || capabilities().readOnly) return;
 
     setHoveredSquare(square);
     applyHoverBaseline(square);
@@ -295,7 +295,7 @@ export function useChessBoard() {
   };
 
   const handleSquareClick = async (square: Square) => {
-    if (isReplaying()) return;
+    if (isReplaying() || capabilities().readOnly) return;
 
     const g = game();
     const selected = selectedSquare();
@@ -358,7 +358,7 @@ export function useChessBoard() {
   };
 
   const handleDragStart = (square: Square, e: DragEvent) => {
-    if (isReplaying()) {
+    if (isReplaying() || capabilities().readOnly) {
       e.preventDefault();
       return;
     }

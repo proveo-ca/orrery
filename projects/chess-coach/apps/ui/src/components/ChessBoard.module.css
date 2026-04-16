@@ -25,6 +25,9 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   position: relative;
   touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
   overflow: hidden; /* clip pieces sliding outside the board edge */
 }
 
@@ -218,23 +221,28 @@
 .game-over-banner {
   background: rgba(0, 0, 0, 0.85);
   color: #fff;
-  padding: 1rem 2rem;
-  font-weight: bold;
-  text-transform: uppercase;
-  letter-spacing: 4px;
   border: 2px solid #76b3e1;
   border-radius: 8px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   gap: 1.5rem;
   justify-content: center;
 
-  .result {
+  h1 {
+    padding: 1rem 2rem 2rem;
+    letter-spacing: 4px;
+    font-weight: bold;
+    text-transform: uppercase;
     font-size: clamp(1.2rem, 5vw, 2rem);
-    padding-bottom: 2rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
   }
+}
+
+.game-over-actions {
+  display: flex;
+  align-items: stretch;
+  gap: 1rem;
 }
 
 .square.in-check {

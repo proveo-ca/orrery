@@ -57,10 +57,8 @@ test.describe("Analysis screen", () => {
     await expect(c1.locator("img[alt='b q']")).toBeVisible({ timeout: 5_000 });
     await expect(c2.locator("img")).toHaveCount(0);
 
-    // Qc1 delivers mate against Ka1 (a2 covered by Ka3, b1 and b2 by the
-    // queen). The game-over modal should show the Checkmate result and
-    // an "Another game?" CTA.
-    await expect(page.getByText("Checkmate")).toBeVisible({ timeout: 5_000 });
-    await expect(page.getByRole("button", { name: "Another game?" })).toBeVisible();
+    // Qc1 delivers mate against Ka1. The game-over modal is Coach-only,
+    // so it should NOT appear on the Analysis screen.
+    await expect(page.getByText("Checkmate")).not.toBeVisible({ timeout: 2_000 });
   });
 });

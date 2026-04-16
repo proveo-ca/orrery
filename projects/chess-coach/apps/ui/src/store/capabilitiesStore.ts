@@ -23,6 +23,7 @@ export type ScreenCapabilities = {
   // Board interaction
   historyBranching: boolean; // past-history moves branch instead of lock UI
   freeColorControl: boolean; // can touch any color on its turn
+  readOnly: boolean; // disables all piece interaction (used by ReviewScreen)
 
   // Visual
   opponentUsesPlayerPieceSet: boolean; // both sides render with player's piece set
@@ -38,6 +39,7 @@ export const COACH_CAPABILITIES: ScreenCapabilities = {
   showBestMove: false,
   historyBranching: false,
   freeColorControl: false,
+  readOnly: false,
   opponentUsesPlayerPieceSet: false,
 };
 
@@ -51,6 +53,23 @@ export const ANALYSIS_CAPABILITIES: ScreenCapabilities = {
   showBestMove: true,
   historyBranching: true,
   freeColorControl: true,
+  readOnly: false,
+  opponentUsesPlayerPieceSet: true,
+};
+
+export const REVIEW_CAPABILITIES: ScreenCapabilities = {
+  hint: false,
+  travel: false,
+  evalBarAlwaysVisible: true,
+  aiOpponent: false,
+  blunderDetection: false,
+  continuousAnalysis: true,
+  showBestMove: false,
+  // historyBranching=true so past-position navigation doesn't lock the UI
+  // behind the replay overlay — the user IS navigating past positions.
+  historyBranching: true,
+  freeColorControl: false,
+  readOnly: true,
   opponentUsesPlayerPieceSet: true,
 };
 

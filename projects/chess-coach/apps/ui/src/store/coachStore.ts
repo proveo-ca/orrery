@@ -170,7 +170,13 @@ export type CoachEvent =
   | { type: "SLEEPING" }
   | { type: "WAKE_UP" };
 
+// Mirrors every dispatched event so passive listeners (e.g. the game
+// recorder on CoachScreen) can react without the dispatcher needing to
+// know about them. Not a queue — subscribers use `on(lastCoachEvent, ...)`.
+export const [lastCoachEvent, setLastCoachEvent] = createSignal<CoachEvent | null>(null);
+
 export const dispatchCoachEvent = (event: CoachEvent) => {
+  setLastCoachEvent(event);
   switch (event.type) {
     case "APP_READY":
       setCoachState("isAppReady", true);

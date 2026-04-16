@@ -6,6 +6,7 @@ import { Label } from "~/components/common/Label";
 import { MenuButton } from "~/components/common/MenuButton";
 import { Select } from "~/components/common/Select";
 import styles from "~/components/common/SplashScreen.module.css";
+import { gameHistory } from "~/store/gameHistoryStore";
 import { playerIdentity, setPlayerIdentity, type PlayerIdentity } from "~/store/settingsStore";
 
 const IDENTITY_OPTIONS: PlayerIdentity[] = ["Human", "Cat", "Dog", "Rat"];
@@ -38,6 +39,9 @@ export const MenuScreen: Component = () => {
           Play with Selena
         </MenuButton>
         <MenuButton onClick={() => navigate("/analysis")}>Solo Analysis</MenuButton>
+        <MenuButton onClick={() => navigate("/review")} disabled={gameHistory().length === 0}>
+          Review
+        </MenuButton>
         <MenuButton disabled>Learn to Play</MenuButton>
         <MenuButton disabled>Play LAN</MenuButton>
         <Label variant="caption" class={styles["coming-soon"]}>

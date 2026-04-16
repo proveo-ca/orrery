@@ -16,9 +16,10 @@ import {
 } from "~/components/DebugControls";
 import { MobileDrawer } from "~/components/MobileDrawer";
 import { Sidebar } from "~/components/Sidebar";
+import { useGameRecorder } from "~/hooks/useGameRecorder";
 import { checkEngineSupport } from "~/services/browserSupport";
 import { COACH_CAPABILITIES, setCapabilities } from "~/store/capabilitiesStore";
-import { currentIndex, fenHistory } from "~/store/gameStore";
+import { currentIndex, fenHistory, restoreGame } from "~/store/gameStore";
 import { isTravelling } from "~/store/travelStore";
 
 /**
@@ -32,8 +33,20 @@ export const CoachScreen: Component = () => {
   const [unsupportedReason, setUnsupportedReason] = createSignal<string | null>(null);
   const [debugInfo, setDebugInfo] = createSignal<string>("");
 
+  // Passively record this game (PGN + per-move annotations) for later
+  // review at /review/:id. Mounted here so it only runs on the Coach
+  // screen where the AI-driven metadata (best-move, hint) is meaningful.
+  useGameRecorder();
+
   onMount(() => {
     setCapabilities(COACH_CAPABILITIES);
+
+    // Restore the coach's live game from localStorage. Other screens
+    // (Review, Analysis) load ephemeral positions into gameStore without
+    // persisting, so the coach's slot is still intact. If the restored
+    // game was resigned / over, the game-over modal shows naturally.
+    restoreGame();
+
     const { supported, reason, debug } = checkEngineSupport();
     if (!supported) {
       setUnsupportedReason(reason);
