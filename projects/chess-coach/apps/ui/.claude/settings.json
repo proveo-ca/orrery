@@ -1,0 +1,9 @@
+{
+  "enabledPlugins": {
+    "kotlin-lsp@claude-plugins-official": true,
+    "vtsls@claude-code-lsps": false,
+    "github@claude-plugins-official": true,
+    "kotlin-lsp@claude-code-lsps": false,
+    "frontend-design@claude-plugins-official": true
+  }
+}

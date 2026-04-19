@@ -1,3 +1,4 @@
+// SPEC: _spec/chess-coach/ui/components.puml
 /**
  * Central resolution of the app's runtime mode.
  *

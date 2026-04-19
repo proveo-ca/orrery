@@ -1,3 +1,4 @@
+// SPEC: _spec/chess-coach/ui/components.puml
 import { useParams } from "@solidjs/router";
 import { Show, createEffect, createMemo, on } from "solid-js";
 import type { Component } from "solid-js";

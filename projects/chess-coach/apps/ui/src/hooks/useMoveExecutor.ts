@@ -1,66 +1,97 @@
+// SPEC: _spec/chess-coach/ui/components.puml
 import { type Chess, type Square } from "chess.js";
 import { createSignal } from "solid-js";
 
-import { postAdviceStream, postMove } from "~/services/api";
-import { accumulateStream } from "~/services/streamUtils";
+import { postMove } from "~/services/api";
 import { capabilities } from "~/store/capabilitiesStore";
-import {
-  bestMovePhrases,
-  dispatchCoachEvent,
-  setAdvice,
-  setAdviceArrow,
-  setAdviceHoveredSquares,
-  thinkingPhrases,
-} from "~/store/coachStore";
 import {
   addMove,
   addMoveSan,
   game as gameFromStore,
   isThreefoldRepetition,
 } from "~/store/gameStore";
+import { difficulty } from "~/store/settingsStore";
+import { logger } from "~/utils/logger";
 
-/**
- * Emitted once per committed human move. Module-level so passive consumers
- * (the game recorder) can subscribe without being wired into the executor.
- */
 export const [lastHumanMoveInfo, setLastHumanMoveInfo] = createSignal<{
   san: string;
   lan: string;
+  wasBestMove: boolean;
+  gameOver: { result: "win" | "loss" | "draw"; message: string } | null;
 } | null>(null);
 
-/** Emitted once per committed AI move. */
 export const [lastAIMoveInfo, setLastAIMoveInfo] = createSignal<{
   san: string;
+  captured?: string;
+  humanMoveSan: string;
+  fen: string;
+  move: string;
+  gameOver: { result: "win" | "loss" | "draw"; message: string } | null;
 } | null>(null);
-import { type PlayerIdentity, difficulty, playerIdentity } from "~/store/settingsStore";
-import { logger } from "~/utils/logger";
 
-const QUEEN_CAPTURE_PHRASES: Record<PlayerIdentity, string[]> = {
-  Human: [
-    "I am the real Queen.",
-    "That other Queen was too ugly anyway.",
-    "The best piece, but not all is lost.",
-    "Goodbye, Your Majesty. I won't miss you.",
-  ],
-  Cat: [
-    "An honorable fight, your Highness.",
-    "I guess I'm the new Lioness now.",
-    "Miscalculated zoomies.",
-    "She fought well, but I had all my nine lives.",
-  ],
-  Dog: [
-    "The moon is sad today.",
-    "Fierce battle, respect.",
-    "I'll remember her in the moonlight.",
-    "The bravest. Almost got me.",
-  ],
-  Rat: [
-    "The legendary Kugaan Jaad is mine.",
-    "Hopefully the Haida people will understand me.",
-    "Sorry King Capy, no more Queen.",
-    "Too strong for that undeserving army.",
-  ],
-};
+/** Emitted when the AI turn fails so coach behavior can react. */
+export const [lastAIError, setLastAIError] = createSignal<string | null>(null);
+
+/**
+ * Chess.com / USCF insufficient material rules:
+ * - Both sides each have at most one minor piece (K, K+B, or K+N) → draw
+ * - K+2N vs lone K → draw (no forced mate; Chess.com follows USCF here)
+ * - K+2N vs K+minor → NOT a draw (checkmate is possible with the extra piece)
+ */
+function isInsufficientMaterial(g: ReturnType<typeof gameFromStore>): boolean {
+  let wQ = 0, wR = 0, wB = 0, wN = 0, wP = 0;
+  let bQ = 0, bR = 0, bB = 0, bN = 0, bP = 0;
+
+  for (const piece of g.board().flat()) {
+    if (!piece) continue;
+    if (piece.color === "w") {
+      if (piece.type === "q") wQ++;
+      else if (piece.type === "r") wR++;
+      else if (piece.type === "b") wB++;
+      else if (piece.type === "n") wN++;
+      else if (piece.type === "p") wP++;
+    } else {
+      if (piece.type === "q") bQ++;
+      else if (piece.type === "r") bR++;
+      else if (piece.type === "b") bB++;
+      else if (piece.type === "n") bN++;
+      else if (piece.type === "p") bP++;
+    }
+  }
+
+  if (wQ || bQ || wR || bR || wP || bP) return false;
+
+  const wMinor = wB + wN;
+  const bMinor = bB + bN;
+
+  if (wMinor <= 1 && bMinor <= 1) return true;
+
+  // K+2N vs lone K only
+  if (wN === 2 && wB === 0 && bMinor === 0) return true;
+  if (bN === 2 && bB === 0 && wMinor === 0) return true;
+
+  return false;
+}
+
+function getGameOverState(isHumanTurn: boolean) {
+  const g = gameFromStore();
+  if (g.isCheckmate()) {
+    return {
+      result: isHumanTurn ? "win" : "loss",
+      message: isHumanTurn ? "Checkmate! You win!" : "Checkmate! I win!",
+    } as const;
+  }
+  if (isThreefoldRepetition()) {
+    return { result: "draw", message: "Game over — draw by threefold repetition." } as const;
+  }
+  if (isInsufficientMaterial(g)) {
+    return { result: "draw", message: "Game over — draw by insufficient material." } as const;
+  }
+  if (g.isGameOver()) {
+    return { result: "draw", message: "Game over. It's a draw." } as const;
+  }
+  return null;
+}
 
 type PromotionPiece = "q" | "r" | "b" | "n";
 
@@ -77,90 +108,25 @@ type ExecuteMoveParams = {
   onPromotionRequired?: () => Promise<PromotionPiece | null>;
 };
 
-function getGameOverState(isHumanTurn: boolean) {
-  const g = gameFromStore();
-  if (g.isCheckmate()) {
-    return {
-      result: isHumanTurn ? "win" : "loss",
-      message: isHumanTurn ? "Checkmate! You win!" : "Checkmate! I win!",
-    } as const;
-  }
-  if (isThreefoldRepetition()) {
-    return { result: "draw", message: "Game over — draw by threefold repetition." } as const;
-  }
-  if (g.isGameOver()) {
-    return { result: "draw", message: "Game over. It's a draw." } as const;
-  }
-  return null;
-}
-
 export function useMoveExecutor(stopStockfish: () => void) {
-  const [adviceAbortController, setAdviceAbortController] = createSignal<AbortController | null>(
-    null,
-  );
-
-  const abortAdvice = () => {
-    const controller = adviceAbortController();
-    if (controller) controller.abort();
-    setAdviceAbortController(null);
-  };
-
-  const _streamAdvice = async (humanMoveSan: string, moveData: { fen: string; move: string }) => {
-    const controller = new AbortController();
-    setAdviceAbortController(controller);
-
-    try {
-      const fullAdvice = await accumulateStream(
-        postAdviceStream,
-        { humanMove: humanMoveSan, aiMove: moveData.move, fen: moveData.fen },
-        setAdvice,
-        { signal: controller.signal },
-      );
-
-      const adviceLower = fullAdvice.toLowerCase();
-      const isBlunder = adviceLower.includes("blunder") || adviceLower.includes("mistake");
-      dispatchCoachEvent({ type: "ADVICE_RECEIVED", isBlunder });
-    } catch (err: any) {
-      if (err.name === "AbortError") {
-        logger.action("Advice request aborted due to new move.");
-      } else {
-        logger.error("Advice stream failed", err);
-        setAdvice("Error getting advice.");
-        dispatchCoachEvent({ type: "AI_ERROR" });
-      }
-    }
-  };
-
   const _processAITurn = async (humanMoveSan: string, fenAfterHuman: string) => {
     try {
       const moveData = await postMove({ humanMoveSan, fenAfterHuman, difficulty: difficulty() });
 
       const aiMove = addMoveSan(moveData.move);
-      setLastAIMoveInfo({ san: aiMove.san });
+      const gameOver = getGameOverState(false) ?? null;
 
-      const overState = getGameOverState(false);
-      if (overState) {
-        dispatchCoachEvent({ type: "GAME_OVER", result: overState.result });
-        setAdvice(overState.message);
-        return;
-      }
-
-      // Easter egg: Selena captures the Queen
-      if (aiMove.captured === "q") {
-        const phrases = QUEEN_CAPTURE_PHRASES[playerIdentity()];
-        setAdvice(phrases[Math.floor(Math.random() * phrases.length)]);
-        dispatchCoachEvent({ type: "HUMAN_MOVE_BEST" }); // triggers "happy" emotion
-        return;
-      }
-
-      dispatchCoachEvent({ type: "AI_MOVED" });
-
-      // Kick off advice stream (non-blocking)
-      void _streamAdvice(humanMoveSan, moveData);
+      setLastAIMoveInfo({
+        san: aiMove.san,
+        captured: aiMove.captured as string | undefined,
+        humanMoveSan,
+        fen: moveData.fen,
+        move: moveData.move,
+        gameOver,
+      });
     } catch (err) {
       logger.error("Error communicating with the coach", err);
-      setAdvice("Error communicating with the coach.");
-      dispatchCoachEvent({ type: "AI_ERROR" });
+      setLastAIError("Error communicating with the coach.");
     }
   };
 
@@ -188,10 +154,6 @@ export function useMoveExecutor(stopStockfish: () => void) {
     try {
       const result = addMove({ from: selected, to: square, promotion });
 
-      abortAdvice();
-      setAdviceArrow(null);
-      setAdviceHoveredSquares([]);
-
       const humanMoveSan = result.san;
       const humanMoveLan = result.lan;
       const fenAfterHuman = result.after;
@@ -201,32 +163,13 @@ export function useMoveExecutor(stopStockfish: () => void) {
 
       stopStockfish();
 
-      setLastHumanMoveInfo({ san: humanMoveSan, lan: humanMoveLan });
+      const gameOver = capabilities().aiOpponent ? (getGameOverState(true) ?? null) : null;
+      setLastHumanMoveInfo({ san: humanMoveSan, lan: humanMoveLan, wasBestMove, gameOver });
 
-      // Screens without an AI opponent (Solo Analysis) just apply the move;
-      // no AI response, no coach advice.
-      if (!capabilities().aiOpponent) {
+      if (!capabilities().aiOpponent || gameOver) {
         return { didMove: true, fenAfterHuman };
       }
 
-      const overState = getGameOverState(true);
-      if (overState) {
-        dispatchCoachEvent({ type: "GAME_OVER", result: overState.result });
-        setAdvice(overState.message);
-        return { didMove: true, fenAfterHuman };
-      }
-
-      if (wasBestMove) {
-        const phrases = bestMovePhrases();
-        setAdvice(phrases[Math.floor(Math.random() * phrases.length)]);
-        dispatchCoachEvent({ type: "HUMAN_MOVE_BEST" });
-      } else {
-        dispatchCoachEvent({ type: "HUMAN_MOVE_NORMAL" });
-        const phrases = thinkingPhrases();
-        setAdvice(phrases[Math.floor(Math.random() * phrases.length)]);
-      }
-
-      // Trigger AI asynchronously
       void _processAITurn(humanMoveSan, fenAfterHuman);
 
       return { didMove: true, fenAfterHuman };
@@ -236,5 +179,5 @@ export function useMoveExecutor(stopStockfish: () => void) {
     }
   };
 
-  return { executeMove, abortAdvice };
+  return { executeMove };
 }

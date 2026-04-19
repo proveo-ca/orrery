@@ -1,3 +1,4 @@
+// SPEC: _spec/chess-coach/ui/components.puml
 import { useLocation } from "@solidjs/router";
 import { Show } from "solid-js";
 import type { Component } from "solid-js";
@@ -10,6 +11,7 @@ import {
   CheckIcon,
   CogIcon,
   FlagIcon,
+  FlipBoardIcon,
   HintIcon,
   PlusCircleIcon,
   SearchIcon,
@@ -34,6 +36,7 @@ import {
   showSettings,
 } from "~/store/coachStore";
 import { resetGame } from "~/store/gameStore";
+import { activePlayerColor, setActivePlayerColor } from "~/store/settingsStore";
 import { isTravelling, travelFenHistory, travelIndex } from "~/store/travelStore.ts";
 
 const isRoute = (pathname: string, route: string) =>
@@ -113,6 +116,16 @@ export const Sidebar: Component = () => {
       <Show when={!capabilities().aiOpponent && !capabilities().readOnly}>
         <IconButton label="New Game" onClick={() => resetGame()} aria-label="New game">
           <PlusCircleIcon />
+        </IconButton>
+      </Show>
+
+      <Show when={capabilities().flipBoard}>
+        <IconButton
+          label="Flip"
+          onClick={() => setActivePlayerColor(activePlayerColor() === "w" ? "b" : "w")}
+          aria-label="Flip board"
+        >
+          <FlipBoardIcon />
         </IconButton>
       </Show>
 

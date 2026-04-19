@@ -5,6 +5,7 @@ import { URL, fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
 import oxlintPlugin from "vite-plugin-oxlint";
 import solid from "vite-plugin-solid";
+import { VitePWA } from "vite-plugin-pwa";
 
 const isWebTarget = process.env.VITE_TARGET === "web";
 
@@ -16,6 +17,52 @@ export default defineConfig({
   plugins: [
     solid(),
     oxlintPlugin(),
+    VitePWA({
+      registerType: "autoUpdate",
+      workbox: {
+        globIgnores: ["**/*.wasm", "**/models/**", "**/web-engine/**", "**/*.worker-*.js"],
+        runtimeCaching: [
+          {
+            urlPattern: /\.wasm$/,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "wasm-cache",
+              expiration: { maxEntries: 10, maxAgeSeconds: 30 * 24 * 60 * 60 },
+            },
+          },
+          {
+            urlPattern: /\/(web-engine|models)\//,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "engine-model-cache",
+              expiration: { maxEntries: 50, maxAgeSeconds: 30 * 24 * 60 * 60 },
+            },
+          },
+          {
+            urlPattern: /\.worker-[^/]+\.js$/,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "worker-cache",
+              expiration: { maxEntries: 5, maxAgeSeconds: 30 * 24 * 60 * 60 },
+            },
+          },
+        ],
+      },
+      manifest: {
+        name: "Selena Chess Coach",
+        short_name: "Chess Coach",
+        description: "AI-powered chess coach",
+        start_url: "/chess/",
+        scope: "/chess/",
+        display: "standalone",
+        background_color: "#1a1a2e",
+        theme_color: "#1a1a2e",
+        icons: [
+          { src: "/chess/icon-192.png", sizes: "192x192", type: "image/png" },
+          { src: "/chess/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any maskable" },
+        ],
+      },
+    }),
     {
       name: "isolate-and-debug",
       configureServer(server) {

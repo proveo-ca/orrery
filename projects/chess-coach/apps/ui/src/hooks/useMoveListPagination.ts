@@ -1,3 +1,4 @@
+// SPEC: _spec/chess-coach/ui/components.puml
 import { createEffect, createMemo, createSignal } from "solid-js";
 
 import type { MoveRow } from "~/engine/moveAnnotations";

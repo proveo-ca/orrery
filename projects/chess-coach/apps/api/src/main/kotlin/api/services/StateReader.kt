@@ -1,3 +1,4 @@
+// SPEC: _spec/chess-coach/api/components.puml
 package api.services
 
 import java.io.File

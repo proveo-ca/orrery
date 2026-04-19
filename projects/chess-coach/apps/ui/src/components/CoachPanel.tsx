@@ -1,3 +1,4 @@
+// SPEC: _spec/chess-coach/ui/components.puml
 import { Chess } from "chess.js";
 import { For, Show } from "solid-js";
 import type { Component } from "solid-js";

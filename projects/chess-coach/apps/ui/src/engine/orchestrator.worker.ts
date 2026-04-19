@@ -1,3 +1,4 @@
+// SPEC: _spec/chess-coach/ui/components.puml
 /// <reference lib="webworker" />
 import { type LlmClient, NoopLlmClient, WebLlmClient } from "~/engine/LlmClient";
 import { Orchestrator, type LlmDebugEvent } from "~/engine/Orchestrator";

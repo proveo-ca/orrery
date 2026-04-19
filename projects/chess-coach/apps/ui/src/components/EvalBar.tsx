@@ -1,3 +1,4 @@
+// SPEC: _spec/chess-coach/ui/components.puml
 import { type Component } from "solid-js";
 
 import styles from "~/components/EvalBar.module.css";

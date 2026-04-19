@@ -1,3 +1,4 @@
+// SPEC: _spec/chess-coach/ui/components.puml
 import { Show, createSignal } from "solid-js";
 import type { Component } from "solid-js";
 

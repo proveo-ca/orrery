@@ -1,7 +1,9 @@
+// SPEC: _spec/chess-coach/ui/components.puml
 import { Chess, type Color, type Square } from "chess.js";
 import { createEffect, createMemo, createSignal, onCleanup, untrack } from "solid-js";
 
 import { DEFAULT_STOCKFISH_WORKER_URL } from "~/engine/StockfishEngine.ts";
+import { useCoachBehavior } from "~/hooks/useCoachBehavior";
 import { type HoverEval, useHoverEvaluator } from "~/hooks/useHoverEvaluator";
 import { useMoveExecutor } from "~/hooks/useMoveExecutor";
 import { useStockfishWorker } from "~/hooks/useStockfishWorker";
@@ -87,6 +89,7 @@ export function useChessBoard() {
   };
   const { send, analysis } = useStockfishWorker(DEFAULT_STOCKFISH_WORKER_URL);
   const moveExecutor = useMoveExecutor(() => send("stop"));
+  const coachBehavior = useCoachBehavior();
 
   // When historyBranching is enabled, past-history positions are fully
   // editable (moves branch), so we never enter the "replaying" state that
@@ -177,7 +180,7 @@ export function useChessBoard() {
   });
 
   onCleanup(() => {
-    moveExecutor.abortAdvice();
+    coachBehavior.abortAdvice();
     clearTimeout(evalTimeout);
   });
 

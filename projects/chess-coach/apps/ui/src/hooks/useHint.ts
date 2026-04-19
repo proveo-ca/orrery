@@ -1,3 +1,4 @@
+// SPEC: _spec/chess-coach/ui/components.puml
 import { createSignal, onCleanup, onMount } from "solid-js";
 
 import { DEFAULT_STOCKFISH_WORKER_URL } from "~/engine/StockfishEngine.ts";
@@ -92,7 +93,7 @@ export function useHint(workerPath: string = DEFAULT_STOCKFISH_WORKER_URL) {
     });
   });
 
-  const requestHint = (fen: string, depth: number = 10): Promise<string> => {
+  const requestHint = (fen: string, depth: number = 16): Promise<string> => {
     cleanupPending(new Error("hint request superseded by a new request"));
     setPendingHint(true);
 

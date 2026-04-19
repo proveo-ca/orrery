@@ -1,3 +1,4 @@
+// SPEC: _spec/chess-coach/ui/components.puml
 import { createEffect, createSignal, on } from "solid-js";
 
 import { setPendingHintUci } from "~/hooks/useGameControls";

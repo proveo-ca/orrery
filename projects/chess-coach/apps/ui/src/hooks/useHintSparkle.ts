@@ -1,3 +1,4 @@
+// SPEC: _spec/chess-coach/ui/components.puml
 import { createSignal, onCleanup } from "solid-js";
 
 import styles from "~/components/common/Sparkle.module.css";

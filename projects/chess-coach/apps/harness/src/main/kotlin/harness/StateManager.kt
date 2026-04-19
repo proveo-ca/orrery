@@ -1,3 +1,5 @@
+// SPEC: _spec/chess-coach/harness/components.puml
+// SPEC: _spec/chess-coach/harness/lifecycle.puml
 package harness
 
 import java.io.File

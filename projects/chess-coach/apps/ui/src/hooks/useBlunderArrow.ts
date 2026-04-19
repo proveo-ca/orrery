@@ -1,3 +1,4 @@
+// SPEC: _spec/chess-coach/ui/components.puml
 import { createEffect, on } from "solid-js";
 
 import type { AnnotationTag } from "~/engine/moveAnnotations";

@@ -1,3 +1,4 @@
+// SPEC: _spec/chess-coach/ui/components.puml
 import { polyglotHashFromPgn } from "~/engine/polyglotZobrist";
 import { deleteAnalysisCache } from "~/hooks/useGameAnalysis";
 import { createPersistedStore } from "~/store/createPersistedStore";
@@ -27,7 +28,7 @@ type GameHistoryState = {
   inProgress: GameRecord | null;
 };
 
-const MAX_GAMES = 10;
+const MAX_GAMES = 1000;
 
 const [state, setState] = createPersistedStore<GameHistoryState>("chess_coach_game_history", {
   games: [],

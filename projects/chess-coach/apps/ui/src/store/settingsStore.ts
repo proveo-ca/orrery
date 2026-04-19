@@ -1,3 +1,4 @@
+// SPEC: _spec/chess-coach/ui/components.puml
 import { capabilities } from "~/store/capabilitiesStore";
 import { createPersistedStore } from "~/store/createPersistedStore";
 
@@ -20,7 +21,7 @@ const [settingsState, setSettingsState] = createPersistedStore("chess_coach_sett
   activePlayerColor: "w" as "w" | "b",
   difficulty: "intermediate" as Difficulty,
   playerIdentity: "Human" as PlayerIdentity,
-  imLost: false,
+  imLost: true,
 });
 
 export const colorPref = () => settingsState.colorPref;

@@ -1,3 +1,4 @@
+// SPEC: _spec/chess-coach/ui/components.puml
 import { For, Show, onCleanup, onMount } from "solid-js";
 import type { Component } from "solid-js";
 

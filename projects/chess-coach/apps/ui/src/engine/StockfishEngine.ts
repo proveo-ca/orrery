@@ -1,3 +1,4 @@
+// SPEC: _spec/chess-coach/ui/components.puml
 import { UciDriver } from "~/engine/UciDriver.ts";
 
 export type EvalResult = {

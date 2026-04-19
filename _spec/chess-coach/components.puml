@@ -1,0 +1,106 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+skinparam componentStyle rectangle
+
+title Chess Coach UI: Component Architecture (SolidJS)
+
+actor User
+
+package "SolidJS Frontend (chess-coach-ui)" {
+  package "UI Components" as UI {
+    [ChessBoard] as BOARD
+    [Controls] as MENU
+    [CoachPanel] as COACH_PANEL
+  }
+
+  package "Hooks & Stores" as HOOKS {
+    [useChessBoard] as USE_CHESS_BOARD
+    [useMoveExecutor] as USE_MOVE_EXEC
+    [useCoachBehavior] as USE_COACH_BEHAVIOR
+    [useHoverEvaluator] as USE_HOVER
+    [gameStore / coachStore] as STORES
+  }
+
+  package "Network / Service Layer (api.ts)" as NET {
+    [API Client Facade] as API_CLIENT
+    [HttpCoachService] as HTTP_SVC
+    [WebWorkerCoachService] as WW_SVC
+  }
+
+  package "Local Engine Layer" as ENGINE {
+    [Stockfish Worker\n(stockfish-18-lite.js)] as SF_HINT_WORKER
+  }
+}
+
+frame "Mode: desktop" as DESKTOP_MODE {
+  package "Ktor API (chess-coach-api)" as KTOR_PKG {
+    [HTTP Server\n(/move, /advice, /hello, /new)] as KTOR
+    [HarnessInvoker\n(daemon lifecycle)] as INVOKER
+  }
+
+  package "Kotlin Harness Daemon" as HARNESS_PKG {
+    [Orchestrator\n(execution loop)] as ORCH_DAEMON
+    [EngineBridge\n(facade)] as ENGINE_BRIDGE
+    [LlmClient\n(OpenAI-compatible)] as LLM_CLIENT_DAEMON
+  }
+
+  package "Native Binaries" as NATIVE_PKG {
+    [Stockfish\n(eval + legality)] as NATIVE_SF
+    [lc0 + Maia Weights\n(AI move)] as MAIA
+  }
+
+  [Ollama Server] as OLLAMA
+}
+
+frame "Mode: web-full" as WEB_FULL_MODE {
+  [Orchestrator Worker\n(orchestrator.worker.ts)] as ORCH_FULL
+  [LLM Worker\n(llm.worker.ts / WebLLM)] as LLM_WORKER
+  [Stockfish Worker\n(AI Moves)] as SF_AI_FULL
+}
+
+frame "Mode: web-no-llm" as WEB_NO_LLM_MODE {
+  [Orchestrator Worker\n(orchestrator.worker.ts)] as ORCH_NOLLM
+  [Stockfish Worker\n(AI Moves)] as SF_AI_NOLLM
+  note right of ORCH_NOLLM
+    Advice stream skipped.
+    3 s thinking-phrase delay
+    before showing advice text.
+  end note
+}
+
+UI -[hidden]-> HOOKS
+
+User --> BOARD : "Play move / Hover"
+BOARD ----> USE_CHESS_BOARD
+USE_CHESS_BOARD ---> USE_MOVE_EXEC
+USE_CHESS_BOARD ---> USE_HOVER
+
+USE_HOVER <--> SF_HINT_WORKER : "Local Eval (all modes)"
+
+USE_MOVE_EXEC --> API_CLIENT : "postMove"
+USE_MOVE_EXEC ..> USE_COACH_BEHAVIOR : "lastHumanMoveInfo\nlastAIMoveInfo signals"
+USE_COACH_BEHAVIOR --> API_CLIENT : "postAdviceStream"
+
+API_CLIENT --> HTTP_SVC : "desktop"
+API_CLIENT --> WW_SVC : "web-full / web-no-llm"
+
+HTTP_SVC --> KTOR : "HTTP JSON"
+KTOR --> INVOKER
+INVOKER --> ORCH_DAEMON : "JSON-line\n(stdin/stdout)"
+ORCH_DAEMON --> ENGINE_BRIDGE : "Move / Eval"
+ENGINE_BRIDGE --> MAIA : "UCI (AI move)"
+ENGINE_BRIDGE --> NATIVE_SF : "UCI (eval + legality)"
+ORCH_DAEMON --> LLM_CLIENT_DAEMON : "Generate Advice"
+LLM_CLIENT_DAEMON --> OLLAMA : "HTTP POST\n/v1/chat/completions"
+
+WW_SVC --> ORCH_FULL : "postMessage"
+ORCH_FULL --> LLM_WORKER : "Generate Advice (WebGPU)"
+ORCH_FULL --> SF_AI_FULL : "UCI / AI Move"
+
+WW_SVC --> ORCH_NOLLM : "postMessage"
+ORCH_NOLLM --> SF_AI_NOLLM : "UCI / AI Move"
+
+STORES --> BOARD : "Reactive FEN"
+STORES --> COACH_PANEL : "Reactive Advice"
+
+@enduml

@@ -1,3 +1,4 @@
+// SPEC: _spec/chess-coach/ui/components.puml
 import { Chess } from "chess.js";
 import { createEffect, createSignal, on, onCleanup } from "solid-js";
 

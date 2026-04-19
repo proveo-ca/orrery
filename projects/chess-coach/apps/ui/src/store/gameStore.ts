@@ -1,3 +1,4 @@
+// SPEC: _spec/chess-coach/ui/components.puml
 import { Chess, type Move } from "chess.js";
 import { createSignal } from "solid-js";
 

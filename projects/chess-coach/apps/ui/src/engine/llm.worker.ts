@@ -1,3 +1,4 @@
+// SPEC: _spec/chess-coach/ui/components.puml
 import { WebWorkerMLCEngineHandler } from "@mlc-ai/web-llm";
 
 // --- ULTIMATE DEBUG INTERCEPTOR ---

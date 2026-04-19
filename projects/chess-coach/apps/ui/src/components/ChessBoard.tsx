@@ -1,3 +1,4 @@
+// SPEC: _spec/chess-coach/ui/components.puml
 import type { Color, PieceSymbol, Square } from "chess.js";
 import { For, Show, createEffect, createSignal } from "solid-js";
 import type { Component } from "solid-js";

@@ -1,3 +1,4 @@
+// SPEC: _spec/chess-coach/api/components.puml
 package api.models
 
 import kotlinx.serialization.Serializable

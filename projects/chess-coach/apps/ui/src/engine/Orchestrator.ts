@@ -1,3 +1,4 @@
+// SPEC: _spec/chess-coach/ui/components.puml
 import { ENGINE_CONFIG } from "~/engine/config";
 import { EngineBridge } from "~/engine/EngineBridge";
 import { fallbackAdvice, fallbackExplanation } from "~/engine/fallbackCommentary";

@@ -1,3 +1,4 @@
+// SPEC: _spec/chess-coach/ui/components.puml
 import { Chess, type Square } from "chess.js";
 import { createEffect } from "solid-js";
 

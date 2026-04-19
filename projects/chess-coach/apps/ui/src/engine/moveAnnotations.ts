@@ -1,3 +1,4 @@
+// SPEC: _spec/chess-coach/ui/components.puml
 import type { MoveRecord } from "~/store/gameHistoryStore";
 
 export const BLUNDER_THRESHOLD_CP = -200;

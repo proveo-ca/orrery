@@ -1,0 +1,591 @@
+@startuml chess-coach-entities
+' SPEC: _spec/chess-coach/ui/entities.puml
+!includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+
+skinparam defaultTextAlignment left
+skinparam arrowColor #446688
+hide empty members
+
+title Chess Coach UI · Entity API Reference\n(capabilities · stores · hooks · services · web-engine)
+
+' ══════════════════════════════════════════════════════════════
+' CAPABILITIES
+' ══════════════════════════════════════════════════════════════
+
+package "Capabilities  [capabilitiesStore.ts]" {
+
+  class ScreenCapabilities {
+    .. UI affordances ..
+    hint: boolean
+    travel: boolean
+    historyNav: boolean
+    evalBarAlwaysVisible: boolean
+    .. Engine behavior ..
+    aiOpponent: boolean
+    blunderDetection: boolean
+    continuousAnalysis: boolean
+    showBestMove: boolean
+    commentary: boolean
+    .. Board interaction ..
+    historyBranching: boolean
+    freeColorControl: boolean
+    readOnly: boolean
+    flipBoard: boolean
+    .. Visual ..
+    opponentUsesPlayerPieceSet: boolean
+  }
+
+  note right of ScreenCapabilities
+    **COACH_CAPABILITIES**
+    hint=T, travel=T, aiOpponent=T,
+    blunderDetection=T, continuousAnalysis=T,
+    commentary=T
+    (flipBoard=F, readOnly=F)
+
+    **ANALYSIS_CAPABILITIES**
+    hint=T, continuousAnalysis=T, showBestMove=T,
+    freeColorControl=T, flipBoard=T,
+    opponentUsesPlayerPieceSet=T
+    (aiOpponent=F, readOnly=F)
+
+    **REVIEW_CAPABILITIES**
+    historyNav=T, evalBarAlwaysVisible=T, readOnly=T
+    (historyBranching=T when game loaded)
+  end note
+}
+
+' ══════════════════════════════════════════════════════════════
+' STORES
+' ══════════════════════════════════════════════════════════════
+
+package "Stores  [src/store/]" {
+
+  class gameStore {
+    .. Selectors ..
+    game(): Chess
+    currentFen(): string
+    currentIndex(): number
+    fenHistory(): string[]
+    moveHistory(): MoveSquares[]
+    isThreefoldRepetition(): boolean
+    isResigned(): boolean
+    .. Mutations ..
+    addMove({from,to,promotion?}): Move
+    addMoveSan(san): Move
+    setViewIndex(n)
+    goBack() / goForward()
+    resetGame(fen?)
+    loadFen(fen)
+    loadGame({pgn, startingFen})
+    resignGame()
+    .. Persistence ..
+    key: chess_coach_game_state
+  }
+
+  class coachStore {
+    .. Selectors (hover wins over base) ..
+    advice(): string
+    coachEmotion(): CoachEmotion
+    adviceArrow(): {from,to} | null
+    hoverBlunder(): boolean
+    hoverBlunderFen(): string | null
+    hoverBlunderSan(): string | null
+    pendingTravel(): TravelPending | null
+    llmProgress(): number
+    llmLoadingText(): string
+    isAppReady(): boolean
+    lastCoachEvent(): CoachEvent | null
+    .. Mutations ..
+    setAdvice(text)
+    setCoachEmotion(e, autoResetMs?)
+    setHoverAdvice(text | null)
+    setHoverBlunder(bool, fen, san)
+    clearHoverOverride()
+    dispatchCoachEvent(event)
+    setPendingTravel(data) / clearPendingTravel()
+    .. Types ..
+    CoachEmotion: idle | watching | thinking
+      happy | shocked | sleepy | sleeping
+    CoachEvent: APP_READY | NEW_GAME | AI_MOVED
+      GAME_OVER | ADVICE_RECEIVED | SLEEPY | ...
+    .. Behaviours ..
+    auto-sleep after 30s/40s inactivity
+    window focus wakes if sleepy/sleeping
+  }
+
+  class settingsStore {
+    .. Selectors ..
+    colorPref(): PlayerColorPref
+    activePlayerColor(): "w" | "b"
+    difficulty(): Difficulty
+    playerIdentity(): PlayerIdentity
+    playerPieceSet(): PieceSet
+    opponentPieceSet(): PieceSet
+    imLost(): boolean
+    .. Mutations ..
+    setColorPref(p)
+    setActivePlayerColor(c)
+    setDifficulty(d)
+    setPlayerIdentity(id)
+    setImLost(v)
+    .. Types ..
+    PlayerColorPref: w | b | random
+    Difficulty: intermediate | advanced | expert
+    PieceSet: cburnett | selena | gord | manuel
+    PlayerIdentity: Human | Cat | Dog | Rat
+    .. Persistence ..
+    key: chess_coach_settings_state
+  }
+
+  class gameHistoryStore {
+    .. Selectors ..
+    gameHistory(): GameRecord[]  (max 1000, newest first)
+    inProgressGame(): GameRecord | null
+    getGameById(id): GameRecord | null
+    .. Mutations ..
+    startNewRecord(id, fen, color, diff)
+    pushMove(moveRecord)
+    patchMoveAt(index, patch)
+    finalizeGame(result, pgn)
+    discardInProgress()
+    .. Types ..
+    GameRecord: {id, startedAt, endedAt, result,
+      pgn, startingFen, playerColor, difficulty, moves[]}
+    MoveRecord: {san, hasPressedHint, isAI}
+    GameResult: win | loss | draw | ongoing
+    id = Polyglot-Zobrist hash of move sequence
+    .. Persistence ..
+    key: chess_coach_history_state
+  }
+
+  class travelStore {
+    .. Selectors ..
+    isTravelling(): boolean
+    travelFen(): string
+    travelIndex(): number
+    travelFenHistory(): string[]
+    travelMoveHistory(): MoveSquares[]
+    .. Mutations ..
+    startTravel(fens, moves)
+    travelForward() / travelBack()
+    exitTravel()
+  }
+
+  class createPersistedStore <<factory>> {
+    createPersistedStore(key, initialValue)
+    merges localStorage + initialValue
+    guarantees: no missing keys after schema change
+  }
+
+  settingsStore    ..> createPersistedStore : factory
+  gameHistoryStore ..> createPersistedStore : factory
+}
+
+' ══════════════════════════════════════════════════════════════
+' HOOKS
+' ══════════════════════════════════════════════════════════════
+
+package "Hooks  [src/hooks/]" {
+
+  package "Board Hooks" {
+
+    class useChessBoard {
+      .. Returns ..
+      game(): Chess (live or travel position)
+      activeGame(): Chess (always live)
+      lastMove(): MoveSquares | null
+      animatedMove(): MoveSquares | null
+      selectedSquare(): Square | null
+      hoveredSquare(): Square | null
+      validMoves(): string[]
+      isReplaying(): boolean
+      bestMoveArrow(): {from,to} | null
+      baseEvalScore(): PositionEval | null
+      pendingPromotion(): PendingPromotion | null
+      .. Handlers ..
+      handleSquareClick(square)
+      handleSquareHover(square)
+      handleBoardMouseEnter/Leave()
+      handleDragStart/Enter/Drop(sq, event)
+      resolvePromotion(piece: q|r|b|n)
+      cancelPromotion()
+      .. Notes ..
+      hover eval delay: 150ms
+      integrates: useMoveExecutor · useCoachBehavior
+        useHoverEvaluator · useStockfishWorker
+    }
+
+    class useStockfishWorker {
+      .. Returns ..
+      analysis(): StockfishAnalysis
+      send(command: string)
+      .. Types ..
+      StockfishAnalysis: {last, lastInfo, lastBestMove}
+      .. Notes ..
+      singleton via stockfishService
+      parses UCI: info depth pv score | bestmove
+    }
+
+    class useHoverEvaluator {
+      BLUNDER_THRESHOLD_CP: -200
+      .. Side effects ..
+      detects CP drop > 200 on hovered move
+      → coachStore.setHoverBlunder(fen, san)
+      → coachStore.setHoverAdvice(text)
+      → coachStore.setPendingTravel(data)
+      clears: clearHoverOverride() on mouse-leave
+    }
+  }
+
+  package "Coach Hooks" {
+
+    class useMoveExecutor {
+      .. Module-level signals ..
+      [signal] lastHumanMoveInfo:
+        {san, lan, wasBestMove, gameOver} | null
+      [signal] lastAIMoveInfo:
+        {san, captured, humanMoveSan,
+         fen, move, gameOver} | null
+      [signal] lastAIError: string | null
+      .. Returns ..
+      executeMove(from, to, promotion?)
+      .. Notes ..
+      validates legality · applies to gameStore
+      checks: checkmate · threefold ·
+        insufficient material · generic draw
+      calls postMove(req) → AI response
+      calls addMoveSan(san) for AI move
+    }
+
+    class useCoachBehavior {
+      .. Reactive subscriptions (createEffect) ..
+      on lastHumanMoveInfo:
+        abortAdvice · clear board arrows
+        if web-no-llm: setTimeout 3s → thinking phrase
+          (cancelled if AI responds first)
+        if wasBestMove: praise phrase
+      on lastAIMoveInfo:
+        cancel pending thinking timer
+        if has LLM: stream postAdviceStream
+        queen capture easter egg by PlayerIdentity
+        GAME_OVER handling
+      on lastAIError: setAdvice(error message)
+      .. Returns ..
+      abortAdvice()
+      .. Notes ..
+      owns: AbortController · setTimeout ref
+      QUEEN_CAPTURE_PHRASES[PlayerIdentity]
+    }
+  }
+
+  package "Game Control Hooks" {
+
+    class useGameControls {
+      .. Module-level signal ..
+      [signal] pendingHintUci: string | null
+      .. Returns ..
+      atStart(): boolean
+      atLatest(): boolean
+      isReplaying(): boolean
+      isResigned(): boolean
+      pendingHint(): boolean
+      handleBack()
+      handleForward()
+      handleBackToLive()
+      handleHint()
+      handleResign()
+      .. Notes ..
+      integrates useHint()
+      manages: travel vs normal navigation
+      streams hint explanation via postExplainStream
+    }
+
+    class useHint {
+      .. Returns ..
+      requestHint(fen, depth?): Promise<string>
+      stopHint()
+      pendingHint(): boolean
+      .. Notes ..
+      lazy-init worker on first call
+      drains stale bestmove replies (drainCount)
+      timeout: 12s per request
+    }
+
+    class useGlobalShortcuts <<side-effect>> {
+      Space      → activateTravel (blunder only)
+      Escape     → exitTravel | backToLive
+      ArrowLeft  → back | travelBack
+      ArrowRight → forward | travelForward
+    }
+  }
+
+  package "Analysis & Review Hooks" {
+
+    class useGameAnalysis {
+      .. Input ..
+      game: () => GameRecord | null
+      .. Returns ..
+      analysis(): GameAnalysis
+      deleteAnalysisCache(id)
+      .. Types ..
+      GameAnalysis: {cpDeltas[], wasBestMoves[],
+        bestMoveUcis[], loading: boolean}
+      .. Notes ..
+      spawns dedicated SF worker per game
+      caches in localStorage by game id
+      partial progress writes every 4 positions
+      resumes from partial cache on re-entry
+    }
+
+    class useBlunderArrow {
+      .. Input ..
+      annotations(): AnnotationTag[][]
+      bestMoveUcis(): (string | null)[]
+      .. Notes ..
+      shows best-move arrow for blunder/inaccuracy
+        at current ply (review mode)
+      falls back to live hint if cache unavailable
+    }
+
+    class useMoveListPagination {
+      .. Input ..
+      rows: () => MoveRow[]
+      .. Returns ..
+      activePly(): number
+      activePage(): number
+      totalPages(): number
+      visibleRows(): MoveRow[]
+      goToStart() / goToEnd()
+      goToPrev() / goToNext()
+      .. Notes ..
+      ROWS_PER_PAGE = 8
+      auto-follows active ply
+      manual override on user navigation
+    }
+  }
+
+  package "Recording & Travel Hooks" {
+
+    class useGameRecorder <<side-effect>> {
+      .. Exports ..
+      markHintPressed()
+      .. Behaviour ..
+      on mount: backfill existing moves
+      on NEW_GAME event: startNewRecord()
+      on GAME_OVER event: finalizeGame(pgn)
+      per move: pushMove → gameHistoryStore
+      reads: lastCoachEvent() mirror signal
+    }
+
+    class useTravelMode {
+      .. Returns ..
+      activateTravel(blunderFen,
+        blunderSan, fenBefore?)
+      loading(): boolean
+      .. Notes ..
+      extracts 8-ply best line via Stockfish worker
+      calls travelStore.startTravel(fens, moves)
+      streams parallel LLM explanation
+        via postExplainStream
+    }
+  }
+
+  package "UX Hooks" {
+
+    class useHintSparkle {
+      .. Returns ..
+      hintSparkleClass(): string
+      dismissHintSparkle()
+      .. Notes ..
+      shows sparkle after 10s idle delay
+      dismissed state persists to localStorage
+    }
+  }
+}
+
+' ══════════════════════════════════════════════════════════════
+' SERVICES
+' ══════════════════════════════════════════════════════════════
+
+package "Services  [src/services/]" {
+
+  interface CoachService {
+    postNewGame(): Promise<{fen}>
+    fetchHello(): Promise<HelloResponse>
+    postMove(req: MoveRequest): Promise<MoveResponse>
+    postAdviceStream(req, onChunk, opts?): Promise<void>
+    postExplainStream(req, onChunk, opts?): Promise<void>
+  }
+
+  class HttpCoachService {
+    .. Notes ..
+    desktop mode · HTTP to Kotlin backend
+    endpoints: /new · /hello · /move ·
+      /advice · /explain
+  }
+
+  class WebWorkerCoachService {
+    .. Notes ..
+    web-full | web-no-llm mode
+    spawns orchestrator.worker.ts
+    routes via postMessage / onmessage
+    tracks pending requests by UUID
+    supports streaming via onChunk callback
+  }
+
+  class runtimeMode {
+    resolveMode(): RuntimeMode
+    .. Types ..
+    RuntimeMode: {kind: "desktop"|"web-full"|"web-no-llm",
+      apiUrl?: string}
+    .. Notes ..
+    reads: VITE_TARGET · VITE_API_URL
+    default: "web-no-llm"
+  }
+
+  class stockfishService <<singleton>> {
+    getWorker(): Worker
+    send(command: string)
+    addListener(fn) / removeListener(fn)
+    .. Notes ..
+    watchdog: detects hung worker
+    restarts with synthetic bestmove event
+  }
+
+  class browserSupport {
+    checkEngineSupport(): {supported, reason, debug}
+    .. Checks ..
+    SharedArrayBuffer · crossOriginIsolated
+    WASM shared memory
+  }
+
+  class streamUtils {
+    accumulateStream(stream, req, onUpdate, opts?)
+    .. Notes ..
+    clears placeholder on first chunk
+    supports AbortSignal · optional text prefix
+  }
+
+  HttpCoachService      ..|> CoachService
+  WebWorkerCoachService ..|> CoachService
+}
+
+' ══════════════════════════════════════════════════════════════
+' WEB ENGINE
+' ══════════════════════════════════════════════════════════════
+
+package "WebEngine  [src/engine/]" {
+
+  class Orchestrator {
+    executeTurn(humanMoveSan, fen, diff): TurnResult
+    generateAdviceStream(humanMove, aiMove, fen)
+    generateExplanationStream(fenBefore, fenAfter,
+      isBlunder, moveSan)
+    generateUiPhrases(): UiPhrases
+    .. Types ..
+    TurnResult: {fen, move, advice?}
+    .. Notes ..
+    builds MoveAnalysis for prompt
+    sanitizes + validates LLM output
+    falls back to canned advice if low-quality
+  }
+
+  class EngineBridge {
+    getEvaluation(fen, depth=15): EvalResult
+    getAiMove(fen, difficulty): string (UCI)
+    getFenAfterMove(fen, uciMove): string | null
+    getSanForUciMove(fen, uciMove): string | null
+    .. Notes ..
+    intermediate → maia-1100 · advanced → maia-1600
+    expert → maia-2200
+  }
+
+  class StockfishEngine {
+    getEvaluation(fen, depth=15): EvalResult
+    getMoveAtElo(fen, elo): string
+    getFenAfterMove(fen, uciMove): string | null
+    getSanForUciMove(fen, uciMove): string | null
+    .. Types ..
+    EvalResult: {bestMove, cp, isMate, mateIn, pv}
+    .. Notes ..
+    worker: stockfish-18-lite.js
+  }
+
+  class MaiaEngine {
+    init(weightsFile: string)
+    getMove(fen, weightsFile): string (UCI)
+    .. Notes ..
+    weights: maia-1100/1600/2200.pb.gz
+    WASM: lc0.wasm · go nodes 1
+    auto-restart on worker crash
+  }
+
+  interface LlmClient {
+    prompt(sys, user, temp?, maxTokens?): Promise<string>
+    promptStream(...): AsyncGenerator<string>
+  }
+
+  class WebLlmClient {
+    .. Notes ..
+    @mlc-ai/web-llm · web-full mode only
+    model: chess-gemma-commentary-q0f32-MLC
+    WASM: gemma-3-270m-q0f32-webgpu.wasm
+  }
+
+  class NoopLlmClient {
+    .. Notes ..
+    web-no-llm mode · returns empty strings
+    Orchestrator falls back to canned commentary
+  }
+
+  class llmPromptFormat {
+    buildAdvicePrompt(analysis: MoveAnalysis): string
+    buildExplanationPrompt(...): string
+    .. Types ..
+    MoveAnalysis: {fenBefore, fenAfter, moveSan,
+      tag, cpDelta, bestAlt, bestAltMatchesMove, ...}
+  }
+
+  class fallbackCommentary {
+    fallbackAdvice(tag, ...): string
+    fallbackExplanation(...): string
+    .. Notes ..
+    canned arrays by move tag / situation
+    used when LLM output fails quality check
+  }
+
+  class moveAnnotations {
+    resolveAnnotations(moves, cpDeltas,
+      wasBestMoves, bestMoveUcis): AnnotationTag[][]
+    pairMovesIntoRows(moves, startFen): MoveRow[]
+    formatCp(cp: number): string
+    .. Constants ..
+    BLUNDER_THRESHOLD_CP    = -200
+    INACCURACY_THRESHOLD_CP = -50
+    .. Types ..
+    AnnotationTag: best | blunder | inaccuracy |
+      hint | forced
+    MoveRow: {turn, white, whiteIndex, black, blackIndex}
+  }
+
+  WebLlmClient  ..|> LlmClient
+  NoopLlmClient ..|> LlmClient
+
+  Orchestrator  --> EngineBridge      : getEvaluation · getAiMove
+  Orchestrator  --> LlmClient         : prompt / promptStream
+  Orchestrator  --> llmPromptFormat   : builds prompts
+  Orchestrator  --> fallbackCommentary : fallback advice
+  EngineBridge  --> StockfishEngine   : evaluation
+  EngineBridge  --> MaiaEngine        : AI moves
+}
+
+' ══════════════════════════════════════════════════════════════
+' LAYOUT
+' ══════════════════════════════════════════════════════════════
+
+ScreenCapabilities -[hidden]-> gameStore
+gameStore          -[hidden]-> useChessBoard
+useChessBoard      -[hidden]-> CoachService
+CoachService       -[hidden]-> Orchestrator
+
+@enduml

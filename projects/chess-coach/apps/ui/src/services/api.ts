@@ -1,3 +1,4 @@
+// SPEC: _spec/chess-coach/ui/components.puml
 import { resolveMode } from "~/services/runtimeMode";
 import { setLlmProgress } from "~/store/coachStore";
 import type { Difficulty } from "~/store/settingsStore";

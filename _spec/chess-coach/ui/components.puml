@@ -1,63 +1,306 @@
-@startuml
+@startuml chess-coach-ui
+' SPEC: _spec/chess-coach/ui/components.puml
 !includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
-skinparam componentStyle rectangle
 
-title Chess Coach UI: Component Architecture (SolidJS)
+skinparam defaultTextAlignment left
+skinparam arrowColor #446688
 
-actor User
+title Chess Coach UI · Components\n(see entities.puml for API details)
 
-package "SolidJS Frontend (chess-coach-ui)" {
-  package "UI Components" {
-    [ChessBoard] as BOARD
-    [Controls] as MENU
-    [CoachAdvice Panel] as COACH_PANEL
+' ══════════════════════════════════════════════════════════════
+' CAPABILITIES
+' ══════════════════════════════════════════════════════════════
+
+package "Capabilities  [capabilitiesStore.ts]" {
+  [ScreenCapabilities]
+  note right of ScreenCapabilities
+    COACH · ANALYSIS · REVIEW presets
+    see entities.puml for flag definitions
+  end note
+}
+
+' ══════════════════════════════════════════════════════════════
+' SCREENS
+' ══════════════════════════════════════════════════════════════
+
+package "Screens  [src/screens/]" {
+
+  rectangle "CoachScreen" as CoachScreen
+  note right of CoachScreen
+    mounts COACH_CAPABILITIES on init
+    calls useGameRecorder() · restoreGame()
+    composition: CoachAvatar · ChessBoard ·
+      CapturedPieces · CoachPanel · Sidebar ·
+      MobileDrawer · DualNavButton
+    overlays: HistoryOverlay · LightSpeedOverlay ·
+      Modal (browser support check)
+  end note
+
+  rectangle "AnalysisScreen" as AnalysisScreen
+  note right of AnalysisScreen
+    mounts ANALYSIS_CAPABILITIES on init
+    no coach avatar · no replay/travel overlays
+    composition: FenLoader · ChessBoard ·
+      CapturedPieces · Sidebar · MobileDrawer
+  end note
+
+  rectangle "ReviewScreen" as ReviewScreen
+  note right of ReviewScreen
+    mounts REVIEW_CAPABILITIES on init
+    route param: id (Polyglot-Zobrist hash)
+    loads GameRecord → gameStore.loadGame()
+    composition: GameHistoryList · ChessBoard ·
+      MoveList · CapturedPieces
+  end note
+
+  rectangle "MenuScreen" as MenuScreen
+  note right of MenuScreen
+    identity selector (Human | Cat | Dog | Rat)
+    routes to: /selena · /analysis · /review · /lan
+    composition: CoachAvatar · MenuButton ×5
+  end note
+
+  rectangle "LanScreen" as LanScreen
+  note right of LanScreen
+    placeholder ("Coming soon")
+  end note
+}
+
+CoachScreen    ..> ScreenCapabilities : setCapabilities (COACH)
+AnalysisScreen ..> ScreenCapabilities : setCapabilities (ANALYSIS)
+ReviewScreen   ..> ScreenCapabilities : setCapabilities (REVIEW)
+
+' ══════════════════════════════════════════════════════════════
+' STORES
+' ══════════════════════════════════════════════════════════════
+
+package "Stores  [src/store/]" {
+  [gameStore]        as GameStore
+  [coachStore]       as CoachStore
+  [settingsStore]    as SettingsStore
+  [gameHistoryStore] as HistoryStore
+  [travelStore]      as TravelStore
+}
+
+' ══════════════════════════════════════════════════════════════
+' HOOKS
+' ══════════════════════════════════════════════════════════════
+
+package "Hooks  [src/hooks/]" {
+
+  package "Board Hooks" {
+    [useChessBoard]      as UseChessBoard
+    [useStockfishWorker] as UseStockfishWorker
+    [useHoverEvaluator]  as UseHoverEvaluator
   }
 
-  package "Hooks & Stores" {
-    [useMoveExecutor] as USE_MOVE_EXEC
-    [useHoverEvaluator] as USE_HOVER
-    [gameState / coachState] as STORES
+  package "Coach Hooks" {
+    [useMoveExecutor]  as UseMoveExecutor
+    [useCoachBehavior] as UseCoachBehavior
   }
 
-  package "Network / Service Layer (api.ts)" {
-    [API Client Facade] as API_CLIENT
-    [HttpCoachService] as HTTP_SVC
-    [WebWorkerCoachService] as WW_SVC
+  package "Game Control Hooks" {
+    [useGameControls]    as UseGameControls
+    [useHint]            as UseHint
+    [useGlobalShortcuts] as UseGlobalShortcuts
   }
 
-  package "Local Engine Layer" {
-    [Stockfish Worker\n(stockfish-18-lite.js)] as SF_HINT_WORKER
+  package "Analysis & Review Hooks" {
+    [useGameAnalysis]       as UseGameAnalysis
+    [useBlunderArrow]       as UseBlunderArrow
+    [useMoveListPagination] as UseMoveListPagination
+  }
+
+  package "Recording & Travel Hooks" {
+    [useGameRecorder] as UseGameRecorder
+    [useTravelMode]   as UseTravelMode
+  }
+
+  package "UX Hooks" {
+    [useHintSparkle] as UseHintSparkle
   }
 }
 
-package "Distribution 1: Web Workers" {
-    [Orchestrator Worker\n(orchestrator.worker.ts)] as ORCH_WORKER
-    [LLM Worker\n(WebLLM)] as LLM_WORKER
-    [Stockfish Worker\n(AI Moves)] as SF_AI_WORKER
+' ══════════════════════════════════════════════════════════════
+' UI COMPONENTS
+' ══════════════════════════════════════════════════════════════
+
+package "Components  [src/components/]" {
+
+  package "Board Components" {
+    rectangle "ChessBoard"      as ChessBoard
+    note bottom of ChessBoard
+      8×8 grid · drag+drop · touch-drag
+      piece animation · last-move highlight
+      best-move arrow (green) · advice arrow (blue)
+      EvalBar overlay · GameOver modal · PromotionModal
+      board flips on activePlayerColor change
+    end note
+    rectangle "ChessSquare"     as ChessSquare
+    rectangle "ChessBoardArrow" as ChessBoardArrow
+    rectangle "CapturedPieces"  as CapturedPieces
+    rectangle "EvalBar"         as EvalBar
+    rectangle "PromotionModal"  as PromotionModal
+  }
+
+  package "Coach Components" {
+    rectangle "CoachPanel" as CoachPanel
+    note right of CoachPanel
+      parses SAN notation · interactive spans
+      hover/click → board arrow highlight
+      "Why?" button if hoverBlunder=true
+    end note
+    rectangle "CoachAvatar"      as CoachAvatar
+    rectangle "CoachEmotionIcon" as CoachEmotionIcon
+  }
+
+  package "Navigation Components" {
+    rectangle "Sidebar" as Sidebar
+    note right of Sidebar
+      hint · resign · new game · flip board
+      (gated by capabilities flags)
+    end note
+    rectangle "MobileDrawer" as MobileDrawer
+    note right of MobileDrawer
+      all same controls for mobile
+      (gated by capabilities flags)
+    end note
+    rectangle "Controls"      as Controls
+    rectangle "DualNavButton" as DualNavButton
+  }
+
+  package "Game UI Components" {
+    rectangle "MoveList" as MoveList
+    note right of MoveList
+      2-column layout · CP delta · annotation badges
+      best | blunder | inaccuracy | hint | forced
+      ROWS_PER_PAGE=8 · swipe on mobile
+    end note
+    rectangle "GameHistoryList" as GameHistoryList
+    rectangle "FenLoader"       as FenLoader
+    rectangle "TurnLabel"       as TurnLabel
+    rectangle "NewGamePanel"    as NewGamePanel
+    rectangle "Settings"        as Settings
+    rectangle "Credits"         as Credits
+    rectangle "DebugControls"   as DebugControls
+  }
+
+  package "Overlays" {
+    rectangle "LoadingOverlay"    as LoadingOverlay
+    rectangle "HistoryOverlay"    as HistoryOverlay
+    rectangle "LightSpeedOverlay" as LightSpeedOverlay
+    rectangle "Modal"             as Modal
+  }
+
+  package "Common  [components/common/]" {
+    rectangle "Button / IconButton / MenuButton" as Buttons
+    rectangle "Select / Toggle / Label"          as Inputs
+    rectangle "Modal / Divider / ProgressBar"    as Utility
+    rectangle "icons.tsx (40+ SVG icons)"        as Icons
+  }
 }
 
-package "Distribution 2: Backend" {
-  [Ktor API] as KTOR
+' ══════════════════════════════════════════════════════════════
+' SERVICES
+' ══════════════════════════════════════════════════════════════
+
+package "Services  [src/services/]" {
+  [CoachService] as CoachServiceIF
+  note right of CoachServiceIF
+    interface: postNewGame · fetchHello
+    postMove · postAdviceStream · postExplainStream
+  end note
+  [HttpCoachService]      as HttpCoachService
+  [WebWorkerCoachService] as WebWorkerCoachService
+  [runtimeMode]           as RuntimeMode
+  note right of RuntimeMode
+    desktop → HttpCoachService
+    web-full | web-no-llm → WebWorkerCoachService
+  end note
 }
 
-User --> BOARD : "Play move / Hover"
-BOARD --> USE_MOVE_EXEC
-BOARD --> USE_HOVER
+HttpCoachService      ..|> CoachServiceIF
+WebWorkerCoachService ..|> CoachServiceIF
 
-USE_HOVER <--> SF_HINT_WORKER : "Local Eval (Both Modes)"
+' ══════════════════════════════════════════════════════════════
+' WEB ENGINE
+' ══════════════════════════════════════════════════════════════
 
-USE_MOVE_EXEC --> API_CLIENT : "postMove / postAdviceStream"
+package "WebEngine  [src/engine/]" {
+  [orchestrator.worker.ts] as OrchestratorWorker
+  [Orchestrator]           as Orchestrator
+  [EngineBridge]           as EngBridge
+  note right of EngBridge
+    StockfishEngine (analysis)
+    MaiaEngine (AI moves)
+  end note
+  [LlmClient]       as LlmClientIF
+  note right of LlmClientIF
+    WebLlmClient (web-full)
+    NoopLlmClient (web-no-llm)
+  end note
+  [moveAnnotations] as MoveAnnot
+  note right of MoveAnnot
+    AnnotationTag: best | blunder |
+    inaccuracy | hint | forced
+  end note
+}
 
-API_CLIENT --> HTTP_SVC : "If VITE_TARGET != web"
-API_CLIENT --> WW_SVC : "If VITE_TARGET == web"
+' ══════════════════════════════════════════════════════════════
+' RELATIONSHIPS
+' ══════════════════════════════════════════════════════════════
 
-HTTP_SVC --> KTOR : "HTTP JSON"
+' ── Board hook wiring ──
+UseChessBoard --> UseMoveExecutor   : uses
+UseChessBoard --> UseCoachBehavior  : uses
+UseChessBoard --> UseHoverEvaluator : uses
+UseChessBoard --> UseStockfishWorker: uses
 
-WW_SVC --> ORCH_WORKER : "postMessage"
-ORCH_WORKER --> LLM_WORKER : "Generate Advice (WebGPU)"
-ORCH_WORKER --> SF_AI_WORKER : "UCI Eval / AI Move"
+' ── Signal flow (module-level reactive) ──
+UseMoveExecutor ..> UseCoachBehavior : lastHumanMoveInfo\nlastAIMoveInfo · lastAIError
 
-STORES --> BOARD : "Reactive FEN"
-STORES --> COACH_PANEL : "Reactive Advice"
+' ── Store writes ──
+UseCoachBehavior  --> CoachStore   : setAdvice · dispatchCoachEvent
+UseHoverEvaluator --> CoachStore   : setHoverBlunder · setPendingTravel
+UseGameRecorder   --> HistoryStore : pushMove · finalizeGame
+UseMoveExecutor   --> GameStore    : addMove · addMoveSan
+
+' ── Controls ──
+UseGameControls --> UseHint : uses
+UseGameControls --> TravelStore : navigation
+
+' ── Coach panel ──
+UseGlobalShortcuts --> UseTravelMode : Space key
+UseTravelMode --> TravelStore : startTravel()
+
+' ── API routing ──
+UseMoveExecutor  --> CoachServiceIF : postMove()
+UseCoachBehavior --> CoachServiceIF : postAdviceStream()
+UseGameControls  --> CoachServiceIF : postExplainStream()
+UseTravelMode    --> CoachServiceIF : postExplainStream()
+
+RuntimeMode --> HttpCoachService      : desktop
+RuntimeMode --> WebWorkerCoachService : web-full | web-no-llm
+
+WebWorkerCoachService --> OrchestratorWorker : postMessage
+OrchestratorWorker    --> Orchestrator       : hosts
+Orchestrator --> EngBridge   : getEvaluation · getAiMove
+Orchestrator --> LlmClientIF : prompt / promptStream
+
+UseGameAnalysis ..> MoveAnnot : resolveAnnotations
+
+' ══════════════════════════════════════════════════════════════
+' LAYOUT
+' ══════════════════════════════════════════════════════════════
+"Navigation Components" -[hidden]down- "Game UI Components"
+"Game UI Components" -[hidden]down--- "Board Components"
+"Board Components" -[hidden]down- "Coach Components"
+
+"Screens  [src/screens/]" -[hidden] "Capabilities  [capabilitiesStore.ts]"
+"Capabilities  [capabilitiesStore.ts]" -[hidden]down-- "Components  [src/components/]"
+"Components  [src/components/]" -[hidden]down-------- "Hooks  [src/hooks/]"
+"Hooks  [src/hooks/]" -[hidden]down--- "Stores  [src/store/]"
+"Stores  [src/store/]" -[hidden]down-- "Services  [src/services/]"
+"Services  [src/services/]" -[hidden]down--- "WebEngine  [src/engine/]"
 
 @enduml

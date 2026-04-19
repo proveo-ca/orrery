@@ -1,3 +1,4 @@
+// SPEC: _spec/chess-coach/ui/components.puml
 import { useNavigate } from "@solidjs/router";
 import type { Component } from "solid-js";
 

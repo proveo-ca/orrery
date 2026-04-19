@@ -1,3 +1,4 @@
+// SPEC: _spec/chess-coach/ui/components.puml
 import { createSignal } from "solid-js";
 
 import { resolveMode } from "~/services/runtimeMode";
@@ -31,6 +32,7 @@ export type ScreenCapabilities = {
 
   // Visual
   opponentUsesPlayerPieceSet: boolean; // both sides render with player's piece set
+  flipBoard: boolean; // show flip board button
 };
 
 const hasLlm = resolveMode().kind !== "web-no-llm";
@@ -49,6 +51,7 @@ export const COACH_CAPABILITIES: ScreenCapabilities = {
   freeColorControl: false,
   readOnly: false,
   opponentUsesPlayerPieceSet: false,
+  flipBoard: false,
 };
 
 export const ANALYSIS_CAPABILITIES: ScreenCapabilities = {
@@ -65,6 +68,7 @@ export const ANALYSIS_CAPABILITIES: ScreenCapabilities = {
   freeColorControl: true,
   readOnly: false,
   opponentUsesPlayerPieceSet: true,
+  flipBoard: true,
 };
 
 export const REVIEW_CAPABILITIES: ScreenCapabilities = {
@@ -83,6 +87,7 @@ export const REVIEW_CAPABILITIES: ScreenCapabilities = {
   freeColorControl: false,
   readOnly: true,
   opponentUsesPlayerPieceSet: true,
+  flipBoard: false,
 };
 
 export const [capabilities, setCapabilities] = createSignal<ScreenCapabilities>(COACH_CAPABILITIES);

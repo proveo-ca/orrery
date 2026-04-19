@@ -1,3 +1,4 @@
+// SPEC: _spec/chess-coach/ui/components.puml
 import clsx from "clsx";
 import { Show, createSignal } from "solid-js";
 import type { Component } from "solid-js";
@@ -7,6 +8,7 @@ import { IconButton } from "~/components/common/IconButton";
 import {
   CheckIcon,
   FlagIcon,
+  FlipBoardIcon,
   HamburgerIcon,
   HintIcon,
   PlusCircleIcon,
@@ -26,6 +28,7 @@ import { capabilities } from "~/store/capabilitiesStore";
 import { setShowCredits, setShowNewGame, showCredits, showNewGame } from "~/store/coachStore";
 import { gameHistory } from "~/store/gameHistoryStore";
 import { resetGame } from "~/store/gameStore";
+import { activePlayerColor, setActivePlayerColor } from "~/store/settingsStore";
 import { isTravelling, travelFenHistory, travelIndex } from "~/store/travelStore.ts";
 
 export const MobileDrawer: Component = () => {
@@ -157,6 +160,18 @@ export const MobileDrawer: Component = () => {
               aria-label="Resign"
             >
               <FlagIcon />
+            </IconButton>
+          </Show>
+          <Show when={capabilities().flipBoard}>
+            <IconButton
+              label="Flip"
+              onClick={() => {
+                setActivePlayerColor(activePlayerColor() === "w" ? "b" : "w");
+                setOpen(false);
+              }}
+              aria-label="Flip board"
+            >
+              <FlipBoardIcon />
             </IconButton>
           </Show>
           <IconButton

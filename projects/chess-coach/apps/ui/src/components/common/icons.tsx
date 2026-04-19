@@ -224,6 +224,27 @@ export const BookIcon: Component<IconProps> = (props) => {
   );
 };
 
+export const FlipBoardIcon: Component<IconProps> = (props) => {
+  const s = () => props.size ?? 20;
+  return (
+    <svg
+      width={s()}
+      height={s()}
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <line x1="3" y1="7" x2="14" y2="7" />
+      <polyline points="11,4 14,7 11,10" />
+      <line x1="6" y1="13" x2="17" y2="13" />
+      <polyline points="9,10 6,13 9,16" />
+    </svg>
+  );
+};
+
 export const ArrowRightIcon: Component<IconProps> = (props) => {
   const s = () => props.size ?? 20;
   return (

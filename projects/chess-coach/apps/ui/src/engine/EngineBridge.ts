@@ -1,3 +1,4 @@
+// SPEC: _spec/chess-coach/ui/components.puml
 import { MaiaEngine } from "~/engine/MaiaEngine.ts";
 import { type EvalResult, StockfishEngine } from "~/engine/StockfishEngine.ts";
 

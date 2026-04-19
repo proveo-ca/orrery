@@ -1,3 +1,4 @@
+// SPEC: _spec/chess-coach/ui/components.puml
 import { createStore } from "solid-js/store";
 
 import type { MoveSquares } from "~/store/gameStore";
