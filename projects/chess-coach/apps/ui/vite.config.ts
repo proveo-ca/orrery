@@ -7,7 +7,8 @@ import oxlintPlugin from "vite-plugin-oxlint";
 import solid from "vite-plugin-solid";
 import { VitePWA } from "vite-plugin-pwa";
 
-const isWebTarget = process.env.VITE_TARGET === "web";
+const target = process.env.VITE_TARGET;
+const isWebTarget = target === "web-full" || target === "web-no-llm";
 
 export default defineConfig({
   base: "/chess/",
@@ -20,6 +21,9 @@ export default defineConfig({
     VitePWA({
       registerType: "autoUpdate",
       workbox: {
+        skipWaiting: true,
+        clientsClaim: true,
+        cleanupOutdatedCaches: true,
         globIgnores: ["**/*.wasm", "**/models/**", "**/web-engine/**", "**/*.worker-*.js"],
         runtimeCaching: [
           {

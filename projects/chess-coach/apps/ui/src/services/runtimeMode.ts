@@ -19,12 +19,14 @@ export function resolveMode(): RuntimeMode {
   const target = import.meta.env.VITE_TARGET;
   const apiUrl = import.meta.env.VITE_API_URL;
 
-  // Desktop: not running as 'web' and a backend URL is configured.
-  if (target !== "web" && apiUrl) {
+  // Desktop: no web target and a backend URL is configured.
+  if (target !== "web-full" && target !== "web-no-llm" && apiUrl) {
     return { kind: "desktop", apiUrl };
   }
 
-  // Web: web-llm commentary is currently disabled (temporary kill-switch).
-  // Flip to `{ kind: "web-full" }` to re-enable once quality improves.
+  if (target === "web-full") {
+    return { kind: "web-full" };
+  }
+
   return { kind: "web-no-llm" };
 }

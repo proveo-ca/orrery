@@ -26,6 +26,19 @@ export default {
     newResponse.headers.set("Cross-Origin-Opener-Policy", "same-origin");
     newResponse.headers.set("Cross-Origin-Embedder-Policy", "require-corp");
 
+    // Force revalidation for the SW bootstrap files so new deploys propagate.
+    // Hashed assets (worker-*.js, wasm, models) keep Cloudflare's default long cache.
+    const isSwBootstrap =
+      url.pathname.endsWith("/sw.js") ||
+      url.pathname.endsWith("/registerSW.js") ||
+      url.pathname.endsWith("/manifest.webmanifest") ||
+      url.pathname.endsWith("/index.html") ||
+      url.pathname === "/chess" ||
+      url.pathname === "/chess/";
+    if (isSwBootstrap) {
+      newResponse.headers.set("Cache-Control", "no-cache, no-store, must-revalidate");
+    }
+
     // Prevent Cloudflare from treating .gz weight files as pre-compressed content
     if (isGzAsset) {
       console.log(`[Worker] Overriding headers for .gz asset: ${url.pathname}`);
