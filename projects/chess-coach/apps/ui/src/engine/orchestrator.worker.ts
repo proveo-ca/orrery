@@ -1,23 +1,21 @@
 // SPEC: _spec/chess-coach/ui/components.puml
 /// <reference lib="webworker" />
-import { type LlmClient, NoopLlmClient, WebLlmClient } from "~/engine/LlmClient";
+import { type LlmClient, NoopLlmClient } from "~/engine/LlmClient";
 import { Orchestrator, type LlmDebugEvent } from "~/engine/Orchestrator";
-import { resolveMode } from "~/services/runtimeMode";
 
 const DEBUG = import.meta.env.VITE_DEBUG === "true";
 
-const mode = resolveMode();
-const llmClient: LlmClient = mode.kind === "web-full" ? new WebLlmClient() : new NoopLlmClient();
+// `__HAS_LLM__` is statically replaced by Vite (see vite.config.ts). When
+// false, the dynamic import is dead-eliminated and @mlc-ai/web-llm never
+// enters the bundle.
+const llmClient: LlmClient = __HAS_LLM__
+  ? new (await import("~/engine/WebLlmClient")).WebLlmClient()
+  : new NoopLlmClient();
 
-const skipFallback = mode.kind === "web-no-llm";
-const orchestrator = new Orchestrator(
-  llmClient,
-  (debugEvent: LlmDebugEvent) => {
-    if (!DEBUG) return;
-    self.postMessage({ type: "LLM_DEBUG", debug: debugEvent });
-  },
-  { skipFallback },
-);
+const orchestrator = new Orchestrator(llmClient, (debugEvent: LlmDebugEvent) => {
+  if (!DEBUG) return;
+  self.postMessage({ type: "LLM_DEBUG", debug: debugEvent });
+});
 
 self.addEventListener("message", async (event: MessageEvent) => {
   const { id, type, payload } = event.data;

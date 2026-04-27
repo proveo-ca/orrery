@@ -39,17 +39,11 @@ export class Orchestrator {
   private engineBridge = new EngineBridge();
   private llmClient: LlmClient;
   private currentFen = ENGINE_CONFIG.chess.startingFen;
-  private skipFallback: boolean;
   private onDebug?: (event: LlmDebugEvent) => void;
 
-  constructor(
-    llmClient: LlmClient,
-    onDebug?: (event: LlmDebugEvent) => void,
-    opts?: { skipFallback?: boolean },
-  ) {
+  constructor(llmClient: LlmClient, onDebug?: (event: LlmDebugEvent) => void) {
     this.llmClient = llmClient;
     this.onDebug = onDebug;
-    this.skipFallback = opts?.skipFallback ?? false;
   }
 
   resetGame(): string {
@@ -148,9 +142,6 @@ export class Orchestrator {
     let usedFallback = false;
 
     if (isLowQualityLlmOutput(finalCommentary)) {
-      if (this.skipFallback) {
-        return;
-      }
       finalCommentary = fallbackAdvice(safeHumanMove);
       usedFallback = true;
     }
@@ -232,9 +223,6 @@ export class Orchestrator {
     let usedFallback = false;
 
     if (isLowQualityLlmOutput(finalText)) {
-      if (this.skipFallback) {
-        return;
-      }
       finalText = fallbackExplanation(analysis.tag, analysis.bestAlt, analysis.bestAltMatchesMove);
       usedFallback = true;
     }

@@ -2,7 +2,6 @@
 import { createEffect } from "solid-js";
 
 import { postAdviceStream } from "~/services/api";
-import { resolveMode } from "~/services/runtimeMode";
 import { accumulateStream } from "~/services/streamUtils";
 import { capabilities } from "~/store/capabilitiesStore";
 import {
@@ -90,11 +89,14 @@ export function useCoachBehavior() {
       dispatchCoachEvent({ type: "HUMAN_MOVE_BEST" });
     } else {
       dispatchCoachEvent({ type: "HUMAN_MOVE_NORMAL" });
-      if (resolveMode().kind === "web-no-llm") {
-        scheduleThinkingPhrase();
-      } else {
+      // With commentary the thinking phrase is a placeholder that the streamed
+      // advice will replace, so show it immediately. Without commentary it is
+      // the final string, so delay it to avoid an instant filler line.
+      if (capabilities().commentary) {
         const phrases = thinkingPhrases();
         setAdvice(phrases[Math.floor(Math.random() * phrases.length)]);
+      } else {
+        scheduleThinkingPhrase();
       }
     }
   });
@@ -119,6 +121,8 @@ export function useCoachBehavior() {
     }
 
     dispatchCoachEvent({ type: "AI_MOVED" });
+    // postAdviceStream is a no-op when commentary is unavailable (see api.ts),
+    // so this can call uniformly without a capability gate here.
     void _streamAdvice(info.humanMoveSan, { fen: info.fen, move: info.move });
   });
 

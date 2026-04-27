@@ -261,12 +261,16 @@ package "Hooks  [src/hooks/]" {
       .. Reactive subscriptions (createEffect) ..
       on lastHumanMoveInfo:
         abortAdvice · clear board arrows
-        if web-no-llm: setTimeout 3s → thinking phrase
-          (cancelled if AI responds first)
+        if !capabilities().commentary:
+          setTimeout 3s → thinking phrase
+          (final state — no LLM will replace it)
+        else: thinking phrase shown immediately
+          (placeholder — streamed advice replaces)
         if wasBestMove: praise phrase
       on lastAIMoveInfo:
         cancel pending thinking timer
-        if has LLM: stream postAdviceStream
+        always call postAdviceStream — the api
+          facade no-ops it in web-no-llm
         queen capture easter egg by PlayerIdentity
         GAME_OVER handling
       on lastAIError: setAdvice(error message)
@@ -297,7 +301,11 @@ package "Hooks  [src/hooks/]" {
       .. Notes ..
       integrates useHint()
       manages: travel vs normal navigation
-      streams hint explanation via postExplainStream
+      hint UI:
+        capabilities().commentary
+          → "Try moving X. " + streamed
+            postExplainStream
+          → "Try moving X." (terminal, no LLM)
     }
 
     class useHint {
@@ -415,6 +423,11 @@ package "Services  [src/services/]" {
     postMove(req: MoveRequest): Promise<MoveResponse>
     postAdviceStream(req, onChunk, opts?): Promise<void>
     postExplainStream(req, onChunk, opts?): Promise<void>
+    --
+    api.ts gate (HAS_COMMENTARY):
+      web-no-llm → postAdviceStream and
+        postExplainStream resolve immediately
+        without invoking the active service.
   }
 
   class HttpCoachService {

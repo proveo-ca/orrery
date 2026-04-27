@@ -194,13 +194,16 @@ class WebWorkerCoachService implements CoachService {
 }
 
 // Mode branching: "desktop" uses the Kotlin backend via HTTP; every other
-// mode (web-full, web-no-llm) runs the in-browser Web Worker engine. The
-// worker itself decides whether to use a real LLM or a noop based on the
-// same resolveMode() result — see orchestrator.worker.ts.
+// mode (web-full, web-no-llm) runs the in-browser Web Worker engine.
 const activeService: CoachService =
   RUNTIME_MODE.kind === "desktop" ? new HttpCoachService() : new WebWorkerCoachService();
 
-// Export facade functions to maintain compatibility with existing UI imports
+// LLM-driven endpoints become no-ops in `web-no-llm` so call sites can
+// invoke them uniformly. Whether to substitute different visible text
+// (e.g. the hint's "Try moving X.") is still a UI decision and lives in
+// the relevant hook — this gate just suppresses the worker round-trip.
+const HAS_COMMENTARY = RUNTIME_MODE.kind !== "web-no-llm";
+
 export const postNewGame = () => activeService.postNewGame();
 export const fetchHello = () => activeService.fetchHello();
 export const postMove = (req: MoveRequest) => activeService.postMove(req);
@@ -208,9 +211,15 @@ export const postAdviceStream = (
   req: AdviceRequest,
   onChunk: (chunk: string) => void,
   opts?: { signal?: AbortSignal },
-) => activeService.postAdviceStream(req, onChunk, opts);
+): Promise<void> => {
+  if (!HAS_COMMENTARY) return Promise.resolve();
+  return activeService.postAdviceStream(req, onChunk, opts);
+};
 export const postExplainStream = (
   req: ExplainRequest,
   onChunk: (chunk: string) => void,
   opts?: { signal?: AbortSignal },
-) => activeService.postExplainStream(req, onChunk, opts);
+): Promise<void> => {
+  if (!HAS_COMMENTARY) return Promise.resolve();
+  return activeService.postExplainStream(req, onChunk, opts);
+};

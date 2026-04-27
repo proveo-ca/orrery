@@ -209,6 +209,11 @@ package "Services  [src/services/]" {
   note right of CoachServiceIF
     interface: postNewGame · fetchHello
     postMove · postAdviceStream · postExplainStream
+    --
+    api.ts facade: postAdviceStream and
+    postExplainStream short-circuit to a
+    resolved Promise in web-no-llm — call
+    sites stay uniform across modes.
   end note
   [HttpCoachService]      as HttpCoachService
   [WebWorkerCoachService] as WebWorkerCoachService
@@ -228,16 +233,31 @@ WebWorkerCoachService ..|> CoachServiceIF
 
 package "WebEngine  [src/engine/]" {
   [orchestrator.worker.ts] as OrchestratorWorker
+  note right of OrchestratorWorker
+    Picks LlmClient at module init via the
+    `__HAS_LLM__` Vite define:
+      true  → await import("./WebLlmClient")
+      false → NoopLlmClient (sync)
+    web-no-llm/desktop builds dead-eliminate
+    the dynamic import — @mlc-ai/web-llm
+    never enters the bundle.
+  end note
   [Orchestrator]           as Orchestrator
   [EngineBridge]           as EngBridge
   note right of EngBridge
     StockfishEngine (analysis)
     MaiaEngine (AI moves)
   end note
-  [LlmClient]       as LlmClientIF
+  [LlmClient + NoopLlmClient] as LlmClientIF
   note right of LlmClientIF
-    WebLlmClient (web-full)
-    NoopLlmClient (web-no-llm)
+    Interface + Noop in LlmClient.ts.
+    Always present in the worker bundle.
+  end note
+  [WebLlmClient]    as WebLlmClient
+  note right of WebLlmClient
+    Separate module — lazy chunk loaded
+    only when __HAS_LLM__ is true
+    (web-full builds).
   end note
   [moveAnnotations] as MoveAnnot
   note right of MoveAnnot
@@ -284,8 +304,10 @@ RuntimeMode --> WebWorkerCoachService : web-full | web-no-llm
 
 WebWorkerCoachService --> OrchestratorWorker : postMessage
 OrchestratorWorker    --> Orchestrator       : hosts
+OrchestratorWorker    ..> WebLlmClient       : dynamic import\n(when __HAS_LLM__)
 Orchestrator --> EngBridge   : getEvaluation · getAiMove
 Orchestrator --> LlmClientIF : prompt / promptStream
+WebLlmClient ..|> LlmClientIF
 
 UseGameAnalysis ..> MoveAnnot : resolveAnnotations
 

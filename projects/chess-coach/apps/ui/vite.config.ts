@@ -9,11 +9,23 @@ import { VitePWA } from "vite-plugin-pwa";
 
 const target = process.env.VITE_TARGET;
 const isWebTarget = target === "web-full" || target === "web-no-llm";
+const hasLlm = target === "web-full";
 
 export default defineConfig({
   base: "/chess/",
   build: {
     outDir: "dist/chess",
+  },
+  // Statically replaced at build time. The orchestrator worker uses this to
+  // gate the dynamic import of WebLlmClient — `web-no-llm` and `desktop`
+  // builds get the dead-branch eliminated and never bundle @mlc-ai/web-llm.
+  define: {
+    __HAS_LLM__: JSON.stringify(hasLlm),
+  },
+  // ES-module workers so top-level await + dynamic imports work inside
+  // `?worker` files (used by `orchestrator.worker.ts` to lazy-load WebLLM).
+  worker: {
+    format: "es",
   },
   plugins: [
     solid(),
@@ -30,6 +42,9 @@ export default defineConfig({
           "**/web-engine/**",
           "**/*.worker-*.js",
           "stockfish-18-lite.js",
+          // The WebLLM chunk is ~6 MB and only loaded in `web-full` builds.
+          // Skip precache; the orchestrator imports it lazily on first use.
+          "**/WebLlmClient-*.js",
         ],
         // Don't register handlers for stockfish/engine binaries: Safari's SW
         // CacheFirst fails to produce a COEP-compatible response for `.wasm`

@@ -6,7 +6,6 @@ import { DEFAULT_STOCKFISH_WORKER_URL } from "~/engine/StockfishEngine.ts";
 import { markHintPressed } from "~/hooks/useGameRecorder";
 import { useHint } from "~/hooks/useHint";
 import { postExplainStream } from "~/services/api";
-import { resolveMode } from "~/services/runtimeMode";
 import { accumulateStream } from "~/services/streamUtils";
 import { capabilities } from "~/store/capabilitiesStore";
 
@@ -131,9 +130,7 @@ export const useGameControls = () => {
         setAdviceArrow({ from: moveObj.from, to: moveObj.to });
       }
 
-      if (resolveMode().kind === "web-no-llm") {
-        setAdvice(`Try moving ${san}.`);
-      } else {
+      if (capabilities().commentary) {
         setAdvice(`${prefix}Let me explain why...`);
 
         await accumulateStream(
@@ -142,6 +139,8 @@ export const useGameControls = () => {
           setAdvice,
           { prefix },
         );
+      } else {
+        setAdvice(`Try moving ${san}.`);
       }
 
       dispatchCoachEvent({ type: "AI_MOVED" });
