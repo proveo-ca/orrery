@@ -24,16 +24,20 @@ export default defineConfig({
         skipWaiting: true,
         clientsClaim: true,
         cleanupOutdatedCaches: true,
-        globIgnores: ["**/*.wasm", "**/models/**", "**/web-engine/**", "**/*.worker-*.js"],
+        globIgnores: [
+          "**/*.wasm",
+          "**/models/**",
+          "**/web-engine/**",
+          "**/*.worker-*.js",
+          "stockfish-18-lite.js",
+        ],
+        // Don't register handlers for stockfish/engine binaries: Safari's SW
+        // CacheFirst fails to produce a COEP-compatible response for `.wasm`
+        // (FetchEvent.respondWith → no-response), which kills Stockfish init.
+        // Letting these URLs bypass the SW means the Cloudflare worker handles
+        // the COOP/COEP headers and the browser HTTP cache covers repeat loads.
+        navigateFallbackDenylist: [/\/(web-engine|models)\//, /stockfish-18-lite\./, /\.wasm$/],
         runtimeCaching: [
-          {
-            urlPattern: /\.wasm$/,
-            handler: "CacheFirst",
-            options: {
-              cacheName: "wasm-cache",
-              expiration: { maxEntries: 10, maxAgeSeconds: 30 * 24 * 60 * 60 },
-            },
-          },
           {
             urlPattern: /\/(web-engine|models)\//,
             handler: "CacheFirst",

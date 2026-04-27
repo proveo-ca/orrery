@@ -13,17 +13,57 @@ class StockfishService {
     this.workerPath = workerPath;
 
     if (!this.worker) {
-      console.log("[StockfishService] Initializing new worker instance...");
+      console.log("[StockfishService] Initializing new worker instance...", {
+        workerPath,
+        crossOriginIsolated: self.crossOriginIsolated,
+        hasSharedArrayBuffer: typeof SharedArrayBuffer !== "undefined",
+        hasWasmThreads: (() => {
+          try {
+            // WebAssembly threads requires SAB + the "shared" memory flag
+            return (
+              typeof SharedArrayBuffer !== "undefined" &&
+              new WebAssembly.Memory({ initial: 1, maximum: 1, shared: true }).buffer instanceof
+                SharedArrayBuffer
+            );
+          } catch {
+            return false;
+          }
+        })(),
+        userAgent: navigator.userAgent,
+      });
       this.worker = new Worker(workerPath);
 
       this.worker.onerror = (err) => {
-        console.error("[StockfishService] Worker Error:", err.message, err);
+        // Stockfish wraps child-worker errors and re-throws an ErrorEvent, which
+        // Safari surfaces here with message="[object ErrorEvent]". Dump every
+        // field so we can see the underlying child filename/lineno/colno.
+        console.error("[StockfishService] Worker Error:", {
+          message: err.message,
+          filename: err.filename,
+          lineno: err.lineno,
+          colno: err.colno,
+          error: err.error,
+          errorName: err.error?.name,
+          errorMessage: err.error?.message,
+          errorStack: err.error?.stack,
+          type: err.type,
+        });
         this.restartWorker();
+      };
+
+      this.worker.onmessageerror = (event) => {
+        console.error("[StockfishService] Worker MessageError:", event);
       };
 
       this.worker.onmessage = (event) => {
         const raw = event.data;
         if (typeof raw === "string") {
+          // Stockfish's pthread workers forward stderr lines as "Thread N: ..."
+          // strings via printErr. Surface them so we can see why a child died.
+          if (raw.startsWith("Thread ") || raw.includes("worker sent an error")) {
+            console.error(`[StockfishService] Child stderr: ${raw}`);
+          }
+
           // 2. Healthcheck logging
           if (raw === "readyok" || raw === "uciok") {
             console.log(`[StockfishService] Healthcheck OK: ${raw}`);
