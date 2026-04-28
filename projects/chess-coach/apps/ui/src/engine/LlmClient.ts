@@ -26,6 +26,14 @@ export interface LlmClient {
     temperature?: number,
     maxTokens?: number,
   ): AsyncGenerator<string, void, unknown>;
+
+  /**
+   * Optional pre-warm hook. Real backends (e.g. WebLLM) implement this to
+   * pull the model into VRAM ahead of the first real prompt; no-op clients
+   * leave it unimplemented so the orchestrator skips the call entirely
+   * (and skips the misleading "Warming up LLM..." console output).
+   */
+  warmup?(): Promise<void>;
 }
 
 export class NoopLlmClient implements LlmClient {

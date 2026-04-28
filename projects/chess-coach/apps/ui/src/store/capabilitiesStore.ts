@@ -25,6 +25,9 @@ export type ScreenCapabilities = {
   showBestMove: boolean; // continuous best-move highlight overlay
   commentary: boolean; // LLM-generated move commentary
 
+  // Persistence
+  persistGame: boolean; // moves write to localStorage (Coach only)
+
   // Board interaction
   historyBranching: boolean; // past-history moves branch instead of lock UI
   freeColorControl: boolean; // can touch any color on its turn
@@ -47,6 +50,7 @@ export const COACH_CAPABILITIES: ScreenCapabilities = {
   continuousAnalysis: false,
   showBestMove: false,
   commentary: hasLlm,
+  persistGame: true,
   historyBranching: false,
   freeColorControl: false,
   readOnly: false,
@@ -64,6 +68,7 @@ export const ANALYSIS_CAPABILITIES: ScreenCapabilities = {
   continuousAnalysis: true,
   showBestMove: true,
   commentary: hasLlm,
+  persistGame: false,
   historyBranching: true,
   freeColorControl: true,
   readOnly: false,
@@ -81,6 +86,7 @@ export const REVIEW_CAPABILITIES: ScreenCapabilities = {
   continuousAnalysis: true,
   showBestMove: false,
   commentary: hasLlm,
+  persistGame: false,
   // historyBranching=true so past-position navigation doesn't lock the UI
   // behind the replay overlay — the user IS navigating past positions.
   historyBranching: true,

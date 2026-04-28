@@ -251,13 +251,11 @@ export class Orchestrator {
   }
 
   async generateUiPhrases(): Promise<UiPhrases> {
-    try {
-      console.log("Warming up LLM into VRAM...");
-      await this.llmClient.prompt("System", "Ping", ENGINE_CONFIG.llm.defaultTemperature, 1);
-      console.log("LLM Warmup complete.");
-    } catch (e: any) {
-      console.error("LLM Warmup failed:", e);
-    }
+    // Real LLM clients (WebLlmClient) implement `warmup` to pre-load the
+    // model into VRAM. Noop clients leave it undefined so we skip the call
+    // entirely — no misleading "Warming up LLM..." console output in
+    // web-no-llm/desktop builds where there's nothing to warm.
+    await this.llmClient.warmup?.();
 
     return {
       thinking: [

@@ -26,6 +26,8 @@ package "Capabilities  [capabilitiesStore.ts]" {
     continuousAnalysis: boolean
     showBestMove: boolean
     commentary: boolean
+    .. Persistence ..
+    persistGame: boolean
     .. Board interaction ..
     historyBranching: boolean
     freeColorControl: boolean
@@ -39,17 +41,21 @@ package "Capabilities  [capabilitiesStore.ts]" {
     **COACH_CAPABILITIES**
     hint=T, travel=T, aiOpponent=T,
     blunderDetection=T, continuousAnalysis=T,
-    commentary=T
+    commentary=T, persistGame=T
     (flipBoard=F, readOnly=F)
 
     **ANALYSIS_CAPABILITIES**
     hint=T, continuousAnalysis=T, showBestMove=T,
     freeColorControl=T, flipBoard=T,
-    opponentUsesPlayerPieceSet=T
+    opponentUsesPlayerPieceSet=T,
+    persistGame=F (scratch-pad — moves are
+      volatile, must not overwrite Coach's
+      saved game)
     (aiOpponent=F, readOnly=F)
 
     **REVIEW_CAPABILITIES**
-    historyNav=T, evalBarAlwaysVisible=T, readOnly=T
+    historyNav=T, evalBarAlwaysVisible=T, readOnly=T,
+    persistGame=F
     (historyBranching=T when game loaded)
   end note
 }
@@ -80,6 +86,14 @@ package "Stores  [src/store/]" {
     resignGame()
     .. Persistence ..
     key: chess_coach_game_state
+    All persistent writes (addMove, goBack/Forward,
+      setViewIndex, resignGame, resetGame) call the
+      internal `_persist()` which is gated by
+      `capabilities().persistGame`. Analysis and
+      Review screens flip that flag to false so
+      their scratch-pad / review mutations don't
+      overwrite the Coach's saved game; loadFen /
+      loadGame already use `_notify()` (no write).
   }
 
   class coachStore {
@@ -454,6 +468,16 @@ package "Services  [src/services/]" {
     .. Notes ..
     reads: VITE_TARGET · VITE_API_URL
     default: "web-no-llm"
+    --
+    Build-time companions in vite.config.ts:
+    · `__HAS_LLM__` — true iff web-full.
+      Gates the WebLlmClient dynamic import.
+    · `__STOCKFISH_VARIANT__` — selects
+      "stockfish-18-lite-single" (web) or
+      "stockfish-18-lite" (desktop). Read
+      by StockfishEngine to pick the worker
+      file; the unused variant is stripped
+      from `dist/` post-build.
   }
 
   class stockfishService <<singleton>> {
@@ -461,15 +485,35 @@ package "Services  [src/services/]" {
     send(command: string)
     addListener(fn) / removeListener(fn)
     .. Notes ..
-    watchdog: detects hung worker
-    restarts with synthetic bestmove event
+    watchdog: detects hung worker, restarts
+      with synthetic `bestmove (none)` so
+      pending consumers don't hang.
+    --
+    Circuit breaker: > 3 restarts in 10 s
+      → flips `givenUp`, terminates the
+      worker, future getWorker()/send()
+      become no-ops until page reload.
+      Prevents a permanently-faulting wasm
+      from looping into an OOM blow-up.
+    --
+    Stale-event guard: each onerror
+      handler checks `this.worker === w`
+      so drain-events from a terminated
+      worker can't terminate its successor.
   }
 
   class browserSupport {
     checkEngineSupport(): {supported, reason, debug}
     .. Checks ..
     SharedArrayBuffer · crossOriginIsolated
-    WASM shared memory
+    WASM shared memory (1-page probe)
+    --
+    Probe is intentionally tiny — we only
+    confirm SAB+threads support is present
+    (Maia/lc0 still needs threads). We do
+    NOT pre-flight Stockfish's actual
+    request size: that would consume the
+    SAB budget Stockfish then needs.
   }
 
   class streamUtils {
@@ -498,9 +542,15 @@ package "WebEngine  [src/engine/]" {
     .. Types ..
     TurnResult: {fen, move, advice?}
     .. Notes ..
+    constructor: (LlmClient, onDebug?)
+    generateUiPhrases() calls llmClient.warmup?()
+      (no-op when the client doesn't implement it,
+      i.e. NoopLlmClient in web-no-llm/desktop)
     builds MoveAnalysis for prompt
     sanitizes + validates LLM output
-    falls back to canned advice if low-quality
+    always falls back to canned advice if
+      low-quality (the api.ts gate keeps
+      web-no-llm from reaching these paths)
   }
 
   class EngineBridge {
@@ -509,6 +559,10 @@ package "WebEngine  [src/engine/]" {
     getFenAfterMove(fen, uciMove): string | null
     getSanForUciMove(fen, uciMove): string | null
     .. Notes ..
+    Stockfish + Maia are spawned LAZILY on
+      first use (getter pattern) to avoid
+      eagerly competing with main-thread
+      engines for the per-origin SAB budget.
     intermediate → maia-1100 · advanced → maia-1600
     expert → maia-2200
   }
@@ -521,7 +575,28 @@ package "WebEngine  [src/engine/]" {
     .. Types ..
     EvalResult: {bestMove, cp, isMate, mateIn, pv}
     .. Notes ..
-    worker: stockfish-18-lite.js
+    Worker file selected at build time by
+    the `__STOCKFISH_VARIANT__` Vite define:
+    · web-no-llm / web-full
+        → stockfish-18-lite-single.js
+          (single-threaded, no SAB)
+    · desktop
+        → stockfish-18-lite.js (threaded)
+    --
+    Web targets run two Stockfish workers
+    (main-thread + orchestrator) and the
+    threaded build's 128 MB / 2 GB shared
+    WebAssembly.Memory request trips
+    Chrome 147's per-origin SAB budget,
+    cascading into a pthread-pool spawn
+    loop. Single-threaded sidesteps it.
+    Desktop has only the main-thread worker
+    (orchestrator runs server-side), so
+    threading is safe and faster.
+    --
+    The unused variant is stripped from
+    `dist/` by the strip-unused-stockfish
+    Vite plugin.
   }
 
   class MaiaEngine {
@@ -536,19 +611,40 @@ package "WebEngine  [src/engine/]" {
   interface LlmClient {
     prompt(sys, user, temp?, maxTokens?): Promise<string>
     promptStream(...): AsyncGenerator<string>
+    warmup?(): Promise<void>
+    .. Notes ..
+    `warmup` is optional. Real backends
+    (WebLlmClient) implement it to pre-load
+    the model into VRAM. Noop clients leave
+    it undefined; Orchestrator skips the
+    call entirely so web-no-llm / desktop
+    builds emit no "Warming up LLM..."
+    console output.
   }
 
   class WebLlmClient {
     .. Notes ..
+    file: src/engine/WebLlmClient.ts
     @mlc-ai/web-llm · web-full mode only
+    lazy chunk — orchestrator.worker.ts does
+      `await import("./WebLlmClient")` only
+      when __HAS_LLM__ is true; web-no-llm and
+      desktop builds dead-eliminate the import
+    implements warmup() — pre-loads the
+      model into VRAM with a 1-token Ping
     model: chess-gemma-commentary-q0f32-MLC
     WASM: gemma-3-270m-q0f32-webgpu.wasm
   }
 
   class NoopLlmClient {
     .. Notes ..
-    web-no-llm mode · returns empty strings
-    Orchestrator falls back to canned commentary
+    file: src/engine/LlmClient.ts (with interface)
+    returns empty strings · does NOT implement
+      warmup (Orchestrator skips the call)
+    used as the worker's eager LlmClient when
+      __HAS_LLM__ is false. In practice
+      unreachable in web-no-llm (the api.ts
+      gate short-circuits before postMessage).
   }
 
   class llmPromptFormat {

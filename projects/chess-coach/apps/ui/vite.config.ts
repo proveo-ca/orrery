@@ -11,6 +11,14 @@ const target = process.env.VITE_TARGET;
 const isWebTarget = target === "web-full" || target === "web-no-llm";
 const hasLlm = target === "web-full";
 
+// Web targets run two Stockfish workers in the browser (main-thread for
+// hint/blunder + orchestrator-thread for AI move planning) and compete for
+// the same per-origin SharedArrayBuffer budget. The single-threaded build
+// avoids that contention. Desktop mode runs the orchestrator server-side,
+// so the browser only has one Stockfish and the threaded build is fine.
+const stockfishVariant = isWebTarget ? "stockfish-18-lite-single" : "stockfish-18-lite";
+const stockfishOther = isWebTarget ? "stockfish-18-lite" : "stockfish-18-lite-single";
+
 export default defineConfig({
   base: "/chess/",
   build: {
@@ -21,6 +29,7 @@ export default defineConfig({
   // builds get the dead-branch eliminated and never bundle @mlc-ai/web-llm.
   define: {
     __HAS_LLM__: JSON.stringify(hasLlm),
+    __STOCKFISH_VARIANT__: JSON.stringify(stockfishVariant),
   },
   // ES-module workers so top-level await + dynamic imports work inside
   // `?worker` files (used by `orchestrator.worker.ts` to lazy-load WebLLM).
@@ -36,22 +45,32 @@ export default defineConfig({
         skipWaiting: true,
         clientsClaim: true,
         cleanupOutdatedCaches: true,
+        // Default globPatterns misses the `pieces/` SVGs. Spell out the full
+        // set explicitly so every piece-set asset (~42 KB total across 4
+        // sets × 12 pieces) lands in the precache and the board renders
+        // offline from the very first PWA install.
+        globPatterns: [
+          "**/*.{js,css,html,ico,svg,png,webp,woff,woff2,webmanifest,wasm}",
+        ],
+        // The chosen Stockfish build (~7 MB wasm) is precached so the app
+        // works fully offline. That's the only non-engine asset above the
+        // workbox default 2 MiB cap.
+        maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
         globIgnores: [
-          "**/*.wasm",
+          // Heavy chess-engine binaries — runtime-cached on first use instead
+          // of bloating the SW install download.
           "**/models/**",
           "**/web-engine/**",
           "**/*.worker-*.js",
-          "stockfish-18-lite.js",
           // The WebLLM chunk is ~6 MB and only loaded in `web-full` builds.
           // Skip precache; the orchestrator imports it lazily on first use.
           "**/WebLlmClient-*.js",
+          // Exclude the Stockfish variant we DON'T ship for this target.
+          `${stockfishOther}.js`,
+          `${stockfishOther}.wasm`,
         ],
-        // Don't register handlers for stockfish/engine binaries: Safari's SW
-        // CacheFirst fails to produce a COEP-compatible response for `.wasm`
-        // (FetchEvent.respondWith → no-response), which kills Stockfish init.
-        // Letting these URLs bypass the SW means the Cloudflare worker handles
-        // the COOP/COEP headers and the browser HTTP cache covers repeat loads.
-        navigateFallbackDenylist: [/\/(web-engine|models)\//, /stockfish-18-lite\./, /\.wasm$/],
+        // Don't run the SPA navigate-fallback for engine/binary URLs.
+        navigateFallbackDenylist: [/\/(web-engine|models)\//, /stockfish-18-lite/, /\.wasm$/],
         runtimeCaching: [
           {
             urlPattern: /\/(web-engine|models)\//,
@@ -122,6 +141,19 @@ export default defineConfig({
           if (fs.existsSync(webEnginesDir)) {
             fs.rmSync(webEnginesDir, { recursive: true, force: true });
             console.log("🗑️  Removed web-engines directory for Docker build.");
+          }
+        }
+      },
+    },
+    {
+      name: "strip-unused-stockfish",
+      closeBundle() {
+        const distDir = path.resolve(__dirname, "dist/chess");
+        for (const ext of ["js", "wasm"]) {
+          const fullPath = path.join(distDir, `${stockfishOther}.${ext}`);
+          if (fs.existsSync(fullPath)) {
+            fs.rmSync(fullPath);
+            console.log(`🗑️  Removed unused ${stockfishOther}.${ext}`);
           }
         }
       },

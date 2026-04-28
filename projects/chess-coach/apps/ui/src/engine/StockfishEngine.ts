@@ -9,7 +9,24 @@ export type EvalResult = {
   pv: string;
 };
 
-export const DEFAULT_STOCKFISH_WORKER_URL = import.meta.env.BASE_URL + "stockfish-18-lite.js";
+/**
+ * Stockfish binary chosen at build time by `__STOCKFISH_VARIANT__` in
+ * vite.config.ts:
+ *   - web-no-llm / web-full → "stockfish-18-lite-single" (no SAB, no
+ *     pthread pool). Web targets run two Stockfish workers in the browser
+ *     (main-thread + orchestrator) and compete for the per-origin
+ *     SharedArrayBuffer budget; the threaded build trips Chrome 147's
+ *     allocation cap and Stockfish's pthread pool then loops on
+ *     sub-worker spawn failures, blowing up RAM.
+ *   - desktop → "stockfish-18-lite" (threaded). Orchestrator runs server-
+ *     side, so the browser holds only the main-thread Stockfish — no
+ *     contention, full multi-threaded search.
+ *
+ * The unused variant is stripped from `dist/` by the `strip-unused-
+ * stockfish` plugin, so each build only ships the file it needs.
+ */
+export const DEFAULT_STOCKFISH_WORKER_URL =
+  import.meta.env.BASE_URL + __STOCKFISH_VARIANT__ + ".js";
 
 export class StockfishEngine {
   private driver: UciDriver;

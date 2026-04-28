@@ -149,6 +149,11 @@ export function useCoachBehavior() {
       );
 
       if (_adviceController !== controller) return;
+      // No-op stream (web-no-llm) produces an empty `fullAdvice`. Skip the
+      // event — dispatching ADVICE_RECEIVED with isBlunder=false would
+      // unconditionally reset the coach emotion to "idle" and stomp on a
+      // recent HUMAN_MOVE_BEST happy state mid-decay.
+      if (!fullAdvice.trim()) return;
       const lower = fullAdvice.toLowerCase();
       const isBlunder = lower.includes("blunder") || lower.includes("mistake");
       dispatchCoachEvent({ type: "ADVICE_RECEIVED", isBlunder });

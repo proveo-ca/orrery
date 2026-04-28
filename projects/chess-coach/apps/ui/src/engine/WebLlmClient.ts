@@ -17,6 +17,22 @@ export class WebLlmClient implements LlmClient {
     this.initPromise = this.initEngine();
   }
 
+  /** Pre-warm the model into VRAM so the first real prompt isn't a cold load. */
+  async warmup(): Promise<void> {
+    console.log("[LlmClient] Warming up LLM into VRAM...");
+    try {
+      await this.prompt(
+        "System",
+        "Ping",
+        ENGINE_CONFIG.llm.defaultTemperature,
+        1,
+      );
+      console.log("[LlmClient] Warmup complete.");
+    } catch (e: any) {
+      console.error("[LlmClient] Warmup failed:", e);
+    }
+  }
+
   private async initEngine() {
     console.log(`[LlmClient] Initializing WebLLM with model: ${ENGINE_CONFIG.llm.modelId}`);
 

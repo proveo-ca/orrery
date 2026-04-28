@@ -2,6 +2,7 @@
 import { Chess, type Move } from "chess.js";
 import { createSignal } from "solid-js";
 
+import { capabilities } from "~/store/capabilitiesStore";
 import { dispatchCoachEvent, setAdvice } from "~/store/coachStore";
 import { colorPref, setActivePlayerColor } from "~/store/settingsStore";
 
@@ -40,6 +41,11 @@ function _notify() {
 
 // ── Persistence ─────────────────────────────────────────────────────────
 function _persist() {
+  // Screens that flip `persistGame: false` (Analysis scratch-pad, Review)
+  // share the same gameStore for reactivity but must not overwrite the
+  // Coach's saved game in localStorage. Capability is initialised to the
+  // Coach default at module load, so app startup writes still go through.
+  if (!capabilities().persistGame) return;
   try {
     localStorage.setItem(
       STORAGE_KEY,

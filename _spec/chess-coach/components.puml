@@ -28,7 +28,7 @@ package "SolidJS Frontend (chess-coach-ui)" {
   }
 
   package "Local Engine Layer" as ENGINE {
-    [Stockfish Worker\n(stockfish-18-lite.js)] as SF_HINT_WORKER
+    [Stockfish Worker\n(threaded on desktop, single-threaded on web —\nbuild-time __STOCKFISH_VARIANT__ define)] as SF_HINT_WORKER
   }
 }
 
@@ -54,17 +54,32 @@ frame "Mode: desktop" as DESKTOP_MODE {
 
 frame "Mode: web-full" as WEB_FULL_MODE {
   [Orchestrator Worker\n(orchestrator.worker.ts)] as ORCH_FULL
+  [WebLlmClient\n(lazy chunk via __HAS_LLM__)] as WEBLLM_CLIENT
   [LLM Worker\n(llm.worker.ts / WebLLM)] as LLM_WORKER
-  [Stockfish Worker\n(AI Moves)] as SF_AI_FULL
+  [Stockfish Worker\n(stockfish-18-lite-single.js, single-threaded)] as SF_AI_FULL
 }
 
 frame "Mode: web-no-llm" as WEB_NO_LLM_MODE {
   [Orchestrator Worker\n(orchestrator.worker.ts)] as ORCH_NOLLM
-  [Stockfish Worker\n(AI Moves)] as SF_AI_NOLLM
+  [Stockfish Worker\n(stockfish-18-lite-single.js, single-threaded)] as SF_AI_NOLLM
   note right of ORCH_NOLLM
-    Advice stream skipped.
-    3 s thinking-phrase delay
-    before showing advice text.
+    api.ts gate: postAdviceStream
+    and postExplainStream resolve
+    immediately — the orchestrator's
+    LLM paths are never reached.
+    Build dead-eliminates WebLlmClient
+    so @mlc-ai/web-llm is not bundled.
+    --
+    UI substitutes:
+    · "Try moving X." for hint
+    · 3 s thinking-phrase delay
+      after a non-best human move
+    --
+    Stockfish: single-threaded build —
+    no SharedArrayBuffer, sidesteps the
+    Chrome 147 SAB-budget contention
+    between main-thread + orchestrator
+    Stockfish workers.
   end note
 }
 
@@ -94,10 +109,11 @@ ORCH_DAEMON --> LLM_CLIENT_DAEMON : "Generate Advice"
 LLM_CLIENT_DAEMON --> OLLAMA : "HTTP POST\n/v1/chat/completions"
 
 WW_SVC --> ORCH_FULL : "postMessage"
-ORCH_FULL --> LLM_WORKER : "Generate Advice (WebGPU)"
+ORCH_FULL ..> WEBLLM_CLIENT : "dynamic import\n(__HAS_LLM__)"
+WEBLLM_CLIENT --> LLM_WORKER : "Generate Advice (WebGPU)"
 ORCH_FULL --> SF_AI_FULL : "UCI / AI Move"
 
-WW_SVC --> ORCH_NOLLM : "postMessage"
+WW_SVC --> ORCH_NOLLM : "postMessage (NEW_GAME / MOVE)"
 ORCH_NOLLM --> SF_AI_NOLLM : "UCI / AI Move"
 
 STORES --> BOARD : "Reactive FEN"

@@ -1,6 +1,11 @@
 // SPEC: _spec/chess-coach/ui/components.puml
 import { DEFAULT_STOCKFISH_WORKER_URL } from "~/engine/StockfishEngine";
 
+// Circuit breaker so a worker that keeps faulting can't pin the CPU and
+// balloon RAM by being respawned in a tight terminate/respawn loop.
+const RESTART_WINDOW_MS = 10_000;
+const MAX_RESTARTS_PER_WINDOW = 3;
+
 class StockfishService {
   private worker: Worker | null = null;
   private listeners: Set<(event: MessageEvent) => void> = new Set();
@@ -9,34 +14,34 @@ class StockfishService {
   private watchdogTimer: number | null = null;
   private isSearching: boolean = false;
 
+  private restartCount = 0;
+  private restartWindowStart = 0;
+  private givenUp = false;
+
   getWorker(workerPath: string = DEFAULT_STOCKFISH_WORKER_URL): Worker {
     this.workerPath = workerPath;
+
+    if (this.givenUp) {
+      throw new Error(
+        "[StockfishService] Engine disabled after repeated init failures (likely wasm memory exhaustion). Reload the page to retry.",
+      );
+    }
 
     if (!this.worker) {
       console.log("[StockfishService] Initializing new worker instance...", {
         workerPath,
-        crossOriginIsolated: self.crossOriginIsolated,
-        hasSharedArrayBuffer: typeof SharedArrayBuffer !== "undefined",
-        hasWasmThreads: (() => {
-          try {
-            // WebAssembly threads requires SAB + the "shared" memory flag
-            return (
-              typeof SharedArrayBuffer !== "undefined" &&
-              new WebAssembly.Memory({ initial: 1, maximum: 1, shared: true }).buffer instanceof
-                SharedArrayBuffer
-            );
-          } catch {
-            return false;
-          }
-        })(),
         userAgent: navigator.userAgent,
       });
-      this.worker = new Worker(workerPath);
 
-      this.worker.onerror = (err) => {
-        // Stockfish wraps child-worker errors and re-throws an ErrorEvent, which
-        // Safari surfaces here with message="[object ErrorEvent]". Dump every
-        // field so we can see the underlying child filename/lineno/colno.
+      const worker = new Worker(workerPath);
+      this.worker = worker;
+
+      worker.onerror = (err) => {
+        // Drop stale errors emitted by an already-terminated worker so
+        // residual events from a previous instance can't terminate the
+        // newly-spawned successor.
+        if (this.worker !== worker) return;
+
         console.error("[StockfishService] Worker Error:", {
           message: err.message,
           filename: err.filename,
@@ -46,16 +51,17 @@ class StockfishService {
           errorName: err.error?.name,
           errorMessage: err.error?.message,
           errorStack: err.error?.stack,
-          type: err.type,
         });
         this.restartWorker();
       };
 
-      this.worker.onmessageerror = (event) => {
+      worker.onmessageerror = (event) => {
+        if (this.worker !== worker) return;
         console.error("[StockfishService] Worker MessageError:", event);
       };
 
-      this.worker.onmessage = (event) => {
+      worker.onmessage = (event) => {
+        if (this.worker !== worker) return;
         const raw = event.data;
         if (typeof raw === "string") {
           // Stockfish's pthread workers forward stderr lines as "Thread N: ..."
@@ -110,19 +116,50 @@ class StockfishService {
     }, timeoutMs);
   }
 
+  /** Detach handlers and kill the worker so its drain-events can't re-enter. */
+  private killCurrentWorker() {
+    if (!this.worker) return;
+    this.worker.onerror = null;
+    this.worker.onmessage = null;
+    this.worker.onmessageerror = null;
+    this.worker.terminate();
+    this.worker = null;
+  }
+
+  private giveUp(reason: string) {
+    this.givenUp = true;
+    this.killCurrentWorker();
+    this.clearWatchdog();
+    this.isSearching = false;
+    console.error(
+      `[StockfishService] Engine disabled (${reason}) — reload the page to retry.`,
+    );
+    // Unblock any pending consumers.
+    const syntheticEvent = new MessageEvent("message", { data: "bestmove (none)" });
+    for (const listener of this.listeners) listener(syntheticEvent);
+  }
+
   private restartWorker() {
-    if (this.worker) {
-      this.worker.terminate();
-      this.worker = null;
-    }
+    this.killCurrentWorker();
     this.clearWatchdog();
     this.isSearching = false;
 
     // Broadcast a synthetic bestmove so any pending hooks (useHint, useTravelMode)
     // don't hang forever waiting for a promise to resolve.
     const syntheticEvent = new MessageEvent("message", { data: "bestmove (none)" });
-    for (const listener of this.listeners) {
-      listener(syntheticEvent);
+    for (const listener of this.listeners) listener(syntheticEvent);
+
+    // Circuit-breaker: roll the restart counter, refuse to respawn once the
+    // budget is exhausted in the current window.
+    const now = Date.now();
+    if (now - this.restartWindowStart > RESTART_WINDOW_MS) {
+      this.restartCount = 0;
+      this.restartWindowStart = now;
+    }
+    this.restartCount += 1;
+    if (this.restartCount > MAX_RESTARTS_PER_WINDOW) {
+      this.giveUp(`${this.restartCount} restarts in ${RESTART_WINDOW_MS}ms`);
+      return;
     }
 
     // Recreate the worker
@@ -138,6 +175,7 @@ class StockfishService {
   }
 
   send(command: string) {
+    if (this.givenUp) return;
     if (!this.worker) this.getWorker(this.workerPath);
 
     // Start watchdog for commands that expect a response

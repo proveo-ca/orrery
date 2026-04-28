@@ -3,6 +3,7 @@ import { type Chess, type Square } from "chess.js";
 import { createSignal } from "solid-js";
 
 import { postMove } from "~/services/api";
+import { resolveMode } from "~/services/runtimeMode";
 import { capabilities } from "~/store/capabilitiesStore";
 import {
   addMove,
@@ -12,6 +13,12 @@ import {
 } from "~/store/gameStore";
 import { difficulty } from "~/store/settingsStore";
 import { logger } from "~/utils/logger";
+
+// "Communicating with the coach" is only literally true when an HTTP API
+// is plugged in (desktop mode). In web modes the orchestrator runs in the
+// browser, so a misleading network-style banner just confuses the user —
+// we still log the underlying error.
+const HAS_REMOTE_COACH = resolveMode().kind === "desktop";
 
 export const [lastHumanMoveInfo, setLastHumanMoveInfo] = createSignal<{
   san: string;
@@ -125,8 +132,10 @@ export function useMoveExecutor(stopStockfish: () => void) {
         gameOver,
       });
     } catch (err) {
-      logger.error("Error communicating with the coach", err);
-      setLastAIError("Error communicating with the coach.");
+      logger.error("AI move failed", err);
+      if (HAS_REMOTE_COACH) {
+        setLastAIError("Error communicating with the coach.");
+      }
     }
   };
 

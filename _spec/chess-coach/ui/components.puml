@@ -245,8 +245,15 @@ package "WebEngine  [src/engine/]" {
   [Orchestrator]           as Orchestrator
   [EngineBridge]           as EngBridge
   note right of EngBridge
-    StockfishEngine (analysis)
-    MaiaEngine (AI moves)
+    StockfishEngine (analysis) · MaiaEngine
+      (AI moves) — both lazy-spawned on
+      first use to avoid eagerly competing
+      with main-thread engines for the
+      per-origin SharedArrayBuffer budget.
+    StockfishEngine picks the worker file
+      at build time (`__STOCKFISH_VARIANT__`):
+      web → single-threaded, desktop →
+      threaded. See entities.puml.
   end note
   [LlmClient + NoopLlmClient] as LlmClientIF
   note right of LlmClientIF

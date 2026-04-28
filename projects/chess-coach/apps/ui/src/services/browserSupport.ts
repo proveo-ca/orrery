@@ -1,6 +1,13 @@
 /**
  * Checks whether the browser supports the features needed for the in-browser
- * chess engines (Stockfish pthreads, lc0/Maia pthreads + SharedArrayBuffer).
+ * chess engines.
+ *
+ * Stockfish is now the single-threaded build (`stockfish-18-lite-single.js`),
+ * which uses ordinary wasm memory and has no SAB / pthread requirement. The
+ * remaining hard requirement is Maia/lc0, which still uses SharedArrayBuffer
+ * + WASM threads (cross-origin isolation needed). When that's unavailable
+ * we'd still want to surface a clear "this browser can't play AI moves"
+ * message before the user enters the screen.
  *
  * Call once on app load; the result never changes within a session.
  */
@@ -31,6 +38,9 @@ export function checkEngineSupport(): { supported: boolean; reason: string | nul
     };
   }
 
+  // Maia/lc0 needs WASM threads; probe with a 1-page (64 KB) shared
+  // allocation so we just confirm the capability without consuming real
+  // memory budget.
   try {
     const mem = new WebAssembly.Memory({ initial: 1, maximum: 1, shared: true });
     info.push(`WASM shared memory: ${mem.buffer instanceof SharedArrayBuffer}`);
