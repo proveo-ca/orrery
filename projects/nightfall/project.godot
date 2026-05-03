@@ -8,13 +8,17 @@
 
 config_version=5
 
+[animation]
+
+compatibility/default_parent_skeleton_in_mesh_instance_3d=true
+
 [application]
 
 config/name="Nightfall"
 config/description="A short real-time horror experience where you survive 20 minutes in a dark house with 4 mischievous cats. Built for browser using Godot 4 + WebLLM nano models."
 config/tags=PackedStringArray("3d", "horror", "first-person", "browser")
 run/main_scene="res://main.tscn"
-config/features=PackedStringArray("4.3")
+config/features=PackedStringArray("4.6")
 config/icon="res://icon.webp"
 
 [debug]
@@ -23,10 +27,10 @@ gdscript/warnings/untyped_declaration=1
 
 [display]
 
-window/stretch/mode="canvas_items"
-window/stretch/aspect="expand"
 window/size/viewport_width=1280
 window/size/viewport_height=720
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
 
 [input]
 
@@ -86,11 +90,7 @@ common/physics_interpolation=true
 [rendering]
 
 renderer/rendering_method="mobile"
-lights_and_shadows/directional_shadow/soft_shadow_filter_quality=2
-lights_and_shadows/positional_shadow/soft_shadow_filter_quality=2
-textures/default_filters/anisotropic_filtering_level=2
 anti_aliasing/quality/msaa_3d=1
 anti_aliasing/quality/use_debanding=true
 environment/defaults/default_clear_color=Color(0.02, 0.02, 0.03, 1)
 environment/defaults/default_environment="res://environment/default_env.tres"
-textures/light_projectors/filter=3
