@@ -1,0 +1,13 @@
+[gd_scene format=3 uid="uid://d3v4v2v3k4l5m"]
+
+[node name="Main" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = ExtResource("1")
+
+[node name="Player" parent="." instance=ExtResource("2")]
+
+[node name="House" parent="." instance=ExtResource("3")]
+
+[node name="GameManager" type="Node" parent="."]
+script = ExtResource("4")

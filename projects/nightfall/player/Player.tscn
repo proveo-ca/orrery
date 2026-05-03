@@ -1,0 +1,26 @@
+[gd_scene format=3 uid="uid://xyu1nofmqxa2"]
+
+[ext_resource type="Script" path="res://player/Player.gd" id="1"]
+[ext_resource type="PackedScene" uid="uid://c34pvm3p8cwk5" path="res://player/follow_camera.tscn" id="2"]
+
+[node name="Player" type="CharacterBody3D"]
+script = ExtResource("1")
+speed = 4.0
+sprint_multiplier = 1.6
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("1")
+
+[node name="Target" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
+
+[node name="Camera" parent="Target" instance=ExtResource("2")]
+
+[node name="Flashlight" type="SpotLight3D" parent="Target/Camera"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+light_color = Color(0.9, 0.85, 0.7)
+light_energy = 2.0
+shadow_enabled = true
+spot_range = 12.0
+spot_angle = 35.0
+spot_angle_attenuation = 1.5
