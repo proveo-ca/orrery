@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://c34pvm3p8cwk5"]
+[gd_scene format=3 uid="uid://c4m3r4s0c3n3v1"]
 
 [node name="Camera" type="Camera3D"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)

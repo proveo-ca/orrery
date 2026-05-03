@@ -1,11 +1,38 @@
 [gd_scene format=3 uid="uid://d3v4v2v3k4l5m"]
 
+[ext_resource type="Environment" uid="uid://7x9k2m3n4p5q" path="res://environment/default_env.tres" id="1"]
+[ext_resource type="PackedScene" uid="uid://b2c3d4e5f6g7h" path="res://player/Player.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://cats/Cat.tscn" id="3"]
+
+[sub_resource type="PlaneMesh" id="2"]
+size = Vector2(100, 100)
+
+[sub_resource type="BoxShape3D" id="3"]
+size = Vector3(100, 1, 100)
+
 [node name="Main" type="Node3D"]
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = ExtResource("1")
 
-[node name="Player" parent="." instance=ExtResource("2")]
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.707107, -0.707107, 0, 0.707107, -0.707107, 0, 0, 0, 1, 0, 10, 0)
+light_energy = 0.8
+shadow_enabled = true
+shadow_bias = 0.05
+directional_shadow_mode = 0
 
-[node name="GameManager" type="Node" parent="."]
-script = ExtResource("3")
+[node name="Floor" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Floor"]
+mesh = SubResource("2")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Floor"]
+shape = SubResource("3")
+
+[node name="Player" parent="." instance=ExtResource("2")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+
+[node name="Cat" parent="." instance=ExtResource("3")]
+transform = Transform3D(0.965926, 0, -0.258819, 0, 1, 0, 0.258819, 0, 0.965926, 4, 1.1, 3)

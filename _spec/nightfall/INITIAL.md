@@ -69,3 +69,77 @@ Add lighting and heartbeat UI.
 
 Godot has excellent documentation and an active Discord/forums. Your idea is very doable as a solo hobby project—short duration keeps it focused and finishable.
 If you share more details (e.g., specific collision rules for running, cat behaviors, or a mechanic you're stuck on), I can give more targeted code snippets or architecture advice. Good luck; this has real potential to be a charming little horror gem! 🐱
+
+The https://github.com/godotengine/godot-demo-projects/tree/master/3d folder contains many small focused examples. For your Nightfall horror game (first-person, low-light house, 4 agentic cats, heart-rate monitor, 20-minute timer,
+curtains, interactables), you only need these specific demos:
+
+```
+Demo Folder          Why it's useful for Nightfall                                                                Priority
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+kinematic_character  Best starting point for a proper first-person controller (collision-aware, no spam running)  ★★★★★
+lights_and_shadows   Low-light horror atmosphere, flashlight, flickering lights, window lights from outside       ★★★★★
+rigidbody_character  Alternative movement style (more bouncy) – good reference                                    ★★★
+navigation           Cat pathfinding around the house (they need to walk intelligently)                           ★★★★★
+particles            Dust, god rays, creepy fog in low light                                                      ★★★
+volumetric_fog       Thick darkness + flashlight cutting through fog                                              ★★★★
+squash_the_creeps    Simple enemy AI + state machine example (very useful for cats)                               ★★★★
+labels_and_texts     HUD elements (heart rate monitor, timer)                                                     ★★
+platformer           Good example of structured project layout                                                    ★★
+```
+
+You do not need most of the others (voxel, truck_town, ragdoll, etc.).
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Recommended Starter Project Structure (Nightfall)
+
+Create this exact folder structure.
+
+```
+nightfall/
+├── project.godot                 # Main project file (created by Godot)
+├── main.tscn                     # Entry scene (loads everything)
+├── autoload/
+│   ├── GameManager.gd            # Central orchestrator + event bus
+│   ├── StateManager.gd           # Game state (timer, curtains opened, etc.)
+│   └── WebLLMConnector.gd        # Bridge to nano models (later)
+├── player/
+│   ├── Player.tscn
+│   ├── Player.gd
+│   └── components/
+│       ├── HeartRate.gd
+│       ├── Inventory.gd
+│       └── Flashlight.gd
+├── cats/
+│   ├── Cat.tscn                  # Reusable cat template
+│   ├── Cat.gd
+│   └── ai/
+│       ├── CatBrain.gd           # Will call nano model
+│       └── behaviors/
+│           ├── Wander.gd
+│           ├── Mischief.gd
+│           └── Flee.gd
+├── environment/
+│   ├── House.tscn
+│   ├── House.gd
+│   ├── Curtains.gd
+│   └── lights/
+│       ├── WindowLight.tscn      # Static light coming from outside
+│       └── FlickerLight.gd
+├── interactables/
+│   ├── Interactable.gd           # Base class
+│   ├── Note.tscn
+│   ├── Door.tscn
+│   └── Curtain.tscn
+├── ui/
+│   ├── HUD.tscn
+│   ├── HeartMonitor.tscn
+│   └── GameTimer.gd
+├── assets/
+│   ├── models/                   # .glb or .obj files
+│   ├── textures/
+│   └── sounds/                   # footsteps, meows, creaks, heartbeat
+├── web_harness/                  # For WebLLM later
+│   └── WebLLM.gd
+└── README.md
+```
