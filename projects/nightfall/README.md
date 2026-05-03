@@ -15,7 +15,7 @@ The "paranormal" activity turns out to be four very mischievous black cats.
 
 ## How to Run Locally (Development)
 
-1. Download **Godot 4.3 or newer** (Godot 4.4+ recommended) from https://godotengine.org/download
+1. Download **Godot 4.3 or newer** (Godot 4.6+ recommended) from https://godotengine.org/download
 2. Make sure you download the **Standard** version (not Mono or .NET)
 3. Open Godot Editor
 4. Click **"Import"** and select the `project.godot` file in this folder
