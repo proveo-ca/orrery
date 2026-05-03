@@ -1,0 +1,112 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+title Nightfall - Deployment & Project Structure (Pure Browser + Godot 4 Web)
+
+cloud "Static Hosting (GitHub Pages / Cloudflare / S3)" as Host {
+  folder "Godot Web Export" {
+    artifact "index.html"
+    artifact "nightfall.js"
+    artifact "nightfall.wasm"
+    artifact "nightfall.pck"
+    artifact "godot.editor.html"
+  }
+
+  folder "WebLLM Nano Models" {
+    artifact "phi-2-q4f16_1-webgpu.wasm"
+    artifact "mlc-chat-config.json"
+    artifact "ndarray-cache.json"
+    artifact "params_shard_*.bin"
+  }
+
+  folder "Assets (Imported into .pck)" {
+    artifact "player/"
+    artifact "cats/"
+    artifact "environment/"
+    artifact "ui/"
+    artifact "sounds/"
+  }
+}
+
+node "Client Browser" as Browser {
+  component "Godot 4 Web Engine" as GodotEngine
+  component "WebLLM Runtime" as WebLLM
+  component "WebGPU" as GPU
+  database "IndexedDB" as Cache
+}
+
+actor "Human Player" as Player
+
+' Flow
+Player --> GodotEngine : "WASD + Mouse + Interaction"
+GodotEngine --> WebLLM : "Query nano model for cat behavior"
+WebLLM --> GPU : "Inference on nano models"
+GodotEngine <--> Cache : "Load model weights & game assets"
+
+note right of GodotEngine
+  Recommended Godot Project Tree:
+
+  nightfall/
+  ├── project.godot
+  ├── main.tscn                  ← Entry point scene
+  ├── autoload/
+  │   ├── GameManager.gd         ← Central orchestration + event bus
+  │   ├── StateManager.gd        ← Persistent game state
+  │   └── WebLLMConnector.gd     ← Bridge to WebLLM nano models
+  ├── player/
+  │   ├── Player.tscn            ← CharacterBody3D + Camera3D
+  │   ├── Player.gd              ← Input, movement, heart rate, inventory
+  │   └── components/
+  │       ├── HeartRate.gd
+  │       ├── Inventory.gd
+  │       └── Flashlight.gd
+  ├── cats/
+  │   ├── Cat.tscn               ← CharacterBody3D template
+  │   ├── Cat.gd                 ← Vision, state machine
+  │   └── ai/
+  │       ├── CatBrain.gd        ← Nano-model prompting & decision making
+  │       └── behaviors/
+  │           ├── Wander.gd
+  │           ├── Mischief.gd
+  │           └── Flee.gd
+  ├── environment/
+  │   ├── House.tscn
+  │   ├── Curtains.gd
+  │   ├── Lights/
+  │   │   ├── StaticWindowLight.tscn   ← OmniLight3D outside windows
+  │   │   └── FlickeringLight.gd
+  │   └── props/
+  ├── interactables/
+  │   ├── Note.tscn
+  │   ├── Door.tscn
+  │   ├── Button.tscn
+  │   └── Interactable.gd        ← Base script with _on_interacted()
+  ├── ui/
+  │   ├── HUD.tscn
+  │   ├── HeartMonitor.tscn
+  │   └── CurtainReveal.tscn
+  ├── assets/
+  │   ├── models/
+  │   ├── textures/
+  │   └── sounds/
+  └── web_harness/
+      ├── WebLLM.gd              ← JavaScript bridge via JavaScriptBridge
+      └── EventBus.gd            ← Godot Signal based reactivity
+end note
+
+note bottom of GodotEngine
+  • Godot 4 natively supports event-driven architecture via Signals.
+  • No extra framework needed — use connect() / emit_signal().
+  • GameManager acts as central orchestrator.
+  • Player actions (open curtain, make noise) emit signals that cats react to.
+  • Reactivity achieved through Godot’s built-in _process(), Signals,
+    and reactive GDScript properties (using @export and setters).
+  • WebLLMConnector uses Godot’s JavaScriptBridge to call browser nano models.
+end note
+
+note right of WebLLM
+  Nano models (Phi-2, TinyLlama, Gemma-2B quantized)
+  run completely in-browser via WebLLM.
+  Each cat maintains a tiny rolling context.
+end note
+
+@enduml
