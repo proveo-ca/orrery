@@ -1,0 +1,16 @@
+name = "nightfall"
+compatibility_date = "2026-05-05"
+main = "worker.js"
+
+[assets]
+directory = "dist"
+binding = "ASSETS"
+run_worker_first = true
+
+[[routes]]
+pattern = "proveo.ca/nightfall"
+zone_name = "proveo.ca"
+
+[[routes]]
+pattern = "proveo.ca/nightfall/*"
+zone_name = "proveo.ca"

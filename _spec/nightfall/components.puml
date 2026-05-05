@@ -1,88 +1,86 @@
 @startuml
 !includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
-title Nightfall - Initial Version Component Diagram
-' Pure Browser Experience - Godot 4 Web Export + Nano Models
+title Nightfall - Component Diagram (Three.js + TypeScript)
 
 package "Browser Runtime" {
-  [Godot 4 Web Export\n(.html + .wasm + .pck)] as GodotWeb
+  [Vite + Three.js Bundle\n(index.html + JS + WASM)] as ThreeBundle
   [WebLLM / Nano Models\n(q4f16_1 or smaller)] as NanoLLM
   [IndexedDB Cache] as Cache
 }
 
-package "Godot Engine (Core)" {
-  [Main Scene\n(3-story house + basement)] as MainScene
+package "Three.js Core" {
+  [Main Scene\n(3D house + basement)] as MainScene
 
-  component "Player Character" as Player {
-    [CharacterBody3D] as PlayerBody
-    [Camera3D (First Person)] as FpsCamera
-    [SpotLight3D (Flashlight)] as Flashlight
+  component "Player" as Player {
+    [Player Class] as PlayerClass
+    [PointerLockControls + Camera] as FpsCamera
+    [SpotLight (Flashlight)] as Flashlight
     [HeartRate System] as HeartRate
-    [Inventory (Pockets)] as Inventory
+    [Inventory] as Inventory
+    [Rapier CharacterController] as Physics
   }
 
-  component "AI Agents" as Cats {
-    [Cat 1..4\n(CharacterBody3D)] as CatBodies
-    [Nano Model Driver\n(Agentic Reasoning)] as CatBrain
-    [Behavior Tree / State Machine] as CatAI
-    [Vision (RayCast3D)] as CatVision
+  component "AI Agents (Cats)" as Cats {
+    [Cat Class (THREE.Group)] as CatMeshes
+    [CatBrain (State Machine)] as CatBrain
+    [StalkingBehavior (Primary)] as Stalking
+    [FleeBehavior, MischiefBehavior] as OtherBehaviors
+    [Vision (Raycaster)] as CatVision
   }
 
-  [Interactible Objects] as Interactibles
-  [Items & Pickups] as Items
-  [Environment\n(Lights, Curtains, Sounds)] as Environment
+  [Interactable Objects] as Interactibles
+  [Environment (Lights, Curtains, Fog)] as Environment
 }
 
 package "Nano Model Layer" as Nano {
-  [Tiny LLM (e.g. Phi-2-q4, Gemma-2B, TinyLlama)\nrunning via WebLLM] as NanoLLM
+  [Tiny LLM (Phi-2, Gemma-2B, TinyLlama)\nvia WebLLM] as NanoLLM
   note right of NanoLLM
-    Each cat gets its own
-    very small context +
-    personality prompt.
+    Each cat maintains a tiny
+    rolling context + personality.
     Runs entirely in browser.
   end note
 }
 
 ' Relationships
-GodotWeb --> NanoLLM : "Loads & calls nano models"
-GodotWeb ---------> MainScene : "Runs game"
+ThreeBundle --> NanoLLM : "Loads & calls nano models"
+ThreeBundle --------> MainScene : "Renders & runs game"
 
 MainScene -----> Player
 MainScene -----> Cats
 MainScene --> Interactibles
-MainScene --> Items
 MainScene --> Environment
 
-PlayerBody --> FpsCamera
-PlayerBody --> Flashlight
-PlayerBody --> HeartRate
-PlayerBody --> Inventory
+PlayerClass --> FpsCamera
+PlayerClass --> Flashlight
+PlayerClass --> HeartRate
+PlayerClass --> Inventory
+PlayerClass --> Physics
 
-Cats --> CatBodies
-CatBodies --> CatAI
-CatAI --> CatBrain
+Cats --> CatMeshes
+CatMeshes --> CatBrain
+CatBrain --> Stalking
+CatBrain --> OtherBehaviors
 CatBrain --> NanoLLM : "Query for next action"
-CatBodies --> CatVision
+CatMeshes --> CatVision
 
-Interactibles --> Player : "Raycast interaction\n(notes, doors, buttons, curtains)"
-Items --> Inventory : "Pick up → Pocket"
-
+Interactibles --> PlayerClass : "Raycast interaction\n(curtains, notes, doors)"
 Environment --> HeartRate : "Affects BPM\n(sounds, darkness, cat proximity)"
 Environment --> Flashlight : "Battery / Flicker"
 
-note bottom of GodotWeb
-  • Pure browser experience (no backend)
-  • Godot 4.3+ Web export with WebGPU support
-  • All AI runs locally via WebLLM nano models
+note bottom of ThreeBundle
+  • Pure browser experience (Vite build)
+  • Three.js + Rapier physics
+  • All AI runs locally via WebLLM
   • 20-minute real-time survival loop
   • Final reveal: curtains open → cats are just troublemakers
 end note
 
 note right of CatBrain
-  Initial approach:
-  - Very small system prompt per cat
-  - Simple goal-oriented behavior
-  - Vision + sound events as context
-  - State machine as safety net
+  Current implementation:
+  - StalkingBehavior is the primary action
+  - Simple state machine as safety net
+  - Vision + heart rate as context
+  - Ready for WebLLM integration
 end note
 
 @enduml
