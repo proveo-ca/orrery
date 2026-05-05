@@ -135,27 +135,59 @@ export const clearHoverOverride = () => {
   });
 };
 
-// ===== Base Coach Emotion with Auto-Reset =====
-let emotionTimeout: number | undefined;
+// ===== Base Coach Emotion: state-coupled decay timer =====
+//
+// One timer, always synced to the displayed emotion. Each `setCoachEmotion`
+// call cancels the prior decay and (optionally) schedules a fresh one — so
+// stale closures from earlier moves cannot fire into an unrelated reactive
+// graph. Decay writes go through `queueMicrotask` to keep them out of
+// whatever tick the timer happened to land on.
+//
+// `dispatchCoachEvent` is a pure event → setCoachEmotion translator. It
+// reads the current emotion to decide whether to override (e.g. preserve
+// "happy" through HUMAN_MOVE_NORMAL) but never touches the timer directly.
 
-export const setCoachEmotion = (emotion: CoachEmotion, autoResetMs?: number) => {
-  setCoachState("baseCoachEmotion", emotion);
+let decayTimer: number | undefined;
+let decayFromEmotion: CoachEmotion | null = null;
 
-  if (emotionTimeout) {
-    clearTimeout(emotionTimeout);
-    emotionTimeout = undefined;
+const clearDecay = () => {
+  if (decayTimer !== undefined) {
+    clearTimeout(decayTimer);
+    decayTimer = undefined;
   }
+  decayFromEmotion = null;
+};
 
-  if (autoResetMs) {
-    emotionTimeout = window.setTimeout(() => {
-      if (coachState.baseCoachEmotion === emotion) {
+const scheduleDecay = (fromEmotion: CoachEmotion, holdMs: number) => {
+  clearDecay();
+  decayFromEmotion = fromEmotion;
+  decayTimer = window.setTimeout(() => {
+    decayTimer = undefined;
+    const captured = decayFromEmotion;
+    decayFromEmotion = null;
+    // Defer the actual write so the reactive cascade doesn't run
+    // synchronously inside this timer's macrotask. The previous
+    // implementation was suspected of triggering a Solid runtime
+    // recursion when "happy" → "idle" landed mid-Stockfish-info-storm.
+    queueMicrotask(() => {
+      if (coachState.baseCoachEmotion === captured) {
         setCoachState("baseCoachEmotion", "idle");
       }
-    }, autoResetMs);
+    });
+  }, holdMs);
+};
+
+export const setCoachEmotion = (emotion: CoachEmotion, autoResetMs?: number) => {
+  console.log("[debug:coach] setCoachEmotion", { emotion, autoResetMs, prev: coachState.baseCoachEmotion });
+  setCoachState("baseCoachEmotion", emotion);
+  if (autoResetMs && emotion !== "idle") {
+    scheduleDecay(emotion, autoResetMs);
+  } else {
+    clearDecay();
   }
 };
 
-// ===== Event Dispatcher =====
+// ===== Event Dispatcher (reducer-style) =====
 export type CoachEvent =
   | { type: "APP_READY" }
   | { type: "APP_ERROR" }
@@ -173,23 +205,22 @@ export type CoachEvent =
 
 // Mirrors every dispatched event so passive listeners (e.g. the game
 // recorder on CoachScreen) can react without the dispatcher needing to
-// know about them. Not a queue — subscribers use `on(lastCoachEvent, ...)`.
+// know about them. Subscribers use `on(lastCoachEvent, ...)`.
 export const [lastCoachEvent, setLastCoachEvent] = createSignal<CoachEvent | null>(null);
 
 export const dispatchCoachEvent = (event: CoachEvent) => {
+  console.log("[debug:coach] dispatch", { event: event.type, cur: coachState.baseCoachEmotion });
   setLastCoachEvent(event);
+  const cur = coachState.baseCoachEmotion;
+
   switch (event.type) {
     case "APP_READY":
       setCoachState("isAppReady", true);
-      if (coachState.baseCoachEmotion !== "happy") {
-        setCoachEmotion("idle");
-      }
+      if (cur !== "happy") setCoachEmotion("idle");
       break;
     case "AI_MOVED":
     case "WAKE_UP":
-      if (coachState.baseCoachEmotion !== "happy") {
-        setCoachEmotion("idle");
-      }
+      if (cur !== "happy") setCoachEmotion("idle");
       break;
     case "APP_ERROR":
       setCoachEmotion("shocked");
@@ -202,10 +233,8 @@ export const dispatchCoachEvent = (event: CoachEvent) => {
       break;
     case "HUMAN_MOVE_NORMAL":
     case "AI_THINKING":
-      // Don't overwrite the happy feedback if they just played a great move!
-      if (coachState.baseCoachEmotion !== "happy") {
-        setCoachEmotion("thinking");
-      }
+      // Preserve happy through subsequent normal moves / AI thinking.
+      if (cur !== "happy") setCoachEmotion("thinking");
       break;
     case "AI_ERROR":
       setCoachEmotion("shocked", 3000);

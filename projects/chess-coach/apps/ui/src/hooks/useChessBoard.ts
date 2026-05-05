@@ -7,6 +7,7 @@ import { useCoachBehavior } from "~/hooks/useCoachBehavior";
 import { type HoverEval, useHoverEvaluator } from "~/hooks/useHoverEvaluator";
 import { useMoveExecutor } from "~/hooks/useMoveExecutor";
 import { useStockfishWorker } from "~/hooks/useStockfishWorker";
+import { getAnalysisDepth } from "~/services/runtimeMode";
 import { capabilities } from "~/store/capabilitiesStore";
 import {
   type CoachEmotion,
@@ -112,7 +113,7 @@ export function useChessBoard() {
     if (g.isGameOver()) return;
     if (capabilities().continuousAnalysis || g.turn() === activePlayerColor() || isReplaying()) {
       send(`position fen ${g.fen()}`);
-      send("go depth 12");
+      send(`go depth ${getAnalysisDepth()}`);
     }
   };
 
@@ -163,6 +164,7 @@ export function useChessBoard() {
     // If the base coach state becomes something "active" (thinking/happy/shocked/sleepy/etc),
     // ensure hover doesn't mask it.
     if (!canApplyHoverOverride() && !isTravelling()) {
+      clearTimeout(evalTimeout);
       clearHoverOverride();
       setCurrentHoverEval(null);
       send("stop");
@@ -242,6 +244,7 @@ export function useChessBoard() {
   const handleBoardMouseLeave = () => {
     if (isReplaying()) return;
 
+    clearTimeout(evalTimeout);
     setHoveredSquare(null);
     clearHoverOverride();
     setCurrentHoverEval(null);
@@ -257,15 +260,20 @@ export function useChessBoard() {
     applyHoverBaseline(square);
 
     if (!canApplyHoverOverride()) {
+      clearTimeout(evalTimeout);
       setCurrentHoverEval(null);
       send("stop");
       return;
     }
 
-    const selected = selectedSquare();
-    if (selected && validMoves().includes(square)) {
-      clearTimeout(evalTimeout);
-      evalTimeout = window.setTimeout(() => {
+    // Debounce all engine-touching work: only fire once the cursor has
+    // settled on a square for 150ms. Without this, every square the user
+    // crosses on the way to the intended target queues a stop+go pair,
+    // starving the blunder eval before it can land.
+    clearTimeout(evalTimeout);
+    evalTimeout = window.setTimeout(() => {
+      const selected = selectedSquare();
+      if (selected && validMoves().includes(square)) {
         const gameCopy = new Chess(game().fen());
         try {
           gameCopy.move({ from: selected, to: square, promotion: "q" });
@@ -283,18 +291,18 @@ export function useChessBoard() {
 
           send("stop");
           send(`position fen ${gameCopy.fen()}`);
-          send("go depth 12");
+          send(`go depth ${getAnalysisDepth()}`);
         } catch (err) {
           logger.error("Hover evaluation setup failed", err);
           setCurrentHoverEval(null);
           send("stop");
         }
-      }, 150);
-    } else {
-      setCurrentHoverEval(null);
-      send("stop");
-      resumeBaseAnalysis();
-    }
+      } else {
+        setCurrentHoverEval(null);
+        send("stop");
+        resumeBaseAnalysis();
+      }
+    }, 150);
   };
 
   const handleSquareClick = async (square: Square) => {

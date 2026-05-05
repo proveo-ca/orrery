@@ -30,3 +30,37 @@ export function resolveMode(): RuntimeMode {
 
   return { kind: "web-no-llm" };
 }
+
+/**
+ * Coarse mobile-device detection. We use this to ratchet down WASM workload
+ * on phones/tablets where the per-renderer memory ceiling is much lower —
+ * dual-Stockfish web builds reliably trip an `unreachable` trap there at
+ * `go depth 12` (OOM / search-stack overflow inside Stockfish).
+ *
+ * `pointer: coarse` is the most reliable signal across Android Chrome,
+ * iOS Safari, and PWA standalone display modes; UA sniffing is unreliable
+ * post-Chrome 100. The window check guards against worker contexts.
+ */
+export function isMobileDevice(): boolean {
+  if (typeof window === "undefined") return false;
+  return window.matchMedia?.("(pointer: coarse)").matches ?? false;
+}
+
+/**
+ * Depth cap for the main-thread Stockfish (hover-eval + base analysis).
+ *
+ *   - desktop runtime: orchestrator runs server-side, browser holds only
+ *     one Stockfish → full depth 12.
+ *   - web-* runtime on a desktop browser: two Stockfishes share the
+ *     renderer, but plenty of memory → depth 10 keeps things safe.
+ *   - web-* runtime on mobile: aggressive cap (depth 8) to stay well
+ *     under the Android Chrome WASM memory ceiling.
+ *
+ * The orchestrator's own Stockfish (used for AI move planning) is not
+ * affected by this — its depth is set inside `orchestrator.worker.ts`.
+ */
+export function getAnalysisDepth(): number {
+  const mode = resolveMode();
+  if (mode.kind === "desktop") return 12;
+  return isMobileDevice() ? 8 : 10;
+}

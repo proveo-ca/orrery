@@ -63,9 +63,20 @@ export class MaiaEngine {
     try {
       return await this.executeGetMove(fen, weightsFile);
     } catch (err) {
-      console.warn("[MaiaEngine] getMove failed, restarting:", err);
+      console.warn(
+        `[MaiaEngine] getMove failed (weights=${weightsFile}, fen=${fen}), restarting:`,
+        err,
+      );
       this.restart();
-      return this.executeGetMove(fen, weightsFile);
+      try {
+        return await this.executeGetMove(fen, weightsFile);
+      } catch (retryErr) {
+        console.error(
+          `[MaiaEngine] getMove failed again after restart (weights=${weightsFile}, fen=${fen}):`,
+          retryErr,
+        );
+        throw retryErr;
+      }
     }
   }
 

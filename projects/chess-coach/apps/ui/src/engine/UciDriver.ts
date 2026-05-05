@@ -29,11 +29,20 @@ export class UciDriver {
       return this.messageQueue.shift()!;
     }
     return new Promise((resolve, reject) => {
-      const timer = setTimeout(() => reject(new Error("UCI Timeout")), timeoutMs);
-      this.resolvers.push((line) => {
+      // Splice the resolver out on timeout so a delayed worker message
+      // can't get consumed by a dead handler — that previously poisoned
+      // the driver: the awaited line was silently dropped instead of
+      // being queued, and every subsequent read hung.
+      const resolver = (line: string) => {
         clearTimeout(timer);
         resolve(line);
-      });
+      };
+      const timer = setTimeout(() => {
+        const idx = this.resolvers.indexOf(resolver);
+        if (idx !== -1) this.resolvers.splice(idx, 1);
+        reject(new Error("UCI Timeout"));
+      }, timeoutMs);
+      this.resolvers.push(resolver);
     });
   }
 

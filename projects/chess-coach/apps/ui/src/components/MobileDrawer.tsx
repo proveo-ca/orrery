@@ -1,21 +1,22 @@
 // SPEC: _spec/chess-coach/ui/components.puml
-import clsx from "clsx";
+import { useLocation } from "@solidjs/router";
 import { Show, createSignal } from "solid-js";
 import type { Component } from "solid-js";
 
+import { CoachEmotionIcon } from "~/components/CoachEmotionIcon";
 import { Divider } from "~/components/common/Divider";
 import { IconButton } from "~/components/common/IconButton";
 import {
+  BookIcon,
   CheckIcon,
+  CogIcon,
   FlagIcon,
   FlipBoardIcon,
-  HamburgerIcon,
   HintIcon,
   PlusCircleIcon,
+  SearchIcon,
   StarIcon,
 } from "~/components/common/icons";
-import { Label } from "~/components/common/Label";
-import { MenuButton } from "~/components/common/MenuButton";
 import { Modal } from "~/components/common/Modal";
 import { Credits } from "~/components/Credits";
 import { DualNavButton } from "~/components/DualNavButton";
@@ -26,13 +27,16 @@ import { useGameControls } from "~/hooks/useGameControls";
 import { useHintSparkle } from "~/hooks/useHintSparkle";
 import { capabilities } from "~/store/capabilitiesStore";
 import { setShowCredits, setShowNewGame, showCredits, showNewGame } from "~/store/coachStore";
-import { gameHistory } from "~/store/gameHistoryStore";
 import { resetGame } from "~/store/gameStore";
 import { activePlayerColor, setActivePlayerColor } from "~/store/settingsStore";
 import { isTravelling, travelFenHistory, travelIndex } from "~/store/travelStore.ts";
 
+const isRoute = (pathname: string, route: string) =>
+  pathname.endsWith(route) || pathname.includes(route + "/");
+
 export const MobileDrawer: Component = () => {
-  const [open, setOpen] = createSignal(false);
+  const location = useLocation();
+  const [menuOpen, setMenuOpen] = createSignal(false);
   const { hintSparkleClass, dismissHintSparkle } = useHintSparkle();
   const controls = useGameControls();
   const {
@@ -50,27 +54,19 @@ export const MobileDrawer: Component = () => {
 
   const handleHint = () => {
     dismissHintSparkle();
-    setOpen(false);
     void baseHandleHint();
   };
 
   const handleResign = () => {
-    setOpen(false);
+    setMenuOpen(false);
     baseHandleResign();
   };
+
+  const inTimelineMode = () => isTravelling() || isReplaying();
 
   return (
     <div class={styles["mobile-only"]}>
       <div class={styles["top-left-nav"]}>
-        <IconButton
-          class={styles.hamburger}
-          label="Menu"
-          labelPosition="bottom"
-          onClick={() => setOpen(true)}
-          aria-label="Open menu"
-        >
-          <HamburgerIcon />
-        </IconButton>
         <Show when={capabilities().hint}>
           <IconButton
             label="Hint"
@@ -95,103 +91,119 @@ export const MobileDrawer: Component = () => {
         </Show>
       </div>
 
-      <Show when={capabilities().historyNav}>
-        <div class={styles["top-right-nav"]}>
+      <div class={styles["top-right-nav"]}>
+        <Show when={capabilities().historyNav}>
           <DualNavButton
             onBack={handleBack}
             onForward={handleForward}
             backDisabled={atStart() && !isTravelling()}
             forwardDisabled={atLatest()}
-            inverted={isTravelling() || isReplaying()}
-            label={isTravelling() ? "Timeline" : "History"}
+            inverted={inTimelineMode()}
+            label={isTravelling() ? "Timeline" : isReplaying() ? "History" : undefined}
           />
+        </Show>
 
+        <Show
+          when={capabilities().historyNav && inTimelineMode()}
+          fallback={
+            <IconButton onClick={() => setMenuOpen(true)} aria-label="Open menu">
+              <CogIcon />
+            </IconButton>
+          }
+        >
           <Show when={isTravelling()}>
-            <Label class={styles["travel-info"]}>
+            <span class={styles["travel-info"]}>
               {travelIndex()}/{travelFenHistory().length - 1}
-            </Label>
+            </span>
           </Show>
-
-          <Show when={isTravelling() || isReplaying()}>
-            <IconButton onClick={handleBackToLive} aria-label="Back to live">
-              <CheckIcon />
-            </IconButton>
-          </Show>
-        </div>
-      </Show>
-
-      <div
-        class={clsx(styles.backdrop, open() && styles["backdrop--open"])}
-        onClick={() => setOpen(false)}
-      />
-
-      <div class={clsx(styles.drawer, open() && styles["drawer--open"])}>
-        <Label variant="section">Menu</Label>
-        <div class={styles["menu-list"]}>
-          <MenuButton primary href="/selena" onClick={() => setOpen(false)}>
-            Play with Selena
-          </MenuButton>
-          <MenuButton href="/analysis" onClick={() => setOpen(false)}>
-            Solo Analysis
-          </MenuButton>
-          <MenuButton
-            href="/review"
-            onClick={() => setOpen(false)}
-            disabled={gameHistory().length === 0}
-          >
-            Review
-          </MenuButton>
-          <Label variant="caption" class={styles["coming-soon"]}>
-            Coming soon!
-          </Label>
-          <MenuButton disabled>Learn to Play</MenuButton>
-          <MenuButton disabled>Play LAN</MenuButton>
-        </div>
-
-        <Divider />
-
-        <Label variant="section">Controls</Label>
-        <div class={styles["controls-row"]}>
-          <Show when={capabilities().aiOpponent}>
-            <IconButton
-              label="Resign"
-              onClick={handleResign}
-              disabled={isReplaying() || isTravelling() || isResigned()}
-              aria-label="Resign"
-            >
-              <FlagIcon />
-            </IconButton>
-          </Show>
-          <Show when={capabilities().flipBoard}>
-            <IconButton
-              label="Flip"
-              onClick={() => {
-                setActivePlayerColor(activePlayerColor() === "w" ? "b" : "w");
-                setOpen(false);
-              }}
-              aria-label="Flip board"
-            >
-              <FlipBoardIcon />
-            </IconButton>
-          </Show>
-          <IconButton
-            label="Credits"
-            onClick={() => {
-              setOpen(false);
-              setShowCredits(true);
-            }}
-            disabled={isReplaying() || isTravelling()}
-            aria-label="Credits"
-          >
-            <StarIcon />
+          <IconButton onClick={handleBackToLive} aria-label="Back to live">
+            <CheckIcon />
           </IconButton>
-        </div>
-
-        <Divider />
-
-        <Label variant="section">Settings</Label>
-        <SettingsPanel onDismiss={() => setOpen(false)} />
+        </Show>
       </div>
+
+      <Modal
+        open={menuOpen()}
+        onClose={() => setMenuOpen(false)}
+        title="Menu"
+        position="fixed"
+      >
+        <div class={styles["menu-modal"]}>
+          <SettingsPanel onDismiss={() => setMenuOpen(false)} />
+
+          <Divider />
+
+          <div class={styles["menu-modal__icons"]}>
+            <Show when={capabilities().aiOpponent}>
+              <IconButton
+                label="Resign"
+                onClick={handleResign}
+                disabled={isResigned()}
+                aria-label="Resign"
+              >
+                <FlagIcon />
+              </IconButton>
+            </Show>
+            <Show when={capabilities().flipBoard}>
+              <IconButton
+                label="Flip"
+                onClick={() => {
+                  setActivePlayerColor(activePlayerColor() === "w" ? "b" : "w");
+                  setMenuOpen(false);
+                }}
+                aria-label="Flip board"
+              >
+                <FlipBoardIcon />
+              </IconButton>
+            </Show>
+            <IconButton
+              label="Credits"
+              onClick={() => {
+                setMenuOpen(false);
+                setShowCredits(true);
+              }}
+              aria-label="Credits"
+            >
+              <StarIcon />
+            </IconButton>
+          </div>
+
+          <Divider />
+
+          <div class={styles["menu-modal__icons"]}>
+            <IconButton
+              label="Coach"
+              href="/selena"
+              primary={isRoute(location.pathname, "/selena")}
+              disabled={isRoute(location.pathname, "/selena")}
+              onClick={() => setMenuOpen(false)}
+              aria-label="Coach"
+            >
+              <CoachEmotionIcon emotion="happy" />
+            </IconButton>
+            <IconButton
+              label="Analysis"
+              href="/analysis"
+              primary={isRoute(location.pathname, "/analysis")}
+              disabled={isRoute(location.pathname, "/analysis")}
+              onClick={() => setMenuOpen(false)}
+              aria-label="Analysis"
+            >
+              <SearchIcon />
+            </IconButton>
+            <IconButton
+              label="Review"
+              href="/review"
+              primary={isRoute(location.pathname, "/review")}
+              disabled={isRoute(location.pathname, "/review")}
+              onClick={() => setMenuOpen(false)}
+              aria-label="Review"
+            >
+              <BookIcon />
+            </IconButton>
+          </div>
+        </div>
+      </Modal>
 
       <Modal
         open={showNewGame()}

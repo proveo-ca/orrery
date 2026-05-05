@@ -224,7 +224,7 @@ package "Hooks  [src/hooks/]" {
       resolvePromotion(piece: q|r|b|n)
       cancelPromotion()
       .. Notes ..
-      hover eval delay: 150ms
+      hover engine debounce: 150ms (all stop/go + eval requests)
       integrates: useMoveExecutor · useCoachBehavior
         useHoverEvaluator · useStockfishWorker
     }

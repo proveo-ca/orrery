@@ -162,8 +162,11 @@ package "Components  [src/components/]" {
     end note
     rectangle "MobileDrawer" as MobileDrawer
     note right of MobileDrawer
-      all same controls for mobile
-      (gated by capabilities flags)
+      mobile navigation: top-left hint+new-game,
+      top-right DualNavButton + cog (or Back-to-Live
+      when travelling/replaying); cog opens a Modal
+      with SettingsPanel + resign/flip/credits +
+      route shortcuts (Coach/Analysis/Review).
     end note
     rectangle "Controls"      as Controls
     rectangle "DualNavButton" as DualNavButton

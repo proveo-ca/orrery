@@ -133,9 +133,9 @@ export function useMoveExecutor(stopStockfish: () => void) {
       });
     } catch (err) {
       logger.error("AI move failed", err);
-      if (HAS_REMOTE_COACH) {
-        setLastAIError("Error communicating with the coach.");
-      }
+      setLastAIError(
+        HAS_REMOTE_COACH ? "Error communicating with the coach." : "The coach stumbled. Try again.",
+      );
     }
   };
 
