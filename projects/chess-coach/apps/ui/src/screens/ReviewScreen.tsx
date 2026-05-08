@@ -8,6 +8,7 @@ import { OpponentCaptures, PlayerCaptures } from "~/components/CapturedPieces";
 import { ChessBoard } from "~/components/ChessBoard";
 import { Button } from "~/components/common/Button";
 import { GameHistoryList } from "~/components/GameHistoryList";
+import { GameHistoryFilters } from "~/components/GameHistoryFilters";
 import { MobileDrawer } from "~/components/MobileDrawer";
 import { MoveList } from "~/components/MoveList";
 import { Sidebar } from "~/components/Sidebar";
@@ -63,8 +64,8 @@ export const ReviewScreen: Component = () => {
         when={activeGame()}
         fallback={
           <>
-            <div />
             <div class={styles["board-area"]}>
+              <GameHistoryFilters colorFilter={} setColorFilter={} firstMoveFilter={} setFirstMoveFilter={} availableFirstMoves={} totalPages={} activePage={} currentDateLabel={} goToPrev={} goToNext={} />
               <GameHistoryList activeId={params.id} />
               <Sidebar />
             </div>

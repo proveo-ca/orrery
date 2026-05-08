@@ -6,6 +6,7 @@ import { Select } from "~/components/common/Select";
 import { Toggle } from "~/components/common/Toggle";
 import styles from "~/components/Controls.module.css";
 import { postMove, postNewGame } from "~/services/api";
+import { setLastAIMoveInfo } from "~/hooks/useMoveExecutor";
 import { dispatchCoachEvent, setAdvice, setShowNewGame } from "~/store/coachStore";
 import { addMoveSan, resetGame } from "~/store/gameStore";
 import {
@@ -41,14 +42,21 @@ export const NewGamePanel: Component = () => {
             fenAfterHuman: data.fen,
             difficulty: difficulty(),
           });
-          clearTimeout(thinkingTimeout);
+          setLastAIMoveInfo({
+            san: moveData.move,
+            humanMoveSan: "",
+            fen: moveData.fen,
+            move: moveData.move,
+            gameOver: null,
+          });
           addMoveSan(moveData.move);
           setAdvice(moveData.advice ?? "I've made my move!");
           dispatchCoachEvent({ type: "AI_MOVED" });
         } catch (e) {
-          clearTimeout(thinkingTimeout);
           console.error("Failed to get AI's first move", e);
           dispatchCoachEvent({ type: "AI_ERROR" });
+        } finally {
+          clearTimeout(thinkingTimeout);
         }
       }
     } catch (e) {

@@ -14,10 +14,6 @@ import {
 import { difficulty } from "~/store/settingsStore";
 import { logger } from "~/utils/logger";
 
-// "Communicating with the coach" is only literally true when an HTTP API
-// is plugged in (desktop mode). In web modes the orchestrator runs in the
-// browser, so a misleading network-style banner just confuses the user —
-// we still log the underlying error.
 const HAS_REMOTE_COACH = resolveMode().kind === "desktop";
 
 export const [lastHumanMoveInfo, setLastHumanMoveInfo] = createSignal<{

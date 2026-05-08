@@ -13,6 +13,7 @@
     "build:desktop": "tsgo -b && vite build",
     "preview": "npm run build:web-no-llm && wrangler dev",
     "preview:vite": "VITE_TARGET=web-no-llm vite build && vite preview",
+    "typecheck": "tsgo -b",
     "deploy": "npm run build:web-no-llm && wrangler deploy",
     "test:int": "vitest tests/",
     "lint": "oxlint -c oxlint.config.ts",

@@ -1,0 +1,122 @@
+@startuml
+skinparam componentStyle uml2
+skinparam packageStyle rectangle
+skinparam linetype ortho
+
+title Agents of Empires: Single Player Architecture (Local Simulation)
+
+package "Presentation Layer (GUI)" {
+    [Dashboard UI] as GUI
+    note right of GUI
+        - Resource Gauges (RAM/CPU)
+        - Network Topology Map
+        - Unit Control Panel
+    end note
+}
+
+package "Core Engine Layer" {
+    component "Game Loop (Tick: 100ms)" as Loop
+    
+    package "Match State" {
+        [Player Registry] as P_Reg
+        [Opponent Registry] as O_Reg
+        [Global Event Bus] as Bus
+    }
+
+    component "Arbiter" as Arbiter {
+        note bottom
+            Enforces Rules:
+            - Heartbeat Checks
+            - Win Conditions
+            - Fog of War
+        end note
+    }
+}
+
+package "AI Simulation Layer (The Opponent)" {
+    component "Enemy Commander (Brain)" as Enemy_Brain {
+        [Strategy Planner]
+        [Llama-3-8B Client]
+    }
+    
+    component "Enemy Agent Runner" as Enemy_Runner {
+        [Task Executor]
+        [Qwen-1.5B Client]
+    }
+    
+    note right of Enemy_Brain
+        Simulates a human player.
+        Reads "Visible" Game State.
+        Issues Build/Attack commands.
+    end note
+}
+
+package "Infrastructure Layer (HAL)" {
+    component "Resource Orchestrator" as Orch {
+        [Docker Manager]
+        [Hardware Monitor]
+        note left
+            Enforces 8GB RAM / 4 Core
+            limits per side.
+        end note
+    }
+    
+    component "Network Abstraction" as Net {
+        [Virtual Router]
+        [Port Mapper]
+    }
+    
+    component "LLM Gateway" as LLM_Gate {
+        [Ollama / llama.cpp API]
+    }
+}
+
+node "Docker Host (The Arena)" {
+    package "Player Zone (Localhost)" {
+        [Player Nexus]
+        [Player Agents (Max 2)]
+    }
+    
+    package "The Void (Simulated Network)" {
+        [Jumpbox Containers]
+    }
+    
+    package "Opponent Zone (Shadow)" {
+        [Enemy Nexus]
+        [Enemy Agents (Max 2)]
+    }
+}
+
+' --- Relationships ---
+
+' User Input
+GUI --> P_Reg : Player Commands
+P_Reg --> Orch : Spawn Unit
+
+' AI Input
+Loop --> Enemy_Brain : Trigger Decision
+Enemy_Brain --> LLM_Gate : Query Strategy
+Enemy_Brain --> Enemy_Runner : Issue Order
+Enemy_Runner --> O_Reg : Update State
+O_Reg --> Orch : Spawn Enemy Unit
+
+' Game Logic
+Loop --> Arbiter : Tick
+Arbiter --> P_Reg : Check Heartbeats
+Arbiter --> O_Reg : Check Heartbeats
+Arbiter --> Orch : Kill Dead Units
+
+' Infrastructure
+Orch --> "Player Zone (Localhost)" : Manage Containers
+Orch --> "Opponent Zone (Shadow)" : Manage Containers
+Orch --> "The Void (Simulated Network)" : Manage Jumpboxes
+
+' Network Traffic
+"Player Agents (Max 2)" <--> Net : Attack Traffic
+Net <--> "Enemy Agents (Max 2)" : Attack Traffic
+
+' LLM Backend
+LLM_Gate --> "Enemy Commander (Brain)" : Strategy Response
+LLM_Gate --> "Enemy Agent Runner" : Bash Script Generation
+
+@enduml

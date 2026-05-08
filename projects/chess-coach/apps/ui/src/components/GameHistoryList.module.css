@@ -90,3 +90,42 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+ .page-nav {
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   gap: 0.25rem;
+   padding-bottom: 0.35rem;
+   margin-bottom: 0.25rem;
+   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+ }
+
+ .page-btn {
+   display: inline-flex;
+   align-items: center;
+   padding: 0.15rem 0.25rem;
+   background: transparent;
+   border: 1px solid transparent;
+   border-radius: 3px;
+   color: rgba(255, 255, 255, 0.55);
+   cursor: pointer;
+   font: inherit;
+ }
+
+ .page-btn:hover:not(:disabled) {
+   border-color: rgba(118, 179, 225, 0.5);
+   color: rgba(255, 255, 255, 0.85);
+ }
+
+ .page-btn:disabled {
+   opacity: 0.25;
+   cursor: default;
+ }
+
+ .page-indicator {
+   color: rgba(255, 255, 255, 0.45);
+   font-size: 0.75rem;
+   font-variant-numeric: tabular-nums;
+   min-width: 3rem;
+   text-align: center;
+ }

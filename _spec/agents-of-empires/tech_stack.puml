@@ -1,0 +1,76 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+skinparam componentStyle uml2
+skinparam packageStyle rectangle
+
+title Agents of Empires: Technology Stack (v0.0.1 Single Player)
+
+node "User Host Machine (macOS / Linux)" {
+    
+    package "Distribution Layer" {
+        component "AoE Launcher" as Launcher <<Go Binary>> #LightBlue
+        note right of Launcher
+            <b>Entry Point</b>
+            1. Checks Prereqs (Docker)
+            2. Pulls 'agents-of-empires/engine'
+            3. Executes 'docker run' with
+               privileged socket mount.
+        end note
+    }
+
+    package "Presentation Layer" {
+        component "Web Browser" as Browser <<Chrome/Safari>>
+        note bottom of Browser
+            <b>Solid GUI</b>
+            - Visualization (2D graphic lib)
+            - Controls (WebSocket)
+        end note
+    }
+
+    node "Docker Daemon (Host Runtime)" {
+        interface "Docker Socket\n(/var/run/docker.sock)" as Socket
+
+        rectangle "Container: Game Engine (Privileged)" as EngineBox #LightGreen {
+            component "FastAPI Server" as API <<Python 3.11>>
+            component "Orchestrator" as Orch <<Docker SDK>>
+            component "Static File Server" as UI_Serve
+        }
+
+        rectangle "Container: Game Assets (Siblings)" {
+            collections "Player Agents" as PAgents
+            collections "Enemy Agents" as EAgents
+            component "Player Nexus" as PNexus
+            component "Enemy Nexus" as ENexus
+        }
+    }
+
+    component "Tailscale Interface" as Tailscale <<tun0>> #LightGray
+    component "Ollama / AI Service" as AI <<Localhost API>>
+}
+
+' --- Relationships ---
+
+' 1. Launch Sequence
+Launcher ..> Socket : "1. Spawns Engine Container"
+
+' 2. User Interaction
+Browser <--> API : "2. HTTP / WebSocket (Port 3000)"
+Browser <-- UI_Serve : "Loads Solid App"
+
+' 3. The DooD Control Loop
+Orch --> Socket : "3. Mounts & Controls"
+Socket ..> PAgents : "4. Spawns Sibling"
+Socket ..> EAgents : "4. Spawns Sibling"
+
+' 4. External Resources
+API .> Tailscale : "5. Multiplayer (Future)"
+API --> AI : "6. Inference Requests (Player + Enemy)"
+
+note bottom of EngineBox
+    <b>The DooD Pattern (Docker-out-of-Docker)</b>
+    The Engine runs inside a container to isolate dependencies,
+    but mounts the Host's Docker Socket to manage the
+    Game Units as "Sibling Containers" on the host network.
+end note
+
+@enduml

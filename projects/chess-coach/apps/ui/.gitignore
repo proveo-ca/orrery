@@ -27,3 +27,11 @@ dist-ssr
 .wrangler
 
 public/models/**/resolve/main/*
+
+# ==========================================
+# Harness & AI Tools
+# ==========================================
+.aider/
+.aider*
+.claude
+.cursor/rules/nx-rules.mdc

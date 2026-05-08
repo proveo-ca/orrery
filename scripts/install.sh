@@ -8,7 +8,7 @@ if ! command -v docker > /dev/null 2>&1; then
     exit 1
 fi
 
-mkdir -p chess-coach-app && cd chess-coach-app
+mkdir -p dist && cd dist
 
 OS="$(uname -s)"
 MODEL_COMMENTARY="hf.co/NAKSTStudio/chess-gemma-commentary:Q8_0"
