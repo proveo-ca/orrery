@@ -5,8 +5,8 @@ import { ColorSelector } from "~/components/common/ColorSelector";
 import { Select } from "~/components/common/Select";
 import { Toggle } from "~/components/common/Toggle";
 import styles from "~/components/Controls.module.css";
-import { postMove, postNewGame } from "~/services/api";
 import { setLastAIMoveInfo } from "~/hooks/useMoveExecutor";
+import { postMove, postNewGame } from "~/services/api";
 import { dispatchCoachEvent, setAdvice, setShowNewGame } from "~/store/coachStore";
 import { addMoveSan, resetGame } from "~/store/gameStore";
 import {

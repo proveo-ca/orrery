@@ -66,14 +66,16 @@ export const Sidebar: Component = () => {
 
   return (
     <div class={styles.sidebar}>
-      <DualNavButton
-        onBack={handleBack}
-        onForward={handleForward}
-        backDisabled={atStart() && !isTravelling()}
-        forwardDisabled={atLatest()}
-        inverted={isTravelling() || isReplaying()}
-        label={isTravelling() ? "Timeline" : isReplaying() ? "History" : undefined}
-      />
+      <Show when={capabilities().historyNav}>
+        <DualNavButton
+          onBack={handleBack}
+          onForward={handleForward}
+          backDisabled={atStart() && !isTravelling()}
+          forwardDisabled={atLatest()}
+          inverted={isTravelling() || isReplaying()}
+          label={isTravelling() ? "Timeline" : isReplaying() ? "History" : undefined}
+        />
+      </Show>
 
       <Show when={isTravelling() || isReplaying()}>
         <div class={styles["travel-section"]}>

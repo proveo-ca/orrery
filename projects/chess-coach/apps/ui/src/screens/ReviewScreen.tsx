@@ -7,11 +7,12 @@ import styles from "~/App.module.css";
 import { OpponentCaptures, PlayerCaptures } from "~/components/CapturedPieces";
 import { ChessBoard } from "~/components/ChessBoard";
 import { Button } from "~/components/common/Button";
-import { GameHistoryList } from "~/components/GameHistoryList";
 import { GameHistoryFilters } from "~/components/GameHistoryFilters";
+import { GameHistoryList } from "~/components/GameHistoryList";
 import { MobileDrawer } from "~/components/MobileDrawer";
 import { MoveList } from "~/components/MoveList";
 import { Sidebar } from "~/components/Sidebar";
+import { useGameHistoryFilters } from "~/hooks/useGameHistoryFilters";
 import { REVIEW_CAPABILITIES, setCapabilities } from "~/store/capabilitiesStore";
 import { gameHistory, getGameById } from "~/store/gameHistoryStore";
 import { loadGame } from "~/store/gameStore";
@@ -24,6 +25,7 @@ import { loadGame } from "~/store/gameStore";
  */
 export const ReviewScreen: Component = () => {
   const params = useParams<{ id?: string }>();
+  const filters = useGameHistoryFilters();
 
   const activeGame = createMemo(() => {
     const id = params.id;
@@ -64,14 +66,39 @@ export const ReviewScreen: Component = () => {
         when={activeGame()}
         fallback={
           <>
+            <div class={styles["sidebar-inset"]}>
+              <GameHistoryFilters
+                colorFilter={filters.colorFilter()}
+                setColorFilter={filters.setColorFilter}
+                firstMoveFilter={filters.firstMoveFilter()}
+                setFirstMoveFilter={filters.setFirstMoveFilter}
+                availableFirstMoves={filters.availableFirstMoves()}
+                totalPages={filters.totalPages()}
+                activePage={filters.activePage()}
+                currentDateLabel={filters.currentDateLabel()}
+                goToPrev={filters.goToPrev}
+                goToNext={filters.goToNext}
+              />
+            </div>
             <div class={styles["board-area"]}>
-              <GameHistoryFilters colorFilter={} setColorFilter={} firstMoveFilter={} setFirstMoveFilter={} availableFirstMoves={} totalPages={} activePage={} currentDateLabel={} goToPrev={} goToNext={} />
-              <GameHistoryList activeId={params.id} />
+              <GameHistoryList games={filters.visibleGames()} activeId={params.id} />
               <Sidebar />
             </div>
             <div class={styles.footer}>
-              <div style={{ color: "rgba(255,255,255,0.6)", padding: "2rem", "text-align": "center", display: "flex", "flex-direction": "column", "align-items": "center", gap: "1rem" }}>
-                <span>{params.id ? "Game not found. Pick one above." : "Pick a game above to review."}</span>
+              <div
+                style={{
+                  color: "rgba(255,255,255,0.6)",
+                  padding: "2rem",
+                  "text-align": "center",
+                  display: "flex",
+                  "flex-direction": "column",
+                  "align-items": "center",
+                  gap: "1rem",
+                }}
+              >
+                <span>
+                  {params.id ? "Game not found. Pick one above." : "Pick a game above to review."}
+                </span>
                 <Button href="/">Back to Main Menu</Button>
               </div>
             </div>

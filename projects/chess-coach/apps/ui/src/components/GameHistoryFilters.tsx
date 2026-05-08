@@ -4,7 +4,7 @@ import type { Component } from "solid-js";
 
 import { ColorSelector } from "~/components/common/ColorSelector";
 import { ChevronLeftIcon, ChevronRightIcon } from "~/components/common/icons";
-import styles from "~/components/GameHistoryList.module.css";
+import styles from "~/components/GameHistoryFilters.module.css";
 
 interface Props {
   colorFilter: "w" | "b";
@@ -22,10 +22,9 @@ interface Props {
 export const GameHistoryFilters: Component<Props> = (props) => {
   return (
     <>
-      {/* Filters */}
-      <div style={{ display: "flex", "flex-direction": "column", gap: "0.5rem", "margin-bottom": "0.75rem" }}>
+      <div class={styles.filters}>
         <div>
-          <div style={{ "font-size": "0.75rem", opacity: 0.6, "margin-bottom": "0.25rem" }}>Playing as</div>
+          <div class={styles.label}>Playing as</div>
           <ColorSelector
             value={props.colorFilter}
             onChange={(v) => {
@@ -38,8 +37,8 @@ export const GameHistoryFilters: Component<Props> = (props) => {
         </div>
         <Show when={props.availableFirstMoves.length > 0}>
           <div>
-            <div style={{ "font-size": "0.75rem", opacity: 0.6, "margin-bottom": "0.25rem" }}>First move</div>
-            <div style={{ display: "flex", gap: "0.25rem", "flex-wrap": "wrap" }}>
+            <div class={styles.label}>First move</div>
+            <div class={styles.firstMoves}>
               <button
                 type="button"
                 class={styles["page-btn"]}
@@ -65,18 +64,34 @@ export const GameHistoryFilters: Component<Props> = (props) => {
         </Show>
       </div>
 
-      {/* Date pagination */}
-      <Show when={props.totalPages > 1}>
+      {/* Date pagination - always shown to display the game date */}
+      <Show when={props.totalPages >= 1 && props.currentDateLabel}>
         <div class={styles["page-nav"]}>
-          <button class={styles["page-btn"]} onClick={props.goToPrev} disabled={props.activePage === 0} aria-label="Previous date">
-            <ChevronLeftIcon size={14} />
-          </button>
+          <Show when={props.totalPages > 1}>
+            <button
+              class={styles["page-btn"]}
+              onClick={props.goToPrev}
+              disabled={props.activePage === 0}
+              aria-label="Previous date"
+            >
+              <ChevronLeftIcon size={14} />
+            </button>
+          </Show>
+
           <span class={styles["page-indicator"]}>
             {props.currentDateLabel} ({props.activePage + 1} / {props.totalPages})
           </span>
-          <button class={styles["page-btn"]} onClick={props.goToNext} disabled={props.activePage >= props.totalPages - 1} aria-label="Next date">
-            <ChevronRightIcon size={14} />
-          </button>
+
+          <Show when={props.totalPages > 1}>
+            <button
+              class={styles["page-btn"]}
+              onClick={props.goToNext}
+              disabled={props.activePage >= props.totalPages - 1}
+              aria-label="Next date"
+            >
+              <ChevronRightIcon size={14} />
+            </button>
+          </Show>
         </div>
       </Show>
     </>
