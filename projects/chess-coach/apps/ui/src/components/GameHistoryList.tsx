@@ -2,9 +2,9 @@
 import { A } from "@solidjs/router";
 import { For, Show } from "solid-js";
 import type { Component } from "solid-js";
-import { type GameRecord } from "~/store/gameHistoryStore";
 
 import styles from "~/components/GameHistoryList.module.css";
+import { type GameRecord } from "~/store/gameHistoryStore";
 
 interface Props {
   games: GameRecord[];

@@ -22,7 +22,6 @@
   }
 }
 
-
 /* Grid layout for the header — offset to align with board center (not board+sidebar) */
 .coach-header {
   display: grid;
@@ -61,9 +60,7 @@
 
 /* Offset content to align with the board center (not board+sidebar). */
 .sidebar-inset {
-  width: 100%;
   padding-right: var(--sidebar-width);
-  box-sizing: border-box;
 }
 
 .footer {

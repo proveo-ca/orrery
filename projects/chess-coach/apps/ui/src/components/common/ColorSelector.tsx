@@ -22,7 +22,7 @@ export const ColorSelector: Component<Props> = (props) => {
       >
         White
       </Button>
-      <Show when={props.allowRandom}>
+      <Show when={!props.hideRandom}>
         <Button
           class={clsx(props.value === "random" && styles.active)}
           onClick={() => props.onChange("random")}

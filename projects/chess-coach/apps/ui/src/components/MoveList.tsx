@@ -77,9 +77,7 @@ const PlyCell: Component<{
   >
     <span class={styles.san}>{props.move.san}</span>
     {!props.move.isAI && props.cpDelta != null && (
-      <span class={`${styles.cp} ${cpColorClass(props.cpDelta)}`}>
-        {formatCp(props.cpDelta)}
-      </span>
+      <span class={`${styles.cp} ${cpColorClass(props.cpDelta)}`}>{formatCp(props.cpDelta)}</span>
     )}
     <span class={styles.tags}>
       <For each={props.tags}>{(tag) => <TagIcon tag={tag} />}</For>
@@ -101,11 +99,10 @@ export const MoveList: Component<Props> = (props) => {
     const a = gameAnalysis();
     return resolveAnnotations(g.moves, a.cpDeltas, a.wasBestMoves, a.bestMoveUcis);
   };
-  const rows = () => (props.game ? pairMovesIntoRows(props.game.moves, props.game.startingFen) : []);
-  const {
-    activePly, activePage, totalPages, visibleRows,
-    goToStart, goToEnd, goToPrev, goToNext,
-  } = useMoveListPagination(rows);
+  const rows = () =>
+    props.game ? pairMovesIntoRows(props.game.moves, props.game.startingFen) : [];
+  const { activePly, activePage, totalPages, visibleRows, goToStart, goToEnd, goToPrev, goToNext } =
+    useMoveListPagination(rows);
 
   useBlunderArrow(annotations, () => gameAnalysis().bestMoveUcis);
 
@@ -118,7 +115,9 @@ export const MoveList: Component<Props> = (props) => {
   let wrapperRef: HTMLDivElement | undefined;
   let touchStartX = 0;
 
-  const onTouchStart = (e: TouchEvent) => { touchStartX = e.touches[0].clientX; };
+  const onTouchStart = (e: TouchEvent) => {
+    touchStartX = e.touches[0].clientX;
+  };
   const onTouchEnd = (e: TouchEvent) => {
     const dx = e.changedTouches[0].clientX - touchStartX;
     if (Math.abs(dx) > 50) {
@@ -144,20 +143,42 @@ export const MoveList: Component<Props> = (props) => {
       >
         <Show when={totalPages() > 1}>
           <div class={styles["page-nav"]}>
-            <button class={styles["page-btn"]} onClick={goToStart} disabled={activePage() === 0} aria-label="First page">
-              <ChevronLeftIcon size={14} /><ChevronLeftIcon size={14} />
+            <button
+              class={styles["page-btn"]}
+              onClick={goToStart}
+              disabled={activePage() === 0}
+              aria-label="First page"
+            >
+              <ChevronLeftIcon size={14} />
+              <ChevronLeftIcon size={14} />
             </button>
-            <button class={styles["page-btn"]} onClick={goToPrev} disabled={activePage() === 0} aria-label="Previous page">
+            <button
+              class={styles["page-btn"]}
+              onClick={goToPrev}
+              disabled={activePage() === 0}
+              aria-label="Previous page"
+            >
               <ChevronLeftIcon size={14} />
             </button>
             <span class={styles["page-indicator"]}>
               {activePage() + 1} / {totalPages()}
             </span>
-            <button class={styles["page-btn"]} onClick={goToNext} disabled={activePage() >= totalPages() - 1} aria-label="Next page">
+            <button
+              class={styles["page-btn"]}
+              onClick={goToNext}
+              disabled={activePage() >= totalPages() - 1}
+              aria-label="Next page"
+            >
               <ChevronRightIcon size={14} />
             </button>
-            <button class={styles["page-btn"]} onClick={goToEnd} disabled={activePage() >= totalPages() - 1} aria-label="Last page">
-              <ChevronRightIcon size={14} /><ChevronRightIcon size={14} />
+            <button
+              class={styles["page-btn"]}
+              onClick={goToEnd}
+              disabled={activePage() >= totalPages() - 1}
+              aria-label="Last page"
+            >
+              <ChevronRightIcon size={14} />
+              <ChevronRightIcon size={14} />
             </button>
           </div>
         </Show>

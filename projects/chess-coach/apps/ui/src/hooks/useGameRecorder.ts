@@ -4,12 +4,7 @@ import { createEffect, createSignal, on } from "solid-js";
 import { setPendingHintUci } from "~/hooks/useGameControls";
 import { lastAIMoveInfo, lastHumanMoveInfo } from "~/hooks/useMoveExecutor";
 import { lastCoachEvent } from "~/store/coachStore";
-import {
-  finalizeGame,
-  inProgressGame,
-  pushMove,
-  startNewRecord,
-} from "~/store/gameHistoryStore";
+import { finalizeGame, inProgressGame, pushMove, startNewRecord } from "~/store/gameHistoryStore";
 import { game as gameFromStore } from "~/store/gameStore";
 import { activePlayerColor, difficulty } from "~/store/settingsStore";
 

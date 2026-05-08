@@ -21,12 +21,7 @@ export class WebLlmClient implements LlmClient {
   async warmup(): Promise<void> {
     console.log("[LlmClient] Warming up LLM into VRAM...");
     try {
-      await this.prompt(
-        "System",
-        "Ping",
-        ENGINE_CONFIG.llm.defaultTemperature,
-        1,
-      );
+      await this.prompt("System", "Ping", ENGINE_CONFIG.llm.defaultTemperature, 1);
       console.log("[LlmClient] Warmup complete.");
     } catch (e: any) {
       console.error("[LlmClient] Warmup failed:", e);

@@ -131,9 +131,7 @@ class StockfishService {
     this.killCurrentWorker();
     this.clearWatchdog();
     this.isSearching = false;
-    console.error(
-      `[StockfishService] Engine disabled (${reason}) — reload the page to retry.`,
-    );
+    console.error(`[StockfishService] Engine disabled (${reason}) — reload the page to retry.`);
     // Unblock any pending consumers.
     const syntheticEvent = new MessageEvent("message", { data: "bestmove (none)" });
     for (const listener of this.listeners) listener(syntheticEvent);

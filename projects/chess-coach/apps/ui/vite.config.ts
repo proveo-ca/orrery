@@ -4,8 +4,8 @@ import { URL, fileURLToPath } from "node:url";
 
 import { defineConfig } from "vite";
 import oxlintPlugin from "vite-plugin-oxlint";
-import solid from "vite-plugin-solid";
 import { VitePWA } from "vite-plugin-pwa";
+import solid from "vite-plugin-solid";
 
 const target = process.env.VITE_TARGET;
 const isWebTarget = target === "web-full" || target === "web-no-llm";
@@ -49,9 +49,7 @@ export default defineConfig({
         // set explicitly so every piece-set asset (~42 KB total across 4
         // sets × 12 pieces) lands in the precache and the board renders
         // offline from the very first PWA install.
-        globPatterns: [
-          "**/*.{js,css,html,ico,svg,png,webp,woff,woff2,webmanifest,wasm}",
-        ],
+        globPatterns: ["**/*.{js,css,html,ico,svg,png,webp,woff,woff2,webmanifest,wasm}"],
         // The chosen Stockfish build (~7 MB wasm) is precached so the app
         // works fully offline. That's the only non-engine asset above the
         // workbox default 2 MiB cap.
@@ -101,7 +99,12 @@ export default defineConfig({
         theme_color: "#1a1a2e",
         icons: [
           { src: "/chess/icon-192.png", sizes: "192x192", type: "image/png" },
-          { src: "/chess/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any maskable" },
+          {
+            src: "/chess/icon-512.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "any maskable",
+          },
         ],
       },
     }),

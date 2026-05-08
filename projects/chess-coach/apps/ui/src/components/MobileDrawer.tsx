@@ -122,12 +122,7 @@ export const MobileDrawer: Component = () => {
         </Show>
       </div>
 
-      <Modal
-        open={menuOpen()}
-        onClose={() => setMenuOpen(false)}
-        title="Menu"
-        position="fixed"
-      >
+      <Modal open={menuOpen()} onClose={() => setMenuOpen(false)} title="Menu" position="fixed">
         <div class={styles["menu-modal"]}>
           <SettingsPanel onDismiss={() => setMenuOpen(false)} />
 

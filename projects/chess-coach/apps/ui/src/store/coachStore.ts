@@ -178,7 +178,11 @@ const scheduleDecay = (fromEmotion: CoachEmotion, holdMs: number) => {
 };
 
 export const setCoachEmotion = (emotion: CoachEmotion, autoResetMs?: number) => {
-  console.log("[debug:coach] setCoachEmotion", { emotion, autoResetMs, prev: coachState.baseCoachEmotion });
+  console.log("[debug:coach] setCoachEmotion", {
+    emotion,
+    autoResetMs,
+    prev: coachState.baseCoachEmotion,
+  });
   setCoachState("baseCoachEmotion", emotion);
   if (autoResetMs && emotion !== "idle") {
     scheduleDecay(emotion, autoResetMs);

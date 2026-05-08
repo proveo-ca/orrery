@@ -42,8 +42,16 @@ export const [lastAIError, setLastAIError] = createSignal<string | null>(null);
  * - K+2N vs K+minor → NOT a draw (checkmate is possible with the extra piece)
  */
 function isInsufficientMaterial(g: ReturnType<typeof gameFromStore>): boolean {
-  let wQ = 0, wR = 0, wB = 0, wN = 0, wP = 0;
-  let bQ = 0, bR = 0, bB = 0, bN = 0, bP = 0;
+  let wQ = 0,
+    wR = 0,
+    wB = 0,
+    wN = 0,
+    wP = 0;
+  let bQ = 0,
+    bR = 0,
+    bB = 0,
+    bN = 0,
+    bP = 0;
 
   for (const piece of g.board().flat()) {
     if (!piece) continue;
@@ -162,9 +170,7 @@ export function useMoveExecutor(stopStockfish: () => void) {
       const humanMoveSan = result.san;
       const humanMoveLan = result.lan;
       const fenAfterHuman = result.after;
-      const wasBestMove = !!(
-        params.stockfishBestMove && humanMoveLan === params.stockfishBestMove
-      );
+      const wasBestMove = !!(params.stockfishBestMove && humanMoveLan === params.stockfishBestMove);
 
       stopStockfish();
 

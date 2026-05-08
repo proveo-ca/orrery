@@ -13,9 +13,7 @@ export function useMoveListPagination(rows: () => MoveRow[]) {
   const plyPage = createMemo(() => {
     const ply = activePly();
     if (ply < 0) return 0;
-    const idx = rows().findIndex(
-      (r) => r.whiteIndex === ply || r.blackIndex === ply,
-    );
+    const idx = rows().findIndex((r) => r.whiteIndex === ply || r.blackIndex === ply);
     return idx < 0 ? 0 : Math.floor(idx / ROWS_PER_PAGE);
   });
 
@@ -28,9 +26,7 @@ export function useMoveListPagination(rows: () => MoveRow[]) {
     setManualPage(null);
   });
 
-  const totalPages = createMemo(() =>
-    Math.max(1, Math.ceil(rows().length / ROWS_PER_PAGE)),
-  );
+  const totalPages = createMemo(() => Math.max(1, Math.ceil(rows().length / ROWS_PER_PAGE)));
 
   const activePage = () => manualPage() ?? plyPage();
 

@@ -26,53 +26,50 @@ export function useBlunderArrow(
   // reaches it would silently miss the arrow because `on(currentIndex)`
   // alone never re-fires when the annotation data arrives later.
   createEffect(
-    on(
-      [() => currentIndex(), annotations, bestMoveUcis],
-      ([idx, annots, bestMoves], prev) => {
-        const indexChanged = !prev || prev[0] !== idx;
+    on([() => currentIndex(), annotations, bestMoveUcis], ([idx, annots, bestMoves], prev) => {
+      const indexChanged = !prev || prev[0] !== idx;
 
-        // Only clear arrow / cancel in-flight hint when the user navigated.
-        if (indexChanged) {
-          setAdviceArrow(null);
-          stopHint();
-        }
+      // Only clear arrow / cancel in-flight hint when the user navigated.
+      if (indexChanged) {
+        setAdviceArrow(null);
+        stopHint();
+      }
 
-        if (idx <= 0) return;
-        const plyIndex = idx - 1;
-        const tags = annots[plyIndex];
-        if (!tags) return;
+      if (idx <= 0) return;
+      const plyIndex = idx - 1;
+      const tags = annots[plyIndex];
+      if (!tags) return;
 
-        const isBlunder = tags.includes("blunder") || tags.includes("forced");
-        const isInaccuracy = tags.includes("inaccuracy");
-        if (!isBlunder && !isInaccuracy) return;
+      const isBlunder = tags.includes("blunder") || tags.includes("forced");
+      const isInaccuracy = tags.includes("inaccuracy");
+      if (!isBlunder && !isInaccuracy) return;
 
-        // Try cached best-move first (always available for inaccuracies,
-        // usually available for blunders once analysis is complete).
-        const cachedUci = bestMoves[plyIndex];
-        if (cachedUci && cachedUci.length >= 4) {
-          stopHint();
-          setAdviceArrow({ from: cachedUci.slice(0, 2), to: cachedUci.slice(2, 4) });
-          return;
-        }
+      // Try cached best-move first (always available for inaccuracies,
+      // usually available for blunders once analysis is complete).
+      const cachedUci = bestMoves[plyIndex];
+      if (cachedUci && cachedUci.length >= 4) {
+        stopHint();
+        setAdviceArrow({ from: cachedUci.slice(0, 2), to: cachedUci.slice(2, 4) });
+        return;
+      }
 
-        // Fallback: live Stockfish search (blunders only, only on navigation —
-        // if analysis is still running it will eventually provide the cached
-        // UCI and the effect will re-fire via the tracked bestMoveUcis).
-        if (!isBlunder || !indexChanged) return;
-        const fens = fenHistory();
-        const fenBefore = fens[plyIndex];
-        if (!fenBefore) return;
+      // Fallback: live Stockfish search (blunders only, only on navigation —
+      // if analysis is still running it will eventually provide the cached
+      // UCI and the effect will re-fire via the tracked bestMoveUcis).
+      if (!isBlunder || !indexChanged) return;
+      const fens = fenHistory();
+      const fenBefore = fens[plyIndex];
+      if (!fenBefore) return;
 
-        requestHint(fenBefore, 12)
-          .then((uci) => {
-            if (currentIndex() !== idx || !uci || uci.length < 4) return;
-            setAdviceArrow({
-              from: uci.slice(0, 2),
-              to: uci.slice(2, 4),
-            });
-          })
-          .catch(() => {});
-      },
-    ),
+      requestHint(fenBefore, 12)
+        .then((uci) => {
+          if (currentIndex() !== idx || !uci || uci.length < 4) return;
+          setAdviceArrow({
+            from: uci.slice(0, 2),
+            to: uci.slice(2, 4),
+          });
+        })
+        .catch(() => {});
+    }),
   );
 }

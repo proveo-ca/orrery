@@ -43,9 +43,7 @@ export const ChessBoard: Component = () => {
   const isCheckmate = () => activeGame().isCheckmate();
   const isStalemate = () => activeGame().isStalemate();
   const isGameOver = () =>
-    capabilities().aiOpponent &&
-    !isTravelling() &&
-    (activeGame().isGameOver() || isResigned());
+    capabilities().aiOpponent && !isTravelling() && (activeGame().isGameOver() || isResigned());
   const turn = () => activeGame().turn();
 
   // ── Touch-drag (mobile) ──────────────────────────────────────────────

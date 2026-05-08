@@ -1,6 +1,7 @@
 // SPEC: _spec/chess-coach/ui/components.puml
 import { createEffect, on } from "solid-js";
 
+import { lastAIError, lastAIMoveInfo, lastHumanMoveInfo } from "~/hooks/useMoveExecutor";
 import { postAdviceStream } from "~/services/api";
 import { accumulateStream } from "~/services/streamUtils";
 import { capabilities } from "~/store/capabilitiesStore";
@@ -14,30 +15,25 @@ import {
 } from "~/store/coachStore";
 import { type PlayerIdentity, playerIdentity } from "~/store/settingsStore";
 import { logger } from "~/utils/logger";
-import { lastAIError, lastAIMoveInfo, lastHumanMoveInfo } from "~/hooks/useMoveExecutor";
 
 const BISHOP_CAPTURE_PHRASES: Record<PlayerIdentity, string[]> = {
-  Human: [
-    'Sade, dis-moi ♪♩',
-    'Bishops are nice humans',
-    'Sure, we can do vigils together'
-  ],
+  Human: ["Sade, dis-moi ♪♩", "Bishops are nice humans", "Sure, we can do vigils together"],
   Cat: [
-    'Yes, they still treat us the same',
-    'Oh great Sphynx, teach me your ways',
-    'Of course i want Bastet\'s autograph',
+    "Yes, they still treat us the same",
+    "Oh great Sphynx, teach me your ways",
+    "Of course i want Bastet's autograph",
   ],
   Dog: [
-    'Free to roam November 1st? Sure',
-    'Recuérdame ♪♩',
-    'I\'m going on an adventure with a Xolo!'
+    "Free to roam November 1st? Sure",
+    "Recuérdame ♪♩",
+    "I'm going on an adventure with a Xolo!",
   ],
   Rat: [
-    'No more rampage, Mushak',
-    'I\'m calling Lord Ganesha if you misbehave',
-    'Humble but mighty'
-  ]
-}
+    "No more rampage, Mushak",
+    "I'm calling Lord Ganesha if you misbehave",
+    "Humble but mighty",
+  ],
+};
 
 const QUEEN_CAPTURE_PHRASES: Record<PlayerIdentity, string[]> = {
   Human: [
@@ -175,10 +171,7 @@ export function useCoachBehavior() {
     }),
   );
 
-  const _streamAdvice = async (
-    humanMoveSan: string,
-    moveData: { fen: string; move: string },
-  ) => {
+  const _streamAdvice = async (humanMoveSan: string, moveData: { fen: string; move: string }) => {
     const controller = new AbortController();
     _adviceController = controller;
 

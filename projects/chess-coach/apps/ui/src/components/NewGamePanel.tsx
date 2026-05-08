@@ -42,6 +42,7 @@ export const NewGamePanel: Component = () => {
             fenAfterHuman: data.fen,
             difficulty: difficulty(),
           });
+
           setLastAIMoveInfo({
             san: moveData.move,
             humanMoveSan: "",
