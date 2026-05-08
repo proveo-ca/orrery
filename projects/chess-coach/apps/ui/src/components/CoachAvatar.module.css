@@ -15,8 +15,8 @@
   top: -30%;
   height: 60%;
   width: 25%;
-  background: #fff;
-  border: 2px solid #161616;
+  background: var(--avatar-fur);
+  border: 2px solid var(--avatar-outline);
   transition:
     transform 0.3s ease,
     top 0.3s ease; /* Smooth ear movements */
@@ -30,7 +30,7 @@
   height: 10%;
   width: 5%;
   border-radius: 50%;
-  background: #d4a5a5;
+  background: var(--avatar-nose);
 }
 
 .ear::after {
@@ -71,7 +71,7 @@
   position: absolute;
   height: 100%;
   width: 100%;
-  background: #161616;
+  background: var(--avatar-outline);
   border-radius: 50%;
 }
 
@@ -80,7 +80,7 @@
   top: 35%;
   height: 30%;
   width: 31%;
-  background: #fff;
+  background: var(--avatar-fur);
   border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
   transition:
     height 0.2s ease,
@@ -99,7 +99,7 @@
   height: 0;
   width: 100%;
   border-radius: 0 0 50% 50% / 0 0 40% 40%;
-  background: #161616;
+  background: var(--avatar-outline);
 }
 
 .eye::before {
@@ -108,7 +108,7 @@
   top: 60%;
   height: 10%;
   width: 15%;
-  background: #fff;
+  background: var(--avatar-fur);
   border-radius: 50%;
 }
 
@@ -136,8 +136,8 @@
   top: 15%;
   height: 60%;
   width: 25%;
-  background: #161616; /* Black slit pupil */
-  border: 3px solid #b3e79f; /* Green Iris */
+  background: var(--avatar-outline); /* Black slit pupil */
+  border: 3px solid var(--avatar-iris); /* Green Iris */
   border-radius: 50%;
   transform: translate(0, 0);
   transition:
@@ -165,7 +165,7 @@
   height: 6px;
   width: 6px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--avatar-fur);
 }
 
 .muzzle {
@@ -174,7 +174,7 @@
   left: 50%;
   height: 6%;
   width: 10%;
-  background: #fff;
+  background: var(--avatar-fur);
   transform: translateX(-50%);
   border-radius: 50% 50% 50% 50% / 30% 30% 70% 70%;
 }
@@ -193,8 +193,8 @@
   position: absolute;
   font-family: sans-serif;
   font-weight: bold;
-  color: #fff;
-  text-shadow: 0 0 3px #161616;
+  color: var(--avatar-fur);
+  text-shadow: 0 0 3px var(--avatar-outline);
   opacity: 0;
 }
 
@@ -391,7 +391,7 @@
   height: 36%;
   top: 36%;
   background-color: transparent;
-  border: solid #fff;
+  border: solid var(--avatar-fur);
   border-width: 0 0 6px 0;
   border-radius: 0 0 50% 50%;
 }
@@ -414,7 +414,7 @@
   height: 36%;
   top: 36%;
   background-color: transparent;
-  border: solid #fff;
+  border: solid var(--avatar-fur);
   border-width: 6px 0 0 0;
   border-radius: 50% 50% 0 0;
 }

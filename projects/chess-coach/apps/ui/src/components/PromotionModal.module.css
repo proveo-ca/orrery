@@ -7,7 +7,7 @@
 
 .choice {
   background: transparent;
-  border: 2px solid rgba(255, 255, 255, 0.15);
+  border: 2px solid rgba(var(--white-rgb), 0.15);
   border-radius: 8px;
   padding: 6px;
   cursor: pointer;
@@ -19,8 +19,8 @@
 
 .choice:hover,
 .choice:focus-visible {
-  border-color: rgba(118, 179, 225, 0.9);
-  background-color: rgba(118, 179, 225, 0.12);
+  border-color: rgba(var(--primary-rgb), 0.9);
+  background-color: rgba(var(--primary-rgb), 0.12);
   transform: scale(1.04);
   outline: none;
 }

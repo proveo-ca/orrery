@@ -62,11 +62,11 @@
 
 .inverted .half:hover:not(:disabled) {
   background-color: var(--primary-hover);
-  color: #fff;
+  color: var(--surface-color);
 }
 
 .inverted .left {
-  border-right-color: rgba(0, 0, 0, 0.2);
+  border-right-color: rgba(var(--shadow-rgb), 0.2);
 }
 
 :global(.highlight) .dual-nav {

@@ -20,9 +20,9 @@
   grid-template-columns: repeat(8, 1fr);
   width: var(--board-size);
   height: var(--board-size);
-  border: 4px solid #2c2c2c;
+  border: 4px solid var(--board-border);
   border-radius: 4px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(var(--shadow-rgb), 0.3);
   position: relative;
   touch-action: none;
   -webkit-touch-callout: none;
@@ -42,10 +42,10 @@
 }
 
 .square.light {
-  background-color: #f0d9b5;
+  background-color: var(--board-light);
 }
 .square.dark {
-  background-color: #b58863;
+  background-color: var(--board-dark);
 }
 
 /* =========================================
@@ -72,10 +72,10 @@
 
 /* Contrast colors based on square background */
 .square.light .coordinate {
-  color: #b58863;
+  color: var(--board-dark);
 }
 .square.dark .coordinate {
-  color: #f0d9b5;
+  color: var(--board-light);
 }
 
 /* =========================================
@@ -92,19 +92,19 @@
 
 /* Selected Piece */
 .square.selected::before {
-  background-color: rgba(20, 85, 30, 0.5);
+  background-color: var(--square-selected-bg);
 }
 
 /* Valid Hover */
 .square.hovered::before {
-  background-color: rgba(255, 255, 255, 0.25);
-  border: 2px solid rgba(255, 255, 255, 0.6);
+  background-color: var(--square-hover-bg);
+  border: 2px solid var(--square-hover-border);
   box-sizing: border-box;
 }
 
 /* Invalid Hover / Click */
 .square.invalid::before {
-  background-color: rgba(220, 50, 50, 0.4);
+  background-color: var(--square-invalid-bg);
 }
 .square.invalid {
   cursor: not-allowed;
@@ -125,7 +125,7 @@
   content: "";
   width: 30%;
   height: 30%;
-  background-color: rgba(0, 0, 0, 0.2);
+  background-color: rgba(var(--shadow-rgb), 0.2);
   border-radius: 50%;
 }
 
@@ -135,7 +135,7 @@
   width: 80%;
   height: 80%;
   background-color: transparent;
-  border: clamp(3px, 1vw, 5px) solid rgba(220, 50, 50, 0.7);
+  border: clamp(3px, 1vw, 5px) solid var(--square-capture-border);
   border-radius: 50%;
   box-sizing: border-box;
 }
@@ -144,7 +144,7 @@
   position: absolute;
   width: 75%;
   height: 75%;
-  border: clamp(2px, 0.8vw, 4px) solid rgba(0, 128, 0, 0.7);
+  border: clamp(2px, 0.8vw, 4px) solid var(--square-last-move-border);
   border-radius: 50%;
   pointer-events: none;
   z-index: 3;
@@ -157,9 +157,9 @@
   width: 80%;
   height: 80%;
   background-color: transparent;
-  border: clamp(3px, 1vw, 5px) solid #76b3e1;
+  border: clamp(3px, 1vw, 5px) solid var(--primary-color);
   border-radius: 50%;
-  box-shadow: 0 0 10px rgba(118, 179, 225, 0.5);
+  box-shadow: 0 0 10px rgba(var(--primary-rgb), 0.5);
   box-sizing: border-box;
 }
 
@@ -213,18 +213,18 @@
    Game Over States
    ========================================= */
 .game-over-overlay {
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(var(--shadow-rgb), 0.4);
   border-radius: 4px;
   z-index: 30;
   pointer-events: auto; /* block board interaction */
 }
 
 .game-over-banner {
-  background: rgba(0, 0, 0, 0.85);
-  color: #fff;
-  border: 2px solid #76b3e1;
+  background: rgba(var(--shadow-rgb), 0.85);
+  color: var(--white);
+  border: 2px solid var(--primary-color);
   border-radius: 8px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 15px rgba(var(--shadow-rgb), 0.5);
   display: flex;
   align-items: center;
   gap: 1.5rem;
@@ -236,7 +236,7 @@
     font-weight: bold;
     text-transform: uppercase;
     font-size: clamp(1.2rem, 5vw, 2rem);
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    text-shadow: 0 2px 4px rgba(var(--shadow-rgb), 0.5);
   }
 }
 
@@ -247,13 +247,13 @@
 }
 
 .square.in-check {
-  background: radial-gradient(circle, rgba(255, 68, 68, 0.8) 0%, transparent 80%);
+  background: radial-gradient(circle, var(--square-check-color) 0%, transparent 80%);
 }
 
 .square.in-checkmate {
-  background-color: #cc0000;
+  background-color: var(--square-checkmate-bg);
 }
 
 .square.in-stalemate {
-  background: radial-gradient(circle, rgba(170, 170, 170, 0.8) 0%, transparent 80%);
+  background: radial-gradient(circle, var(--square-stalemate-color) 0%, transparent 80%);
 }

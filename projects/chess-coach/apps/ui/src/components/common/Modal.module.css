@@ -1,6 +1,6 @@
 .modal-overlay {
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(var(--shadow-rgb), 0.7);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -19,7 +19,7 @@
   background: var(--bg-color);
   border-radius: var(--border-radius-md);
   padding: 1.5rem;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 10px 25px rgba(var(--shadow-rgb), 0.5);
   text-align: left;
 }
 

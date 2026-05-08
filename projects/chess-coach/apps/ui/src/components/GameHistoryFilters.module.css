@@ -6,7 +6,7 @@
 
 .label {
   font-size: 0.75rem;
-  opacity: 0.6;
+  color: var(--text-muted);
   margin-bottom: 0.25rem;
 }
 
@@ -23,7 +23,7 @@
   gap: 0.25rem;
   padding-bottom: 0.35rem;
   margin-bottom: 0.25rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .page-btn {
@@ -33,14 +33,14 @@
   background: transparent;
   border: 1px solid transparent;
   border-radius: 3px;
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--text-muted);
   cursor: pointer;
   font: inherit;
 }
 
 .page-btn:hover:not(:disabled) {
-  border-color: rgba(118, 179, 225, 0.5);
-  color: rgba(255, 255, 255, 0.85);
+  border-color: var(--primary-color);
+  color: var(--text-color);
 }
 
 .page-btn:disabled {
@@ -49,14 +49,22 @@
 }
 
 .page-indicator {
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--text-muted);
   font-size: 0.75rem;
   font-variant-numeric: tabular-nums;
   min-width: 3rem;
   text-align: center;
 }
 
-.tile--active {
-  border-color: rgba(118, 179, 225, 0.95);
-  background-color: rgba(118, 179, 225, 0.2);
+.page-btn.tile--active {
+  border-color: var(--primary-color);
+  background-color: var(--primary-color);
+  color: var(--surface-color);
+}
+
+.page-btn.tile--active:hover:not(:disabled),
+.page-btn.tile--active:focus-visible {
+  border-color: var(--primary-hover);
+  background-color: var(--primary-hover);
+  color: var(--surface-color);
 }

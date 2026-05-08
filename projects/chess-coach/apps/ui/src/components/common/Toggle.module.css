@@ -30,7 +30,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #4a4a4a;
+  background-color: var(--toggle-off-bg);
   transition: 0.3s;
 }
 
@@ -41,7 +41,7 @@
   width: 18px;
   left: 3px;
   bottom: 3px;
-  background-color: white;
+  background-color: var(--white);
   transition: 0.3s;
 }
 

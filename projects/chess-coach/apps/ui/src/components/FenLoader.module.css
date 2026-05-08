@@ -12,9 +12,9 @@
   min-width: 0;
   padding: 0.5rem 0.75rem;
   font: inherit;
-  color: #e0e0e0;
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--text-strong);
+  background: rgba(var(--shadow-rgb), 0.35);
+  border: 1px solid rgba(var(--white-rgb), 0.15);
   border-radius: 6px;
   outline: none;
   transition:
@@ -23,12 +23,12 @@
 }
 
 .input:focus {
-  border-color: rgba(118, 179, 225, 0.9);
-  background: rgba(0, 0, 0, 0.5);
+  border-color: rgba(var(--primary-rgb), 0.9);
+  background: rgba(var(--shadow-rgb), 0.5);
 }
 
 .input--invalid {
-  border-color: rgba(220, 50, 50, 0.8);
+  border-color: var(--input-invalid-border);
 }
 
 .button {
@@ -36,7 +36,7 @@
 }
 
 .error {
-  color: rgba(255, 128, 128, 0.95);
+  color: var(--input-error-text);
   font-size: 0.85rem;
   margin: 0 auto 0.5rem;
   max-width: var(--board-size, 640px);

@@ -3,19 +3,22 @@
   align-items: center;
   justify-content: center;
   border-radius: var(--border-radius-md);
-  border: 1px solid transparent;
+  border: 1px solid var(--border-color, transparent);
   padding: 0.6em 1.2em;
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
   background-color: var(--surface-color);
+  color: var(--text-color);
   cursor: pointer;
-  transition: border-color 0.25s;
-  color: inherit;
+  transition:
+    border-color 0.25s,
+    background-color 0.2s;
   text-decoration: none;
 }
 .common-btn:hover:not(:disabled) {
   border-color: var(--primary-hover);
+  background-color: var(--surface-hover, var(--surface-color));
 }
 .common-btn:focus,
 .common-btn:focus-visible {
@@ -34,5 +37,5 @@
 }
 .common-btn--primary:hover:not(:disabled) {
   background-color: var(--primary-hover);
-  color: #fff;
+  color: var(--surface-color);
 }

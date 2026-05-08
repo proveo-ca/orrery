@@ -2,15 +2,85 @@
 @custom-media --desktop (min-width: 720px);
 
 :root {
+  /* RGB tuples — base color components, used for both solid colors and rgba() */
+  --white-rgb: 255, 255, 255;
+  --shadow-rgb: 0, 0, 0;
+  --primary-rgb: 118, 179, 225;
+  --danger-rgb: 220, 50, 50;
+
+  /* Solid colors derived from RGB tuples */
+  --white: rgb(var(--white-rgb));
+  --black: rgb(var(--shadow-rgb));
+  --primary-color: rgb(var(--primary-rgb));
+
   /* Colors - Dark Mode (Default) */
   --bg-color: #242424;
   --surface-color: #1a1a1a;
-  --panel-bg: rgba(0, 0, 0, 0.2);
-  --text-color: rgba(255, 255, 255, 0.87);
+  --panel-bg: rgba(var(--shadow-rgb), 0.2);
+  --text-color: rgba(var(--white-rgb), 0.87);
   --text-muted: #aaa;
-  --primary-color: #76b3e1;
+  --text-strong: #e0e0e0;
   --primary-hover: #646cff;
   --border-color: #444;
+
+  /* Annotation tags */
+  --annotation-best: #2e7d32;
+  --annotation-blunder: #c62828;
+  --annotation-forced: #e65100;
+  --annotation-inaccuracy: #f9a825;
+
+  /* Game result colors */
+  --result-win: #7ddf7d;
+  --result-loss: #f08080;
+  --result-draw: #f0c86a;
+  --result-neutral: #d0d0d0;
+
+  /* Board surface */
+  --board-light: #f0d9b5;
+  --board-dark: #b58863;
+  --board-border: #2c2c2c;
+
+  /* Board state highlights */
+  --square-selected-bg: rgba(20, 85, 30, 0.5);
+  --square-hover-bg: rgba(var(--white-rgb), 0.25);
+  --square-hover-border: rgba(var(--white-rgb), 0.6);
+  --square-invalid-bg: rgba(var(--danger-rgb), 0.4);
+  --square-capture-border: rgba(var(--danger-rgb), 0.7);
+  --square-last-move-border: rgba(0, 128, 0, 0.7);
+  --square-check-color: rgba(255, 68, 68, 0.8);
+  --square-checkmate-bg: #cc0000;
+  --square-stalemate-color: rgba(170, 170, 170, 0.8);
+
+  /* Form/input states */
+  --input-invalid-border: rgba(var(--danger-rgb), 0.8);
+  --input-error-text: rgba(255, 128, 128, 0.95);
+
+  /* Coach avatar */
+  --avatar-fur: var(--white);
+  --avatar-outline: #161616;
+  --avatar-nose: #d4a5a5;
+  --avatar-iris: #b3e79f;
+
+  /* Eval bar */
+  --eval-bar-bg: #111;
+  --eval-bar-border: #222244;
+  --eval-white-from: #f0f0ff;
+  --eval-white-mid: #c8c8ff;
+  --eval-white-to: #a0a0ff;
+  --eval-black-from: #1a1a2e;
+  --eval-black-mid: #0f0f1f;
+  --eval-black-to: #080814;
+
+  /* Toggle off state */
+  --toggle-off-bg: #4a4a4a;
+
+  /* Light-speed overlay (intro animation) */
+  --beam-color-start: #a0e0ff;
+  --beam-color-peak: #ffffff;
+  --beam-color-end: #a0e0ff;
+  --beam-glow: rgba(120, 180, 255, 0.25);
+  --beam-bg-inner: rgba(20, 20, 60, 0.4);
+  --beam-bg-outer: rgba(0, 0, 0, 0.92);
 
   /* Typography */
   --font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
@@ -33,14 +103,22 @@
 
 @media (prefers-color-scheme: light) {
   :root {
+    --primary-rgb: 0, 86, 179;
+
     --bg-color: #ffffff;
     --surface-color: #f9f9f9;
-    --panel-bg: rgba(0, 0, 0, 0.05);
+    --panel-bg: rgba(var(--shadow-rgb), 0.05);
     --text-color: #213547;
     --text-muted: #666;
-    --primary-color: #0056b3;
+    --text-strong: #1a1a1a;
     --primary-hover: #747bff;
     --border-color: #ccc;
+
+    /* Game result colors retuned for light backgrounds */
+    --result-win: #2e7d32;
+    --result-loss: #c62828;
+    --result-draw: #b07f00;
+    --result-neutral: #666;
   }
 }
 

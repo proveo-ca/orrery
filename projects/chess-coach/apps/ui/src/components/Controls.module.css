@@ -60,7 +60,7 @@
 
 .start-btn:hover:not(:disabled) {
   background-color: var(--primary-hover);
-  color: #fff;
+  color: var(--surface-color);
 }
 
 .settings-btn {

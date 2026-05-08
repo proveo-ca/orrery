@@ -1,6 +1,6 @@
 // SPEC: _spec/chess-coach/ui/components.puml
 import { Chess } from "chess.js";
-import { For, Show } from "solid-js";
+import { For, Show, createEffect, createSignal, onCleanup } from "solid-js";
 import type { Component } from "solid-js";
 
 import styles from "~/components/CoachPanel.module.css";
@@ -10,6 +10,7 @@ import {
   hoverBlunder,
   hoverBlunderFen,
   hoverBlunderSan,
+  panelMessage,
   pendingTravel,
   setAdviceArrow,
   setAdviceHoveredSquares,
@@ -72,38 +73,69 @@ export const CoachPanel: Component = () => {
     }
   };
 
+  // Animation state for the whole panel (slide + bounce)
+  const [isVisible, setIsVisible] = createSignal(false);
+  const [animClass, setAnimClass] = createSignal<"enter" | "exit" | "">("");
+  const [prevMessage, setPrevMessage] = createSignal("");
+
+  createEffect(() => {
+    const current = panelMessage().trim();
+    const wasVisible = isVisible();
+    const messageChanged = current !== prevMessage();
+
+    if (current && (!wasVisible || messageChanged)) {
+      // New message or message changed while visible → animate in
+      setIsVisible(true);
+      setAnimClass("enter");
+      setPrevMessage(current);
+    } else if (!current && wasVisible) {
+      // Message cleared → animate out
+      setAnimClass("exit");
+      const timeout = setTimeout(() => {
+        setIsVisible(false);
+        setAnimClass("");
+        setPrevMessage("");
+      }, 300);
+      onCleanup(() => clearTimeout(timeout));
+    }
+  });
+
   const parsedAdvice = () => advice().split(CHESS_NOTATION_REGEX);
 
   return (
-    <div class={styles["coach-panel"]}>
-      <p>
-        <strong>Coach Selena:</strong>{" "}
-        <For each={parsedAdvice()}>
-          {(part) => {
-            if (part.match(CHESS_NOTATION_REGEX)) {
-              return (
-                <span
-                  class={styles["move-highlight"]}
-                  onMouseEnter={() => handleMouseEnter(part)}
-                  onMouseLeave={handleMouseLeave}
-                  onClick={() => handleTap(part)}
-                >
-                  {part}
-                </span>
-              );
-            }
-            return <span>{part}</span>;
-          }}
-        </For>
-      </p>
-      <Show when={(hoverBlunder() || pendingTravel()) && !isTravelling()}>
-        <span class={styles["why-hint"]} onClick={handleWhyTap}>
-          <span class={styles["why-desktop"]}>
-            Press <kbd>Space</kbd> — To learn why
+    <Show when={isVisible()}>
+      <div class={`${styles["coach-panel"]} ${styles[animClass()]}`}>
+        <Show when={advice().trim().length > 0}>
+          <p>
+            <strong>Coach Selena:</strong>{" "}
+            <For each={parsedAdvice()}>
+              {(part) => {
+                if (part.match(CHESS_NOTATION_REGEX)) {
+                  return (
+                    <span
+                      class={styles["move-highlight"]}
+                      onMouseEnter={() => handleMouseEnter(part)}
+                      onMouseLeave={handleMouseLeave}
+                      onClick={() => handleTap(part)}
+                    >
+                      {part}
+                    </span>
+                  );
+                }
+                return <span>{part}</span>;
+              }}
+            </For>
+          </p>
+        </Show>
+        <Show when={(hoverBlunder() || pendingTravel()) && !isTravelling()}>
+          <span class={styles["why-hint"]} onClick={handleWhyTap}>
+            <span class={styles["why-desktop"]}>
+              Press <kbd>Space</kbd> — To learn why
+            </span>
+            <span class={styles["why-mobile"]}>Tap here — To learn why</span>
           </span>
-          <span class={styles["why-mobile"]}>Tap here — To learn why</span>
-        </span>
-      </Show>
-    </div>
+        </Show>
+      </div>
+    </Show>
   );
 };

@@ -99,14 +99,19 @@ export const MobileDrawer: Component = () => {
             backDisabled={atStart() && !isTravelling()}
             forwardDisabled={atLatest()}
             inverted={inTimelineMode()}
-            label={isTravelling() ? "Timeline" : isReplaying() ? "History" : undefined}
+            label={isTravelling() ? "Timeline" : "History"}
           />
         </Show>
 
         <Show
           when={capabilities().historyNav && inTimelineMode()}
           fallback={
-            <IconButton onClick={() => setMenuOpen(true)} aria-label="Open menu">
+            <IconButton
+              label="Settings"
+              labelPosition="bottom"
+              onClick={() => setMenuOpen(true)}
+              aria-label="Open menu"
+            >
               <CogIcon />
             </IconButton>
           }

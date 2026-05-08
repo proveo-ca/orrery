@@ -1,11 +1,7 @@
 :root {
-  --beam-color-start: #a0e0ff;
-  --beam-color-peak: #ffffff;
-  --beam-color-end: #a0e0ff;
   --beam-blur: 1.2px;
   --beam-width: 2px;
   --animation-base-duration: 1s;
-  --glow-color: rgba(120, 180, 255, 0.25);
   --duration: 1s;
   --delay: 0.4s;
   --rot: 0;
@@ -16,7 +12,7 @@
   inset: 0;
   pointer-events: none;
   z-index: 55;
-  background: radial-gradient(circle at center, rgba(20, 20, 60, 0.4) 0%, rgba(0, 0, 0, 0.92) 70%);
+  background: radial-gradient(circle at center, var(--beam-bg-inner) 0%, var(--beam-bg-outer) 70%);
   opacity: 0;
   transition: opacity 0.25s ease;
 }
@@ -28,7 +24,7 @@
 .center-glow {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 50% 50%, var(--glow-color) 0%, transparent 60%);
+  background: radial-gradient(circle at 50% 50%, var(--beam-glow) 0%, transparent 60%);
   animation: pulse 6s ease-in-out infinite;
   pointer-events: none;
 }

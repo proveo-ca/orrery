@@ -89,6 +89,12 @@ export const [showNewGame, setShowNewGame] = createSignal(false);
 export const [showCredits, setShowCredits] = createSignal(false);
 export const [showSettings, setShowSettings] = createSignal(false);
 
+// Central message for CoachPanel (advice is the primary source today;
+// future sources like thinking/easter-eggs/blunder-warnings can feed here)
+export const panelMessage = () => advice();
+
+export const clearAdvice = () => setCoachState("baseAdvice", "");
+
 // ===== Base setters =====
 export const setAdvice = (val: string) => setCoachState("baseAdvice", val);
 export const setAdviceHoveredSquares = (squares: string[]) =>

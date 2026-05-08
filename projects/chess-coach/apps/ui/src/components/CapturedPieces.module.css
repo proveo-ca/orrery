@@ -22,14 +22,14 @@
 }
 
 .white-piece {
-  color: #fff;
+  color: var(--white);
 }
 
 .black-piece {
-  color: #000;
+  color: var(--black);
   text-shadow:
-    -1px -1px 0 #fff,
-    1px -1px 0 #fff,
-    -1px 1px 0 #fff,
-    1px 1px 0 #fff;
+    -1px -1px 0 var(--white),
+    1px -1px 0 var(--white),
+    -1px 1px 0 var(--white),
+    1px 1px 0 var(--white);
 }

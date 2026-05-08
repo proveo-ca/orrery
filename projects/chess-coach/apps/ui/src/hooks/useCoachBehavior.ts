@@ -7,6 +7,7 @@ import { accumulateStream } from "~/services/streamUtils";
 import { capabilities } from "~/store/capabilitiesStore";
 import {
   bestMovePhrases,
+  clearAdvice,
   dispatchCoachEvent,
   setAdvice,
   setAdviceArrow,
@@ -100,6 +101,7 @@ export function useCoachBehavior() {
       if (!info || !capabilities().aiOpponent) return;
 
       abortAdvice();
+      clearAdvice();
       setAdviceArrow(null);
       setAdviceHoveredSquares([]);
 

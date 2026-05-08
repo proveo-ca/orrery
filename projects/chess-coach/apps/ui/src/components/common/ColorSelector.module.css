@@ -20,11 +20,19 @@
 
 .color-selector button.active {
   background: var(--primary-color);
-  color: #fff;
+  border-color: var(--primary-color);
+  color: var(--surface-color);
   font-weight: bold;
 }
 
+.color-selector button.active:hover:not(:disabled),
+.color-selector button.active:focus-visible {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+  color: var(--surface-color);
+}
+
 .color-selector button:hover:not(.active) {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-color);
+  background: rgba(var(--primary-rgb), 0.15);
 }

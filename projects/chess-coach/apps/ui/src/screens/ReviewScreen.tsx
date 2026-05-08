@@ -1,4 +1,3 @@
-// SPEC: _spec/chess-coach/ui/components.puml
 import { useParams } from "@solidjs/router";
 import { Show, createEffect, createMemo, on } from "solid-js";
 import type { Component } from "solid-js";
@@ -113,7 +112,9 @@ export const ReviewScreen: Component = () => {
                 <span>
                   {params.id ? "Game not found. Pick one above." : "Pick a game above to review."}
                 </span>
-                <Button href="/">Back to Main Menu</Button>
+                <Button primary href="/">
+                  Back to Main Menu
+                </Button>
               </div>
             </div>
           </>
@@ -122,7 +123,9 @@ export const ReviewScreen: Component = () => {
         {(g) => (
           <>
             <div class={`${styles["sidebar-inset"]} mobile-nav-clear`}>
-              <Button href="/review">Back to recent games</Button>
+              <Button primary href="/review">
+                Back to recent games
+              </Button>
             </div>
 
             <div class={styles["board-area"]}>

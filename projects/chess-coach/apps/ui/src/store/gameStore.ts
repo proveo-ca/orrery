@@ -3,7 +3,7 @@ import { Chess, type Move } from "chess.js";
 import { createSignal } from "solid-js";
 
 import { capabilities } from "~/store/capabilitiesStore";
-import { dispatchCoachEvent, setAdvice } from "~/store/coachStore";
+import { clearAdvice, dispatchCoachEvent, setAdvice } from "~/store/coachStore";
 import { colorPref, setActivePlayerColor } from "~/store/settingsStore";
 
 const STARTING_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -266,6 +266,8 @@ export const resetGame = (fen: string = STARTING_FEN) => {
   _setCurrentIndex(0);
   _setIsResigned(false);
   _bump();
+
+  clearAdvice();
 
   // Resolve random color
   let nextColor: "w" | "b" = "w";
