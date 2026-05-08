@@ -11,7 +11,6 @@ import {
   pairMovesIntoRows,
   resolveAnnotations,
 } from "~/engine/moveAnnotations";
-import { useBlunderArrow } from "~/hooks/useBlunderArrow";
 import { useGameAnalysis } from "~/hooks/useGameAnalysis";
 import { useMoveListPagination } from "~/hooks/useMoveListPagination";
 import type { GameRecord, MoveRecord } from "~/store/gameHistoryStore";
@@ -117,8 +116,6 @@ export const MoveList: Component<Props> = (props) => {
 
   const { activePly, activePage, totalPages, visibleRows, goToStart, goToEnd, goToPrev, goToNext } =
     useMoveListPagination(rows, { rowsPerPage });
-
-  useBlunderArrow(annotations, () => gameAnalysis().bestMoveUcis);
 
   const jump = (plyIndex: number) => {
     if (plyIndex < 0) return;

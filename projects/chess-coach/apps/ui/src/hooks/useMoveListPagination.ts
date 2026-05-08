@@ -35,9 +35,7 @@ export function useMoveListPagination(
     setManualPage(null);
   });
 
-  const totalPages = createMemo(() =>
-    Math.max(1, Math.ceil(rows().length / getRowsPerPage())),
-  );
+  const totalPages = createMemo(() => Math.max(1, Math.ceil(rows().length / getRowsPerPage())));
 
   const activePage = () => manualPage() ?? plyPage();
 

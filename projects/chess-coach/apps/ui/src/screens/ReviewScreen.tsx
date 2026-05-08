@@ -12,6 +12,9 @@ import { GameHistoryList } from "~/components/GameHistoryList";
 import { MobileDrawer } from "~/components/MobileDrawer";
 import { MoveList } from "~/components/MoveList";
 import { Sidebar } from "~/components/Sidebar";
+import { resolveAnnotations } from "~/engine/moveAnnotations";
+import { useBlunderArrow } from "~/hooks/useBlunderArrow";
+import { useGameAnalysis } from "~/hooks/useGameAnalysis";
 import { useGameHistoryFilters } from "~/hooks/useGameHistoryFilters";
 import { REVIEW_CAPABILITIES, setCapabilities } from "~/store/capabilitiesStore";
 import { gameHistory, getGameById } from "~/store/gameHistoryStore";
@@ -33,6 +36,17 @@ export const ReviewScreen: Component = () => {
     void gameHistory();
     return getGameById(id);
   });
+
+  const gameAnalysis = useGameAnalysis(activeGame);
+  const annotations = createMemo(() => {
+    const g = activeGame();
+    if (!g) return [];
+    const a = gameAnalysis();
+    return resolveAnnotations(g.moves, a.cpDeltas, a.wasBestMoves, a.bestMoveUcis);
+  });
+
+  // Blunder arrows are a board-level effect and should only run in ReviewScreen
+  useBlunderArrow(annotations, () => gameAnalysis().bestMoveUcis);
 
   // Capabilities track whether a game is active.
   createEffect(() => {
