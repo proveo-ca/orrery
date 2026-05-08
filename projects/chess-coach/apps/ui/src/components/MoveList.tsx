@@ -1,5 +1,5 @@
 // SPEC: _spec/chess-coach/ui/components.puml
-import { For, Show, onCleanup, onMount } from "solid-js";
+import { For, Show, createSignal, onCleanup, onMount } from "solid-js";
 import type { Component } from "solid-js";
 
 import { CoachEmotionIcon } from "~/components/CoachEmotionIcon";
@@ -101,8 +101,22 @@ export const MoveList: Component<Props> = (props) => {
   };
   const rows = () =>
     props.game ? pairMovesIntoRows(props.game.moves, props.game.startingFen) : [];
+
+  // Responsive rows per page: 3 on desktop/landscape, 8 on mobile
+  const [isLandscape, setIsLandscape] = createSignal(false);
+
+  onMount(() => {
+    const media = window.matchMedia("(min-width: 768px)");
+    const update = () => setIsLandscape(media.matches);
+    update();
+    media.addEventListener("change", update);
+    onCleanup(() => media.removeEventListener("change", update));
+  });
+
+  const rowsPerPage = () => (isLandscape() ? 3 : 8);
+
   const { activePly, activePage, totalPages, visibleRows, goToStart, goToEnd, goToPrev, goToNext } =
-    useMoveListPagination(rows);
+    useMoveListPagination(rows, { rowsPerPage });
 
   useBlunderArrow(annotations, () => gameAnalysis().bestMoveUcis);
 

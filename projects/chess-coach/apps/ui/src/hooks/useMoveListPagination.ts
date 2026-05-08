@@ -1,12 +1,21 @@
-// SPEC: _spec/chess-coach/ui/components.puml
 import { createEffect, createMemo, createSignal } from "solid-js";
 
 import type { MoveRow } from "~/engine/moveAnnotations";
 import { currentIndex } from "~/store/gameStore";
 
-const ROWS_PER_PAGE = 8;
+const DEFAULT_ROWS_PER_PAGE = 8;
 
-export function useMoveListPagination(rows: () => MoveRow[]) {
+export function useMoveListPagination(
+  rows: () => MoveRow[],
+  options?: { rowsPerPage?: number | (() => number) },
+) {
+  const getRowsPerPage = () => {
+    const rpp = options?.rowsPerPage;
+    if (typeof rpp === "function") return rpp();
+    if (typeof rpp === "number") return rpp;
+    return DEFAULT_ROWS_PER_PAGE;
+  };
+
   const activePly = () => currentIndex() - 1;
 
   // Page derived from the active ply (auto-follow when navigating moves).
@@ -14,7 +23,7 @@ export function useMoveListPagination(rows: () => MoveRow[]) {
     const ply = activePly();
     if (ply < 0) return 0;
     const idx = rows().findIndex((r) => r.whiteIndex === ply || r.blackIndex === ply);
-    return idx < 0 ? 0 : Math.floor(idx / ROWS_PER_PAGE);
+    return idx < 0 ? 0 : Math.floor(idx / getRowsPerPage());
   });
 
   // Manual override — null means follow plyPage.
@@ -26,13 +35,15 @@ export function useMoveListPagination(rows: () => MoveRow[]) {
     setManualPage(null);
   });
 
-  const totalPages = createMemo(() => Math.max(1, Math.ceil(rows().length / ROWS_PER_PAGE)));
+  const totalPages = createMemo(() =>
+    Math.max(1, Math.ceil(rows().length / getRowsPerPage())),
+  );
 
   const activePage = () => manualPage() ?? plyPage();
 
   const visibleRows = createMemo(() => {
-    const start = activePage() * ROWS_PER_PAGE;
-    return rows().slice(start, start + ROWS_PER_PAGE);
+    const start = activePage() * getRowsPerPage();
+    return rows().slice(start, start + getRowsPerPage());
   });
 
   const clamp = (p: number) => Math.max(0, Math.min(p, totalPages() - 1));
