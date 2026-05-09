@@ -1,4 +1,4 @@
-import { useParams } from "@solidjs/router";
+import { useNavigate, useParams } from "@solidjs/router";
 import { Show, createEffect, createMemo, on, onCleanup } from "solid-js";
 import type { Component } from "solid-js";
 
@@ -20,9 +20,11 @@ import { REVIEW_CAPABILITIES, setCapabilities } from "~/store/capabilitiesStore"
 import { gameHistory, getGameById } from "~/store/gameHistoryStore";
 import { loadGame } from "~/store/gameStore";
 import {
+  activePlayerColor,
   imLost,
   opponentIdentity,
   playerIdentity,
+  setActivePlayerColor,
   setImLost,
   setOpponentIdentity,
   setPlayerIdentity,
@@ -30,11 +32,13 @@ import {
 
 export const ReviewScreen: Component = () => {
   const params = useParams<{ id?: string }>();
+  const navigate = useNavigate();
   const filters = useGameHistoryFilters();
 
   let prevPlayerIdentity = playerIdentity();
   let prevOpponentIdentity = opponentIdentity();
   let prevImLost = imLost();
+  let prevActivePlayerColor = activePlayerColor();
 
   const activeGame = createMemo(() => {
     const id = params.id;
@@ -70,9 +74,11 @@ export const ReviewScreen: Component = () => {
         prevPlayerIdentity = playerIdentity();
         prevOpponentIdentity = opponentIdentity();
         prevImLost = imLost();
+        prevActivePlayerColor = activePlayerColor();
 
         if (g.playerRace) setPlayerIdentity(g.playerRace);
         if (g.opponentRace) setOpponentIdentity(g.opponentRace);
+        setActivePlayerColor(g.playerColor);
         setImLost(false);
 
         try {
@@ -88,6 +94,7 @@ export const ReviewScreen: Component = () => {
   onCleanup(() => {
     setPlayerIdentity(prevPlayerIdentity);
     setOpponentIdentity(prevOpponentIdentity);
+    setActivePlayerColor(prevActivePlayerColor);
     setImLost(prevImLost);
   });
 
@@ -153,7 +160,7 @@ export const ReviewScreen: Component = () => {
                   {resultLabel} ({colorLabel})
                 </Label>
                 <Label variant="title">vs {g().opponentName}</Label>
-                <Button primary href="/review">
+                <Button primary onClick={() => navigate(-1)}>
                   Back to recent games
                 </Button>
               </div>

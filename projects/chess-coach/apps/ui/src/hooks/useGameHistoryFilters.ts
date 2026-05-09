@@ -1,11 +1,26 @@
+import { useSearchParams } from "@solidjs/router";
 import { createMemo, createSignal } from "solid-js";
 
 import { type GameRecord, gameHistory } from "~/store/gameHistoryStore";
 
 export function useGameHistoryFilters() {
-  const [colorFilter, setColorFilter] = createSignal<"w" | "b">("w");
-  const [firstMoveFilter, setFirstMoveFilter] = createSignal<string | null>(null);
-  const [manualPage, setManualPage] = createSignal<number | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Normalize query param values (they can be string | string[])
+  const getParam = (key: string): string | null => {
+    const val = searchParams[key];
+    if (!val) return null;
+    return Array.isArray(val) ? val[0] : val;
+  };
+
+  // Initialize from URL query params with explicit defaults
+  const initialColor = (getParam("color") === "b" ? "b" : "w") as "w" | "b";
+  const initialFirstMove = getParam("firstMove");
+  const initialPage = getParam("page") ? parseInt(getParam("page")!, 10) - 1 : 0;
+
+  const [colorFilter, setColorFilter] = createSignal<"w" | "b">(initialColor);
+  const [firstMoveFilter, setFirstMoveFilter] = createSignal<string | null>(initialFirstMove);
+  const [manualPage, setManualPage] = createSignal<number>(initialPage);
 
   const filteredGames = createMemo(() => {
     const color = colorFilter();
@@ -22,7 +37,6 @@ export function useGameHistoryFilters() {
     });
   });
 
-  // Available first moves should only depend on color, not the first-move filter
   const availableFirstMoves = createMemo(() => {
     const color = colorFilter();
     const moveIndex = color === "w" ? 0 : 1;
@@ -48,16 +62,19 @@ export function useGameHistoryFilters() {
   });
 
   const totalPages = createMemo(() => Math.max(1, dateGroups().length));
-  const activePage = createMemo(() => manualPage() ?? 0);
+  const activePage = createMemo(() => {
+    const p = manualPage();
+    return Math.min(p, totalPages() - 1);
+  });
 
   const visibleGames = createMemo(() => {
-    const idx = Math.min(activePage(), totalPages() - 1);
+    const idx = activePage();
     const group = dateGroups()[idx];
     return group ? group.games : [];
   });
 
   const currentDateLabel = createMemo(() => {
-    const idx = Math.min(activePage(), totalPages() - 1);
+    const idx = activePage();
     const group = dateGroups()[idx];
     if (!group) return "";
     try {
@@ -69,21 +86,43 @@ export function useGameHistoryFilters() {
   });
 
   const clamp = (p: number) => Math.max(0, Math.min(p, totalPages() - 1));
-  const goToPrev = () => setManualPage(clamp(activePage() - 1));
-  const goToNext = () => setManualPage(clamp(activePage() + 1));
+
+  const updateSearchParams = (updates: Record<string, string | null | undefined>) => {
+    setSearchParams(updates, { replace: true });
+  };
+
+  const setColorFilterWithUrl = (v: "w" | "b") => {
+    setColorFilter(v);
+    setFirstMoveFilter(null);
+    setManualPage(0); // reset to page 1
+    updateSearchParams({ color: v, firstMove: null, page: "1" });
+  };
+
+  const setFirstMoveFilterWithUrl = (san: string | null) => {
+    setFirstMoveFilter(san);
+    setManualPage(0); // reset to page 1
+    updateSearchParams({ firstMove: san, page: "1" });
+  };
+
+  const setManualPageWithUrl = (page: number) => {
+    const clamped = clamp(page);
+    setManualPage(clamped);
+    updateSearchParams({ page: String(clamped + 1) });
+  };
+
+  const goToPrev = () => {
+    setManualPageWithUrl(activePage() - 1);
+  };
+
+  const goToNext = () => {
+    setManualPageWithUrl(activePage() + 1);
+  };
 
   return {
     colorFilter,
-    setColorFilter: (v: "w" | "b") => {
-      setColorFilter(v);
-      setFirstMoveFilter(null);
-      setManualPage(null);
-    },
+    setColorFilter: setColorFilterWithUrl,
     firstMoveFilter,
-    setFirstMoveFilter: (san: string | null) => {
-      setFirstMoveFilter(san);
-      setManualPage(null);
-    },
+    setFirstMoveFilter: setFirstMoveFilterWithUrl,
     filteredGames,
     totalPages,
     activePage,
@@ -92,5 +131,6 @@ export function useGameHistoryFilters() {
     goToPrev,
     goToNext,
     availableFirstMoves,
+    setManualPage: setManualPageWithUrl,
   };
 }

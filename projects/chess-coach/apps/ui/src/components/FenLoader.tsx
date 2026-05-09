@@ -5,6 +5,9 @@ import { Button } from "~/components/common/Button";
 import styles from "~/components/FenLoader.module.css";
 import { loadFen } from "~/store/gameStore";
 
+const FEN_REGEX =
+  /^([rnbqkpRNBQKP1-8]+\/){7}[rnbqkpRNBQKP1-8]+ [wb] (-|[KQkq]+) (-|[a-h][36]) \d+ \d+$/;
+
 export const FenLoader: Component = () => {
   const [value, setValue] = createSignal("");
   const [error, setError] = createSignal<string | null>(null);
@@ -13,6 +16,10 @@ export const FenLoader: Component = () => {
     const fen = value().trim();
     if (!fen) {
       setError("Please enter a FEN string.");
+      return;
+    }
+    if (!FEN_REGEX.test(fen)) {
+      setError("Invalid FEN format.");
       return;
     }
     try {
