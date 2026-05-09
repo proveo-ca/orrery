@@ -2,9 +2,12 @@
   display: flex;
   gap: 0.5rem;
   align-items: stretch;
-  width: 100%;
-  max-width: var(--board-size, 640px);
-  margin: 1.25rem auto 0.5rem;
+}
+
+@media (max-width: 719px) {
+  .wrapper {
+    flex-direction: column;
+  }
 }
 
 .input {

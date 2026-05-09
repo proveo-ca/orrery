@@ -1,11 +1,12 @@
 import { useParams } from "@solidjs/router";
-import { Show, createEffect, createMemo, on } from "solid-js";
+import { Show, createEffect, createMemo, on, onCleanup } from "solid-js";
 import type { Component } from "solid-js";
 
 import styles from "~/App.module.css";
 import { OpponentCaptures, PlayerCaptures } from "~/components/CapturedPieces";
 import { ChessBoard } from "~/components/ChessBoard";
 import { Button } from "~/components/common/Button";
+import { Label } from "~/components/common/Label";
 import { GameHistoryFilters } from "~/components/GameHistoryFilters";
 import { GameHistoryList } from "~/components/GameHistoryList";
 import { MobileDrawer } from "~/components/MobileDrawer";
@@ -18,16 +19,22 @@ import { useGameHistoryFilters } from "~/hooks/useGameHistoryFilters";
 import { REVIEW_CAPABILITIES, setCapabilities } from "~/store/capabilitiesStore";
 import { gameHistory, getGameById } from "~/store/gameHistoryStore";
 import { loadGame } from "~/store/gameStore";
+import {
+  imLost,
+  opponentIdentity,
+  playerIdentity,
+  setImLost,
+  setOpponentIdentity,
+  setPlayerIdentity,
+} from "~/store/settingsStore";
 
-/**
- * Read-only review of a saved game. URL: `/chess/review/:id` where id is the
- * Polyglot-Zobrist game hash. Shows the 10-game history at the top, the
- * board in the middle (interaction disabled via REVIEW_CAPABILITIES.readOnly),
- * and the annotated move list in the footer slot.
- */
 export const ReviewScreen: Component = () => {
   const params = useParams<{ id?: string }>();
   const filters = useGameHistoryFilters();
+
+  let prevPlayerIdentity = playerIdentity();
+  let prevOpponentIdentity = opponentIdentity();
+  let prevImLost = imLost();
 
   const activeGame = createMemo(() => {
     const id = params.id;
@@ -44,18 +51,14 @@ export const ReviewScreen: Component = () => {
     return resolveAnnotations(g.moves, a.cpDeltas, a.wasBestMoves, a.bestMoveUcis);
   });
 
-  // Blunder arrows are a board-level effect and should only run in ReviewScreen
   useBlunderArrow(annotations, () => gameAnalysis().bestMoveUcis);
 
-  // Capabilities track whether a game is active.
   createEffect(() => {
     setCapabilities(
       activeGame() ? { ...REVIEW_CAPABILITIES, historyNav: true } : REVIEW_CAPABILITIES,
     );
   });
 
-  // Load the selected game into the game store.
-  // defer: false so it runs on initial mount (not just on subsequent changes).
   createEffect(
     on(
       () => params.id,
@@ -63,6 +66,15 @@ export const ReviewScreen: Component = () => {
         if (!id) return;
         const g = getGameById(id);
         if (!g) return;
+
+        prevPlayerIdentity = playerIdentity();
+        prevOpponentIdentity = opponentIdentity();
+        prevImLost = imLost();
+
+        if (g.playerRace) setPlayerIdentity(g.playerRace);
+        if (g.opponentRace) setOpponentIdentity(g.opponentRace);
+        setImLost(false);
+
         try {
           loadGame({ pgn: g.pgn, startingFen: g.startingFen });
         } catch (err) {
@@ -72,6 +84,12 @@ export const ReviewScreen: Component = () => {
       { defer: false },
     ),
   );
+
+  onCleanup(() => {
+    setPlayerIdentity(prevPlayerIdentity);
+    setOpponentIdentity(prevOpponentIdentity);
+    setImLost(prevImLost);
+  });
 
   return (
     <div class={styles["app-container"]}>
@@ -120,28 +138,41 @@ export const ReviewScreen: Component = () => {
           </>
         }
       >
-        {(g) => (
-          <>
-            <div class={`${styles["sidebar-inset"]} mobile-nav-clear`}>
-              <Button primary href="/review">
-                Back to recent games
-              </Button>
-            </div>
+        {(g) => {
+          const resultLabel =
+            g().result === "ongoing"
+              ? "In Progress"
+              : g().result.charAt(0).toUpperCase() + g().result.slice(1);
+          const colorLabel = g().playerColor === "w" ? "White" : "Black";
+          const resultColor = g().result === "ongoing" ? undefined : g().result;
 
-            <div class={styles["board-area"]}>
-              <div class={styles["board-column"]}>
-                <OpponentCaptures />
-                <ChessBoard />
-                <PlayerCaptures />
+          return (
+            <>
+              <div class={`${styles["sidebar-inset"]} mobile-nav-clear`}>
+                <Label variant="title" color={resultColor}>
+                  {resultLabel} ({colorLabel})
+                </Label>
+                <Label variant="title">vs {g().opponentName}</Label>
+                <Button primary href="/review">
+                  Back to recent games
+                </Button>
               </div>
-              <Sidebar />
-            </div>
 
-            <div class={styles.footer}>
-              <MoveList game={g()} />
-            </div>
-          </>
-        )}
+              <div class={styles["board-area"]}>
+                <div class={styles["board-column"]}>
+                  <OpponentCaptures />
+                  <ChessBoard />
+                  <PlayerCaptures />
+                </div>
+                <Sidebar />
+              </div>
+
+              <div class={styles.footer}>
+                <MoveList game={g()} />
+              </div>
+            </>
+          );
+        }}
       </Show>
 
       <MobileDrawer />

@@ -60,6 +60,7 @@
 
 /* Offset content to align with the board center (not board+sidebar). */
 .sidebar-inset {
+  padding-top: 0.5rem;
   padding-right: var(--sidebar-width);
 }
 

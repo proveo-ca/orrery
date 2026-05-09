@@ -25,9 +25,10 @@ export const FenLoader: Component = () => {
 
   return (
     <>
-      <div class={`${styles.wrapper} mobile-nav-clear`}>
-        <input
-          type="text"
+      <form class={`${styles.wrapper} mobile-nav-clear`}>
+        <textarea
+          name="fen"
+          rows={3}
           class={styles.input}
           classList={{ [styles["input--invalid"]]: !!error() }}
           placeholder="Load from FEN"
@@ -41,7 +42,7 @@ export const FenLoader: Component = () => {
         <Button type="button" class={styles.button} onClick={submit}>
           Load
         </Button>
-      </div>
+      </form>
       <Show when={error()}>
         {(msg) => (
           <div class={styles.error} role="alert">

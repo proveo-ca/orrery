@@ -1,4 +1,3 @@
-// SPEC: _spec/chess-coach/ui/components.puml
 import { A } from "@solidjs/router";
 import { For, Show } from "solid-js";
 import type { Component } from "solid-js";
@@ -11,14 +10,12 @@ interface Props {
   activeId?: string;
 }
 
-/** Best-effort preview: first ~4 SAN tokens from the PGN. */
 const movePreview = (g: GameRecord): string => {
   const tokens = g.moves
     .slice(0, 4)
     .map((m) => m.san)
     .filter(Boolean);
   if (tokens.length === 0) return "(no moves)";
-  // Group into "1. e4 e5 2. Nf3"
   const parts: string[] = [];
   for (let i = 0; i < tokens.length; i += 2) {
     const num = Math.floor(i / 2) + 1;
@@ -49,6 +46,11 @@ const resultClass = (r: GameRecord["result"]): string => {
   }
 };
 
+const buildTitle = (g: GameRecord): string => {
+  const opponent = g.opponentName || g.opponentRace || "Opponent";
+  return `vs ${opponent}`;
+};
+
 export const GameHistoryList: Component<Props> = (props) => {
   return (
     <div class={styles.wrapper} role="list" aria-label="Recent games">
@@ -69,6 +71,7 @@ export const GameHistoryList: Component<Props> = (props) => {
                 <span class={`${styles.result} ${resultClass(g.result)}`}>{g.result}</span>
                 <span class={styles.date}>{formatDate(g.startedAt)}</span>
               </div>
+              <div class={styles.preview}>{buildTitle(g)}</div>
               <div class={styles.preview}>{movePreview(g)}</div>
             </A>
           )}

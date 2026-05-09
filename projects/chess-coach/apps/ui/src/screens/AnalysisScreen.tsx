@@ -1,5 +1,4 @@
-// SPEC: _spec/chess-coach/ui/components.puml
-import { onMount } from "solid-js";
+import { onCleanup, onMount } from "solid-js";
 import type { Component } from "solid-js";
 
 import styles from "~/App.module.css";
@@ -10,6 +9,7 @@ import { FenLoader } from "~/components/FenLoader";
 import { MobileDrawer } from "~/components/MobileDrawer";
 import { Sidebar } from "~/components/Sidebar";
 import { ANALYSIS_CAPABILITIES, setCapabilities } from "~/store/capabilitiesStore";
+import { imLost, setImLost } from "~/store/settingsStore";
 
 /**
  * Solo Analysis screen. No coach avatar, no advice panel, no replay or
@@ -20,13 +20,23 @@ import { ANALYSIS_CAPABILITIES, setCapabilities } from "~/store/capabilitiesStor
  * no hint button.
  */
 export const AnalysisScreen: Component = () => {
+  let previousImLost = false;
+
   onMount(() => {
     setCapabilities(ANALYSIS_CAPABILITIES);
+    previousImLost = imLost();
+    setImLost(true);
+  });
+
+  onCleanup(() => {
+    setImLost(previousImLost);
   });
 
   return (
     <div class={styles["app-container"]}>
-      <FenLoader />
+      <div class={`${styles["sidebar-inset"]} mobile-nav-clear`}>
+        <FenLoader />
+      </div>
       <div class={styles["board-area"]}>
         <div class={styles["board-column"]}>
           <OpponentCaptures />

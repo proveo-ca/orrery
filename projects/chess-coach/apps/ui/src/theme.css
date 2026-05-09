@@ -125,7 +125,7 @@
 /* Clear MobileDrawer fixed nav on mobile screens. */
 @media (max-width: 719px) {
   .mobile-nav-clear {
-    padding-top: var(--avatar-height);
+    padding-top: 1.5rem;
   }
 }
 
