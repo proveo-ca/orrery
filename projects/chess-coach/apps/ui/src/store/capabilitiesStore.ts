@@ -92,7 +92,7 @@ export const REVIEW_CAPABILITIES: ScreenCapabilities = {
   historyBranching: true,
   freeColorControl: false,
   readOnly: true,
-  opponentUsesPlayerPieceSet: true,
+  opponentUsesPlayerPieceSet: false,
   flipBoard: false,
 };
 
