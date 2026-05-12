@@ -10,6 +10,10 @@ export default defineConfig({
       "~": fileURLToPath(new URL("./src", import.meta.url)),
     },
   },
+  define: {
+    __STOCKFISH_VARIANT__: JSON.stringify("stockfish-18-lite"),
+    __HAS_LLM__: JSON.stringify(false),
+  },
   test: {
     environment: "jsdom",
     globals: true,

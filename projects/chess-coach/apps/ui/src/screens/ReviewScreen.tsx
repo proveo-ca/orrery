@@ -161,7 +161,7 @@ export const ReviewScreen: Component = () => {
                 </Label>
                 <Label variant="title">vs {g().opponentName}</Label>
                 <Button primary onClick={() => navigate(-1)}>
-                  Back to recent games
+                  Back
                 </Button>
               </div>
 

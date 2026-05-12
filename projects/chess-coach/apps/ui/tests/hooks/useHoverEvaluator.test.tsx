@@ -12,6 +12,7 @@ vi.mock("~/store/coachStore", () => ({
   setHoverAdvice: vi.fn(),
   setHoverEmotion: vi.fn(),
   setHoverBlunder: vi.fn(),
+  setPendingTravel: vi.fn(),
 }));
 
 vi.mock("~/store/gameStore", () => ({

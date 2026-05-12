@@ -1,10 +1,11 @@
-// SPEC: _spec/chess-coach/ui/components.puml
 import { type Chess, type Square } from "chess.js";
 import { createSignal } from "solid-js";
 
+import type { StockfishAnalysis } from "~/hooks/useStockfishWorker";
 import { postMove } from "~/services/api";
 import { resolveMode } from "~/services/runtimeMode";
 import { capabilities } from "~/store/capabilitiesStore";
+import { setAdvice, setCoachEmotion } from "~/store/coachStore";
 import {
   addMove,
   addMoveSan,
@@ -111,6 +112,7 @@ type ExecuteMoveParams = {
   selected: Square;
   square: Square;
   stockfishBestMove?: string;
+  analysis?: () => StockfishAnalysis;
   /**
    * Called when the pending move is a pawn promotion so the caller can
    * prompt the user to pick a piece. Resolving with `null` cancels the
@@ -120,7 +122,11 @@ type ExecuteMoveParams = {
 };
 
 export function useMoveExecutor(stopStockfish: () => void) {
-  const _processAITurn = async (humanMoveSan: string, fenAfterHuman: string) => {
+  const _processAITurn = async (
+    humanMoveSan: string,
+    fenAfterHuman: string,
+    analysis?: () => StockfishAnalysis,
+  ): Promise<void> => {
     try {
       const moveData = await postMove({ humanMoveSan, fenAfterHuman, difficulty: difficulty() });
 
@@ -135,6 +141,14 @@ export function useMoveExecutor(stopStockfish: () => void) {
         move: moveData.move,
         gameOver,
       });
+
+      // Detect if the AI has put the human under a mating sequence
+      const lastInfo = analysis?.().lastInfo;
+      if (lastInfo?.score?.kind === "mate" && lastInfo.score.value < 0) {
+        logger.action("Human is under a mating sequence");
+        setCoachEmotion("shocked");
+        setAdvice("You're under a mating sequence!");
+      }
     } catch (err) {
       logger.error("AI move failed", err);
       setLastAIError(
@@ -177,11 +191,19 @@ export function useMoveExecutor(stopStockfish: () => void) {
       const gameOver = capabilities().aiOpponent ? (getGameOverState(true) ?? null) : null;
       setLastHumanMoveInfo({ san: humanMoveSan, lan: humanMoveLan, wasBestMove, gameOver });
 
+      // Detect if human has started a mating sequence (AI is now getting mated)
+      const lastInfo = params.analysis?.().lastInfo;
+      if (lastInfo?.score?.kind === "mate" && lastInfo.score.value < 0) {
+        logger.action("Human started mating sequence");
+        setCoachEmotion("happy");
+        setAdvice("You have begun a mating sequence!");
+      }
+
       if (!capabilities().aiOpponent || gameOver) {
         return { didMove: true, fenAfterHuman };
       }
 
-      void _processAITurn(humanMoveSan, fenAfterHuman);
+      await _processAITurn(humanMoveSan, fenAfterHuman, params.analysis);
 
       return { didMove: true, fenAfterHuman };
     } catch (e) {
