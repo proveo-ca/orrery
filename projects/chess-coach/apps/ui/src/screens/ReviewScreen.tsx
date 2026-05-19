@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from "@solidjs/router";
-import { Show, createEffect, createMemo, on, onCleanup } from "solid-js";
+import { Show, createEffect, createMemo, createSignal, on, onCleanup } from "solid-js";
 import type { Component } from "solid-js";
 
 import styles from "~/App.module.css";
@@ -7,6 +7,7 @@ import { OpponentCaptures, PlayerCaptures } from "~/components/CapturedPieces";
 import { ChessBoard } from "~/components/ChessBoard";
 import { Button } from "~/components/common/Button";
 import { Label } from "~/components/common/Label";
+import { MatrixOverlay } from "~/components/common/MatrixOverlay";
 import { GameHistoryFilters } from "~/components/GameHistoryFilters";
 import { GameHistoryList } from "~/components/GameHistoryList";
 import { MobileDrawer } from "~/components/MobileDrawer";
@@ -18,14 +19,12 @@ import { useGameAnalysis } from "~/hooks/useGameAnalysis";
 import { useGameHistoryFilters } from "~/hooks/useGameHistoryFilters";
 import { REVIEW_CAPABILITIES, setCapabilities } from "~/store/capabilitiesStore";
 import { gameHistory, getGameById } from "~/store/gameHistoryStore";
-import { loadGame } from "~/store/gameStore";
+import { fenHistory, loadGame } from "~/store/gameStore";
 import {
   activePlayerColor,
-  imLost,
   opponentIdentity,
   playerIdentity,
   setActivePlayerColor,
-  setImLost,
   setOpponentIdentity,
   setPlayerIdentity,
 } from "~/store/settingsStore";
@@ -37,8 +36,11 @@ export const ReviewScreen: Component = () => {
 
   let prevPlayerIdentity = playerIdentity();
   let prevOpponentIdentity = opponentIdentity();
-  let prevImLost = imLost();
   let prevActivePlayerColor = activePlayerColor();
+
+  const [analysisMode, setAnalysisMode] = createSignal(false);
+  const [originalFenCount, setOriginalFenCount] = createSignal(0);
+  const [originalPlayerColor, setOriginalPlayerColor] = createSignal<"w" | "b">("w");
 
   const activeGame = createMemo(() => {
     const id = params.id;
@@ -73,29 +75,42 @@ export const ReviewScreen: Component = () => {
 
         prevPlayerIdentity = playerIdentity();
         prevOpponentIdentity = opponentIdentity();
-        prevImLost = imLost();
         prevActivePlayerColor = activePlayerColor();
 
         if (g.playerRace) setPlayerIdentity(g.playerRace);
         if (g.opponentRace) setOpponentIdentity(g.opponentRace);
         setActivePlayerColor(g.playerColor);
-        setImLost(false);
+
+        setOriginalPlayerColor(g.playerColor);
+        setAnalysisMode(false);
 
         try {
           loadGame({ pgn: g.pgn, startingFen: g.startingFen });
+          setOriginalFenCount(fenHistory().length);
         } catch (err) {
           console.error("Failed to load saved game", err);
+          setOriginalFenCount(0);
         }
       },
       { defer: false },
     ),
   );
 
+  createEffect(() => {
+    if (
+      activeGame() &&
+      originalFenCount() > 0 &&
+      fenHistory().length > originalFenCount()
+    ) {
+      setAnalysisMode(true);
+      setActivePlayerColor(originalPlayerColor());
+    }
+  });
+
   onCleanup(() => {
     setPlayerIdentity(prevPlayerIdentity);
     setOpponentIdentity(prevOpponentIdentity);
     setActivePlayerColor(prevActivePlayerColor);
-    setImLost(prevImLost);
   });
 
   return (
@@ -180,6 +195,10 @@ export const ReviewScreen: Component = () => {
             </>
           );
         }}
+      </Show>
+
+      <Show when={analysisMode()}>
+        <MatrixOverlay density={70} speed={0.9} opacity={0.25} />
       </Show>
 
       <MobileDrawer />

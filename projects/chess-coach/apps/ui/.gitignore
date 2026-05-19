@@ -33,5 +33,7 @@ public/models/**/resolve/main/*
 # ==========================================
 .aider/
 .aider*
+.cecli/
+.cecli*
 .claude
 .cursor/rules/nx-rules.mdc

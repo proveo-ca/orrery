@@ -1,0 +1,49 @@
+.matrix {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 60;
+  background: transparent;
+  opacity: var(--overlay-opacity, 0.20);
+}
+
+.drop {
+  position: absolute;
+  top: -140px;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.05;
+  color: var(--drop-color, var(--matrix-color));
+  text-shadow:
+      0 0 8px var(--drop-color, var(--matrix-color)),
+      0 0 18px var(--drop-color, var(--matrix-color));
+  user-select: none;
+  animation: fall linear forwards;
+}
+
+.drop span {
+  opacity: 0;
+  animation: charFade 950ms forwards;
+}
+
+/* Brighter leading character */
+.drop span:first-child {
+  color: var(--matrix-bright);
+  text-shadow:
+      0 0 12px var(--matrix-bright),
+      0 0 28px var(--drop-color, var(--matrix-color));
+}
+
+@keyframes fall {
+  to {
+    transform: translateY(130vh);
+  }
+}
+
+@keyframes charFade {
+  0%   { opacity: 0; }
+  20%  { opacity: 0.95; }
+  75%  { opacity: 0.82; }
+  100% { opacity: 0; }
+}

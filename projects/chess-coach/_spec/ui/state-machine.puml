@@ -1,0 +1,228 @@
+@startuml chess-coach-ui-state-machine
+' SPEC: _spec/chess-coach/ui/state-machine.puml
+!includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+
+skinparam defaultTextAlignment left
+skinparam arrowColor #446688
+
+title Chess Coach UI · State Machine
+
+' ══════════════════════════════════════════════════════════════
+' RUNTIME MODE  (resolved once at module init, never changes)
+' ══════════════════════════════════════════════════════════════
+
+state "Runtime Mode" as RuntimeMode {
+  state "desktop"    as R_DESKTOP : Ktor backend, HttpCoachService
+  state "web-full"   as R_WEBFULL : Web workers + LLM commentary
+  state "web-no-llm" as R_WEB_NL  : Web workers, no LLM
+  [*] --> R_WEB_NL : default (VITE_TARGET unset, no VITE_API_URL)
+  R_DESKTOP : VITE_API_URL is set, target != web-*
+  R_WEBFULL : VITE_TARGET = web-full
+  R_WEB_NL  : VITE_TARGET = web-no-llm
+}
+
+' ══════════════════════════════════════════════════════════════
+' SCREEN STATE  (which screen is mounted)
+' ══════════════════════════════════════════════════════════════
+
+state "Active Screen" as ActiveScreen {
+  [*] --> Menu : app start / navigate("/")
+  state "Menu" as SC_MENU : MenuScreen\nidentity picker\nroutes to sub-screens
+  state "Coach" as SC_COACH : CoachScreen\nplaying with Selena
+  state "Analysis" as SC_ANALYSIS : AnalysisScreen\nsolo analysis scratch-pad
+  state "Review" as SC_REVIEW : ReviewScreen
+  state "Lan" as SC_LAN : LanScreen (placeholder)
+
+  SC_MENU --> SC_COACH     : navigate("/selena")
+  SC_MENU --> SC_ANALYSIS  : navigate("/analysis")
+  SC_MENU --> SC_REVIEW    : navigate("/review")
+  SC_MENU --> SC_LAN       : navigate("/lan")
+  SC_REVIEW --> SC_MENU    : navigate(-1) | navigate("/")
+  SC_COACH  --> SC_MENU    : navigate("/")
+  SC_ANALYSIS --> SC_MENU  : navigate("/")
+  SC_LAN --> SC_MENU       : navigate("/")
+}
+
+' ══════════════════════════════════════════════════════════════
+' CAPABILITY PRESET  (setCapabilities on screen mount)
+' ══════════════════════════════════════════════════════════════
+
+state "Capability Preset" as CapPreset {
+  state "COACH" as CAP_COACH : hint T · travel T · aiOpponent T\nblunderDetection T · persistGame T\ncommentary = hasLlm
+  state "ANALYSIS" as CAP_ANALYSIS : continuousAnalysis T · showBestMove T\nfreeColorControl T · historyBranching T\nflipBoard T · persistGame F
+  state "REVIEW" as CAP_REVIEW : continuousAnalysis T\nreadOnly T · historyBranching T ·\nhistoryNav F · persistGame F
+  state "REVIEW+historyNav" as CAP_REVIEW_NAV : REVIEW preset +\nhistoryNav T (when activeGame() exists)
+
+  [*] --> CAP_COACH : default on app init
+  SC_COACH    : setCapabilities(COACH_CAPABILITIES)
+  SC_ANALYSIS : setCapabilities(ANALYSIS_CAPABILITIES)
+  SC_REVIEW   : setCapabilities(REVIEW_CAPABILITIES) →\n  activeGame() ? CAP_REVIEW_NAV : CAP_REVIEW
+}
+
+' ══════════════════════════════════════════════════════════════
+' BOARD INTERACTION STATE  (how the board behaves)
+' ══════════════════════════════════════════════════════════════
+
+state "Board Interaction" as BoardInt {
+  state "Normal"       as BI_NORMAL : free play, one color active
+  state "FreePlay"     as BI_FREE   : both colors playable (freeColorControl T)
+  state "Replaying"    as BI_REPLAY : viewing past, HistoryOverlay,\nhistoryBranching F, locked input
+  state "Travelling"   as BI_TRAVEL : LightSpeedOverlay, locked input
+  state "ReadOnly"     as BI_RO     : no piece interaction (readOnly T)
+  state "AnalysisBranch" as BI_BRANCH : past positions editable (historyBranching T)
+
+  [*] --> BI_NORMAL : initial
+  BI_NORMAL --> BI_FREE    : freeColorControl T (AnalysisScreen)
+  BI_NORMAL --> BI_REPLAY  : navigate past (historyBranching F, CoachScreen)
+  BI_NORMAL --> BI_TRAVEL  : Space on blunder (travel T)
+  BI_NORMAL --> BI_RO      : readOnly T (ReviewScreen game detail)
+  BI_NORMAL --> BI_BRANCH  : historyBranching T (AnalysisScreen)
+  BI_TRAVEL  --> BI_NORMAL : Escape / reach latest position / exitTravel()
+  BI_REPLAY  --> BI_NORMAL : Escape / navigate to latest / backToLive()
+  BI_FREE    --> BI_NORMAL : screen exit (→ Analysis only)
+  BI_RO      --> BI_NORMAL : back to game list (ReviewScreen fallback)
+  BI_BRANCH  --> BI_NORMAL : screen exit
+  BI_TRAVEL --> BI_REPLAY  : travelBack() at index 0 → exit travel, still replaying
+}
+
+' ══════════════════════════════════════════════════════════════
+' OVERLAY STATE  (visual overlays on the board)
+' ══════════════════════════════════════════════════════════════
+
+state "Overlay" as Overlays {
+  state "None" as O_NONE
+  state "HistoryOverlay" as O_HIST : semi-transparent overlay\nshown during replay\n(CoachScreen only)
+  state "LightSpeedOverlay" as O_LIGHT : time-travel effect\nshown during travel\n(CoachScreen only)
+  state "Modal" as O_MODAL : browser unsupported dialog\n(CoachScreen only)
+  state "MatrixOverlay" as O_MATRIX : Matrix code rain effect\n(ReviewScreen analysis mode)
+
+  [*] --> O_NONE
+  O_NONE  --> O_HIST   : isReplaying && !isTravelling\n(CoachScreen)
+  O_HIST  --> O_NONE   : backToLive / Escape / reaches live
+  O_NONE  --> O_LIGHT  : isTravelling\n(CoachScreen)
+  O_LIGHT --> O_NONE   : exitTravel / Escape
+  O_NONE  --> O_MODAL  : browser unsupported\n(CoachScreen onMount)
+  O_MODAL --> O_NONE   : modal dismissed (setUnsupportedReason(null))
+  O_NONE  --> O_MATRIX : analysisMode T\n(ReviewScreen)
+  O_MATRIX --> O_NONE  : analysisMode F
+}
+
+' ══════════════════════════════════════════════════════════════
+' COACH EMOTION FSM  (coachStore — auto-decay + inactivity sleep)
+' ══════════════════════════════════════════════════════════════
+
+state "Coach Emotion" as CoachFSM {
+  [*] --> sleeping : app init
+  state "idle"       as E_IDLE   : waiting, neutral
+  state "watching"   as E_WATCH  : observing board
+  state "thinking"   as E_THINK  : AI calculating
+  state "happy"      as E_HAPPY  : good move, auto-decay 3s → idle
+  state "shocked"    as E_SHOCK  : blunder/error, auto-decay 3s → idle
+  state "sleepy"     as E_SLEEPY : 30s inactivity
+  state "sleeping"   as E_SLEEP  : 40s inactivity
+  state "watching--left"  as E_W_L : watching variant
+  state "watching--right" as E_W_R : watching variant
+
+  E_SLEEP  --> E_IDLE : WAKE_UP (window focus)
+  E_SLEEPY --> E_SLEEP : 40s timer
+  E_IDLE   --> E_SLEEPY : 30s inactivity timer
+
+  E_IDLE  --> E_THINK : AI_THINKING / HUMAN_MOVE_NORMAL
+  E_IDLE  --> E_HAPPY : HUMAN_MOVE_BEST / NEW_GAME
+  E_IDLE  --> E_SHOCK : APP_ERROR / AI_ERROR / ADVICE_RECEIVED(isBlunder)
+
+  E_THINK --> E_HAPPY : HUMAN_MOVE_BEST (preserves happy)
+  E_THINK --> E_IDLE  : AI_MOVED / APP_READY
+  E_THINK --> E_SHOCK : AI_ERROR
+
+  E_HAPPY --> E_IDLE : auto-decay 3s (HUMAN_MOVE_BEST) / 2s (NEW_GAME)
+  E_HAPPY --> E_SHOCK : ADVICE_RECEIVED(isBlunder) / AI_ERROR / GAME_OVER(loss)
+
+  E_SHOCK --> E_IDLE : auto-decay 3s / AI_MOVED / APP_READY
+}
+
+' ══════════════════════════════════════════════════════════════
+' GAME PHASE  (turn-based game loop — CoachScreen only)
+' ══════════════════════════════════════════════════════════════
+
+state "Game Phase" as GamePhase {
+  state "AwaitingHuman" as GP_IDLE : waiting for player move
+  state "AIThinking"   as GP_AI   : AI calculating response
+  state "GameOver"     as GP_OVER  : checkmate / stalemate / threefold / resign
+  state "AiStartingMove" as GP_AI_FIRST : AI's turn on mount\n(restored game where it's AI's turn)
+
+  [*] --> GP_IDLE : game starts, human's turn
+  [*] --> GP_AI_FIRST : restored game where it's AI's turn
+  GP_AI_FIRST --> GP_IDLE : postMove → AI_MOVED
+  GP_AI_FIRST --> GP_OVER : AI_ERROR → GAME_OVER
+  GP_IDLE  --> GP_AI  : human executes move (executeMove)
+  GP_AI    --> GP_IDLE : AI_MOVED → postAdviceStream → ADVICE_RECEIVED
+  GP_AI    --> GP_OVER : AI makes game-ending move
+  GP_IDLE  --> GP_OVER : human checkmates / resigns / threefold / draw
+  GP_AI    --> GP_IDLE : AI_ERROR → fallback to human
+}
+
+' ══════════════════════════════════════════════════════════════
+' ANALYSIS STATE  (ReviewScreen branching analysis)
+' ══════════════════════════════════════════════════════════════
+
+state "Review Analysis Sub-State" as ReviewAnalysis {
+  state "GameList" as RV_LIST : no game selected,\nshow game history filters + list
+  state "GameDetail" as RV_DETAIL : game loaded,\nstep through history, annotations
+  state "AnalysisBranch" as RV_BRANCH : user made new moves beyond\noriginal game length → analysisMode T,\nMatrixOverlay, color changes back
+
+  [*] --> RV_LIST : ReviewScreen mounted, no :id param
+  RV_LIST --> RV_DETAIL : navigate("/review/:id")
+  RV_DETAIL --> RV_LIST : navigate("/review") (no id)
+  RV_DETAIL --> RV_BRANCH : fenHistory().length > originalMoveCount + 1
+  RV_BRANCH --> RV_DETAIL : load another game (id change)
+}
+
+' ══════════════════════════════════════════════════════════════
+' CROSS-DIMENSION CONSTRAINTS
+' ══════════════════════════════════════════════════════════════
+
+note as CONSTRAINTS
+  **Valid combinations (screen → capability → interaction):**
+
+  CoachScreen   → COACH  → Normal | Replaying | Travelling
+  AnalysisScreen → ANALYSIS → FreePlay | AnalysisBranch
+  ReviewScreen  → REVIEW ± historyNav → ReadOnly (GameDetail)
+                                       → Normal (GameList)
+                  → REVIEW → AnalysisBranch (new moves past game end)
+
+  **Capability gating in components:**
+  · hint button      → capabilities().hint
+  · travel overlay   → capabilities().travel
+  · blunder detect   → capabilities().blunderDetection
+  · continuous SF    → capabilities().continuousAnalysis
+  · best-move arrow  → capabilities().showBestMove
+  · board flip btn   → capabilities().flipBoard
+  · both colors      → capabilities().freeColorControl
+  · past branching   → capabilities().historyBranching
+  · persistence      → capabilities().persistGame
+
+  **runtimeMode gating:**
+  · hasLlm          → resolveMode().kind !== "web-no-llm"
+  · analysisDepth   → desktop=12, web-desktop=10, mobile=8
+  · CoachService    → desktop → HttpCoachService
+                       web-*  → WebWorkerCoachService
+end note
+
+' ══════════════════════════════════════════════════════════════
+' ORTHOGONAL STATE SUMMARY (text for quick reference)
+' ══════════════════════════════════════════════════════════════
+
+note top
+    **All dimensions are orthogonal — every valid combination**
+    **can be described as a 7-tuple:**
+
+    (runtimeMode, screen, capability, interaction,
+     overlay, emotion, gamePhase)
+
+    Example:
+    (desktop, CoachScreen, COACH, Replaying,
+     HistoryOverlay, idle, AwaitingHuman)
+end note
+
+@enduml

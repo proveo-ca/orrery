@@ -18,7 +18,7 @@
 }
 
 .lightspeed-overlay.active {
-  opacity: 0.85;
+  opacity: var(--overlay-opacity);
 }
 
 .center-glow {
