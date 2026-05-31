@@ -74,7 +74,7 @@
   /* Toggle off state */
   --toggle-off-bg: #4a4a4a;
 
-  --overlay-opacity: 0.20;
+  --overlay-opacity: 0.33;
 
   /* Light-speed overlay (intro animation) */
   --beam-color-start: #a0e0ff;

@@ -8,7 +8,6 @@ import { Divider } from "~/components/common/Divider";
 import { IconButton } from "~/components/common/IconButton";
 import {
   BookIcon,
-  CheckIcon,
   CogIcon,
   FlagIcon,
   FlipBoardIcon,
@@ -17,7 +16,6 @@ import {
   SearchIcon,
   StarIcon,
 } from "~/components/common/icons";
-import { Label } from "~/components/common/Label";
 import { Modal } from "~/components/common/Modal";
 import { Credits } from "~/components/Credits";
 import { DualNavButton } from "~/components/DualNavButton";
@@ -35,7 +33,7 @@ import {
   showNewGame,
   showSettings,
 } from "~/store/coachStore";
-import { resetGame } from "~/store/gameStore";
+import { resetGame, reviewAnalysisMode } from "~/store/gameStore";
 import { activePlayerColor, setActivePlayerColor } from "~/store/settingsStore";
 import { isTravelling, travelFenHistory, travelIndex } from "~/store/travelStore.ts";
 
@@ -64,6 +62,8 @@ export const Sidebar: Component = () => {
     baseHandleHint();
   };
 
+  const inTimelineMode = () => isTravelling() || isReplaying() || reviewAnalysisMode();
+
   return (
     <div class={styles.sidebar}>
       <Show when={capabilities().historyNav}>
@@ -72,22 +72,17 @@ export const Sidebar: Component = () => {
           onForward={handleForward}
           backDisabled={atStart() && !isTravelling()}
           forwardDisabled={atLatest()}
-          inverted={isTravelling() || isReplaying()}
-          label={isTravelling() ? "Timeline" : isReplaying() ? "History" : undefined}
+          inverted={inTimelineMode()}
+          label={
+            isTravelling()
+              ? `Timeline ${travelIndex()}/${travelFenHistory().length - 1}`
+              : inTimelineMode()
+                ? "History"
+                : undefined
+          }
+          showBackToLive={inTimelineMode()}
+          onBackToLive={handleBackToLive}
         />
-      </Show>
-
-      <Show when={isTravelling() || isReplaying()}>
-        <div class={styles["travel-section"]}>
-          <Show when={isTravelling()}>
-            <Label variant="caption" class={styles["move-counter"]}>
-              {travelIndex()}/{travelFenHistory().length - 1}
-            </Label>
-          </Show>
-          <IconButton onClick={handleBackToLive} aria-label="Back to live">
-            <CheckIcon />
-          </IconButton>
-        </div>
       </Show>
 
       <Divider class={styles.divider} />

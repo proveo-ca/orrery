@@ -88,6 +88,7 @@ const PlyCell: Component<{
 
 interface Props {
   game: GameRecord | null;
+  activePly?: number | null;
 }
 
 export const MoveList: Component<Props> = (props) => {
@@ -115,7 +116,7 @@ export const MoveList: Component<Props> = (props) => {
   const rowsPerPage = () => (isLandscape() ? 3 : 8);
 
   const { activePly, activePage, totalPages, visibleRows, goToStart, goToEnd, goToPrev, goToNext } =
-    useMoveListPagination(rows, { rowsPerPage });
+    useMoveListPagination(rows, { rowsPerPage, activePly: () => props.activePly });
 
   const jump = (plyIndex: number) => {
     if (plyIndex < 0) return;

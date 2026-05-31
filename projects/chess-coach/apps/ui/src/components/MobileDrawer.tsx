@@ -8,7 +8,6 @@ import { Divider } from "~/components/common/Divider";
 import { IconButton } from "~/components/common/IconButton";
 import {
   BookIcon,
-  CheckIcon,
   CogIcon,
   FlagIcon,
   FlipBoardIcon,
@@ -27,7 +26,7 @@ import { useGameControls } from "~/hooks/useGameControls";
 import { useHintSparkle } from "~/hooks/useHintSparkle";
 import { capabilities } from "~/store/capabilitiesStore";
 import { setShowCredits, setShowNewGame, showCredits, showNewGame } from "~/store/coachStore";
-import { resetGame } from "~/store/gameStore";
+import { resetGame, reviewAnalysisMode } from "~/store/gameStore";
 import { activePlayerColor, setActivePlayerColor } from "~/store/settingsStore";
 import { isTravelling, travelFenHistory, travelIndex } from "~/store/travelStore.ts";
 
@@ -62,7 +61,7 @@ export const MobileDrawer: Component = () => {
     baseHandleResign();
   };
 
-  const inTimelineMode = () => isTravelling() || isReplaying();
+  const inTimelineMode = () => isTravelling() || isReplaying() || reviewAnalysisMode();
 
   return (
     <div class={styles["mobile-only"]}>
@@ -99,30 +98,26 @@ export const MobileDrawer: Component = () => {
             backDisabled={atStart() && !isTravelling()}
             forwardDisabled={atLatest()}
             inverted={inTimelineMode()}
-            label={isTravelling() ? "Timeline" : "History"}
+            label={
+              isTravelling()
+                ? `Timeline ${travelIndex()}/${travelFenHistory().length - 1}`
+                : inTimelineMode()
+                  ? "History"
+                  : undefined
+            }
+            showBackToLive={inTimelineMode()}
+            onBackToLive={handleBackToLive}
           />
         </Show>
 
-        <Show
-          when={capabilities().historyNav && inTimelineMode()}
-          fallback={
-            <IconButton
-              label="Settings"
-              labelPosition="bottom"
-              onClick={() => setMenuOpen(true)}
-              aria-label="Open menu"
-            >
-              <CogIcon />
-            </IconButton>
-          }
-        >
-          <Show when={isTravelling()}>
-            <span class={styles["travel-info"]}>
-              {travelIndex()}/{travelFenHistory().length - 1}
-            </span>
-          </Show>
-          <IconButton onClick={handleBackToLive} aria-label="Back to live">
-            <CheckIcon />
+        <Show when={!inTimelineMode()}>
+          <IconButton
+            label="Settings"
+            labelPosition="bottom"
+            onClick={() => setMenuOpen(true)}
+            aria-label="Open menu"
+          >
+            <CogIcon />
           </IconButton>
         </Show>
       </div>

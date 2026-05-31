@@ -19,7 +19,14 @@ import { useGameAnalysis } from "~/hooks/useGameAnalysis";
 import { useGameHistoryFilters } from "~/hooks/useGameHistoryFilters";
 import { REVIEW_CAPABILITIES, setCapabilities } from "~/store/capabilitiesStore";
 import { gameHistory, getGameById } from "~/store/gameHistoryStore";
-import { fenHistory, loadGame } from "~/store/gameStore";
+import {
+  fenHistory,
+  loadGame,
+  reviewAnalysisMode,
+  setReviewAnalysisMode,
+  setSavedReviewPgn,
+  setSavedReviewStartingFen,
+} from "~/store/gameStore";
 import {
   activePlayerColor,
   opponentIdentity,
@@ -38,9 +45,18 @@ export const ReviewScreen: Component = () => {
   let prevOpponentIdentity = opponentIdentity();
   let prevActivePlayerColor = activePlayerColor();
 
-  const [analysisMode, setAnalysisMode] = createSignal(false);
-  const [originalFenCount, setOriginalFenCount] = createSignal(0);
+  const [originalFenHistory, setOriginalFenHistory] = createSignal<string[]>([]);
   const [originalPlayerColor, setOriginalPlayerColor] = createSignal<"w" | "b">("w");
+  const [analysisBranchPly, setAnalysisBranchPly] = createSignal<number | null>(null);
+
+  // Branched analysis moves are scratch work, so the MoveList stays pinned
+  // to the original move that produced the branch-off position.
+  const branchPlyFrom = (current: string[], original: string[]) => {
+    const firstMismatch = current.findIndex((fen, i) => fen !== original[i]);
+    const branchPosition =
+      firstMismatch >= 0 ? firstMismatch - 1 : Math.min(current.length, original.length) - 1;
+    return branchPosition - 1;
+  };
 
   const activeGame = createMemo(() => {
     const id = params.id;
@@ -61,7 +77,9 @@ export const ReviewScreen: Component = () => {
 
   createEffect(() => {
     setCapabilities(
-      activeGame() ? { ...REVIEW_CAPABILITIES, historyNav: true } : REVIEW_CAPABILITIES,
+      activeGame()
+        ? { ...REVIEW_CAPABILITIES, historyNav: true, freeColorControl: true }
+        : REVIEW_CAPABILITIES,
     );
   });
 
@@ -82,14 +100,15 @@ export const ReviewScreen: Component = () => {
         setActivePlayerColor(g.playerColor);
 
         setOriginalPlayerColor(g.playerColor);
-        setAnalysisMode(false);
+        setReviewAnalysisMode(false);
+        setAnalysisBranchPly(null);
 
         try {
           loadGame({ pgn: g.pgn, startingFen: g.startingFen });
-          setOriginalFenCount(fenHistory().length);
+          setOriginalFenHistory([...fenHistory()]);
         } catch (err) {
           console.error("Failed to load saved game", err);
-          setOriginalFenCount(0);
+          setOriginalFenHistory([]);
         }
       },
       { defer: false },
@@ -97,24 +116,36 @@ export const ReviewScreen: Component = () => {
   );
 
   createEffect(() => {
-    if (
-      activeGame() &&
-      originalFenCount() > 0 &&
-      fenHistory().length > originalFenCount()
-    ) {
-      setAnalysisMode(true);
-      setActivePlayerColor(originalPlayerColor());
+    const orig = originalFenHistory();
+    if (activeGame() && orig.length > 0) {
+      const current = fenHistory();
+      const diverged =
+        current.length !== orig.length ||
+        current.some((fen, i) => fen !== orig[i]);
+      if (diverged) {
+        if (analysisBranchPly() == null) setAnalysisBranchPly(branchPlyFrom(current, orig));
+        setReviewAnalysisMode(true);
+        const g = activeGame()!;
+        setSavedReviewPgn(g.pgn);
+        setSavedReviewStartingFen(g.startingFen);
+        setActivePlayerColor(originalPlayerColor());
+        return;
+      }
     }
+    setAnalysisBranchPly(null);
+    setReviewAnalysisMode(false);
   });
 
   onCleanup(() => {
+    setReviewAnalysisMode(false);
+    setAnalysisBranchPly(null);
     setPlayerIdentity(prevPlayerIdentity);
     setOpponentIdentity(prevOpponentIdentity);
     setActivePlayerColor(prevActivePlayerColor);
   });
 
   return (
-    <div class={styles["app-container"]}>
+    <div classList={{ [styles["app-container"]]: true, highlight: reviewAnalysisMode() }}>
       <Show
         when={activeGame()}
         fallback={
@@ -190,14 +221,14 @@ export const ReviewScreen: Component = () => {
               </div>
 
               <div class={styles.footer}>
-                <MoveList game={g()} />
+                <MoveList game={g()} activePly={analysisBranchPly()} />
               </div>
             </>
           );
         }}
       </Show>
 
-      <Show when={analysisMode()}>
+      <Show when={reviewAnalysisMode()}>
         <MatrixOverlay density={70} speed={0.9} opacity={0.25} />
       </Show>
 

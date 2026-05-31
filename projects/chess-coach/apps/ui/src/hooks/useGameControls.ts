@@ -31,7 +31,12 @@ import {
   goBack,
   goForward,
   isResigned,
+  loadGame,
   resignGame,
+  reviewAnalysisMode,
+  savedReviewPgn,
+  savedReviewStartingFen,
+  setReviewAnalysisMode,
 } from "~/store/gameStore";
 import {
   exitTravel,
@@ -76,6 +81,15 @@ export const useGameControls = () => {
   };
 
   const handleBackToLive = () => {
+    if (reviewAnalysisMode()) {
+      const pgn = savedReviewPgn();
+      const fen = savedReviewStartingFen();
+      if (pgn || fen) {
+        loadGame({ pgn, startingFen: fen });
+        setReviewAnalysisMode(false);
+      }
+      return;
+    }
     if (isTravelling()) {
       exitTravel();
     }

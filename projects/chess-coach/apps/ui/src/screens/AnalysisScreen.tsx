@@ -9,6 +9,8 @@ import { FenLoader } from "~/components/FenLoader";
 import { MobileDrawer } from "~/components/MobileDrawer";
 import { Sidebar } from "~/components/Sidebar";
 import { ANALYSIS_CAPABILITIES, setCapabilities } from "~/store/capabilitiesStore";
+import { inProgressGame } from "~/store/gameHistoryStore";
+import { persistFreshStart } from "~/store/gameStore";
 import { imLost, setImLost } from "~/store/settingsStore";
 
 /**
@@ -23,6 +25,11 @@ export const AnalysisScreen: Component = () => {
   let previousImLost = false;
 
   onMount(() => {
+    // Circuit-breaker: if no game is active, persist a clean starting
+    // position so that navigating to /selena restores fresh instead of
+    // loading a corrupted or stale game state from localStorage.
+    if (!inProgressGame()) persistFreshStart();
+
     setCapabilities(ANALYSIS_CAPABILITIES);
     previousImLost = imLost();
     setImLost(true);

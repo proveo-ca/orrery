@@ -89,7 +89,16 @@ export const patchMoveAt = (index: number, patch: Partial<MoveRecord>) => {
 };
 
 function annotatePgn(pgn: string, moves: MoveRecord[]): string {
-  const tokens = pgn.match(/\{[^}]*\}|\d+\.\s*\.{2}|\d+\.|\S+/g);
+  // Preserve PGN headers before the first blank line; only annotate the move body.
+  // chess.js's game.pgn() emits [Event "?"] headers, and the old code treated
+  // header tokens as moves, corrupting the PGN with misplaced {hint} markers.
+  const blankMatch = pgn.match(/\n\s*\n/);
+  const prefix = blankMatch ? pgn.slice(0, blankMatch.index! + blankMatch[0].length) : "";
+  const body = blankMatch
+    ? pgn.slice(blankMatch.index! + blankMatch[0].length).trim()
+    : pgn.trim();
+
+  const tokens = body.match(/\{[^}]*\}|\d+\.\s*\.{2}|\d+\.|\S+/g);
   if (!tokens) return pgn;
 
   let moveIdx = 0;
@@ -107,7 +116,7 @@ function annotatePgn(pgn: string, moves: MoveRecord[]): string {
     if (rec.hasPressedHint) out.push("{hint}");
   }
 
-  return out.join(" ");
+  return prefix + out.join(" ");
 }
 
 export const finalizeGame = (result: GameResult, pgn: string) => {

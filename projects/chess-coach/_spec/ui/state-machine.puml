@@ -76,12 +76,12 @@ state "Board Interaction" as BoardInt {
   BI_NORMAL --> BI_REPLAY  : navigate past (historyBranching F, CoachScreen)
   BI_NORMAL --> BI_TRAVEL  : Space on blunder (travel T)
   BI_NORMAL --> BI_RO      : readOnly T (ReviewScreen game detail)
-  BI_NORMAL --> BI_BRANCH  : historyBranching T (AnalysisScreen)
+  BI_NORMAL --> BI_BRANCH  : historyBranching T (AnalysisScreen,\n  ReviewScreen after first new move)
   BI_TRAVEL  --> BI_NORMAL : Escape / reach latest position / exitTravel()
   BI_REPLAY  --> BI_NORMAL : Escape / navigate to latest / backToLive()
   BI_FREE    --> BI_NORMAL : screen exit (→ Analysis only)
   BI_RO      --> BI_NORMAL : back to game list (ReviewScreen fallback)
-  BI_BRANCH  --> BI_NORMAL : screen exit
+  BI_BRANCH  --> BI_NORMAL : Back to Live / Escape →\n  loadGame(original PGN), setReviewAnalysisMode(false)
   BI_TRAVEL --> BI_REPLAY  : travelBack() at index 0 → exit travel, still replaying
 }
 
@@ -103,8 +103,8 @@ state "Overlay" as Overlays {
   O_LIGHT --> O_NONE   : exitTravel / Escape
   O_NONE  --> O_MODAL  : browser unsupported\n(CoachScreen onMount)
   O_MODAL --> O_NONE   : modal dismissed (setUnsupportedReason(null))
-  O_NONE  --> O_MATRIX : analysisMode T\n(ReviewScreen)
-  O_MATRIX --> O_NONE  : analysisMode F
+  O_NONE  --> O_MATRIX : analysisMode T\n(ReviewScreen — new move beyond original game)
+  O_MATRIX --> O_NONE  : Back to Live / Escape / load another game\nsetAnalysisMode(false), setReviewAnalysisMode(false)
 }
 
 ' ══════════════════════════════════════════════════════════════
@@ -169,13 +169,13 @@ state "Game Phase" as GamePhase {
 state "Review Analysis Sub-State" as ReviewAnalysis {
   state "GameList" as RV_LIST : no game selected,\nshow game history filters + list
   state "GameDetail" as RV_DETAIL : game loaded,\nstep through history, annotations
-  state "AnalysisBranch" as RV_BRANCH : user made new moves beyond\noriginal game length → analysisMode T,\nMatrixOverlay, color changes back
+  state "AnalysisBranch" as RV_BRANCH : user made new moves beyond\noriginal game → analysisMode T,\nreviewAnalysisMode T, MatrixOverlay,\nSidebar/Drawer show "Back to Live"
 
   [*] --> RV_LIST : ReviewScreen mounted, no :id param
   RV_LIST --> RV_DETAIL : navigate("/review/:id")
   RV_DETAIL --> RV_LIST : navigate("/review") (no id)
-  RV_DETAIL --> RV_BRANCH : fenHistory().length > originalMoveCount + 1
-  RV_BRANCH --> RV_DETAIL : load another game (id change)
+  RV_DETAIL --> RV_BRANCH : fenHistory().length > originalFenCount()\nsetReviewAnalysisMode(true)
+  RV_BRANCH --> RV_DETAIL : Back to Live / Escape\nloadGame(original PGN)\nsetReviewAnalysisMode(false)
 }
 
 ' ══════════════════════════════════════════════════════════════
@@ -207,6 +207,12 @@ note as CONSTRAINTS
   · analysisDepth   → desktop=12, web-desktop=10, mobile=8
   · CoachService    → desktop → HttpCoachService
                        web-*  → WebWorkerCoachService
+
+  **reviewAnalysisMode stores (gameStore.ts):**
+  · reviewAnalysisMode       → true when ReviewScreen user branches
+  · savedReviewPgn           → original PGN saved at branch time
+  · savedReviewStartingFen   → original starting FEN saved at branch time
+  · cleared on Back to Live / Escape / load another game
 end note
 
 ' ══════════════════════════════════════════════════════════════
@@ -215,14 +221,16 @@ end note
 
 note top
     **All dimensions are orthogonal — every valid combination**
-    **can be described as a 7-tuple:**
+    **can be described as an 8-tuple:**
 
     (runtimeMode, screen, capability, interaction,
-     overlay, emotion, gamePhase)
+     overlay, emotion, gamePhase, reviewAnalysis)
 
     Example:
     (desktop, CoachScreen, COACH, Replaying,
-     HistoryOverlay, idle, AwaitingHuman)
+     HistoryOverlay, idle, AwaitingHuman, false)
+    (web-no-llm, ReviewScreen, REVIEW+historyNav, AnalysisBranch,
+     MatrixOverlay, idle, AwaitingHuman, true)
 end note
 
 @enduml
