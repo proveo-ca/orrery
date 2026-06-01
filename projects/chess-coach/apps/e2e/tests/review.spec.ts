@@ -103,3 +103,132 @@ test.describe("Review screen", () => {
     await expect(validSquares).toHaveCount(0);
   });
 });
+
+test.describe("Review analysis ownership", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/");
+    await page.evaluate(() => localStorage.clear());
+  });
+
+  test("only player-color moves receive cp analysis (white player)", async ({ page }) => {
+    // Seed a game where player is white; intentionally mark black moves as isAI:false
+    // to simulate a legacy record that would have caused the old bug.
+    const BAD_FIXTURE = {
+      games: [
+        {
+          id: "bad-isai-fixture",
+          startedAt: new Date().toISOString(),
+          endedAt: new Date().toISOString(),
+          result: "win",
+          pgn: "1. e4 e5 2. d4 d5 3. Nf3 Nc6",
+          startingFen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+          playerColor: "w",
+          difficulty: "easy",
+          moves: [
+            { san: "e4", hasPressedHint: false, isAI: false },
+            { san: "e5", hasPressedHint: false, isAI: false }, // wrong isAI, should still be ignored
+            { san: "d4", hasPressedHint: false, isAI: false },
+            { san: "d5", hasPressedHint: false, isAI: false },
+            { san: "Nf3", hasPressedHint: false, isAI: false },
+            { san: "Nc6", hasPressedHint: false, isAI: false },
+          ],
+        },
+      ],
+      inProgress: null,
+    };
+
+    await page.evaluate((payload) => {
+      localStorage.setItem("chess_coach_game_history", JSON.stringify(payload));
+    }, BAD_FIXTURE);
+
+    // Install a deterministic Worker mock that records analyzed searchmoves on window.
+    await page.addInitScript(() => {
+      // @ts-expect-error global
+      (window as any).__analyzedMoves = [] as string[];
+      class MockWorker extends EventTarget {
+        onmessage: ((ev: MessageEvent) => void) | null = null;
+        constructor(public url: string | URL) {
+          super();
+        }
+        postMessage(msg: string) {
+          const self = this as unknown as MockWorker;
+          const send = (data: string) => {
+            const ev = new MessageEvent("message", { data });
+            if (self.onmessage) self.onmessage(ev);
+            self.dispatchEvent(ev);
+          };
+          if (msg === "uci") {
+            queueMicrotask(() => send("uciok"));
+            return;
+          }
+          if (msg === "isready") {
+            queueMicrotask(() => send("readyok"));
+            return;
+          }
+          if (msg === "ucinewgame") return;
+          if (msg.startsWith("position fen")) {
+            return;
+          }
+          if (msg.startsWith("go depth 20 searchmoves")) {
+            const uci = msg.split("searchmoves")[1]?.trim();
+            if (uci) {
+              // @ts-expect-error global
+              (window as any).__analyzedMoves.push(uci);
+            }
+            queueMicrotask(() => {
+              send("info depth 20 score cp 10 pv e2e4");
+              send("bestmove e2e4");
+            });
+            return;
+          }
+          if (msg === "go depth 20") {
+            queueMicrotask(() => {
+              send("info depth 20 score cp 10 pv e2e4");
+              send("bestmove e2e4");
+            });
+            return;
+          }
+        }
+        terminate() {}
+      }
+      // @ts-expect-error override
+      (window as any).Worker = MockWorker;
+    });
+
+    await page.goto("review/bad-isai-fixture");
+    const moveList = page.getByLabel("Move list");
+    await expect(moveList).toBeVisible({ timeout: 15_000 });
+
+    // Wait for analysis to attempt (cp spans appear for player moves only).
+    // The mock returns +10 for every player move; opponent cells must remain empty.
+    await page.waitForTimeout(800);
+
+    // White cells (player) should eventually show cp text; black cells must not.
+    const whitePlys = moveList.locator("[data-ply='0'],[data-ply='2'],[data-ply='4']");
+    const blackPlys = moveList.locator("[data-ply='1'],[data-ply='3'],[data-ply='5']");
+
+    // At least one white ply should have rendered a cp value.
+    await expect(whitePlys.locator("span").filter({ hasText: /^\+?\d/ })).not.toHaveCount(0, {
+      timeout: 10_000,
+    });
+
+    // No black ply should ever render a cp value.
+    await expect(blackPlys.locator("span").filter({ hasText: /^\+?\d/ })).toHaveCount(0);
+
+    // The recorded searchmoves must only contain white-player UCIs.
+    const analyzed: string[] = await page.evaluate(
+      // @ts-expect-error global
+      () => (window as any).__analyzedMoves ?? [],
+    );
+    const allowed = new Set(["e2e4", "d2d4", "g1f3"]);
+    for (const m of analyzed) {
+      if (!allowed.has(m)) {
+        throw new Error(`Non-player move analyzed: ${m}`);
+      }
+    }
+    // Also ensure at least the first player move was analyzed (smoke).
+    if (!analyzed.includes("e2e4")) {
+      throw new Error("Expected first player move e2e4 to be analyzed");
+    }
+  });
+});

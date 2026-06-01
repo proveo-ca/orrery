@@ -11,7 +11,7 @@ import {
   pairMovesIntoRows,
   resolveAnnotations,
 } from "~/engine/moveAnnotations";
-import { useGameAnalysis } from "~/hooks/useGameAnalysis";
+import { useGameAnalysis, type GameAnalysis } from "~/hooks/useGameAnalysis";
 import { useMoveListPagination } from "~/hooks/useMoveListPagination";
 import type { GameRecord, MoveRecord } from "~/store/gameHistoryStore";
 import { setViewIndex } from "~/store/gameStore";
@@ -66,6 +66,7 @@ const PlyCell: Component<{
   tags: AnnotationTag[];
   active: boolean;
   onJump: () => void;
+  showCp?: boolean;
 }> = (props) => (
   <button
     type="button"
@@ -75,7 +76,7 @@ const PlyCell: Component<{
     data-ply={props.index}
   >
     <span class={styles.san}>{props.move.san}</span>
-    {!props.move.isAI && props.cpDelta != null && (
+    {props.showCp && props.cpDelta != null && (
       <span class={`${styles.cp} ${cpColorClass(props.cpDelta)}`}>{formatCp(props.cpDelta)}</span>
     )}
     <span class={styles.tags}>
@@ -89,14 +90,16 @@ const PlyCell: Component<{
 interface Props {
   game: GameRecord | null;
   activePly?: number | null;
+  analysis?: GameAnalysis;
 }
 
 export const MoveList: Component<Props> = (props) => {
-  const gameAnalysis = useGameAnalysis(() => props.game);
+  const internalAnalysis = useGameAnalysis(() => props.game);
+  const analysisSignal = () => props.analysis ?? internalAnalysis();
   const annotations = () => {
     const g = props.game;
     if (!g) return [];
-    const a = gameAnalysis();
+    const a = analysisSignal();
     return resolveAnnotations(g.moves, a.cpDeltas, a.wasBestMoves, a.bestMoveUcis);
   };
   const rows = () =>
@@ -202,10 +205,11 @@ export const MoveList: Component<Props> = (props) => {
                 <PlyCell
                   move={row.white}
                   index={row.whiteIndex}
-                  cpDelta={gameAnalysis().cpDeltas[row.whiteIndex] ?? null}
+                  cpDelta={analysisSignal().cpDeltas[row.whiteIndex] ?? null}
                   tags={annotations()[row.whiteIndex] ?? []}
                   active={activePly() === row.whiteIndex}
                   onJump={() => jump(row.whiteIndex)}
+                  showCp={props.game?.playerColor === "w"}
                 />
               ) : (
                 <span />
@@ -214,10 +218,11 @@ export const MoveList: Component<Props> = (props) => {
                 <PlyCell
                   move={row.black}
                   index={row.blackIndex}
-                  cpDelta={gameAnalysis().cpDeltas[row.blackIndex] ?? null}
+                  cpDelta={analysisSignal().cpDeltas[row.blackIndex] ?? null}
                   tags={annotations()[row.blackIndex] ?? []}
                   active={activePly() === row.blackIndex}
                   onJump={() => jump(row.blackIndex)}
+                  showCp={props.game?.playerColor === "b"}
                 />
               ) : (
                 <span />

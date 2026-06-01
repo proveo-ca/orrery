@@ -14,9 +14,9 @@ export const MatrixOverlay = (props: MatrixOverlayProps) => {
   let containerRef: HTMLDivElement | undefined;
   let intervalId: number | undefined;
 
-  const density = () => Math.floor((props.density ?? 80));
-  const baseSpeed = () => props.speed ?? 1
-  const maxDrops = () => Math.floor((props.maxDrops ?? 160) * (isMobileDevice() ? 0.66 : 1));
+  const density = () => Math.floor((props.density ?? 12));
+  const baseSpeed = () => props.speed ?? 1 * (isMobileDevice() ? 0.5 : 1);
+  const maxDrops = () => Math.floor((props.maxDrops ?? 240) * (isMobileDevice() ? 0.5 : 1));
   const color = () => props.color ?? "var(--matrix-color)";
 
   const createDrop = () => {

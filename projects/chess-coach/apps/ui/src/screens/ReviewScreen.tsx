@@ -230,7 +230,7 @@ export const ReviewScreen: Component = () => {
               </div>
 
               <div class={styles.footer}>
-                <MoveList game={g()} activePly={analysisBranchPly()} />
+                <MoveList game={g()} activePly={analysisBranchPly()} analysis={gameAnalysis()} />
               </div>
             </>
           );

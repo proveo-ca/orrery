@@ -17,7 +17,7 @@ export type GameAnalysis = {
 const EMPTY: GameAnalysis = { cpDeltas: [], wasBestMoves: [], bestMoveUcis: [], loading: false };
 
 const CACHE_PREFIX = "chess_coach_analysis_";
-const CACHE_VERSION = 4;
+const CACHE_VERSION = 5;
 
 type CachedAnalysis = {
   version: typeof CACHE_VERSION;
@@ -89,7 +89,7 @@ function buildReviewJobs(game: GameRecord): ReviewJob[] {
     const beforeFen = chess.fen();
     try {
       const result = chess.move(m.san);
-      if (!m.isAI && result) {
+      if (result && result.color === game.playerColor) {
         jobs.push({
           ply,
           beforeFen,
@@ -127,6 +127,27 @@ function seedFromCache(cached: CachedAnalysis | null, moveCount: number): Analys
     bestMoveUcis: Array.from({ length: moveCount }, () => null),
     analyzed: Array.from({ length: moveCount }, () => false),
   };
+}
+
+function sanitizeNonPlayerPlies(
+  game: GameRecord,
+  state: AnalysisState,
+): void {
+  const chess = new Chess(game.startingFen);
+  for (let i = 0; i < game.moves.length; i++) {
+    const m = game.moves[i];
+    try {
+      const result = chess.move(m.san);
+      if (result && result.color !== game.playerColor) {
+        state.cpDeltas[i] = null;
+        state.wasBestMoves[i] = false;
+        state.bestMoveUcis[i] = null;
+        state.analyzed[i] = false;
+      }
+    } catch {
+      // ignore malformed; leave as-is
+    }
+  }
 }
 
 const allJobsAnalyzed = (jobs: ReviewJob[], analyzed: boolean[]) =>
@@ -262,6 +283,8 @@ export function useGameAnalysis(game: () => GameRecord | null) {
     const g = game();
     if (!g || g.id !== gameId) return;
 
+    sanitizeNonPlayerPlies(g, state);
+
     setAnalysis({
       cpDeltas: [...state.cpDeltas],
       wasBestMoves: [...state.wasBestMoves],
@@ -290,6 +313,7 @@ export function useGameAnalysis(game: () => GameRecord | null) {
       const jobs = buildReviewJobs(g);
       const cached = readCache(g.id);
       const state = seedFromCache(cached, g.moves.length);
+      sanitizeNonPlayerPlies(g, state);
       const final = allJobsAnalyzed(jobs, state.analyzed);
 
       if (cached?.complete && final) {
