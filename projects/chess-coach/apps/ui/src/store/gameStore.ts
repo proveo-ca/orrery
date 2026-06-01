@@ -22,6 +22,7 @@ let _startingFen = STARTING_FEN;
 export const [reviewAnalysisMode, setReviewAnalysisMode] = createSignal(false);
 export const [savedReviewPgn, setSavedReviewPgn] = createSignal("");
 export const [savedReviewStartingFen, setSavedReviewStartingFen] = createSignal("");
+export const [savedReviewBranchIndex, setSavedReviewBranchIndex] = createSignal(0);
 
 const [_isResigned, _setIsResigned] = createSignal(false);
 

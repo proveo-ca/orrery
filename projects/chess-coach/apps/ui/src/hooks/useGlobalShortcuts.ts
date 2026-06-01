@@ -19,9 +19,11 @@ import {
   goForward,
   loadGame,
   reviewAnalysisMode,
+  savedReviewBranchIndex,
   savedReviewPgn,
   savedReviewStartingFen,
   setReviewAnalysisMode,
+  setViewIndex,
 } from "~/store/gameStore";
 import {
   exitTravel,
@@ -60,8 +62,10 @@ export function useGlobalShortcuts() {
         e.preventDefault();
         const pgn = savedReviewPgn();
         const fen = savedReviewStartingFen();
+        const branchIndex = savedReviewBranchIndex();
         if (pgn || fen) {
           loadGame({ pgn, startingFen: fen });
+          setViewIndex(branchIndex);
           setReviewAnalysisMode(false);
         }
       } else if (isTravelling() || isReplaying()) {

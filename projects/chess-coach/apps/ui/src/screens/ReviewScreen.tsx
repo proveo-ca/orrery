@@ -23,6 +23,7 @@ import {
   fenHistory,
   loadGame,
   reviewAnalysisMode,
+  setSavedReviewBranchIndex,
   setReviewAnalysisMode,
   setSavedReviewPgn,
   setSavedReviewStartingFen,
@@ -51,11 +52,12 @@ export const ReviewScreen: Component = () => {
 
   // Branched analysis moves are scratch work, so the MoveList stays pinned
   // to the original move that produced the branch-off position.
-  const branchPlyFrom = (current: string[], original: string[]) => {
+  const branchIndexFrom = (current: string[], original: string[]) => {
     const firstMismatch = current.findIndex((fen, i) => fen !== original[i]);
-    const branchPosition =
-      firstMismatch >= 0 ? firstMismatch - 1 : Math.min(current.length, original.length) - 1;
-    return branchPosition - 1;
+    return Math.max(
+      0,
+      firstMismatch >= 0 ? firstMismatch - 1 : Math.min(current.length, original.length) - 1,
+    );
   };
 
   const activeGame = createMemo(() => {
@@ -102,6 +104,7 @@ export const ReviewScreen: Component = () => {
         setOriginalPlayerColor(g.playerColor);
         setReviewAnalysisMode(false);
         setAnalysisBranchPly(null);
+        setSavedReviewBranchIndex(0);
 
         try {
           loadGame({ pgn: g.pgn, startingFen: g.startingFen });
@@ -123,7 +126,11 @@ export const ReviewScreen: Component = () => {
         current.length !== orig.length ||
         current.some((fen, i) => fen !== orig[i]);
       if (diverged) {
-        if (analysisBranchPly() == null) setAnalysisBranchPly(branchPlyFrom(current, orig));
+        if (analysisBranchPly() == null) {
+          const branchIndex = branchIndexFrom(current, orig);
+          setAnalysisBranchPly(branchIndex - 1);
+          setSavedReviewBranchIndex(branchIndex);
+        }
         setReviewAnalysisMode(true);
         const g = activeGame()!;
         setSavedReviewPgn(g.pgn);
@@ -133,12 +140,14 @@ export const ReviewScreen: Component = () => {
       }
     }
     setAnalysisBranchPly(null);
+    setSavedReviewBranchIndex(0);
     setReviewAnalysisMode(false);
   });
 
   onCleanup(() => {
     setReviewAnalysisMode(false);
     setAnalysisBranchPly(null);
+    setSavedReviewBranchIndex(0);
     setPlayerIdentity(prevPlayerIdentity);
     setOpponentIdentity(prevOpponentIdentity);
     setActivePlayerColor(prevActivePlayerColor);

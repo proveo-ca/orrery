@@ -17,7 +17,7 @@ export type GameAnalysis = {
 const EMPTY: GameAnalysis = { cpDeltas: [], wasBestMoves: [], bestMoveUcis: [], loading: false };
 
 const CACHE_PREFIX = "chess_coach_analysis_";
-const CACHE_VERSION = 2;
+const CACHE_VERSION = 4;
 
 type CachedAnalysis = {
   version: typeof CACHE_VERSION;
@@ -35,7 +35,6 @@ type AnalysisState = Omit<GameAnalysis, "loading"> & {
 type ReviewJob = {
   ply: number;
   beforeFen: string;
-  afterFen: string;
   playedUci: string;
 };
 
@@ -90,12 +89,10 @@ function buildReviewJobs(game: GameRecord): ReviewJob[] {
     const beforeFen = chess.fen();
     try {
       const result = chess.move(m.san);
-      const afterFen = chess.fen();
       if (!m.isAI && result) {
         jobs.push({
           ply,
           beforeFen,
-          afterFen,
           playedUci: `${result.from}${result.to}${result.promotion ?? ""}`,
         });
       }
@@ -162,16 +159,16 @@ function runQueuedAnalysis(
     worker.postMessage("isready");
 
     let currentJob: ReviewJob | null = null;
-    let phase: "before" | "after" = "before";
-    let beforeScore: PositionEval | null = null;
+    let phase: "best" | "played" = "best";
+    let bestScore: PositionEval | null = null;
     let beforeBestMove: string | null = null;
     let latestScore: PositionEval | null = null;
 
-    const evalFen = (fen: string) => {
+    const evalFen = (fen: string, searchMove?: string) => {
       latestScore = null;
       worker.postMessage("ucinewgame");
       worker.postMessage(`position fen ${fen}`);
-      worker.postMessage("go depth 20");
+      worker.postMessage(searchMove ? `go depth 20 searchmoves ${searchMove}` : "go depth 20");
     };
 
     const evalNextJob = () => {
@@ -183,8 +180,8 @@ function runQueuedAnalysis(
       }
 
       currentJob = pendingJobs[nextJobIndex++];
-      phase = "before";
-      beforeScore = null;
+      phase = "best";
+      bestScore = null;
       beforeBestMove = null;
       evalFen(currentJob.beforeFen);
     };
@@ -209,24 +206,24 @@ function runQueuedAnalysis(
         const uci = msg.move && msg.move !== "(none)" ? msg.move : null;
         if (!currentJob) return;
 
-        if (phase === "before") {
-          beforeScore = latestScore;
+        if (phase === "best") {
+          bestScore = latestScore;
           beforeBestMove = uci;
-          phase = "after";
-          evalFen(currentJob.afterFen);
+          phase = "played";
+          evalFen(currentJob.beforeFen, currentJob.playedUci);
           return;
         }
 
-        const afterScore = latestScore;
+        const playedScore = latestScore;
         const ply = currentJob.ply;
-        const beforeCp = beforeScore
-          ? scoreToPlayerCp(beforeScore, currentJob.beforeFen, playerColor)
+        const bestCp = bestScore
+          ? scoreToPlayerCp(bestScore, currentJob.beforeFen, playerColor)
           : null;
-        const afterCp = afterScore
-          ? scoreToPlayerCp(afterScore, currentJob.afterFen, playerColor)
+        const playedCp = playedScore
+          ? scoreToPlayerCp(playedScore, currentJob.beforeFen, playerColor)
           : null;
 
-        state.cpDeltas[ply] = beforeCp != null && afterCp != null ? afterCp - beforeCp : null;
+        state.cpDeltas[ply] = bestCp != null && playedCp != null ? playedCp - bestCp : null;
         state.bestMoveUcis[ply] = beforeBestMove;
         state.wasBestMoves[ply] = beforeBestMove != null && currentJob.playedUci === beforeBestMove;
         state.analyzed[ply] = true;

@@ -34,9 +34,11 @@ import {
   loadGame,
   resignGame,
   reviewAnalysisMode,
+  savedReviewBranchIndex,
   savedReviewPgn,
   savedReviewStartingFen,
   setReviewAnalysisMode,
+  setViewIndex,
 } from "~/store/gameStore";
 import {
   exitTravel,
@@ -84,8 +86,10 @@ export const useGameControls = () => {
     if (reviewAnalysisMode()) {
       const pgn = savedReviewPgn();
       const fen = savedReviewStartingFen();
+      const branchIndex = savedReviewBranchIndex();
       if (pgn || fen) {
         loadGame({ pgn, startingFen: fen });
+        setViewIndex(branchIndex);
         setReviewAnalysisMode(false);
       }
       return;

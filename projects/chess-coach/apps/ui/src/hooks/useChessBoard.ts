@@ -267,7 +267,7 @@ export function useChessBoard() {
     }
 
     // Debounce all engine-touching work: only fire once the cursor has
-    // settled on a square for 150ms. Without this, every square the user
+    // settled on a square for 300ms. Without this, every square the user
     // crosses on the way to the intended target queues a stop+go pair,
     // starving the blunder eval before it can land.
     clearTimeout(evalTimeout);
@@ -302,7 +302,7 @@ export function useChessBoard() {
         send("stop");
         resumeBaseAnalysis();
       }
-    }, 150);
+    }, 300);
   };
 
   const handleSquareClick = async (square: Square) => {
@@ -431,32 +431,31 @@ export function useChessBoard() {
     return null;
   };
 
-  // Animation driver, decoupled from the last-move indicator.
-  //
-  // The indicator highlights the move that *led to* the current position.
-  // The animation needs to reflect the direction of motion: a backward
-  // travel step animates the piece sliding back (to → from), while
-  // lastMove still points at the earlier move that happens to share the
-  // current position. If we animated off lastMove during backward travel,
-  // the piece on the earlier move's to-square (which was already sitting
-  // there) would replay its arrival, and the piece that actually moved
-  // back would teleport.
-  const [animatedMove, setAnimatedMove] = createSignal<MoveSquares | null>(null);
+  // Animation queue: ensures rapid successive moves (e.g., human+AI on /selena)
+  // each get a visible 150ms slide instead of the later move clobbering the earlier.
+  const [animationQueue, setAnimationQueue] = createSignal<MoveSquares[]>([]);
+  const enqueueAnimation = (m: MoveSquares | null) => {
+    if (!m) return;
+    setAnimationQueue((q) => [...q, m]);
+  };
+  const consumeAnimation = (m: MoveSquares) => {
+    setAnimationQueue((q) =>
+      q.length && q[0].from === m.from && q[0].to === m.to ? q.slice(1) : q,
+    );
+  };
   let prevTravelIdx = 0;
   let wasTravelling = false;
 
   createEffect(() => {
     if (!isTravelling()) {
-      // Just exited travel → skip animation for the jump back to latest.
-      // Normal play → animate the natural last move.
       const justExited = wasTravelling;
       wasTravelling = false;
       prevTravelIdx = 0;
       if (justExited) {
-        setAnimatedMove(null);
+        setAnimationQueue([]);
       } else {
         const idx = currentIndex();
-        setAnimatedMove(idx > 0 ? (moveHistory()[idx - 1] ?? null) : null);
+        if (idx > 0) enqueueAnimation(moveHistory()[idx - 1] ?? null);
       }
       return;
     }
@@ -465,21 +464,17 @@ export function useChessBoard() {
     const moves = travelMoveHistory();
 
     if (!wasTravelling) {
-      // Entering travel mode — don't animate the jump to idx 0.
       wasTravelling = true;
       prevTravelIdx = idx;
-      setAnimatedMove(null);
+      setAnimationQueue([]);
       return;
     }
 
-    // travelMoveHistory is 1-based (see lastMove comment): moves[i] is the
-    // move that led to fens[i]. Forward step to idx applied moves[idx];
-    // backward step from prevTravelIdx undid moves[prevTravelIdx].
     if (idx > prevTravelIdx) {
-      setAnimatedMove(moves[idx] ?? null);
+      enqueueAnimation(moves[idx] ?? null);
     } else if (idx < prevTravelIdx) {
       const undone = moves[prevTravelIdx];
-      setAnimatedMove(undone ? { from: undone.to, to: undone.from } : null);
+      if (undone) enqueueAnimation({ from: undone.to, to: undone.from });
     }
     prevTravelIdx = idx;
   });
@@ -488,7 +483,8 @@ export function useChessBoard() {
     game,
     activeGame,
     lastMove,
-    animatedMove,
+    animationQueue,
+    consumeAnimation,
     isReplaying,
     baseEvalScore,
     bestMoveArrow,
