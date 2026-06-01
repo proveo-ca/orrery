@@ -126,6 +126,9 @@
     --result-loss: #c62828;
     --result-draw: #b07f00;
     --result-neutral: #666;
+
+    /* Overlays lighter on light backgrounds */
+    --overlay-opacity: 0.66;
   }
 }
 
