@@ -1,10 +1,11 @@
 import { onMount, onCleanup } from "solid-js";
+import { isMobileDevice } from "~/services/runtimeMode";
 import styles from "~/components/common/MatrixOverlay.module.css";
 
 interface MatrixOverlayProps {
-  density?: number;        // Recommended: 60-110
-  speed?: number;          // 0.8 = slower, 1.5 = faster
-  opacity?: number;        // 0.4 - 0.9
+  density?: number;
+  speed?: number;
+  maxDrops?: number;
   color?: string;
   class?: string;
 }
@@ -13,13 +14,13 @@ export const MatrixOverlay = (props: MatrixOverlayProps) => {
   let containerRef: HTMLDivElement | undefined;
   let intervalId: number | undefined;
 
-  const density = () => props.density ?? 80;
-  const baseSpeed = () => props.speed ?? 1;
-  const opacity = () => props.opacity ?? 0.7;
+  const density = () => Math.floor((props.density ?? 80));
+  const baseSpeed = () => props.speed ?? 1
+  const maxDrops = () => Math.floor((props.maxDrops ?? 160) * (isMobileDevice() ? 0.66 : 1));
   const color = () => props.color ?? "var(--matrix-color)";
 
   const createDrop = () => {
-    if (!containerRef) return;
+    if (!containerRef || containerRef.childElementCount >= maxDrops()) return;
 
     const drop = document.createElement("div");
     drop.className = styles.drop;
@@ -41,7 +42,6 @@ export const MatrixOverlay = (props: MatrixOverlayProps) => {
     drop.style.left = `${Math.random() * 98}vw`;
     drop.style.fontSize = `${15 + Math.random() * 8}px`;
     drop.style.setProperty("--drop-color", color());
-    drop.style.opacity = String(opacity());
 
     const duration = (2.4 + Math.random() * 3.1) / baseSpeed();
     drop.style.animationDuration = `${duration}s`;

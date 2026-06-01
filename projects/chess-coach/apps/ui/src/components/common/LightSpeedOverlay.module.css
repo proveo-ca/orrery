@@ -11,7 +11,7 @@
   position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 55;
+  z-index: 0;
   background: radial-gradient(circle at center, var(--beam-bg-inner) 0%, var(--beam-bg-outer) 70%);
   opacity: 0;
   transition: opacity 0.25s ease;

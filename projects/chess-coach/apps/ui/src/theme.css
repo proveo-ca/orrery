@@ -128,7 +128,7 @@
     --result-neutral: #666;
 
     /* Overlays lighter on light backgrounds */
-    --overlay-opacity: 0.66;
+    --overlay-opacity: 0.5;
   }
 }
 
