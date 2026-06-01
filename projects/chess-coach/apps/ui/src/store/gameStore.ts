@@ -15,6 +15,15 @@ export type MoveSquares = { from: string; to: string };
 let _game = new Chess();
 let _startingFen = STARTING_FEN;
 
+// Review analysis mode — set when the user branches beyond the original
+// game on ReviewScreen. Allows Sidebar/MobileDrawer to show "Back to Live"
+// similar to travel/replay modes. The saved PGN+fen let us restore the
+// original review game when the user exits analysis mode.
+export const [reviewAnalysisMode, setReviewAnalysisMode] = createSignal(false);
+export const [savedReviewPgn, setSavedReviewPgn] = createSignal("");
+export const [savedReviewStartingFen, setSavedReviewStartingFen] = createSignal("");
+export const [savedReviewBranchIndex, setSavedReviewBranchIndex] = createSignal(0);
+
 const [_isResigned, _setIsResigned] = createSignal(false);
 
 // Version signal — bumped after every mutation to trigger SolidJS reactivity.
@@ -252,12 +261,43 @@ export const loadFen = (fen: string) => {
  */
 export const loadGame = (args: { pgn: string; startingFen: string }) => {
   const next = new Chess(args.startingFen);
-  next.loadPgn(args.pgn);
+  try {
+    next.loadPgn(args.pgn);
+  } catch {
+    // Repair PGNs corrupted by the old annotatePgn bug which injected
+    // {hint} markers into header sections (e.g. "[Event {hint} \"?\"]").
+    // Strip all {hint} markers and re-parse so legacy games can still
+    // be reviewed.
+    const repaired = args.pgn.replace(/\{hint\}\s*/g, "");
+    next.loadPgn(repaired);
+  }
   _game = next;
   _startingFen = args.startingFen;
   _setCurrentIndex(0);
   _setIsResigned(false);
   _notify(); // ephemeral — don't overwrite the coach's saved game
+};
+
+/**
+ * Overwrite the persisted game state with a clean starting position.
+ * Used by screens (e.g. AnalysisScreen) as a circuit-breaker so that
+ * navigating to /selena doesn't try to restore a corrupted or stale
+ * game from a previous session.
+ */
+export const persistFreshStart = () => {
+  try {
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        pgn: "",
+        currentIndex: 0,
+        startingFen: STARTING_FEN,
+        isResigned: false,
+      }),
+    );
+  } catch (e) {
+    console.error("Failed to persist fresh start", e);
+  }
 };
 
 export const resetGame = (fen: string = STARTING_FEN) => {

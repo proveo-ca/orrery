@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from "@solidjs/router";
-import { Show, createEffect, createMemo, on, onCleanup } from "solid-js";
+import { Show, createEffect, createMemo, createSignal, on, onCleanup } from "solid-js";
 import type { Component } from "solid-js";
 
 import styles from "~/App.module.css";
@@ -7,6 +7,7 @@ import { OpponentCaptures, PlayerCaptures } from "~/components/CapturedPieces";
 import { ChessBoard } from "~/components/ChessBoard";
 import { Button } from "~/components/common/Button";
 import { Label } from "~/components/common/Label";
+import { MatrixOverlay } from "~/components/common/MatrixOverlay";
 import { GameHistoryFilters } from "~/components/GameHistoryFilters";
 import { GameHistoryList } from "~/components/GameHistoryList";
 import { MobileDrawer } from "~/components/MobileDrawer";
@@ -18,14 +19,20 @@ import { useGameAnalysis } from "~/hooks/useGameAnalysis";
 import { useGameHistoryFilters } from "~/hooks/useGameHistoryFilters";
 import { REVIEW_CAPABILITIES, setCapabilities } from "~/store/capabilitiesStore";
 import { gameHistory, getGameById } from "~/store/gameHistoryStore";
-import { loadGame } from "~/store/gameStore";
+import {
+  fenHistory,
+  loadGame,
+  reviewAnalysisMode,
+  setSavedReviewBranchIndex,
+  setReviewAnalysisMode,
+  setSavedReviewPgn,
+  setSavedReviewStartingFen,
+} from "~/store/gameStore";
 import {
   activePlayerColor,
-  imLost,
   opponentIdentity,
   playerIdentity,
   setActivePlayerColor,
-  setImLost,
   setOpponentIdentity,
   setPlayerIdentity,
 } from "~/store/settingsStore";
@@ -37,8 +44,21 @@ export const ReviewScreen: Component = () => {
 
   let prevPlayerIdentity = playerIdentity();
   let prevOpponentIdentity = opponentIdentity();
-  let prevImLost = imLost();
   let prevActivePlayerColor = activePlayerColor();
+
+  const [originalFenHistory, setOriginalFenHistory] = createSignal<string[]>([]);
+  const [originalPlayerColor, setOriginalPlayerColor] = createSignal<"w" | "b">("w");
+  const [analysisBranchPly, setAnalysisBranchPly] = createSignal<number | null>(null);
+
+  // Branched analysis moves are scratch work, so the MoveList stays pinned
+  // to the original move that produced the branch-off position.
+  const branchIndexFrom = (current: string[], original: string[]) => {
+    const firstMismatch = current.findIndex((fen, i) => fen !== original[i]);
+    return Math.max(
+      0,
+      firstMismatch >= 0 ? firstMismatch - 1 : Math.min(current.length, original.length) - 1,
+    );
+  };
 
   const activeGame = createMemo(() => {
     const id = params.id;
@@ -59,7 +79,9 @@ export const ReviewScreen: Component = () => {
 
   createEffect(() => {
     setCapabilities(
-      activeGame() ? { ...REVIEW_CAPABILITIES, historyNav: true } : REVIEW_CAPABILITIES,
+      activeGame()
+        ? { ...REVIEW_CAPABILITIES, historyNav: true, freeColorControl: true }
+        : REVIEW_CAPABILITIES,
     );
   });
 
@@ -73,33 +95,66 @@ export const ReviewScreen: Component = () => {
 
         prevPlayerIdentity = playerIdentity();
         prevOpponentIdentity = opponentIdentity();
-        prevImLost = imLost();
         prevActivePlayerColor = activePlayerColor();
 
         if (g.playerRace) setPlayerIdentity(g.playerRace);
         if (g.opponentRace) setOpponentIdentity(g.opponentRace);
         setActivePlayerColor(g.playerColor);
-        setImLost(false);
+
+        setOriginalPlayerColor(g.playerColor);
+        setReviewAnalysisMode(false);
+        setAnalysisBranchPly(null);
+        setSavedReviewBranchIndex(0);
 
         try {
           loadGame({ pgn: g.pgn, startingFen: g.startingFen });
+          setOriginalFenHistory([...fenHistory()]);
         } catch (err) {
           console.error("Failed to load saved game", err);
+          setOriginalFenHistory([]);
         }
       },
       { defer: false },
     ),
   );
 
+  createEffect(() => {
+    const orig = originalFenHistory();
+    if (activeGame() && orig.length > 0) {
+      const current = fenHistory();
+      const diverged =
+        current.length !== orig.length ||
+        current.some((fen, i) => fen !== orig[i]);
+      if (diverged) {
+        if (analysisBranchPly() == null) {
+          const branchIndex = branchIndexFrom(current, orig);
+          setAnalysisBranchPly(branchIndex - 1);
+          setSavedReviewBranchIndex(branchIndex);
+        }
+        setReviewAnalysisMode(true);
+        const g = activeGame()!;
+        setSavedReviewPgn(g.pgn);
+        setSavedReviewStartingFen(g.startingFen);
+        setActivePlayerColor(originalPlayerColor());
+        return;
+      }
+    }
+    setAnalysisBranchPly(null);
+    setSavedReviewBranchIndex(0);
+    setReviewAnalysisMode(false);
+  });
+
   onCleanup(() => {
+    setReviewAnalysisMode(false);
+    setAnalysisBranchPly(null);
+    setSavedReviewBranchIndex(0);
     setPlayerIdentity(prevPlayerIdentity);
     setOpponentIdentity(prevOpponentIdentity);
     setActivePlayerColor(prevActivePlayerColor);
-    setImLost(prevImLost);
   });
 
   return (
-    <div class={styles["app-container"]}>
+    <div classList={{ [styles["app-container"]]: true, highlight: reviewAnalysisMode() }}>
       <Show
         when={activeGame()}
         fallback={
@@ -175,11 +230,15 @@ export const ReviewScreen: Component = () => {
               </div>
 
               <div class={styles.footer}>
-                <MoveList game={g()} />
+                <MoveList game={g()} activePly={analysisBranchPly()} />
               </div>
             </>
           );
         }}
+      </Show>
+
+      <Show when={reviewAnalysisMode()}>
+        <MatrixOverlay density={70} speed={0.9} opacity={0.25} />
       </Show>
 
       <MobileDrawer />

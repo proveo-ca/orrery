@@ -12,7 +12,19 @@ import {
   hoverBlunderSan,
   pendingTravel,
 } from "~/store/coachStore";
-import { currentIndex, fenHistory, goBack, goForward } from "~/store/gameStore";
+import {
+  currentIndex,
+  fenHistory,
+  goBack,
+  goForward,
+  loadGame,
+  reviewAnalysisMode,
+  savedReviewBranchIndex,
+  savedReviewPgn,
+  savedReviewStartingFen,
+  setReviewAnalysisMode,
+  setViewIndex,
+} from "~/store/gameStore";
 import {
   exitTravel,
   isTravelling,
@@ -46,7 +58,17 @@ export function useGlobalShortcuts() {
       const fenBefore = pending?.fenBefore;
       if (fen && san) activateTravel(fen, san, fenBefore);
     } else if (e.code === "Escape") {
-      if (isTravelling() || isReplaying()) {
+      if (reviewAnalysisMode()) {
+        e.preventDefault();
+        const pgn = savedReviewPgn();
+        const fen = savedReviewStartingFen();
+        const branchIndex = savedReviewBranchIndex();
+        if (pgn || fen) {
+          loadGame({ pgn, startingFen: fen });
+          setViewIndex(branchIndex);
+          setReviewAnalysisMode(false);
+        }
+      } else if (isTravelling() || isReplaying()) {
         e.preventDefault();
         if (isTravelling()) exitTravel();
         while (currentIndex() < fenHistory().length - 1) {

@@ -17,6 +17,14 @@ export type HoverEval = { id: number; from: Square; to: Square; fen: string };
 
 const BLUNDER_THRESHOLD_CP = -200;
 
+function scoreToHumanCp(s: { kind: "cp" | "mate"; value: number }, scoreSideIsHuman: boolean): number {
+  if (s.kind === "cp") return scoreSideIsHuman ? s.value : -s.value;
+  const dist = Math.abs(s.value);
+  const mag = 100000 - dist * 100; // preserve mate distance (M1 >> M10)
+  const signed = (s.value > 0 ? 1 : -1) * mag;
+  return scoreSideIsHuman ? signed : -signed;
+}
+
 interface UseHoverEvaluatorProps {
   canApplyHoverOverride: () => boolean;
   hoveredSquare: () => Square | null;
@@ -72,13 +80,10 @@ export function useHoverEvaluator(props: UseHoverEvaluatorProps) {
       }
     }
 
-    // Calculate Human's CP before the move
-    const humanBaseCp =
-      baseScore.kind === "mate" ? (baseScore.value > 0 ? 10000 : -10000) : baseScore.value;
-
-    // Calculate Human's CP after the move
-    const humanHoverCp =
-      msg.score.kind === "mate" ? (msg.score.value > 0 ? -10000 : 10000) : -msg.score.value;
+    // Calculate Human's CP before the move (base is human-to-move)
+    const humanBaseCp = scoreToHumanCp(baseScore, true);
+    // After the hovered move, opponent is to move → invert perspective
+    const humanHoverCp = scoreToHumanCp(msg.score, false);
 
     const delta = humanHoverCp - humanBaseCp;
     const isBlunder = delta <= BLUNDER_THRESHOLD_CP;

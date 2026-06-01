@@ -11,6 +11,7 @@ import { Settings } from "~/components/Settings";
 import { TurnLabel } from "~/components/TurnLabel";
 import { useGameControls } from "~/hooks/useGameControls";
 import { capabilities } from "~/store/capabilitiesStore";
+import { reviewAnalysisMode } from "~/store/gameStore";
 import { isTravelling, travelFenHistory, travelIndex } from "~/store/travelStore";
 
 export const BoardActions: Component = () => {
@@ -38,7 +39,7 @@ export const BoardActions: Component = () => {
         </Button>
       </div>
 
-      {(isTravelling() || isReplaying()) && (
+      {(isTravelling() || isReplaying() || reviewAnalysisMode()) && (
         <div class={styles["travel-row"]}>
           {isTravelling() && (
             <Label>

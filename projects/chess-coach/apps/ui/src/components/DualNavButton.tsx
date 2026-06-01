@@ -13,6 +13,8 @@ interface DualNavButtonProps {
   forwardDisabled?: boolean;
   inverted?: boolean;
   label?: string;
+  showBackToLive?: boolean;
+  onBackToLive?: () => void;
 }
 
 export const DualNavButton: Component<DualNavButtonProps> = (props) => {
@@ -39,6 +41,15 @@ export const DualNavButton: Component<DualNavButtonProps> = (props) => {
           <ChevronRightIcon />
         </Button>
       </div>
+      <Show when={props.showBackToLive}>
+        <Button
+          class={styles["back-to-live"]}
+          onClick={() => props.onBackToLive?.()}
+          disabled={!props.onBackToLive}
+        >
+          Back to Live
+        </Button>
+      </Show>
     </div>
   );
 };

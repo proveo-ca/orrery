@@ -74,6 +74,8 @@
   /* Toggle off state */
   --toggle-off-bg: #4a4a4a;
 
+  --overlay-opacity: 0.33;
+
   /* Light-speed overlay (intro animation) */
   --beam-color-start: #a0e0ff;
   --beam-color-peak: #ffffff;
@@ -81,6 +83,11 @@
   --beam-glow: rgba(120, 180, 255, 0.25);
   --beam-bg-inner: rgba(20, 20, 60, 0.4);
   --beam-bg-outer: rgba(0, 0, 0, 0.92);
+
+  /* Matrix rain overlay */
+  --matrix-color: #00ff41;
+  --matrix-bright: #bbffbb;
+  --drop-color: var(--matrix-color);
 
   /* Typography */
   --font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;

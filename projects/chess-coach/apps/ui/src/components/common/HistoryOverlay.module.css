@@ -8,6 +8,7 @@
   transition:
     background 0.25s ease,
     backdrop-filter 0.25s ease;
+  opacity: var(--overlay-opacity);
 }
 
 .history-overlay.active {

@@ -36,7 +36,8 @@ interface ChessSquareProps {
   onDragOver: (e: DragEvent) => void;
   onDrop: (e: DragEvent) => void;
   lastMove: MoveSquares | null;
-  animatedMove: MoveSquares | null;
+  animationQueue: MoveSquares[];
+  consumeAnimation?: (m: MoveSquares) => void;
   flipped: boolean;
   isCheck: boolean;
   isCheckmate: boolean;
@@ -55,21 +56,18 @@ export const ChessSquare: Component<ChessSquareProps> = (props) => {
 
   let pieceRef: HTMLImageElement | undefined;
 
-  // Animate the piece sliding from its origin square whenever animatedMove
-  // changes. `on(..., { defer: true })` skips the initial run so we only
-  // animate actual moves. Forcing a synchronous layout via `offsetWidth`
-  // between the two transform writes is load-bearing: without it, the
-  // browser coalesces both style changes before the next paint and the
-  // transition silently collapses — the piece just pops to its final
-  // square with no motion. This was the cause of player-side moves not
-  // animating (Selena's moves happened to work only because the HTTP
-  // delay let a paint slip in between the mount and the effect firing).
+  // Queue-driven animation: consumes the head of animationQueue when it targets
+  // this square, ensuring rapid successive moves (human+AI) each get a visible slide.
   createEffect(
     on(
-      () => props.animatedMove,
-      (move) => {
-        if (!move || move.to !== props.square || !pieceRef || props.isDragging) return;
-        const { dx, dy } = squareOffset(move.from, move.to, props.flipped);
+      () => props.animationQueue,
+      (queue) => {
+        if (!queue.length || !pieceRef || props.isDragging) return;
+        const head = queue[0];
+        if (!head || head.to !== props.square) return;
+        // Consume immediately so the next queued move for any square can proceed
+        props.consumeAnimation?.(head);
+        const { dx, dy } = squareOffset(head.from, head.to, props.flipped);
         pieceRef.style.transition = "none";
         pieceRef.style.transform = `translate(${dx * 100}%, ${dy * 100}%)`;
         void pieceRef.offsetWidth;

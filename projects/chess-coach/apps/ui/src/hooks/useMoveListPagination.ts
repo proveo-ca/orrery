@@ -7,7 +7,7 @@ const DEFAULT_ROWS_PER_PAGE = 8;
 
 export function useMoveListPagination(
   rows: () => MoveRow[],
-  options?: { rowsPerPage?: number | (() => number) },
+  options?: { rowsPerPage?: number | (() => number); activePly?: () => number | null | undefined },
 ) {
   const getRowsPerPage = () => {
     const rpp = options?.rowsPerPage;
@@ -16,7 +16,13 @@ export function useMoveListPagination(
     return DEFAULT_ROWS_PER_PAGE;
   };
 
-  const activePly = () => currentIndex() - 1;
+  const activePly = () => {
+    const override = options?.activePly?.();
+    if (override != null) return override;
+
+    const ply = currentIndex() - 1;
+    return ply;
+  };
 
   // Page derived from the active ply (auto-follow when navigating moves).
   const plyPage = createMemo(() => {

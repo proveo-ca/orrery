@@ -29,13 +29,6 @@
   gap: 0.4rem;
 }
 
-.travel-info {
-  font-size: 0.85rem;
-  color: var(--text-muted, currentColor);
-  min-width: 2rem;
-  text-align: center;
-}
-
 .menu-modal {
   display: flex;
   flex-direction: column;

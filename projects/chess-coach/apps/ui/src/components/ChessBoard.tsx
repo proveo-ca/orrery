@@ -11,6 +11,7 @@ import { Modal } from "~/components/common/Modal";
 import { EvalBar } from "~/components/EvalBar";
 import { PromotionModal } from "~/components/PromotionModal";
 import { useChessBoard } from "~/hooks/useChessBoard";
+import type { MoveSquares } from "~/store/gameStore";
 import { capabilities } from "~/store/capabilitiesStore";
 import { adviceArrow, adviceHoveredSquares, setShowNewGame } from "~/store/coachStore";
 import { gameHistory } from "~/store/gameHistoryStore";
@@ -37,7 +38,8 @@ export const ChessBoard: Component = () => {
 
   const activeGame = () => board.activeGame();
   const lastMove = () => board.lastMove();
-  const animatedMove = () => board.animatedMove();
+  const animationQueue = () => board.animationQueue();
+  const consumeAnimation = (m: MoveSquares) => board.consumeAnimation?.(m);
 
   const isCheck = () => activeGame().inCheck();
   const isCheckmate = () => activeGame().isCheckmate();
@@ -189,7 +191,8 @@ export const ChessBoard: Component = () => {
                       onDragOver={(e) => e.preventDefault()}
                       onDrop={(e) => board.handleDrop(square, e)}
                       lastMove={lastMove()}
-                      animatedMove={animatedMove()}
+                      animationQueue={animationQueue()}
+                      consumeAnimation={consumeAnimation}
                       flipped={activePlayerColor() === "b"}
                       isCheck={
                         piece()?.type === "k" &&

@@ -1,4 +1,3 @@
-// SPEC: _spec/chess-coach/ui/components.puml
 import { createSignal } from "solid-js";
 
 import { resolveMode } from "~/services/runtimeMode";
@@ -91,7 +90,7 @@ export const REVIEW_CAPABILITIES: ScreenCapabilities = {
   // behind the replay overlay — the user IS navigating past positions.
   historyBranching: true,
   freeColorControl: false,
-  readOnly: true,
+  readOnly: false,
   opponentUsesPlayerPieceSet: false,
   flipBoard: false,
 };

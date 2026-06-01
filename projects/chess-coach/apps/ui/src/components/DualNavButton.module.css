@@ -69,7 +69,21 @@
   border-right-color: rgba(var(--shadow-rgb), 0.2);
 }
 
+:global(.highlight) .wrapper {
+  z-index: 1000;
+  position: relative;
+}
+
 :global(.highlight) .dual-nav {
   z-index: 1000;
   position: relative;
+}
+
+.back-to-live {
+  width: 100%;
+  min-height: 1.65rem;
+  padding: 0.25rem 0.4rem;
+  font-size: 0.62rem;
+  line-height: 1;
+  white-space: nowrap;
 }
