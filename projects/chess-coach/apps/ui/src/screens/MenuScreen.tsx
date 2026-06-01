@@ -10,7 +10,14 @@ import styles from "~/components/common/SplashScreen.module.css";
 import { Credits } from "~/components/Credits";
 import { setShowCredits, showCredits } from "~/store/coachStore";
 import { gameHistory } from "~/store/gameHistoryStore";
-import { playerIdentity, setPlayerIdentity, type PlayerIdentity } from "~/store/settingsStore";
+import {
+  difficulty,
+  playerIdentity,
+  setDifficulty,
+  setPlayerIdentity,
+  type Difficulty,
+  type PlayerIdentity,
+} from "~/store/settingsStore";
 
 const IDENTITY_OPTIONS: PlayerIdentity[] = ["Human", "Cat", "Dog", "Rat"];
 
@@ -38,9 +45,20 @@ export const MenuScreen: Component = () => {
         </Select>
       </div>
       <div class={styles["menu-options"]}>
-        <MenuButton primary onClick={() => navigate("/selena")}>
-          Play with Selena
-        </MenuButton>
+        <div class={styles["selena-row"]}>
+          <MenuButton primary onClick={() => navigate("/selena")}>
+            Play with Selena
+          </MenuButton>
+          <Select
+            class={styles["difficulty-select"]}
+            value={difficulty()}
+            onChange={(e) => setDifficulty(e.currentTarget.value as Difficulty)}
+          >
+            <option value="intermediate">Intermediate (1100)</option>
+            <option value="advanced">Advanced (1600)</option>
+            <option value="expert">Expert (2200)</option>
+          </Select>
+        </div>
         <MenuButton onClick={() => navigate("/analysis")}>Solo Analysis</MenuButton>
         <MenuButton onClick={() => navigate("/review")} disabled={gameHistory().length === 0}>
           Review

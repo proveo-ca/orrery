@@ -1,4 +1,5 @@
-import { onMount, onCleanup } from "solid-js";
+import { createMemo } from "solid-js";
+import { For } from "solid-js";
 import { isMobileDevice } from "~/services/runtimeMode";
 import styles from "~/components/common/MatrixOverlay.module.css";
 
@@ -10,69 +11,66 @@ interface MatrixOverlayProps {
   class?: string;
 }
 
-export const MatrixOverlay = (props: MatrixOverlayProps) => {
-  let containerRef: HTMLDivElement | undefined;
-  let intervalId: number | undefined;
+interface Drop {
+  id: number;
+  left: string;
+  fontSize: string;
+  duration: string;
+  delay: string;
+  chars: string;
+  color: string;
+}
 
-  const density = () => Math.floor((props.density ?? 12));
-  const baseSpeed = () => props.speed ?? 1 * (isMobileDevice() ? 0.5 : 1);
-  const maxDrops = () => Math.floor((props.maxDrops ?? 240) * (isMobileDevice() ? 0.5 : 1));
-  const color = () => props.color ?? "var(--matrix-color)";
+const rand = (min: number, max: number) => Math.random() * (max - min) + min;
 
-  const createDrop = () => {
-    if (!containerRef || containerRef.childElementCount >= maxDrops()) return;
-
-    const drop = document.createElement("div");
-    drop.className = styles.drop;
-
-    const height = Math.floor(Math.random() * 22) + 14;
-
-    for (let i = 0; i < height; i++) {
-      const span = document.createElement("span");
-      span.textContent = Math.random() > 0.5 ? "1" : "0";
-
-      const delay = i * 0.028 + Math.random() * 0.18;
-      span.style.animationDelay = `${delay}s`;
-      span.style.opacity = String(0.55 + Math.random() * 0.45);
-
-      drop.appendChild(span);
-    }
-
-    // Positioning & styling
-    drop.style.left = `${Math.random() * 98}vw`;
-    drop.style.fontSize = `${15 + Math.random() * 8}px`;
-    drop.style.setProperty("--drop-color", color());
-
-    const duration = (2.4 + Math.random() * 3.1) / baseSpeed();
-    drop.style.animationDuration = `${duration}s`;
-    drop.style.animationDelay = `-${Math.random() * 4}s`;
-
-    containerRef.appendChild(drop);
-
-    // Auto cleanup
-    setTimeout(() => drop.remove(), (duration + 6) * 1000);
+const makeDrop = (id: number, color: string, speed: number): Drop => {
+  const height = Math.floor(rand(14, 36));
+  const chars = Array.from({ length: height }, () =>
+    Math.random() > 0.5 ? "1" : "0",
+  ).join("\n");
+  const duration = (rand(2.4, 5.5) / speed).toFixed(2) + "s";
+  const delay = (-rand(0, 4)).toFixed(2) + "s";
+  return {
+    id,
+    left: rand(0, 98).toFixed(2) + "vw",
+    fontSize: (15 + rand(0, 8)).toFixed(1) + "px",
+    duration,
+    delay,
+    chars,
+    color,
   };
+};
 
-  onMount(() => {
-    // Initial burst
-    for (let i = 0; i < density(); i++) {
-      setTimeout(createDrop, i * 12);
-    }
+export const MatrixOverlay = (props: MatrixOverlayProps) => {
+  const isMobile = isMobileDevice();
+  const density = Math.floor((props.density ?? 60) * (isMobile ? 0.33 : 1));
+  const baseSpeed = (props.speed ?? 1) * (isMobile ? 0.5 : 1);
+  const max = Math.floor((props.maxDrops ?? 240) * (isMobile ? 0.5 : 1));
+  const count = Math.min(density, max);
+  const color = props.color ?? "var(--matrix-color)";
 
-    // Continuous rain
-    intervalId = window.setInterval(createDrop, 38);
-  });
-
-  onCleanup(() => {
-    if (intervalId) {
-      window.clearInterval(intervalId);
-    }
-  });
+  const drops = createMemo<Drop[]>(() =>
+    Array.from({ length: count }, (_, i) => makeDrop(i, color, baseSpeed)),
+  );
 
   return (
-    <div
-      ref={containerRef}
-      class={`${styles.matrix} ${props.class || ""}`}
-    />
+    <div class={`${styles.matrix} ${props.class || ""}`}>
+      <For each={drops()}>
+        {(d) => (
+          <div
+            class={styles.drop}
+            style={{
+              left: d.left,
+              "font-size": d.fontSize,
+              "--drop-color": d.color,
+              "animation-duration": d.duration,
+              "animation-delay": d.delay,
+            }}
+          >
+            {d.chars}
+          </div>
+        )}
+      </For>
+    </div>
   );
-}
+};

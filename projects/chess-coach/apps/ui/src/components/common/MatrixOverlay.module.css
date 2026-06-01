@@ -6,44 +6,67 @@
   z-index: 0;
   background: transparent;
   opacity: var(--overlay-opacity, 0.20);
+  contain: layout paint style;
 }
 
 .drop {
   position: absolute;
   top: -140px;
-  display: flex;
-  flex-direction: column;
+  white-space: pre;
   line-height: 1.05;
   color: var(--drop-color, var(--matrix-color));
   text-shadow:
-      0 0 8px var(--drop-color, var(--matrix-color)),
-      0 0 18px var(--drop-color, var(--matrix-color));
+    0 0 8px var(--drop-color, var(--matrix-color)),
+    0 0 18px var(--drop-color, var(--matrix-color));
   user-select: none;
-  animation: fall linear forwards;
+  animation: fall linear infinite;
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  mask-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.15) 0%,
+    rgba(0, 0, 0, 0.95) 18%,
+    rgba(0, 0, 0, 0.95) 82%,
+    rgba(0, 0, 0, 0.15) 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.15) 0%,
+    rgba(0, 0, 0, 0.95) 18%,
+    rgba(0, 0, 0, 0.95) 82%,
+    rgba(0, 0, 0, 0.15) 100%
+  );
 }
 
-.drop span {
-  opacity: 0;
-  animation: charFade 950ms forwards;
-}
-
-/* Brighter leading character */
-.drop span:first-child {
+/* Brighter leading character via ::first-letter */
+.drop::first-letter {
   color: var(--matrix-bright);
   text-shadow:
-      0 0 12px var(--matrix-bright),
-      0 0 28px var(--drop-color, var(--matrix-color));
+    0 0 12px var(--matrix-bright),
+    0 0 28px var(--drop-color, var(--matrix-color));
 }
 
 @keyframes fall {
   to {
-    transform: translateY(130vh);
+    transform: translate3d(0, 130vh, 0);
   }
 }
 
-@keyframes charFade {
-  0%   { opacity: 0; }
-  20%  { opacity: 0.95; }
-  75%  { opacity: 0.82; }
-  100% { opacity: 0; }
+@media (pointer: coarse) {
+  .matrix {
+    opacity: var(--overlay-opacity, 0.12);
+  }
+  .drop {
+    animation-duration: 1.6s !important;
+    text-shadow: none;
+    mask-image: none;
+    -webkit-mask-image: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drop {
+    animation: none !important;
+    opacity: 0.06;
+  }
 }

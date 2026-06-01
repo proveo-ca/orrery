@@ -238,7 +238,7 @@ export const ReviewScreen: Component = () => {
       </Show>
 
       <Show when={reviewAnalysisMode()}>
-        <MatrixOverlay density={70} speed={0.9} />
+        <MatrixOverlay density={60} speed={0.9} />
       </Show>
 
       <MobileDrawer />

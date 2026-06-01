@@ -1,7 +1,7 @@
 .eval-bar {
   position: absolute;
-  left: -1.5rem;
-  width: calc(var(--square-size) * 0.75);
+  left: -2rem;
+  width: calc(var(--square-size) * 0.50);
   height: var(--board-size);
   background: var(--eval-bar-bg);
   border-radius: 12px;
@@ -10,6 +10,7 @@
     0 4px 20px rgba(var(--shadow-rgb), 0.53),
     inset 0 0 10px rgba(var(--shadow-rgb), 0.67);
   border: 2px solid var(--eval-bar-border);
+  contain: layout paint style;
 }
 
 .eval-white,
@@ -17,10 +18,12 @@
   position: absolute;
   left: 0;
   right: 0;
-  height: 50%; /* default equal split */
-  transition:
-    height 0.7s cubic-bezier(0.22, 0.8, 0.3, 1),
-    top 0.7s cubic-bezier(0.22, 0.8, 0.3, 1);
+  top: 0;
+  bottom: 0;
+  height: 100%;
+  transform-origin: top;
+  transition: transform 0.7s cubic-bezier(0.22, 0.8, 0.3, 1);
+  will-change: transform;
 }
 
 .eval-white {
@@ -35,7 +38,7 @@
 }
 
 .eval-black {
-  bottom: 0;
+  transform-origin: bottom;
   background: linear-gradient(
     to top,
     var(--eval-black-from),
@@ -50,17 +53,19 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: 1rem;
-  font-weight: bold;
-  color: var(--white);
-  text-shadow:
-    0 0 10px rgba(var(--shadow-rgb), 0.8),
-    0 2px 6px rgba(var(--shadow-rgb), 0.53);
-  z-index: 5;
-  min-width: 70px;
+  font-size: clamp(0.7rem, 3.5vw, 0.75rem);
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  z-index: 6;
+  min-width: 52px;
+  max-width: calc(100% - 8px);
   text-align: center;
   pointer-events: none;
-  background: rgba(var(--shadow-rgb), 0.4);
-  padding: 4px 10px;
-  border-radius: 8px;
+  background: rgba(20, 20, 35, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  padding: 3px 8px;
+  border-radius: 999px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+  box-sizing: border-box;
 }

@@ -21,6 +21,12 @@ export const EvalBar: Component<EvalBarProps> = (props) => {
     return val;
   };
 
+  // Player perspective value: flip sign when player is Black (isFlipped)
+  const playerValue = () => {
+    const v = absoluteValue();
+    return props.isFlipped ? -v : v;
+  };
+
   const numericValue = () => {
     if (!props.score) return 0;
     const val = absoluteValue();
@@ -36,30 +42,36 @@ export const EvalBar: Component<EvalBarProps> = (props) => {
     return norm;
   };
 
-  const bottomHeight = () => 50 + normalized() * 50; // % from bottom
-  const topHeight = () => 100 - bottomHeight();
+  const bottomScale = () => Math.max(0, Math.min(1, 0.5 + normalized() * 0.5));
+  const topScale = () => 1 - bottomScale();
 
   const topColorClass = () => (props.isFlipped ? styles["eval-white"] : styles["eval-black"]);
   const bottomColorClass = () => (props.isFlipped ? styles["eval-black"] : styles["eval-white"]);
 
   const displayValue = () => {
     if (!props.score) return "0.0";
-    const val = absoluteValue();
+    const val = playerValue();
     if (props.score.kind === "mate") return val > 0 ? `+M${val}` : `-M${Math.abs(val)}`;
     const v = val / 100;
     return v > 0 ? `+${v.toFixed(1)}` : v.toFixed(1);
   };
 
   const valueColor = () => {
-    const v = numericValue();
+    const v = playerValue() / 100; // in pawns from player perspective
     if (Math.abs(v) >= 9) return v > 0 ? "#ffeb3b" : "#64b5f6";
     return "#ffffff";
   };
 
   return (
     <div class={styles["eval-bar"]}>
-      <div class={topColorClass()} style={{ height: `${topHeight()}%` }} />
-      <div class={bottomColorClass()} style={{ height: `${bottomHeight()}%` }} />
+      <div
+        class={topColorClass()}
+        style={{ transform: `scaleY(${topScale()})` }}
+      />
+      <div
+        class={bottomColorClass()}
+        style={{ transform: `scaleY(${bottomScale()})` }}
+      />
       <div class={styles["eval-value"]} style={{ color: valueColor() }}>
         {displayValue()}
       </div>
