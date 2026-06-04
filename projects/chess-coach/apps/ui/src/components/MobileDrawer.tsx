@@ -21,6 +21,7 @@ import { Credits } from "~/components/Credits";
 import { DualNavButton } from "~/components/DualNavButton";
 import styles from "~/components/MobileDrawer.module.css";
 import { NewGamePanel } from "~/components/NewGamePanel";
+import { ResignConfirm } from "~/components/ResignConfirm";
 import { SettingsPanel } from "~/components/Settings";
 import { useGameControls } from "~/hooks/useGameControls";
 import { useHintSparkle } from "~/hooks/useHintSparkle";
@@ -36,6 +37,7 @@ const isRoute = (pathname: string, route: string) =>
 export const MobileDrawer: Component = () => {
   const location = useLocation();
   const [menuOpen, setMenuOpen] = createSignal(false);
+  const [showResignConfirm, setShowResignConfirm] = createSignal(false);
   const { hintSparkleClass, dismissHintSparkle } = useHintSparkle();
   const controls = useGameControls();
   const {
@@ -58,6 +60,11 @@ export const MobileDrawer: Component = () => {
 
   const handleResign = () => {
     setMenuOpen(false);
+    setShowResignConfirm(true);
+  };
+
+  const confirmResign = () => {
+    setShowResignConfirm(false);
     baseHandleResign();
   };
 
@@ -208,6 +215,8 @@ export const MobileDrawer: Component = () => {
       >
         <NewGamePanel />
       </Modal>
+
+      <ResignConfirm open={showResignConfirm()} onClose={() => setShowResignConfirm(false)} onConfirm={confirmResign} />
 
       <Credits open={showCredits()} onClose={() => setShowCredits(false)} />
     </div>

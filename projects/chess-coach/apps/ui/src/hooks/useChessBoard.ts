@@ -9,6 +9,7 @@ import { useMoveExecutor } from "~/hooks/useMoveExecutor";
 import { useStockfishWorker } from "~/hooks/useStockfishWorker";
 import { getAnalysisDepth } from "~/services/runtimeMode";
 import { capabilities } from "~/store/capabilitiesStore";
+import { setBaseEvalScore as setSharedEval } from "~/store/evalStore";
 import {
   type CoachEmotion,
   baseAdvice,
@@ -193,6 +194,7 @@ export function useChessBoard() {
     setValidMoves([]);
     setHumanBestMove(null);
     setBaseEvalScore(null);
+    setSharedEval(null);
     setAdviceHoveredSquares([]);
     setAdviceArrow(null);
     if (!isTravelling()) {
@@ -229,6 +231,7 @@ export function useChessBoard() {
       const info = analysis().lastInfo;
       if (info && info.score) {
         setBaseEvalScore(info.score);
+        setSharedEval(info.score);
       }
       if (info && info.pv && info.pv.length > 0) {
         setHumanBestMove(info.pv[0]);
@@ -248,6 +251,8 @@ export function useChessBoard() {
     setHoveredSquare(null);
     clearHoverOverride();
     setCurrentHoverEval(null);
+    setBaseEvalScore(null);
+    setSharedEval(null);
 
     send("stop");
     resumeBaseAnalysis();

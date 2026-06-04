@@ -1,6 +1,6 @@
 // SPEC: _spec/chess-coach/ui/components.puml
 import { useLocation } from "@solidjs/router";
-import { Show } from "solid-js";
+import { Show, createSignal } from "solid-js";
 import type { Component } from "solid-js";
 
 import { CoachEmotionIcon } from "~/components/CoachEmotionIcon";
@@ -20,6 +20,7 @@ import { Modal } from "~/components/common/Modal";
 import { Credits } from "~/components/Credits";
 import { DualNavButton } from "~/components/DualNavButton";
 import { NewGamePanel } from "~/components/NewGamePanel";
+import { ResignConfirm } from "~/components/ResignConfirm";
 import { Settings } from "~/components/Settings";
 import styles from "~/components/Sidebar.module.css";
 import { useGameControls } from "~/hooks/useGameControls";
@@ -54,8 +55,15 @@ export const Sidebar: Component = () => {
     handleForward,
     handleBackToLive,
     handleHint: baseHandleHint,
-    handleResign,
+    handleResign: baseHandleResign,
   } = controls;
+
+  const [showResignConfirm, setShowResignConfirm] = createSignal(false);
+  const handleResign = () => setShowResignConfirm(true);
+  const confirmResign = () => {
+    setShowResignConfirm(false);
+    baseHandleResign();
+  };
 
   const handleHint = () => {
     dismissHintSparkle();
@@ -184,6 +192,8 @@ export const Sidebar: Component = () => {
       >
         <NewGamePanel />
       </Modal>
+
+      <ResignConfirm open={showResignConfirm()} onClose={() => setShowResignConfirm(false)} onConfirm={confirmResign} />
 
       <Credits open={showCredits()} onClose={() => setShowCredits(false)} />
       <Settings open={showSettings()} onClose={() => setShowSettings(false)} />
