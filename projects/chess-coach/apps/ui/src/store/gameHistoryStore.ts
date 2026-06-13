@@ -3,6 +3,12 @@ import { deleteAnalysisCache } from "~/hooks/useGameAnalysis";
 import { createPersistedStore } from "~/store/createPersistedStore";
 import type { PlayerIdentity } from "~/store/settingsStore";
 
+export const getExpectedReviewId = (pgn: string, fen: string): string =>
+  polyglotHashFromPgn(pgn, fen);
+
+export const hasRecordedReview = (pgn: string, fen: string): boolean =>
+  getGameById(polyglotHashFromPgn(pgn, fen)) !== null;
+
 export type MoveRecord = {
   san: string;
   hasPressedHint: boolean;

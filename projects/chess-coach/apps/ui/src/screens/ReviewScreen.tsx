@@ -80,7 +80,12 @@ export const ReviewScreen: Component = () => {
   createEffect(() => {
     setCapabilities(
       activeGame()
-        ? { ...REVIEW_CAPABILITIES, historyNav: true, freeColorControl: true }
+        ? {
+            ...REVIEW_CAPABILITIES,
+            historyNav: true,
+            freeColorControl: true,
+            showBestMove: reviewAnalysisMode(),
+          }
         : REVIEW_CAPABILITIES,
     );
   });
@@ -238,7 +243,7 @@ export const ReviewScreen: Component = () => {
       </Show>
 
       <Show when={reviewAnalysisMode()}>
-        <MatrixOverlay density={60} speed={0.9} />
+        <MatrixOverlay density={60} speed={0.25} />
       </Show>
 
       <MobileDrawer />

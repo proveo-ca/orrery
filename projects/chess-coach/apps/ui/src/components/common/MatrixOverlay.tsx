@@ -28,7 +28,7 @@ const makeDrop = (id: number, color: string, speed: number): Drop => {
   const chars = Array.from({ length: height }, () =>
     Math.random() > 0.5 ? "1" : "0",
   ).join("\n");
-  const duration = (rand(2.4, 5.5) / speed).toFixed(2) + "s";
+  const duration = (rand(24, 55) / speed).toFixed(2) + "s";
   const delay = (-rand(0, 4)).toFixed(2) + "s";
   return {
     id,

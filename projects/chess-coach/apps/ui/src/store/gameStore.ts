@@ -180,6 +180,8 @@ export const isThreefoldRepetition = (): boolean => {
 
 export const isResigned = (): boolean => _isResigned();
 
+export const startingFen = (): string => _startingFen;
+
 // ── Mutations ───────────────────────────────────────────────────────────
 
 /** Apply a move by square coordinates. Handles branching when viewing past. */

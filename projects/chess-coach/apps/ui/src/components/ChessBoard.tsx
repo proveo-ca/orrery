@@ -14,7 +14,8 @@ import { useChessBoard } from "~/hooks/useChessBoard";
 import type { MoveSquares } from "~/store/gameStore";
 import { capabilities } from "~/store/capabilitiesStore";
 import { adviceArrow, adviceHoveredSquares, setShowNewGame } from "~/store/coachStore";
-import { gameHistory } from "~/store/gameHistoryStore";
+import { getExpectedReviewId, hasRecordedReview } from "~/store/gameHistoryStore";
+import { startingFen } from "~/store/gameStore";
 import { isResigned } from "~/store/gameStore";
 import { activePlayerColor, opponentPieceSet, playerPieceSet } from "~/store/settingsStore";
 import { isTravelling } from "~/store/travelStore";
@@ -267,8 +268,8 @@ export const ChessBoard: Component = () => {
               <Button primary onClick={() => setShowNewGame(true)}>
                 Another Game
               </Button>
-              <Show when={gameHistory().length > 0}>
-                <Button primary href={`/review/${gameHistory()[0].id}`}>
+              <Show when={hasRecordedReview(activeGame().pgn(), startingFen())}>
+                <Button primary href={`/review/${getExpectedReviewId(activeGame().pgn(), startingFen())}`}>
                   Review Game
                 </Button>
               </Show>

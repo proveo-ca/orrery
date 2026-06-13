@@ -11,6 +11,7 @@ import {
 } from "~/engine/llmPromptFormat";
 import { uciMatchesSan } from "~/engine/moveNotation";
 import { sanitizeExplanationText, isLowQualityLlmOutput } from "~/engine/textSanitizer";
+import type { Difficulty } from "~/store/settingsStore";
 
 export type TurnResult = { fen: string; move: string; advice: string };
 export type UiPhrases = { thinking: string[]; bestMove: string[] };
@@ -54,7 +55,7 @@ export class Orchestrator {
   async executeTurn(
     humanMoveSan: string,
     fenAfterHuman: string,
-    difficulty: string,
+    difficulty: Difficulty,
   ): Promise<TurnResult> {
     console.log(`--- Starting Turn ---`);
     console.log(`Human played: ${humanMoveSan || "(None - First Move)"}`);

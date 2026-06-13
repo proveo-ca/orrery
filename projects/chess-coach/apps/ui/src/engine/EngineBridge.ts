@@ -1,6 +1,7 @@
 // SPEC: _spec/chess-coach/ui/components.puml
 import { MaiaEngine } from "~/engine/MaiaEngine.ts";
 import { type EvalResult, StockfishEngine } from "~/engine/StockfishEngine.ts";
+import type { Difficulty } from "~/store/settingsStore";
 
 export class EngineBridge {
   // Full strength for coaching/evaluations
@@ -21,12 +22,12 @@ export class EngineBridge {
     return this.evaluator.getSanForUciMove(fen, uciMove);
   }
 
-  async getAiMove(fen: string, difficulty: string): Promise<string> {
+  async getAiMove(fen: string, difficulty: Difficulty): Promise<string> {
     // Map difficulty to Maia weights files
     let weightsFile = "maia-1100.pb.gz";
     if (difficulty === "advanced") weightsFile = "maia-1600.pb.gz";
     if (difficulty === "expert") weightsFile = "maia-2200.pb.gz";
 
-    return this.player.getMove(fen, weightsFile);
+    return this.player.getMove(fen, weightsFile, difficulty);
   }
 }

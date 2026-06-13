@@ -1,5 +1,6 @@
 // SPEC: _spec/chess-coach/ui/components.puml
 import { UciDriver } from "~/engine/UciDriver";
+import type { Difficulty } from "~/store/settingsStore";
 
 /**
  * Wrapper around the Maia (lc0) WASM chess engine running in a Web Worker.
@@ -46,7 +47,7 @@ export class MaiaEngine {
     const vfsName = weightsFile.replace(/\.gz$/, "");
     this.driver.send(`setoption name WeightsFile value ${vfsName}`);
     this.driver.send("setoption name Temperature value 0.5");
-    this.driver.send("setoption name TempDecayMoves value 20");
+    this.driver.send("setoption name TempDecayMoves value 15");
     this.driver.send("isready");
     await this.driver.readUntil("readyok");
 
@@ -59,9 +60,9 @@ export class MaiaEngine {
    * RuntimeError, stack overflow, etc.), restarts it and retries once.
    * A second failure propagates to the caller.
    */
-  async getMove(fen: string, weightsFile: string): Promise<string> {
+  async getMove(fen: string, weightsFile: string, difficulty?: Difficulty): Promise<string> {
     try {
-      return await this.executeGetMove(fen, weightsFile);
+      return await this.executeGetMove(fen, weightsFile, difficulty);
     } catch (err) {
       console.warn(
         `[MaiaEngine] getMove failed (weights=${weightsFile}, fen=${fen}), restarting:`,
@@ -69,7 +70,7 @@ export class MaiaEngine {
       );
       this.restart();
       try {
-        return await this.executeGetMove(fen, weightsFile);
+        return await this.executeGetMove(fen, weightsFile, difficulty);
       } catch (retryErr) {
         console.error(
           `[MaiaEngine] getMove failed again after restart (weights=${weightsFile}, fen=${fen}):`,
@@ -80,8 +81,21 @@ export class MaiaEngine {
     }
   }
 
-  private async executeGetMove(fen: string, weightsFile: string): Promise<string> {
+  private getDecay(difficulty?: Difficulty): number {
+    if (difficulty === "advanced") return 12;
+    if (difficulty === "expert") return 10;
+    return 15;
+  }
+
+  private async executeGetMove(
+    fen: string,
+    weightsFile: string,
+    difficulty?: Difficulty,
+  ): Promise<string> {
     await this.init(weightsFile);
+
+    const decay = this.getDecay(difficulty);
+    this.driver.send(`setoption name TempDecayMoves value ${decay}`);
 
     this.driver.send(`position fen ${fen}`);
     this.driver.send("go nodes 1"); // Maia is a policy network, 1 node is enough

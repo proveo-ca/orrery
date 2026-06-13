@@ -28,8 +28,8 @@ export const ResignConfirm: Component<ResignConfirmProps> = (props) => {
     }
     const playerIsBlack = activePlayerColor() === "b";
     const approxPlayerCp = playerIsBlack ? -val : val;
-    if (approxPlayerCp > -150) {
-      setMsg("don't run away! you have a chance.");
+    if (approxPlayerCp > -200) {
+      setMsg("Don't run away! You have a chance.");
     } else {
       setMsg("gg wp");
     }
