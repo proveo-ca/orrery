@@ -24,7 +24,7 @@ package "Capabilities  [capabilitiesStore.ts]" {
     aiOpponent: boolean
     blunderDetection: boolean
     continuousAnalysis: boolean
-    showBestMove: boolean
+    bestMoveArrow: "off" | "player-only" | "both"
     commentary: boolean
     .. Persistence ..
     persistGame: boolean
@@ -45,7 +45,7 @@ package "Capabilities  [capabilitiesStore.ts]" {
     (flipBoard=F, readOnly=F)
 
     **ANALYSIS_CAPABILITIES**
-    hint=T, continuousAnalysis=T, showBestMove=T,
+    hint=T, continuousAnalysis=T, bestMoveArrow=both,
     freeColorControl=T, flipBoard=T,
     opponentUsesPlayerPieceSet=T,
     persistGame=F (scratch-pad — moves are
@@ -132,6 +132,8 @@ package "Stores  [src/store/]" {
     colorPref(): PlayerColorPref
     activePlayerColor(): "w" | "b"
     difficulty(): Difficulty
+    blunderThresholdCp(): number
+    blunderLabel(): string
     playerIdentity(): PlayerIdentity
     playerPieceSet(): PieceSet
     opponentPieceSet(): PieceSet
@@ -147,6 +149,12 @@ package "Stores  [src/store/]" {
     Difficulty: intermediate | advanced | expert
     PieceSet: cburnett | selena | gord | manuel
     PlayerIdentity: Human | Cat | Dog | Rat
+    .. Constants ..
+    BLUNDER_THRESHOLD_CP_BY_DIFFICULTY:
+      intermediate=-200, advanced=-150, expert=-80
+    BLUNDER_LABEL_BY_DIFFICULTY:
+      intermediate="a blunder", advanced="a mistake",
+      expert="an inaccuracy"
     .. Persistence ..
     key: chess_coach_settings_state
   }
@@ -214,6 +222,7 @@ package "Hooks  [src/hooks/]" {
       validMoves(): string[]
       isReplaying(): boolean
       bestMoveArrow(): {from,to} | null
+        (capabilities.bestMoveArrow: off | player-only | both)
       baseEvalScore(): PositionEval | null
       pendingPromotion(): PendingPromotion | null
       .. Handlers ..
@@ -225,27 +234,21 @@ package "Hooks  [src/hooks/]" {
       cancelPromotion()
       .. Notes ..
       hover engine debounce: 150ms (all stop/go + eval requests)
-      integrates: useMoveExecutor · useCoachBehavior
-        useHoverEvaluator · useStockfishWorker
-    }
-
-    class useStockfishWorker {
-      .. Returns ..
-      analysis(): StockfishAnalysis
-      send(command: string)
-      .. Types ..
-      StockfishAnalysis: {last, lastInfo, lastBestMove}
-      .. Notes ..
-      singleton via stockfishService
-      parses UCI: info depth pv score | bestmove
+      integrates: useMoveExecutor · useCoachBehavior · useHoverEvaluator
+      base analysis (arrow) → enginePool.evaluate(normal, onInfo)
+      hover eval → enginePool.evaluate(interactive, onInfo)
+        the two run as separate pool jobs, so hovering no longer
+        interrupts the base search — best-move arrow stays stable
     }
 
     class useHoverEvaluator {
-      BLUNDER_THRESHOLD_CP: -200
+      threshold: settingsStore.blunderThresholdCp()
+      label: settingsStore.blunderLabel()
       .. Side effects ..
-      detects CP drop > 200 on hovered move
+      detects CP drop past difficulty threshold on hovered move
+      skips when hovered move == humanBestMove (forced)
       → coachStore.setHoverBlunder(fen, san)
-      → coachStore.setHoverAdvice(text)
+      → coachStore.setHoverAdvice("... is {label}")
       → coachStore.setPendingTravel(data)
       clears: clearHoverOverride() on mouse-leave
     }
@@ -328,9 +331,8 @@ package "Hooks  [src/hooks/]" {
       stopHint()
       pendingHint(): boolean
       .. Notes ..
-      lazy-init worker on first call
-      drains stale bestmove replies (drainCount)
-      timeout: 12s per request
+      enginePool.evaluate(interactive); never rejects ("" on fail)
+      supersede = AbortController (pool drains the stale bestmove)
     }
 
     class useGlobalShortcuts <<side-effect>> {
@@ -348,15 +350,32 @@ package "Hooks  [src/hooks/]" {
       game: () => GameRecord | null
       .. Returns ..
       analysis(): GameAnalysis
-      deleteAnalysisCache(id)
+      .. Module fns ..
+      analyzeGameToCache(game, {signal, onState})
+      deleteAnalysisCache(id) · migrateAnalysisCache(from, to)
+      ANALYSIS_DEPTH = 20
       .. Types ..
       GameAnalysis: {cpDeltas[], wasBestMoves[],
         bestMoveUcis[], loading: boolean}
       .. Notes ..
-      spawns dedicated SF worker per game
-      caches in localStorage by game id
-      partial progress writes every 4 positions
-      resumes from partial cache on re-entry
+      enginePool.evaluate(background) per ply (best + played)
+      caches in localStorage by game id (CACHE_VERSION)
+      partial progress writes every 2 plies; resumes from cache
+      seedFromCache reuses the cache by ply INDEX (not exact
+        length) → a shorter live-pre-analysis cache warms Review;
+        only the un-cached tail is re-analyzed
+      hook drives analyzeGameToCache via AbortController
+    }
+
+    class useLivePreAnalysis <<side-effect>> {
+      .. Notes ..
+      on CoachScreen: analyzeGameToCache(background), keyed
+        by in-progress UUID, persisted per ply to localStorage
+      COALESCES — one pass at a time; a move mid-pass flags a
+        re-sweep instead of aborting (never discards in-flight
+        ply work, which constant preemption would otherwise lose)
+      finalizeGame migrates the cache → review id (warm Review)
+      interactive searches (hint/hover) preempt these jobs
     }
 
     class useBlunderArrow {
@@ -480,26 +499,30 @@ package "Services  [src/services/]" {
       from `dist/` post-build.
   }
 
-  class stockfishService <<singleton>> {
-    getWorker(): Worker
-    send(command: string)
-    addListener(fn) / removeListener(fn)
+  class EnginePool <<singleton>> {
+    evaluate(req): Promise<EvalResult>
+    dispose()
+    .. Types ..
+    EvalRequest: {fen, depth, searchMoves?,
+      priority?, signal?, onInfo?}
+    Priority: interactive | normal | background
+    EvalResult: {bestMove, score, depth}
     .. Notes ..
-    watchdog: detects hung worker, restarts
-      with synthetic `bestmove (none)` so
-      pending consumers don't hang.
-    --
-    Circuit breaker: > 3 restarts in 10 s
-      → flips `givenUp`, terminates the
-      worker, future getWorker()/send()
-      become no-ops until page reload.
-      Prevents a permanently-faulting wasm
-      from looping into an OOM blow-up.
-    --
-    Stale-event guard: each onerror
-      handler checks `this.worker === w`
-      so drain-events from a terminated
-      worker can't terminate its successor.
+    Central scheduler for ALL main-thread Stockfish
+      work — hint, hover eval, best-move-arrow base
+      analysis, batch review, live pre-analysis.
+    Bounded warm pool (≈cores−2, capped 2–3) of
+      reused single-threaded workers.
+    Task identity: each search owns its worker until
+      its bestmove; a stopped search's drained bestmove
+      is discarded, not mis-attributed → kills the
+      stale-`a2a3` arrow-flicker race.
+    Priorities + preemption: interactive preempts a
+      running lower-prio job and re-queues it.
+    Per-worker watchdog + restart + circuit breaker
+      (>4 restarts/10s → givenUp).
+    Replaces the old stockfishService singleton and
+      the per-consumer ad-hoc workers.
   }
 
   class browserSupport {
@@ -664,12 +687,12 @@ package "WebEngine  [src/engine/]" {
   }
 
   class moveAnnotations {
-    resolveAnnotations(moves, cpDeltas,
-      wasBestMoves, bestMoveUcis): AnnotationTag[][]
+    resolveAnnotations(moves, cpDeltas, wasBestMoves,
+      bestMoveUcis, blunderThresholdCp?): AnnotationTag[][]
     pairMovesIntoRows(moves, startFen): MoveRow[]
     formatCp(cp: number): string
     .. Constants ..
-    BLUNDER_THRESHOLD_CP    = -200
+    BLUNDER_THRESHOLD_CP    = -200 (default arg)
     INACCURACY_THRESHOLD_CP = -50
     .. Types ..
     AnnotationTag: best | blunder | inaccuracy |

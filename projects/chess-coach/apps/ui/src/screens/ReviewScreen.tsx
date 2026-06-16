@@ -30,6 +30,7 @@ import {
 } from "~/store/gameStore";
 import {
   activePlayerColor,
+  blunderThresholdCp,
   opponentIdentity,
   playerIdentity,
   setActivePlayerColor,
@@ -72,7 +73,7 @@ export const ReviewScreen: Component = () => {
     const g = activeGame();
     if (!g) return [];
     const a = gameAnalysis();
-    return resolveAnnotations(g.moves, a.cpDeltas, a.wasBestMoves, a.bestMoveUcis);
+    return resolveAnnotations(g.moves, a.cpDeltas, a.wasBestMoves, a.bestMoveUcis, blunderThresholdCp());
   });
 
   useBlunderArrow(annotations, () => gameAnalysis().bestMoveUcis);
@@ -84,7 +85,7 @@ export const ReviewScreen: Component = () => {
             ...REVIEW_CAPABILITIES,
             historyNav: true,
             freeColorControl: true,
-            showBestMove: reviewAnalysisMode(),
+            bestMoveArrow: reviewAnalysisMode() ? "player-only" : "off",
           }
         : REVIEW_CAPABILITIES,
     );

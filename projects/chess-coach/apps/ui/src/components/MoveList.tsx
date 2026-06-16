@@ -15,6 +15,7 @@ import { useGameAnalysis, type GameAnalysis } from "~/hooks/useGameAnalysis";
 import { useMoveListPagination } from "~/hooks/useMoveListPagination";
 import type { GameRecord, MoveRecord } from "~/store/gameHistoryStore";
 import { setViewIndex } from "~/store/gameStore";
+import { blunderThresholdCp } from "~/store/settingsStore";
 
 // ── Presentational sub-components ──────────────────────────────────────
 
@@ -94,13 +95,16 @@ interface Props {
 }
 
 export const MoveList: Component<Props> = (props) => {
-  const internalAnalysis = useGameAnalysis(() => props.game);
+  // Only run our own analysis when the parent doesn't already supply one.
+  // Passing a null game when `props.analysis` is present keeps the hook inert
+  // (no pool jobs) — otherwise the Review screen would analyze each game twice.
+  const internalAnalysis = useGameAnalysis(() => (props.analysis ? null : props.game));
   const analysisSignal = () => props.analysis ?? internalAnalysis();
   const annotations = () => {
     const g = props.game;
     if (!g) return [];
     const a = analysisSignal();
-    return resolveAnnotations(g.moves, a.cpDeltas, a.wasBestMoves, a.bestMoveUcis);
+    return resolveAnnotations(g.moves, a.cpDeltas, a.wasBestMoves, a.bestMoveUcis, blunderThresholdCp());
   };
   const rows = () =>
     props.game ? pairMovesIntoRows(props.game.moves, props.game.startingFen) : [];

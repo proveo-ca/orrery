@@ -18,6 +18,7 @@ import {
 import { MobileDrawer } from "~/components/MobileDrawer";
 import { Sidebar } from "~/components/Sidebar";
 import { useGameRecorder } from "~/hooks/useGameRecorder";
+import { useLivePreAnalysis } from "~/hooks/useLivePreAnalysis";
 import { fetchHello, postAdviceStream, postMove } from "~/services/api";
 import { checkEngineSupport } from "~/services/browserSupport";
 import { accumulateStream } from "~/services/streamUtils";
@@ -55,6 +56,10 @@ export const CoachScreen: Component = () => {
   // review at /review/:id. Mounted here so it only runs on the Coach
   // screen where the AI-driven metadata (best-move, hint) is meaningful.
   useGameRecorder();
+
+  // Warm the review-analysis cache as moves are recorded (background
+  // priority), so opening Review after the game is instant/near-instant.
+  useLivePreAnalysis();
 
   onMount(async () => {
     setCapabilities(COACH_CAPABILITIES);

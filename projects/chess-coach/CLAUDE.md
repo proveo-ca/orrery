@@ -17,6 +17,7 @@ When you add, rename, or remove a component, hook, store, or service:
 | `_spec/chess-coach/components.puml` | Full-stack architecture: UI ↔ API ↔ Harness; runtime modes (desktop / web-full / web-no-llm) |
 | `_spec/chess-coach/ui/components.puml` | UI component graph: screens, hooks, stores, services, web-engine (no method bodies) |
 | `_spec/chess-coach/ui/entities.puml` | Full API reference: all store selectors/mutations, hook contracts, service interfaces, engine methods |
+| `_spec/chess-coach/ui/scheduler.puml` | EnginePool scheduler: workers, priority tiers + preemption, legacy-vs-pool differences |
 | `_spec/chess-coach/sequence.puml` | Move, hint, and advice request flows (end-to-end) |
 | `_spec/chess-coach/web-llm-integration.puml` | WebLLM model loading and Linux/WebGPU workaround |
 | `_spec/chess-coach/architecture.puml` | Top-level system architecture |
@@ -29,3 +30,4 @@ When you add, rename, or remove a component, hook, store, or service:
 - **Dual distribution**: `runtimeMode === 'desktop'` uses `HttpCoachService` (Ktor backend); `runtimeMode === 'web-*'` uses `WebWorkerCoachService` (in-browser workers).
 - **Coach decoupling**: `useMoveExecutor` owns game mechanics and emits `lastHumanMoveInfo` / `lastAIMoveInfo` signals. `useCoachBehavior` reacts to those signals and owns all advice/emotion logic — do not add coach actions back into `useMoveExecutor`.
 - **Capabilities pattern**: each screen sets `ScreenCapabilities` on mount (`capabilitiesStore`); hooks and components read specific flags rather than branching on a screen name.
+- **Engine scheduling**: all main-thread Stockfish work goes through the `EnginePool` singleton (`engine/EnginePool.ts`) via `evaluate(req)` — never spawn a Stockfish `Worker` directly. Pick a priority (`interactive` for hint/hover, `normal` for the best-move arrow, `background` for review/pre-analysis) so interactive searches preempt bulk work. See `_spec/chess-coach/ui/scheduler.puml`.

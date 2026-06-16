@@ -20,6 +20,7 @@ export function resolveAnnotations(
   cpDeltas: (number | null)[],
   wasBestMoves: boolean[],
   bestMoveUcis: (string | null)[] = [],
+  blunderThresholdCp: number = BLUNDER_THRESHOLD_CP,
 ): AnnotationTag[][] {
   const tags: AnnotationTag[][] = moves.map(() => []);
 
@@ -27,7 +28,7 @@ export function resolveAnnotations(
     if (m.isAI) return;
     const cp = cpDeltas[i] ?? null;
     const best = wasBestMoves[i] ?? false;
-    const isBlunder = cp != null && cp <= BLUNDER_THRESHOLD_CP;
+    const isBlunder = cp != null && cp <= blunderThresholdCp;
     const isForced = best && isBlunder;
 
     if (isForced) {
@@ -39,7 +40,7 @@ export function resolveAnnotations(
         if (bestIdx !== -1) prior.splice(bestIdx, 1);
         if (!prior.includes("blunder")) prior.push("blunder");
       }
-    } else if (best && cp != null && cp > BLUNDER_THRESHOLD_CP) {
+    } else if (best && cp != null && cp > blunderThresholdCp) {
       tags[i].push("best");
     } else if (isBlunder) {
       tags[i].push("blunder");

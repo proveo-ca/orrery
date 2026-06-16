@@ -1,5 +1,5 @@
 import { polyglotHashFromPgn } from "~/engine/polyglotZobrist";
-import { deleteAnalysisCache } from "~/hooks/useGameAnalysis";
+import { deleteAnalysisCache, migrateAnalysisCache } from "~/hooks/useGameAnalysis";
 import { createPersistedStore } from "~/store/createPersistedStore";
 import type { PlayerIdentity } from "~/store/settingsStore";
 
@@ -131,6 +131,10 @@ export const finalizeGame = (result: GameResult, pgn: string) => {
 
   const annotatedPgn = annotatePgn(pgn, current.moves);
   const polyglotId = polyglotHashFromPgn(pgn, current.startingFen);
+
+  // Carry any live pre-analysis (cached under the in-progress UUID) over to
+  // the final review id so Review opens warm.
+  migrateAnalysisCache(current.id, polyglotId);
 
   const finalized: GameRecord = {
     ...current,

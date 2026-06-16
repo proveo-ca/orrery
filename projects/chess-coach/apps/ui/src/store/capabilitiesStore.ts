@@ -10,6 +10,15 @@ import { resolveMode } from "~/services/runtimeMode";
  * Kept in a dedicated module so `settingsStore` can depend on it without
  * risking a circular import with `gameStore`.
  */
+/**
+ * Best-move arrow overlay mode:
+ *   - "off"         — never shown
+ *   - "player-only" — only on the human (activePlayerColor) turn (review of a
+ *                     human-vs-AI game: advice is for the human, not the AI reply)
+ *   - "both"        — best move for whichever side is to move (free analysis)
+ */
+export type BestMoveArrowMode = "off" | "player-only" | "both";
+
 export type ScreenCapabilities = {
   // UI affordances
   hint: boolean; // show hint button
@@ -21,7 +30,7 @@ export type ScreenCapabilities = {
   aiOpponent: boolean; // AI responds + advice after human move
   blunderDetection: boolean; // hover blunder detection + shocked emotion
   continuousAnalysis: boolean; // stockfish runs even when not player's turn
-  showBestMove: boolean; // continuous best-move highlight overlay
+  bestMoveArrow: BestMoveArrowMode; // continuous best-move arrow overlay mode
   commentary: boolean; // LLM-generated move commentary
 
   // Persistence
@@ -47,7 +56,7 @@ export const COACH_CAPABILITIES: ScreenCapabilities = {
   aiOpponent: true,
   blunderDetection: true,
   continuousAnalysis: false,
-  showBestMove: false,
+  bestMoveArrow: "off",
   commentary: hasLlm,
   persistGame: true,
   historyBranching: false,
@@ -65,7 +74,7 @@ export const ANALYSIS_CAPABILITIES: ScreenCapabilities = {
   aiOpponent: false,
   blunderDetection: false,
   continuousAnalysis: true,
-  showBestMove: true,
+  bestMoveArrow: "both", // free analysis: best move for whichever side moves
   commentary: hasLlm,
   persistGame: false,
   historyBranching: true,
@@ -83,7 +92,8 @@ export const REVIEW_CAPABILITIES: ScreenCapabilities = {
   aiOpponent: false,
   blunderDetection: false,
   continuousAnalysis: true,
-  showBestMove: false,
+  // "off" by default; ReviewScreen flips it to "player-only" in branch mode.
+  bestMoveArrow: "off",
   commentary: hasLlm,
   persistGame: false,
   // historyBranching=true so past-position navigation doesn't lock the UI

@@ -1,9 +1,16 @@
 import { Chess } from "chess.js";
 import { createEffect, createSignal, on, onCleanup } from "solid-js";
 
-import { DEFAULT_STOCKFISH_WORKER_URL } from "~/engine/StockfishEngine.ts";
-import { parseStockfishMessage } from "~/utils/stockfishParser";
+import { enginePool, type EvalResult } from "~/engine/EnginePool";
 import type { GameRecord } from "~/store/gameHistoryStore";
+
+/** Search depth for review analysis. Shared by the Review screen and the
+ *  CoachScreen live pre-analysis so both write interchangeable cache entries. */
+export const ANALYSIS_DEPTH = 20;
+/** How many ply-pairs to keep in flight; the pool bounds real worker concurrency. */
+const MAX_ANALYSIS_LANES = 3;
+/** Persist + emit progress after this many freshly-analyzed plies. */
+const FLUSH_EVERY = 2;
 
 export type PositionEval = { kind: "cp" | "mate"; value: number };
 
@@ -70,6 +77,21 @@ export function deleteAnalysisCache(gameId: string): void {
   } catch {}
 }
 
+/**
+ * Move a cache entry from one game id to another. The live pre-analysis on
+ * CoachScreen writes under the in-progress game's (stable) UUID, but
+ * `finalizeGame` rekeys the finished game to a sequence-hash id — this
+ * carries the warmed analysis across so Review opens warm.
+ */
+export function migrateAnalysisCache(fromId: string, toId: string): void {
+  if (fromId === toId) return;
+  try {
+    const raw = localStorage.getItem(CACHE_PREFIX + fromId);
+    if (raw !== null) localStorage.setItem(CACHE_PREFIX + toId, raw);
+    localStorage.removeItem(CACHE_PREFIX + fromId);
+  } catch {}
+}
+
 const scoreToCp = (s: PositionEval): number =>
   s.kind === "mate" ? (s.value > 0 ? 10000 : -10000) : s.value;
 
@@ -106,26 +128,22 @@ function buildReviewJobs(game: GameRecord): ReviewJob[] {
 }
 
 function seedFromCache(cached: CachedAnalysis | null, moveCount: number): AnalysisState {
-  if (
-    cached &&
-    cached.cpDeltas.length === moveCount &&
-    cached.wasBestMoves.length === moveCount &&
-    cached.bestMoveUcis.length === moveCount &&
-    cached.analyzed.length === moveCount
-  ) {
-    return {
-      cpDeltas: [...cached.cpDeltas],
-      wasBestMoves: [...cached.wasBestMoves],
-      bestMoveUcis: [...cached.bestMoveUcis],
-      analyzed: [...cached.analyzed],
-    };
-  }
-
+  // Align cached entries by ply INDEX rather than requiring an exact length
+  // match. The CoachScreen live pre-analysis persists this cache while the
+  // game is still in progress, so its arrays reflect the move count at the
+  // last write — almost always SHORTER than the finalized game. Because the
+  // in-progress moves are a strict prefix of the final game, index i refers to
+  // the same move in both, so we reuse every cached ply and leave the rest
+  // (the tail played after the last pre-analysis write) to be analyzed. The
+  // old strict `=== moveCount` check discarded the whole warm cache here,
+  // which is why Review opened blank despite pre-analysis having run.
+  const at = <T>(arr: readonly T[] | undefined, i: number, fallback: T): T =>
+    arr && i < arr.length ? arr[i] : fallback;
   return {
-    cpDeltas: Array.from({ length: moveCount }, () => null),
-    wasBestMoves: Array.from({ length: moveCount }, () => false),
-    bestMoveUcis: Array.from({ length: moveCount }, () => null),
-    analyzed: Array.from({ length: moveCount }, () => false),
+    cpDeltas: Array.from({ length: moveCount }, (_, i) => at(cached?.cpDeltas, i, null)),
+    wasBestMoves: Array.from({ length: moveCount }, (_, i) => at(cached?.wasBestMoves, i, false)),
+    bestMoveUcis: Array.from({ length: moveCount }, (_, i) => at(cached?.bestMoveUcis, i, null)),
+    analyzed: Array.from({ length: moveCount }, (_, i) => at(cached?.analyzed, i, false)),
   };
 }
 
@@ -150,148 +168,56 @@ function sanitizeNonPlayerPlies(
   }
 }
 
-const allJobsAnalyzed = (jobs: ReviewJob[], analyzed: boolean[]) =>
-  jobs.every((job) => analyzed[job.ply]);
-
-function runQueuedAnalysis(
-  jobs: ReviewJob[],
+/**
+ * Fold one ply's best/played evals into the state. Returns whether the ply is
+ * now considered analyzed.
+ *
+ * A ply is marked analyzed ONLY when a real cp delta could be computed (both
+ * searches returned a score). Otherwise we leave it pending so a later pass —
+ * the live pre-analysis pump, or the Review screen, which runs without the
+ * preemption contention of a live game — retries it. Caching a ply as
+ * `analyzed` with a null cpDelta is what left moves showing no cp diff.
+ */
+function applyJobResult(
   state: AnalysisState,
+  job: ReviewJob,
   playerColor: "w" | "b",
-  isAborted: () => boolean,
-  onProgress: (final: boolean) => void,
-  onDone: () => void,
-): () => void {
-  const pendingJobs = jobs.filter((job) => !state.analyzed[job.ply]);
-  if (pendingJobs.length === 0) {
-    onDone();
-    return () => {};
-  }
+  best: EvalResult,
+  played: EvalResult,
+): boolean {
+  const bestCp = best.score ? scoreToPlayerCp(best.score, job.beforeFen, playerColor) : null;
+  const playedCp = played.score ? scoreToPlayerCp(played.score, job.beforeFen, playerColor) : null;
+  if (bestCp == null || playedCp == null) return false;
 
-  const workerCount = Math.min(2, pendingJobs.length);
-  const workers: Worker[] = [];
-  let nextJobIndex = 0;
-  let completedJobs = 0;
-  let finishedWorkers = 0;
-
-  for (let w = 0; w < workerCount; w++) {
-    const worker = new Worker(DEFAULT_STOCKFISH_WORKER_URL);
-    workers.push(worker);
-    worker.postMessage("uci");
-    worker.postMessage("isready");
-
-    let currentJob: ReviewJob | null = null;
-    let phase: "best" | "played" = "best";
-    let bestScore: PositionEval | null = null;
-    let beforeBestMove: string | null = null;
-    let latestScore: PositionEval | null = null;
-
-    const evalFen = (fen: string, searchMove?: string) => {
-      latestScore = null;
-      worker.postMessage("ucinewgame");
-      worker.postMessage(`position fen ${fen}`);
-      worker.postMessage(searchMove ? `go depth 20 searchmoves ${searchMove}` : "go depth 20");
-    };
-
-    const evalNextJob = () => {
-      if (nextJobIndex >= pendingJobs.length) {
-        finishedWorkers++;
-        worker.terminate();
-        if (finishedWorkers === workerCount) onDone();
-        return;
-      }
-
-      currentJob = pendingJobs[nextJobIndex++];
-      phase = "best";
-      bestScore = null;
-      beforeBestMove = null;
-      evalFen(currentJob.beforeFen);
-    };
-
-    worker.onmessage = (event: MessageEvent) => {
-      if (isAborted()) {
-        worker.terminate();
-        return;
-      }
-
-      const raw = event.data;
-      if (typeof raw !== "string") return;
-
-      const msg = parseStockfishMessage(raw);
-
-      if (msg.type === "info" && msg.score) {
-        latestScore = msg.score;
-        return;
-      }
-
-      if (msg.type === "bestmove") {
-        const uci = msg.move && msg.move !== "(none)" ? msg.move : null;
-        if (!currentJob) return;
-
-        if (phase === "best") {
-          bestScore = latestScore;
-          beforeBestMove = uci;
-          phase = "played";
-          evalFen(currentJob.beforeFen, currentJob.playedUci);
-          return;
-        }
-
-        const playedScore = latestScore;
-        const ply = currentJob.ply;
-        const bestCp = bestScore
-          ? scoreToPlayerCp(bestScore, currentJob.beforeFen, playerColor)
-          : null;
-        const playedCp = playedScore
-          ? scoreToPlayerCp(playedScore, currentJob.beforeFen, playerColor)
-          : null;
-
-        state.cpDeltas[ply] = bestCp != null && playedCp != null ? playedCp - bestCp : null;
-        state.bestMoveUcis[ply] = beforeBestMove;
-        state.wasBestMoves[ply] = beforeBestMove != null && currentJob.playedUci === beforeBestMove;
-        state.analyzed[ply] = true;
-        completedJobs++;
-
-        if (completedJobs % 2 === 0 || completedJobs >= pendingJobs.length) {
-          onProgress(completedJobs >= pendingJobs.length);
-        }
-        evalNextJob();
-      }
-    };
-
-    evalNextJob();
-  }
-
-  return () => workers.forEach((worker) => worker.terminate());
+  state.cpDeltas[job.ply] = playedCp - bestCp;
+  state.bestMoveUcis[job.ply] = best.bestMove;
+  state.wasBestMoves[job.ply] = best.bestMove != null && job.playedUci === best.bestMove;
+  state.analyzed[job.ply] = true;
+  return true;
 }
 
-export function useGameAnalysis(game: () => GameRecord | null) {
-  const [analysis, setAnalysis] = createSignal<GameAnalysis>(EMPTY);
+/**
+ * Analyze every player ply of `game` through the shared engine pool at
+ * background priority, persisting progress to the localStorage cache that
+ * `useGameAnalysis` reads. Interactive searches (hint/hover) preempt these
+ * jobs, so it is safe to run during a live game — which is exactly what the
+ * CoachScreen pre-analysis does, leaving the Review screen warm.
+ *
+ * `onState` fires on the seeded state, on every {@link FLUSH_EVERY} freshly
+ * analyzed plies, and once more when complete (`final = true`).
+ */
+export async function analyzeGameToCache(
+  game: GameRecord,
+  opts: { signal: AbortSignal; onState?: (state: AnalysisState, final: boolean) => void },
+): Promise<void> {
+  const { signal, onState } = opts;
+  const jobs = buildReviewJobs(game);
+  const state = seedFromCache(readCache(game.id), game.moves.length);
+  sanitizeNonPlayerPlies(game, state);
 
-  let _aborted = false;
-  let cancelAnalysis = () => {};
-
-  const cleanup = () => {
-    _aborted = true;
-    cancelAnalysis();
-    cancelAnalysis = () => {};
-  };
-
-  onCleanup(cleanup);
-
-  const flush = (gameId: string, state: AnalysisState, final: boolean) => {
-    if (_aborted) return;
-
-    const g = game();
-    if (!g || g.id !== gameId) return;
-
-    sanitizeNonPlayerPlies(g, state);
-
-    setAnalysis({
-      cpDeltas: [...state.cpDeltas],
-      wasBestMoves: [...state.wasBestMoves],
-      bestMoveUcis: [...state.bestMoveUcis],
-      loading: !final,
-    });
-    writeCache(gameId, {
+  const persist = (final: boolean) => {
+    sanitizeNonPlayerPlies(game, state);
+    writeCache(game.id, {
       version: CACHE_VERSION,
       cpDeltas: [...state.cpDeltas],
       wasBestMoves: [...state.wasBestMoves],
@@ -299,53 +225,88 @@ export function useGameAnalysis(game: () => GameRecord | null) {
       analyzed: [...state.analyzed],
       complete: final,
     });
+    onState?.(state, final);
   };
+
+  const pending = jobs.filter((job) => !state.analyzed[job.ply]);
+  if (pending.length === 0) {
+    persist(true);
+    return;
+  }
+
+  // Paint the seeded (possibly partial) cache immediately.
+  onState?.(state, false);
+
+  let completed = 0;
+  let cursor = 0;
+  const runLane = async (): Promise<void> => {
+    while (cursor < pending.length) {
+      if (signal.aborted) return;
+      const job = pending[cursor++];
+      try {
+        const [best, played] = await Promise.all([
+          enginePool.evaluate({
+            fen: job.beforeFen,
+            depth: ANALYSIS_DEPTH,
+            priority: "background",
+            signal,
+          }),
+          enginePool.evaluate({
+            fen: job.beforeFen,
+            depth: ANALYSIS_DEPTH,
+            searchMoves: [job.playedUci],
+            priority: "background",
+            signal,
+          }),
+        ]);
+        if (applyJobResult(state, job, game.playerColor, best, played)) {
+          completed++;
+          if (completed % FLUSH_EVERY === 0) persist(false);
+        }
+      } catch {
+        // Aborted or a worker fault for this ply — stop on abort, otherwise
+        // leave the ply unanalyzed and move on.
+        if (signal.aborted) return;
+      }
+    }
+  };
+
+  const lanes = Math.min(MAX_ANALYSIS_LANES, pending.length);
+  await Promise.all(Array.from({ length: lanes }, runLane));
+  if (!signal.aborted) persist(true);
+}
+
+export function useGameAnalysis(game: () => GameRecord | null) {
+  const [analysis, setAnalysis] = createSignal<GameAnalysis>(EMPTY);
+
+  let controller: AbortController | null = null;
+  const stop = () => {
+    controller?.abort();
+    controller = null;
+  };
+  onCleanup(stop);
 
   createEffect(
     on(game, (g) => {
-      cleanup();
+      stop();
       if (!g || g.moves.length === 0) {
         setAnalysis(EMPTY);
         return;
       }
 
-      _aborted = false;
-      const jobs = buildReviewJobs(g);
-      const cached = readCache(g.id);
-      const state = seedFromCache(cached, g.moves.length);
-      sanitizeNonPlayerPlies(g, state);
-      const final = allJobsAnalyzed(jobs, state.analyzed);
-
-      if (cached?.complete && final) {
+      controller = new AbortController();
+      const gameId = g.id;
+      const emit = (state: AnalysisState, final: boolean) => {
+        if (game()?.id !== gameId) return;
         setAnalysis({
           cpDeltas: [...state.cpDeltas],
           wasBestMoves: [...state.wasBestMoves],
           bestMoveUcis: [...state.bestMoveUcis],
-          loading: false,
+          loading: !final,
         });
-        return;
-      }
+      };
 
-      setAnalysis({
-        cpDeltas: [...state.cpDeltas],
-        wasBestMoves: [...state.wasBestMoves],
-        bestMoveUcis: [...state.bestMoveUcis],
-        loading: !final,
-      });
-
-      if (final) {
-        flush(g.id, state, true);
-        return;
-      }
-
-      cancelAnalysis = runQueuedAnalysis(
-        jobs,
-        state,
-        g.playerColor,
-        () => _aborted,
-        (final) => flush(g.id, state, final),
-        () => flush(g.id, state, true),
-      );
+      void analyzeGameToCache(g, { signal: controller.signal, onState: emit }).catch(() => {});
     }),
   );
 

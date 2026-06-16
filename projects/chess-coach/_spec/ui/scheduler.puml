@@ -1,0 +1,116 @@
+@startuml chess-coach-ui-scheduler
+' SPEC: _spec/chess-coach/ui/scheduler.puml
+!includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+
+skinparam defaultTextAlignment left
+skinparam arrowColor #446688
+
+title Chess Coach UI · Engine Scheduler\n(workers · priorities · pool vs. legacy)
+
+' ══════════════════════════════════════════════════════════════
+' 1. WORKERS — who owns which Web Worker, and how many
+' ══════════════════════════════════════════════════════════════
+
+package "Pool consumers  [src/hooks/]" {
+  [useChessBoard · base analysis\n(best-move arrow)] as Base
+  [useChessBoard · hover eval\n(blunder detect)]    as Hover
+  [useHint]                                         as Hint
+  [useGameAnalysis · review]                        as Review
+  [useLivePreAnalysis]                              as Pre
+}
+
+package "EnginePool  [engine/EnginePool.ts]   «singleton»" {
+  [priority queue\nhigh → low, FIFO per tier] as Queue
+  [Stockfish worker #1] as W1
+  [Stockfish worker #2] as W2
+  [Stockfish worker #N] as WN
+}
+
+note right of Queue
+  Bounded WARM pool, size = clamp(cores−2, 2, 3).
+  Workers are REUSED — no per-request cold WASM compile.
+  One search per worker at a time (UCI is 1:1).
+  --
+  Build variant (__STOCKFISH_VARIANT__):
+    web     → stockfish-18-lite-single (no SAB / pthreads)
+    desktop → stockfish-18-lite (threaded)
+  --
+  Resilience: per-worker watchdog (30 s) → terminate+respawn;
+  circuit breaker (>4 restarts / 10 s → `givenUp`, reject all).
+end note
+
+Base   --> Queue : evaluate(normal,  onInfo)
+Hover  --> Queue : evaluate(interactive, onInfo)
+Hint   --> Queue : evaluate(interactive)
+Review --> Queue : evaluate(background)
+Pre    ..> Review : analyzeGameToCache
+Pre    --> Queue : evaluate(background)
+
+Queue --> W1 : dispatch
+Queue --> W2 : dispatch
+Queue --> WN : dispatch
+
+' ── Engines NOT governed by the pool ───────────────────────────
+package "Orchestrator worker  [engine/orchestrator.worker.ts]\n(web-full / web-no-llm only)" as Orchestrator {
+  [StockfishEngine (evaluator)] as OrchSF
+  [MaiaEngine (AI move)]        as Maia
+  [WebLlmClient]                as Llm
+}
+
+note bottom of Orchestrator
+  Separate thread → outside the main-thread pool's reach.
+  Unifying it would mean moving ALL engines behind one
+  worker (future work). On desktop these run server-side
+  (Ktor), so the browser holds only the pool workers.
+end note
+
+' ══════════════════════════════════════════════════════════════
+' 2. PRIORITIES — tiers, owners, and scheduling rules
+' ══════════════════════════════════════════════════════════════
+
+note as Priorities
+  == Priority tiers (Priority = interactive | normal | background) ==
+  |= tier |= rank |= consumers |= intent |
+  |  interactive | 2 | hover eval · hint | must feel instant; preempts lower tiers |
+  |  normal      | 1 | best-move-arrow base analysis | live but non-urgent |
+  |  background  | 0 | review · live pre-analysis | bulk; must never block play |
+  --
+  **Scheduling**
+  • Highest-priority queued job fills an idle worker first; spawn a new
+    worker (up to max) before queuing.
+  • Saturated **and** an interactive job is waiting → **preempt** the
+    lowest-priority RUNNING job: `stop` it, re-queue it, run the
+    interactive job, then resume the preempted one from scratch.
+  • Non-interactive jobs never preempt — they wait their turn.
+  --
+  **Task identity** (the arrow-flicker fix)
+  • A worker owns one search until its `bestmove`.
+  • A `stop` yields exactly one drained `bestmove`, which the slot
+    DISCARDS — it is never mis-attributed to the next request.
+  • `AbortSignal` cancels a job whether queued, running, or staged.
+end note
+
+Priorities .. Queue
+
+' ══════════════════════════════════════════════════════════════
+' 3. ENGINE / POOL DIFFERENCES — legacy (scattered) vs. EnginePool
+' ══════════════════════════════════════════════════════════════
+
+note as Diff
+  == Legacy (pre-pool)  vs.  EnginePool ==
+  |= aspect |= legacy (scattered) |= EnginePool |
+  | worker mgmt | stockfishService singleton **+** ad-hoc per-hook workers | one bounded, reused warm pool |
+  | main-thread SF workers (web, worst case) | 1 shared + ≤4 hint + 2×2 review | ≤ 3 total |
+  | prioritization | none — shared UCI pipe / independent workers | 3 tiers + preemption |
+  | best-move arrow | base & hover multiplexed on 1 worker → stop/go races, stale/blank arrow | separate jobs + task identity → stable |
+  | review duplication | MoveList **and** ReviewScreen each analyze (4 workers) | single pass (2 workers); MoveList inert when analysis is supplied |
+  | live pre-analysis | unsafe — adds contending workers during play | background tier yields to the live coach |
+  | cold start | new WASM compile per hint / review open | warm pool reused |
+  | stale `bestmove` | leaked across consumers (the `a2a3/a7a6` bug) | drained & discarded per task |
+  | resilience | per-service watchdog + breaker | per-worker watchdog + pool-wide breaker |
+  --
+  Removed by the migration: `services/stockfishService.ts`,
+  `hooks/useStockfishWorker.ts`.
+end note
+
+@enduml

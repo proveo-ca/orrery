@@ -2,7 +2,6 @@
 import { Chess } from "chess.js";
 import { createSignal } from "solid-js";
 
-import { DEFAULT_STOCKFISH_WORKER_URL } from "~/engine/StockfishEngine.ts";
 import { markHintPressed } from "~/hooks/useGameRecorder";
 import { useHint } from "~/hooks/useHint";
 import { postExplainStream } from "~/services/api";
@@ -50,7 +49,7 @@ import {
 } from "~/store/travelStore";
 
 export const useGameControls = () => {
-  const { requestHint, pendingHint } = useHint(DEFAULT_STOCKFISH_WORKER_URL);
+  const { requestHint, pendingHint } = useHint();
 
   const atStart = () => (isTravelling() ? travelIndex() === 0 : currentIndex() === 0);
   const atLatest = () =>

@@ -2,12 +2,12 @@
 import { Chess, type Color, type Square } from "chess.js";
 import { createEffect, createMemo, createSignal, onCleanup, untrack } from "solid-js";
 
-import { DEFAULT_STOCKFISH_WORKER_URL } from "~/engine/StockfishEngine.ts";
+import { enginePool } from "~/engine/EnginePool";
 import { useCoachBehavior } from "~/hooks/useCoachBehavior";
 import { type HoverEval, useHoverEvaluator } from "~/hooks/useHoverEvaluator";
 import { useMoveExecutor } from "~/hooks/useMoveExecutor";
-import { useStockfishWorker } from "~/hooks/useStockfishWorker";
 import { getAnalysisDepth } from "~/services/runtimeMode";
+import type { StockfishAnalysis } from "~/types/Stockfish";
 import { capabilities } from "~/store/capabilitiesStore";
 import { setBaseEvalScore as setSharedEval } from "~/store/evalStore";
 import {
@@ -89,8 +89,31 @@ export function useChessBoard() {
     p.resolve(null);
     setPendingPromotion(null);
   };
-  const { send, analysis } = useStockfishWorker(DEFAULT_STOCKFISH_WORKER_URL);
-  const moveExecutor = useMoveExecutor(() => send("stop"));
+  // Hover-eval analysis stream consumed by useHoverEvaluator. Base (arrow)
+  // analysis now writes its own signals directly via onInfo, so this stream
+  // carries ONLY hover evals — base and hover no longer share a worker/stream.
+  const [analysis, setAnalysis] = createSignal<StockfishAnalysis>({
+    last: null,
+    lastInfo: null,
+    lastBestMove: null,
+  });
+
+  let baseController: AbortController | null = null;
+  let hoverController: AbortController | null = null;
+  const stopBase = () => {
+    baseController?.abort();
+    baseController = null;
+  };
+  const stopHover = () => {
+    hoverController?.abort();
+    hoverController = null;
+  };
+  const stopAnalysis = () => {
+    stopBase();
+    stopHover();
+  };
+
+  const moveExecutor = useMoveExecutor(() => stopAnalysis());
   const coachBehavior = useCoachBehavior();
 
   // When historyBranching is enabled, past-history positions are fully
@@ -109,20 +132,73 @@ export function useChessBoard() {
     value: number;
   } | null>(null);
 
-  const resumeBaseAnalysis = () => {
+  // Continuous best-move-arrow + eval for the live position, on its own pool
+  // job at NORMAL priority. A hover eval (interactive) runs on a separate
+  // worker instead of hijacking this one, so `info pv[0]` stays scoped to the
+  // current position and the arrow stops flickering. We read pv[0] from the
+  // streamed info — never the stop-response bestmove, which can be a stale
+  // shallow move.
+  const startBase = () => {
+    baseController?.abort();
     const g = activeGame();
     if (g.isGameOver()) return;
-    if (capabilities().continuousAnalysis || g.turn() === activePlayerColor() || isReplaying()) {
-      send(`position fen ${g.fen()}`);
-      send(`go depth ${getAnalysisDepth()}`);
+    if (!(capabilities().continuousAnalysis || g.turn() === activePlayerColor() || isReplaying())) {
+      return;
     }
+    const ctrl = new AbortController();
+    baseController = ctrl;
+    enginePool
+      .evaluate({
+        fen: g.fen(),
+        depth: getAnalysisDepth(),
+        priority: "normal",
+        signal: ctrl.signal,
+        onInfo: (info) => {
+          if (info.score) {
+            setBaseEvalScore(info.score);
+            setSharedEval(info.score);
+          }
+          if (info.pv && info.pv.length > 0) setHumanBestMove(info.pv[0]);
+        },
+      })
+      .catch(() => {});
   };
 
-  // When showBestMove is enabled, expose the best move's from/to squares
-  // so the board can draw a single arrow from FROM to TO. Null when the
-  // capability is off or no best move is known yet.
+  // Transient eval of a candidate move at INTERACTIVE priority (preempts
+  // background work, runs alongside base analysis). Feeds the hover stream
+  // useHoverEvaluator reads to detect blunders.
+  const startHover = (fen: string) => {
+    hoverController?.abort();
+    const ctrl = new AbortController();
+    hoverController = ctrl;
+    enginePool
+      .evaluate({
+        fen,
+        depth: getAnalysisDepth(),
+        priority: "interactive",
+        signal: ctrl.signal,
+        onInfo: (info) => {
+          const msg = {
+            type: "info" as const,
+            depth: info.depth,
+            score: info.score,
+            pv: info.pv,
+            raw: "",
+          };
+          setAnalysis({ last: msg, lastInfo: msg, lastBestMove: null });
+        },
+      })
+      .catch(() => {});
+  };
+
+  // Expose the best move's from/to squares so the board can draw a single
+  // arrow. Null when the overlay is off, no best move is known yet, or — in
+  // "player-only" mode (reviewing a human-vs-AI game) — when it's the AI's
+  // turn, since `humanBestMove` then holds the AI's reply, not human advice.
   const bestMoveArrow = (): { from: Square; to: Square } | null => {
-    if (!capabilities().showBestMove) return null;
+    const mode = capabilities().bestMoveArrow;
+    if (mode === "off") return null;
+    if (mode === "player-only" && activeGame().turn() !== activePlayerColor()) return null;
     const uci = humanBestMove();
     if (!uci || uci.length < 4) return null;
     return { from: uci.slice(0, 2) as Square, to: uci.slice(2, 4) as Square };
@@ -168,7 +244,7 @@ export function useChessBoard() {
       clearTimeout(evalTimeout);
       clearHoverOverride();
       setCurrentHoverEval(null);
-      send("stop");
+      stopHover();
     }
   });
 
@@ -179,12 +255,14 @@ export function useChessBoard() {
     currentHoverEval,
     analysis,
     baseEvalScore,
+    humanBestMove,
     game,
   });
 
   onCleanup(() => {
     coachBehavior.abortAdvice();
     clearTimeout(evalTimeout);
+    stopAnalysis();
   });
 
   createEffect(() => {
@@ -211,32 +289,8 @@ export function useChessBoard() {
       }
     }
     setCurrentHoverEval(null);
-    send("stop");
-    send("ucinewgame");
-    resumeBaseAnalysis();
-  });
-
-  // Capture the current best move (pv[0]) and evaluation for the base
-  // position. Per UCI spec, `bestmove` is emitted in response to BOTH
-  // `go`-completion AND `stop` — the stop-response variant carries the
-  // shallow best-so-far of an aborted search and arrives asynchronously
-  // after our outgoing-position clear in `useStockfishWorker.send`, which
-  // is why reading `lastBestMove.move` surfaces the stale `a2a3`/`a7a6`
-  // until the current `go depth 12` fully completes. By contrast,
-  // `info ... pv <move>...` is only emitted by the currently-running
-  // `go`, so `info.pv[0]` is always scoped to the current position.
-  // Keep this reading `pv[0]` — do not switch back to `lastBestMove`.
-  createEffect(() => {
-    if (!currentHoverEval()) {
-      const info = analysis().lastInfo;
-      if (info && info.score) {
-        setBaseEvalScore(info.score);
-        setSharedEval(info.score);
-      }
-      if (info && info.pv && info.pv.length > 0) {
-        setHumanBestMove(info.pv[0]);
-      }
-    }
+    stopAnalysis();
+    startBase();
   });
 
   const handleBoardMouseEnter = () => {
@@ -254,8 +308,8 @@ export function useChessBoard() {
     setBaseEvalScore(null);
     setSharedEval(null);
 
-    send("stop");
-    resumeBaseAnalysis();
+    stopHover();
+    startBase();
   };
 
   const handleSquareHover = (square: Square) => {
@@ -267,7 +321,7 @@ export function useChessBoard() {
     if (!canApplyHoverOverride()) {
       clearTimeout(evalTimeout);
       setCurrentHoverEval(null);
-      send("stop");
+      stopHover();
       return;
     }
 
@@ -294,18 +348,16 @@ export function useChessBoard() {
 
           logger.action("Stockfish Hover Eval Request", newEval);
 
-          send("stop");
-          send(`position fen ${gameCopy.fen()}`);
-          send(`go depth ${getAnalysisDepth()}`);
+          startHover(newEval.fen);
         } catch (err) {
           logger.error("Hover evaluation setup failed", err);
           setCurrentHoverEval(null);
-          send("stop");
+          stopHover();
         }
       } else {
         setCurrentHoverEval(null);
-        send("stop");
-        resumeBaseAnalysis();
+        stopHover();
+        startBase();
       }
     }, 300);
   };
@@ -325,7 +377,7 @@ export function useChessBoard() {
       setHoveredSquare(null);
       clearHoverOverride();
       setCurrentHoverEval(null);
-      send("stop");
+      stopHover();
       return;
     }
 

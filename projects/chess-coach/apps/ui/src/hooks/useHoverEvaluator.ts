@@ -2,7 +2,7 @@
 import { Chess, type Square } from "chess.js";
 import { createEffect } from "solid-js";
 
-import type { StockfishAnalysis } from "~/hooks/useStockfishWorker";
+import type { StockfishAnalysis } from "~/types/Stockfish";
 import { capabilities } from "~/store/capabilitiesStore";
 import {
   setHoverAdvice,
@@ -11,11 +11,10 @@ import {
   setPendingTravel,
 } from "~/store/coachStore";
 import { currentFen } from "~/store/gameStore";
+import { blunderLabel, blunderThresholdCp } from "~/store/settingsStore";
 import { logger } from "~/utils/logger";
 
 export type HoverEval = { id: number; from: Square; to: Square; fen: string };
-
-const BLUNDER_THRESHOLD_CP = -200;
 
 function scoreToHumanCp(s: { kind: "cp" | "mate"; value: number }, scoreSideIsHuman: boolean): number {
   if (s.kind === "cp") return scoreSideIsHuman ? s.value : -s.value;
@@ -32,6 +31,7 @@ interface UseHoverEvaluatorProps {
   currentHoverEval: () => HoverEval | null;
   analysis: () => StockfishAnalysis;
   baseEvalScore: () => { kind: "cp" | "mate"; value: number } | null;
+  humanBestMove: () => string | null;
   game: () => Chess;
 }
 
@@ -86,7 +86,7 @@ export function useHoverEvaluator(props: UseHoverEvaluatorProps) {
     const humanHoverCp = scoreToHumanCp(msg.score, false);
 
     const delta = humanHoverCp - humanBaseCp;
-    const isBlunder = delta <= BLUNDER_THRESHOLD_CP;
+    const isBlunder = delta <= blunderThresholdCp();
 
     logger.action(`Hover Eval Result [${evalTarget.from}-${evalTarget.to}]`, {
       baseScore,
@@ -96,6 +96,12 @@ export function useHoverEvaluator(props: UseHoverEvaluatorProps) {
     });
 
     if (!isBlunder) return;
+
+    // Don't flag the move when it IS the engine's best move: if even the best
+    // available move crosses the loss threshold, the position is already
+    // lost/forced and there's nothing better to point the player toward.
+    const bestUci = props.humanBestMove();
+    if (bestUci && bestUci.slice(0, 4) === `${evalTarget.from}${evalTarget.to}`) return;
 
     logger.action("Stockfish Hover Blunder Detected", { msg, evalTarget });
 
@@ -108,7 +114,7 @@ export function useHoverEvaluator(props: UseHoverEvaluatorProps) {
     const san = m ? m.san : `${evalTarget.from}-${evalTarget.to}`;
 
     lastProcessedEvalId = evalTarget.id;
-    setHoverAdvice(`Moving the ${pieceName} to ${evalTarget.to} is a blunder`);
+    setHoverAdvice(`Moving the ${pieceName} to ${evalTarget.to} is ${blunderLabel()}`);
     setHoverEmotion("shocked");
     setHoverBlunder(true, evalTarget.fen, san);
     setPendingTravel({ blunderFen: evalTarget.fen, blunderSan: san, fenBefore: currentFen() });
