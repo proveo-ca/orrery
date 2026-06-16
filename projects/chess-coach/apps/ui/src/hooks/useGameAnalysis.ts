@@ -128,26 +128,22 @@ function buildReviewJobs(game: GameRecord): ReviewJob[] {
 }
 
 function seedFromCache(cached: CachedAnalysis | null, moveCount: number): AnalysisState {
-  if (
-    cached &&
-    cached.cpDeltas.length === moveCount &&
-    cached.wasBestMoves.length === moveCount &&
-    cached.bestMoveUcis.length === moveCount &&
-    cached.analyzed.length === moveCount
-  ) {
-    return {
-      cpDeltas: [...cached.cpDeltas],
-      wasBestMoves: [...cached.wasBestMoves],
-      bestMoveUcis: [...cached.bestMoveUcis],
-      analyzed: [...cached.analyzed],
-    };
-  }
-
+  // Align cached entries by ply INDEX rather than requiring an exact length
+  // match. The CoachScreen live pre-analysis persists this cache while the
+  // game is still in progress, so its arrays reflect the move count at the
+  // last write — almost always SHORTER than the finalized game. Because the
+  // in-progress moves are a strict prefix of the final game, index i refers to
+  // the same move in both, so we reuse every cached ply and leave the rest
+  // (the tail played after the last pre-analysis write) to be analyzed. The
+  // old strict `=== moveCount` check discarded the whole warm cache here,
+  // which is why Review opened blank despite pre-analysis having run.
+  const at = <T>(arr: readonly T[] | undefined, i: number, fallback: T): T =>
+    arr && i < arr.length ? arr[i] : fallback;
   return {
-    cpDeltas: Array.from({ length: moveCount }, () => null),
-    wasBestMoves: Array.from({ length: moveCount }, () => false),
-    bestMoveUcis: Array.from({ length: moveCount }, () => null),
-    analyzed: Array.from({ length: moveCount }, () => false),
+    cpDeltas: Array.from({ length: moveCount }, (_, i) => at(cached?.cpDeltas, i, null)),
+    wasBestMoves: Array.from({ length: moveCount }, (_, i) => at(cached?.wasBestMoves, i, false)),
+    bestMoveUcis: Array.from({ length: moveCount }, (_, i) => at(cached?.bestMoveUcis, i, null)),
+    analyzed: Array.from({ length: moveCount }, (_, i) => at(cached?.analyzed, i, false)),
   };
 }
 

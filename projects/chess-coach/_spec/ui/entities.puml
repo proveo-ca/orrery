@@ -360,6 +360,9 @@ package "Hooks  [src/hooks/]" {
       enginePool.evaluate(background) per ply (best + played)
       caches in localStorage by game id (CACHE_VERSION)
       partial progress writes every 2 plies; resumes from cache
+      seedFromCache reuses the cache by ply INDEX (not exact
+        length) → a shorter live-pre-analysis cache warms Review;
+        only the un-cached tail is re-analyzed
       hook drives analyzeGameToCache via AbortController
     }
 
