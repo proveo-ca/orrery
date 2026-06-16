@@ -49,7 +49,7 @@ state "Active Screen" as ActiveScreen {
 
 state "Capability Preset" as CapPreset {
   state "COACH" as CAP_COACH : hint T · travel T · aiOpponent T\nblunderDetection T · persistGame T\ncommentary = hasLlm
-  state "ANALYSIS" as CAP_ANALYSIS : continuousAnalysis T · showBestMove T\nfreeColorControl T · historyBranching T\nflipBoard T · persistGame F
+  state "ANALYSIS" as CAP_ANALYSIS : continuousAnalysis T · bestMoveArrow=both\nfreeColorControl T · historyBranching T\nflipBoard T · persistGame F
   state "REVIEW" as CAP_REVIEW : continuousAnalysis T\nreadOnly T · historyBranching T ·\nhistoryNav F · persistGame F
   state "REVIEW+historyNav" as CAP_REVIEW_NAV : REVIEW preset +\nhistoryNav T (when activeGame() exists)
 
@@ -196,7 +196,7 @@ note as CONSTRAINTS
   · travel overlay   → capabilities().travel
   · blunder detect   → capabilities().blunderDetection
   · continuous SF    → capabilities().continuousAnalysis
-  · best-move arrow  → capabilities().showBestMove
+  · best-move arrow  → capabilities().bestMoveArrow (off|player-only|both)
   · board flip btn   → capabilities().flipBoard
   · both colors      → capabilities().freeColorControl
   · past branching   → capabilities().historyBranching

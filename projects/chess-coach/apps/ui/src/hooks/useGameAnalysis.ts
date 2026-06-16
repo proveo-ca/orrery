@@ -168,19 +168,32 @@ function sanitizeNonPlayerPlies(
   }
 }
 
+/**
+ * Fold one ply's best/played evals into the state. Returns whether the ply is
+ * now considered analyzed.
+ *
+ * A ply is marked analyzed ONLY when a real cp delta could be computed (both
+ * searches returned a score). Otherwise we leave it pending so a later pass —
+ * the live pre-analysis pump, or the Review screen, which runs without the
+ * preemption contention of a live game — retries it. Caching a ply as
+ * `analyzed` with a null cpDelta is what left moves showing no cp diff.
+ */
 function applyJobResult(
   state: AnalysisState,
   job: ReviewJob,
   playerColor: "w" | "b",
   best: EvalResult,
   played: EvalResult,
-): void {
+): boolean {
   const bestCp = best.score ? scoreToPlayerCp(best.score, job.beforeFen, playerColor) : null;
   const playedCp = played.score ? scoreToPlayerCp(played.score, job.beforeFen, playerColor) : null;
-  state.cpDeltas[job.ply] = bestCp != null && playedCp != null ? playedCp - bestCp : null;
+  if (bestCp == null || playedCp == null) return false;
+
+  state.cpDeltas[job.ply] = playedCp - bestCp;
   state.bestMoveUcis[job.ply] = best.bestMove;
   state.wasBestMoves[job.ply] = best.bestMove != null && job.playedUci === best.bestMove;
   state.analyzed[job.ply] = true;
+  return true;
 }
 
 /**
@@ -246,9 +259,10 @@ export async function analyzeGameToCache(
             signal,
           }),
         ]);
-        applyJobResult(state, job, game.playerColor, best, played);
-        completed++;
-        if (completed % FLUSH_EVERY === 0) persist(false);
+        if (applyJobResult(state, job, game.playerColor, best, played)) {
+          completed++;
+          if (completed % FLUSH_EVERY === 0) persist(false);
+        }
       } catch {
         // Aborted or a worker fault for this ply — stop on abort, otherwise
         // leave the ply unanalyzed and move on.

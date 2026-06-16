@@ -85,7 +85,7 @@ export const ReviewScreen: Component = () => {
             ...REVIEW_CAPABILITIES,
             historyNav: true,
             freeColorControl: true,
-            showBestMove: reviewAnalysisMode(),
+            bestMoveArrow: reviewAnalysisMode() ? "player-only" : "off",
           }
         : REVIEW_CAPABILITIES,
     );

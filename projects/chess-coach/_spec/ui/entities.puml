@@ -24,7 +24,7 @@ package "Capabilities  [capabilitiesStore.ts]" {
     aiOpponent: boolean
     blunderDetection: boolean
     continuousAnalysis: boolean
-    showBestMove: boolean
+    bestMoveArrow: "off" | "player-only" | "both"
     commentary: boolean
     .. Persistence ..
     persistGame: boolean
@@ -45,7 +45,7 @@ package "Capabilities  [capabilitiesStore.ts]" {
     (flipBoard=F, readOnly=F)
 
     **ANALYSIS_CAPABILITIES**
-    hint=T, continuousAnalysis=T, showBestMove=T,
+    hint=T, continuousAnalysis=T, bestMoveArrow=both,
     freeColorControl=T, flipBoard=T,
     opponentUsesPlayerPieceSet=T,
     persistGame=F (scratch-pad — moves are
@@ -222,6 +222,7 @@ package "Hooks  [src/hooks/]" {
       validMoves(): string[]
       isReplaying(): boolean
       bestMoveArrow(): {from,to} | null
+        (capabilities.bestMoveArrow: off | player-only | both)
       baseEvalScore(): PositionEval | null
       pendingPromotion(): PendingPromotion | null
       .. Handlers ..

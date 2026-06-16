@@ -77,6 +77,25 @@ describe("analyzeGameToCache · warm-cache prefix reuse", () => {
     expect(evaluate).toHaveBeenCalledTimes(4);
   });
 
+  it("does NOT mark a ply analyzed when a search returns no score (retried later)", async () => {
+    // Simulate the played eval coming back without a score (a degenerate
+    // completion under live-play contention). The ply must stay unanalyzed.
+    evaluate.mockImplementation((req: { searchMoves?: string[] }) =>
+      Promise.resolve(
+        req.searchMoves
+          ? { bestMove: null, score: null, depth: 0 }
+          : { bestMove: "e2e4", score: { kind: "cp", value: 10 }, depth: 20 },
+      ),
+    );
+
+    await analyzeGameToCache(game(["e4", "e5"]), { signal: new AbortController().signal });
+
+    const cache = JSON.parse(localStorage.getItem(KEY)!);
+    // Ply 0 had no usable cp → not analyzed, no cp cached.
+    expect(cache.analyzed[0]).toBe(false);
+    expect(cache.cpDeltas[0]).toBeNull();
+  });
+
   it("does no work when the cache already covers every player ply", async () => {
     localStorage.setItem(
       KEY,

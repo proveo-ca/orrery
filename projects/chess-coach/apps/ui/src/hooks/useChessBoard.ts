@@ -191,11 +191,14 @@ export function useChessBoard() {
       .catch(() => {});
   };
 
-  // When showBestMove is enabled, expose the best move's from/to squares
-  // so the board can draw a single arrow from FROM to TO. Null when the
-  // capability is off or no best move is known yet.
+  // Expose the best move's from/to squares so the board can draw a single
+  // arrow. Null when the overlay is off, no best move is known yet, or — in
+  // "player-only" mode (reviewing a human-vs-AI game) — when it's the AI's
+  // turn, since `humanBestMove` then holds the AI's reply, not human advice.
   const bestMoveArrow = (): { from: Square; to: Square } | null => {
-    if (!capabilities().showBestMove) return null;
+    const mode = capabilities().bestMoveArrow;
+    if (mode === "off") return null;
+    if (mode === "player-only" && activeGame().turn() !== activePlayerColor()) return null;
     const uci = humanBestMove();
     if (!uci || uci.length < 4) return null;
     return { from: uci.slice(0, 2) as Square, to: uci.slice(2, 4) as Square };

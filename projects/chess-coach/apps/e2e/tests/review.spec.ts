@@ -104,6 +104,106 @@ test.describe("Review screen", () => {
   });
 });
 
+test.describe("Review best-move arrow (branch mode)", () => {
+  const GAME_ID = "arrow-turn-fixture";
+  // Player is White. 4 plies → after Nf6 it is White's (the human's) turn.
+  const fixture = {
+    games: [
+      {
+        id: GAME_ID,
+        startedAt: new Date("2026-04-14").toISOString(),
+        endedAt: new Date("2026-04-14").toISOString(),
+        result: "win",
+        pgn: "1. e4 e5 2. Nf3 Nf6",
+        startingFen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        playerColor: "w",
+        difficulty: "intermediate",
+        moves: [
+          { san: "e4", hasPressedHint: false, isAI: false },
+          { san: "e5", hasPressedHint: false, isAI: true },
+          { san: "Nf3", hasPressedHint: false, isAI: false },
+          { san: "Nf6", hasPressedHint: false, isAI: true },
+        ],
+      },
+    ],
+    inProgress: null,
+  };
+
+  test.beforeEach(async ({ page }) => {
+    // Deterministic Stockfish: every search returns a pv so humanBestMove is
+    // always populated — the arrow's visibility then depends purely on the
+    // turn gate, not on engine timing.
+    await page.addInitScript(() => {
+      class MockWorker extends EventTarget {
+        onmessage: ((ev: MessageEvent) => void) | null = null;
+        constructor(public url: string | URL) {
+          super();
+        }
+        postMessage(msg: unknown) {
+          if (typeof msg !== "string") return;
+          const send = (data: string) => {
+            const ev = new MessageEvent("message", { data });
+            this.onmessage?.(ev);
+            this.dispatchEvent(ev);
+          };
+          if (msg === "uci") return void queueMicrotask(() => send("uciok"));
+          if (msg === "isready") return void queueMicrotask(() => send("readyok"));
+          if (msg === "ucinewgame" || msg.startsWith("position")) return;
+          if (msg.startsWith("go")) {
+            return void queueMicrotask(() => {
+              send("info depth 18 score cp 20 pv a2a3");
+              send("bestmove a2a3");
+            });
+          }
+          if (msg === "stop") return void queueMicrotask(() => send("bestmove a2a3"));
+        }
+        terminate() {}
+      }
+      window.Worker = MockWorker as unknown as typeof Worker;
+    });
+
+    await page.goto("/");
+    await page.evaluate((payload) => {
+      localStorage.clear();
+      localStorage.setItem("chess_coach_game_history", JSON.stringify(payload));
+    }, fixture);
+  });
+
+  test("green best-move arrow only renders on the human's turn", async ({ page }) => {
+    await page.goto(`review/${GAME_ID}`);
+
+    const moveList = page.getByLabel("Move list");
+    await expect(moveList).toBeVisible({ timeout: 15_000 });
+
+    // Jump to the final position (after Nf6) — White (human) to move.
+    await moveList.locator("[data-ply='3']").click();
+
+    const arrow = page.locator("#best-move-arrow-head");
+    const play = async (from: string, to: string) => {
+      await page.locator(`[data-square='${from}']`).click();
+      const dest = page.locator(`[data-square='${to}']`);
+      await expect(dest).toHaveAttribute("class", /valid/, { timeout: 5_000 });
+      await dest.click();
+    };
+
+    // Not branched yet → overlay is "off", no arrow.
+    await expect(arrow).toHaveCount(0);
+
+    // Branch with a White move → reviewAnalysisMode on, now Black (AI) to move.
+    await play("d2", "d4");
+
+    // Play Black's reply (freeColorControl allows it) → White (human) to move.
+    await play("d7", "d5");
+    // Human's turn → arrow must render.
+    await expect(arrow).toHaveCount(1, { timeout: 15_000 });
+
+    // Another White move → Black (AI) to move → arrow must disappear, even
+    // though base analysis keeps populating humanBestMove (the turn gate hides it).
+    await play("c2", "c4");
+    await expect(arrow).toHaveCount(0, { timeout: 15_000 });
+  });
+});
+
 test.describe("Review analysis ownership", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
