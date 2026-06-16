@@ -83,4 +83,60 @@ test.describe("Coach (web-no-llm)", () => {
     await f7.hover();
     await expect(page.getByText(/blunder/i)).toBeVisible({ timeout: 15_000 });
   });
+
+  test("live game persists each move to history AND warms the analysis cache", async ({
+    page,
+  }) => {
+    // Confirms the two CoachScreen persistence paths during a real game:
+    //   1. useGameRecorder → createPersistedStore writes the in-progress game
+    //      (PGN + moves) to localStorage["chess_coach_game_history"] per move.
+    //   2. useLivePreAnalysis → analyzeGameToCache writes per-ply review
+    //      analysis to localStorage["chess_coach_analysis_<in-progress id>"]
+    //      at background priority — so Review opens warm.
+    await page.goto("/");
+    await expect(page.getByText("Play with Selena")).toBeVisible({ timeout: 15_000 });
+    await page.getByText("Play with Selena").click();
+    await expect(page).toHaveURL(/\/selena/);
+
+    // Play e2 → e4 (a real human move; player is white).
+    const e2 = page.locator("[data-square='e2']");
+    await expect(e2.locator("img")).toBeVisible({ timeout: 15_000 });
+    await e2.click();
+    const e4 = page.locator("[data-square='e4']");
+    await expect(e4).toHaveAttribute("class", /valid/, { timeout: 5_000 });
+    await e4.click();
+    await expect(e4.locator("img")).toBeVisible({ timeout: 5_000 });
+
+    const readHistory = () =>
+      page.evaluate(() => {
+        const raw = localStorage.getItem("chess_coach_game_history");
+        return raw ? JSON.parse(raw) : null;
+      });
+
+    // 1. History persistence: the human move lands in the in-progress record.
+    await expect
+      .poll(async () => (await readHistory())?.inProgress?.moves?.map((m: any) => m.san) ?? [], {
+        timeout: 10_000,
+      })
+      .toContain("e4");
+
+    const inProgressId = (await readHistory())?.inProgress?.id as string;
+    expect(inProgressId).toBeTruthy();
+
+    // 2. Analysis persistence: the live pre-analysis must write a cache entry
+    //    keyed by the in-progress id, with the player ply (e4, ply 0) analyzed.
+    //    Background priority + real depth-20 search → allow generous time.
+    await expect
+      .poll(
+        async () =>
+          await page.evaluate((id) => {
+            const raw = localStorage.getItem(`chess_coach_analysis_${id}`);
+            if (!raw) return "missing";
+            const cache = JSON.parse(raw);
+            return cache.analyzed?.[0] === true ? "analyzed" : "pending";
+          }, inProgressId),
+        { timeout: 90_000, intervals: [1_000] },
+      )
+      .toBe("analyzed");
+  });
 });

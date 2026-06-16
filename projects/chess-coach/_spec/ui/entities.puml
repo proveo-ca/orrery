@@ -365,8 +365,11 @@ package "Hooks  [src/hooks/]" {
 
     class useLivePreAnalysis <<side-effect>> {
       .. Notes ..
-      on CoachScreen: re-runs analyzeGameToCache(background)
-        on each recorded move, keyed by in-progress UUID
+      on CoachScreen: analyzeGameToCache(background), keyed
+        by in-progress UUID, persisted per ply to localStorage
+      COALESCES — one pass at a time; a move mid-pass flags a
+        re-sweep instead of aborting (never discards in-flight
+        ply work, which constant preemption would otherwise lose)
       finalizeGame migrates the cache → review id (warm Review)
       interactive searches (hint/hover) preempt these jobs
     }

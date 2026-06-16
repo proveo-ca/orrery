@@ -261,7 +261,10 @@ export class EnginePool {
     this.enqueue(running); // resumes from scratch once capacity frees up
     victim.next = incoming;
     victim.freeing = true;
-    this.clearWatchdog(victim);
+    // Keep the watchdog armed across the drain: if the stopped search's
+    // `bestmove` never arrives (dead worker), the slot would otherwise stay
+    // `freeing` forever and silently shrink the pool.
+    this.armWatchdog(victim);
     victim.worker.post("stop");
   }
 
@@ -337,7 +340,9 @@ export class EnginePool {
       if (slot.job === job) {
         slot.job = null;
         slot.freeing = true;
-        this.clearWatchdog(slot);
+        // Keep the watchdog armed across the drain (see preempt): a dead worker
+        // mid-cancel must not strand the slot in `freeing` forever.
+        this.armWatchdog(slot);
         slot.worker.post("stop");
         this.settle(job, null, error);
         return;
