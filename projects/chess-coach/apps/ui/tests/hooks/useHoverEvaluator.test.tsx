@@ -40,6 +40,7 @@ describe("useHoverEvaluator", () => {
     // Base score: White is slightly better (+50 cp)
     const [baseScore] = createSignal({ kind: "cp" as const, value: 50 });
     const [game] = createSignal(new Chess());
+    const [humanBestMove] = createSignal<string | null>("d2d4");
     const [analysis, setAnalysis] = createSignal<any>({ lastInfo: null });
 
     renderHookTest({
@@ -51,6 +52,7 @@ describe("useHoverEvaluator", () => {
         currentHoverEval: hoverEval,
         analysis,
         baseEvalScore: baseScore,
+        humanBestMove,
         game,
       },
     });
@@ -83,6 +85,7 @@ describe("useHoverEvaluator", () => {
     // Base score: White is slightly better (+50 cp)
     const [baseScore] = createSignal({ kind: "cp" as const, value: 50 });
     const [game] = createSignal(new Chess());
+    const [humanBestMove] = createSignal<string | null>("d2d4");
     const [analysis, setAnalysis] = createSignal<any>({ lastInfo: null });
 
     renderHookTest({
@@ -94,6 +97,7 @@ describe("useHoverEvaluator", () => {
         currentHoverEval: hoverEval,
         analysis,
         baseEvalScore: baseScore,
+        humanBestMove,
         game,
       },
     });
@@ -126,6 +130,7 @@ describe("useHoverEvaluator", () => {
     // Base score: White is slightly better (+50 cp)
     const [baseScore] = createSignal({ kind: "cp" as const, value: 50 });
     const [game] = createSignal(new Chess());
+    const [humanBestMove] = createSignal<string | null>("d2d4");
     const [analysis, setAnalysis] = createSignal<any>({ lastInfo: null });
 
     renderHookTest({
@@ -137,6 +142,7 @@ describe("useHoverEvaluator", () => {
         currentHoverEval: hoverEval,
         analysis,
         baseEvalScore: baseScore,
+        humanBestMove,
         game,
       },
     });
@@ -168,6 +174,7 @@ describe("useHoverEvaluator", () => {
     // Base score: White is slightly better (+50 cp)
     const [baseScore] = createSignal({ kind: "cp" as const, value: 50 });
     const [game] = createSignal(new Chess());
+    const [humanBestMove] = createSignal<string | null>("d2d4");
     const [analysis, setAnalysis] = createSignal<any>({ lastInfo: null });
 
     renderHookTest({
@@ -179,6 +186,7 @@ describe("useHoverEvaluator", () => {
         currentHoverEval: hoverEval,
         analysis,
         baseEvalScore: baseScore,
+        humanBestMove,
         game,
       },
     });
@@ -209,6 +217,7 @@ describe("useHoverEvaluator", () => {
     // Base score: White is already getting mated in 3 (negative mate value for White)
     const [baseScore] = createSignal({ kind: "mate" as const, value: -3 });
     const [game] = createSignal(new Chess());
+    const [humanBestMove] = createSignal<string | null>("d2d4");
     const [analysis, setAnalysis] = createSignal<any>({ lastInfo: null });
 
     renderHookTest({
@@ -220,6 +229,7 @@ describe("useHoverEvaluator", () => {
         currentHoverEval: hoverEval,
         analysis,
         baseEvalScore: baseScore,
+        humanBestMove,
         game,
       },
     });
@@ -234,5 +244,60 @@ describe("useHoverEvaluator", () => {
 
     // Human went from -10000 to -10000. Delta is 0. Not a *new* blunder.
     expect(coachState.setHoverBlunder).not.toHaveBeenCalled();
+  });
+
+  it("does not notify when the threshold-crossing move IS the engine's best move", () => {
+    // Forced position: White (human) is in check from a Black knight on e2
+    // that royal-forks Kg1 and Qc1. The knight can't be captured, so every
+    // legal move is a king move and White loses the queen to ...Nxc1 next.
+    // Kf1 is the engine's best move yet the eval still craters — it must NOT
+    // be reported as the player's mistake.
+    const before = "4k3/7p/8/8/8/8/4n2P/2Q3K1 w - - 0 1";
+    // After Kf1, with Black to move (its winning reply is the PV below).
+    const afterKf1 = "4k3/7p/8/8/8/8/4n2P/2Q2K2 b - - 1 1";
+
+    const [canApply] = createSignal(true);
+    const [hovered] = createSignal<Square>("f1");
+    const [selected] = createSignal<Square>("g1");
+    const [hoverEval] = createSignal<HoverEval>({
+      id: 1,
+      from: "g1",
+      to: "f1",
+      fen: afterKf1,
+    });
+
+    // The base read hadn't yet seen the fork, so it looks roughly equal (+20).
+    const [baseScore] = createSignal({ kind: "cp" as const, value: 20 });
+    const [game] = createSignal(new Chess(before));
+    const [humanBestMove] = createSignal<string | null>("g1f1");
+    const [analysis, setAnalysis] = createSignal<any>({ lastInfo: null });
+
+    renderHookTest({
+      hook: useHoverEvaluator,
+      props: {
+        canApplyHoverOverride: canApply,
+        hoveredSquare: hovered,
+        selectedSquare: selected,
+        currentHoverEval: hoverEval,
+        analysis,
+        baseEvalScore: baseScore,
+        humanBestMove,
+        game,
+      },
+    });
+
+    // Deeper eval after Kf1: Black (to move) is up a queen (+900 for Black),
+    // i.e. White dropped from +20 to ~-900 — well past the blunder threshold.
+    // Black's winning reply Ne2xc1 must be legal in the eval FEN.
+    setAnalysis({
+      lastInfo: {
+        score: { kind: "cp", value: 900 },
+        pv: ["e2c1"],
+      },
+    });
+
+    expect(coachState.setHoverBlunder).not.toHaveBeenCalled();
+    expect(coachState.setHoverEmotion).not.toHaveBeenCalled();
+    expect(coachState.setHoverAdvice).not.toHaveBeenCalled();
   });
 });

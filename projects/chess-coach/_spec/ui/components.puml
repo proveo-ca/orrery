@@ -28,7 +28,7 @@ package "Screens  [src/screens/]" {
   rectangle "CoachScreen" as CoachScreen
   note right of CoachScreen
     mounts COACH_CAPABILITIES on init
-    calls useGameRecorder() · restoreGame()
+    calls useGameRecorder() · useLivePreAnalysis() · restoreGame()
     composition: CoachAvatar · ChessBoard ·
       CapturedPieces · CoachPanel · Sidebar ·
       MobileDrawer · DualNavButton
@@ -90,7 +90,6 @@ package "Hooks  [src/hooks/]" {
 
   package "Board Hooks" {
     [useChessBoard]      as UseChessBoard
-    [useStockfishWorker] as UseStockfishWorker
     [useHoverEvaluator]  as UseHoverEvaluator
   }
 
@@ -107,6 +106,7 @@ package "Hooks  [src/hooks/]" {
 
   package "Analysis & Review Hooks" {
     [useGameAnalysis]       as UseGameAnalysis
+    [useLivePreAnalysis]    as UseLivePreAnalysis
     [useBlunderArrow]       as UseBlunderArrow
     [useMoveListPagination] as UseMoveListPagination
   }
@@ -235,6 +235,17 @@ WebWorkerCoachService ..|> CoachServiceIF
 ' ══════════════════════════════════════════════════════════════
 
 package "WebEngine  [src/engine/]" {
+  [EnginePool] as EnginePool
+  note right of EnginePool
+    Main-thread Stockfish SCHEDULER (singleton).
+    Bounded warm worker pool + priority queue
+    (interactive > normal > background) with
+    preemption and per-task identity. All main-
+    thread SF consumers route through it: hint,
+    hover eval, best-move-arrow base analysis,
+    batch review, live pre-analysis. Replaced the
+    old stockfishService + ad-hoc per-hook workers.
+  end note
   [orchestrator.worker.ts] as OrchestratorWorker
   note right of OrchestratorWorker
     Picks LlmClient at module init via the
@@ -284,7 +295,13 @@ package "WebEngine  [src/engine/]" {
 UseChessBoard --> UseMoveExecutor   : uses
 UseChessBoard --> UseCoachBehavior  : uses
 UseChessBoard --> UseHoverEvaluator : uses
-UseChessBoard --> UseStockfishWorker: uses
+UseChessBoard --> EnginePool        : base (normal) + hover (interactive) eval
+
+' ── Engine pool consumers ──
+UseHint            --> EnginePool : evaluate (interactive)
+UseGameAnalysis    --> EnginePool : evaluate (background)
+UseLivePreAnalysis ..> UseGameAnalysis : analyzeGameToCache
+UseLivePreAnalysis --> EnginePool : evaluate (background)
 
 ' ── Signal flow (module-level reactive) ──
 UseMoveExecutor ..> UseCoachBehavior : lastHumanMoveInfo\nlastAIMoveInfo · lastAIError
