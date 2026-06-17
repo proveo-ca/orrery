@@ -1,7 +1,6 @@
 import { type Chess, type Square } from "chess.js";
 import { createSignal } from "solid-js";
 
-import type { StockfishAnalysis } from "~/types/Stockfish";
 import { postMove } from "~/services/api";
 import { resolveMode } from "~/services/runtimeMode";
 import { capabilities } from "~/store/capabilitiesStore";
@@ -13,6 +12,7 @@ import {
   isThreefoldRepetition,
 } from "~/store/gameStore";
 import { difficulty } from "~/store/settingsStore";
+import type { StockfishAnalysis } from "~/types/Stockfish";
 import { logger } from "~/utils/logger";
 
 const HAS_REMOTE_COACH = resolveMode().kind === "desktop";

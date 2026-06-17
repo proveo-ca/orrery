@@ -5,7 +5,7 @@
   pointer-events: none;
   z-index: 0;
   background: transparent;
-  opacity: var(--overlay-opacity, 0.20);
+  opacity: var(--overlay-opacity, 0.2);
   contain: layout paint style;
 }
 

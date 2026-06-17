@@ -7,9 +7,7 @@ import { useCoachBehavior } from "~/hooks/useCoachBehavior";
 import { type HoverEval, useHoverEvaluator } from "~/hooks/useHoverEvaluator";
 import { useMoveExecutor } from "~/hooks/useMoveExecutor";
 import { getAnalysisDepth } from "~/services/runtimeMode";
-import type { StockfishAnalysis } from "~/types/Stockfish";
 import { capabilities } from "~/store/capabilitiesStore";
-import { setBaseEvalScore as setSharedEval } from "~/store/evalStore";
 import {
   type CoachEmotion,
   baseAdvice,
@@ -22,6 +20,7 @@ import {
   setHoverAdvice,
   setHoverEmotion,
 } from "~/store/coachStore";
+import { setBaseEvalScore as setSharedEval } from "~/store/evalStore";
 import {
   type MoveSquares,
   currentFen,
@@ -37,6 +36,7 @@ import {
   playerPieceSet,
 } from "~/store/settingsStore";
 import { isTravelling, travelFen, travelIndex, travelMoveHistory } from "~/store/travelStore";
+import type { StockfishAnalysis } from "~/types/Stockfish";
 import { logger } from "~/utils/logger";
 
 export function useChessBoard() {
@@ -133,11 +133,15 @@ export function useChessBoard() {
   } | null>(null);
 
   // Continuous best-move-arrow + eval for the live position, on its own pool
-  // job at NORMAL priority. A hover eval (interactive) runs on a separate
-  // worker instead of hijacking this one, so `info pv[0]` stays scoped to the
-  // current position and the arrow stops flickering. We read pv[0] from the
-  // streamed info — never the stop-response bestmove, which can be a stale
-  // shallow move.
+  // job. A hover eval (interactive) runs on a separate worker instead of
+  // hijacking this one, so `info pv[0]` stays scoped to the current position
+  // and the arrow stops flickering. We read pv[0] from the streamed info —
+  // never the stop-response bestmove, which can be a stale shallow move.
+  //
+  // Priority is lifted to `interactive` whenever the best-move arrow is shown
+  // (analysis screen, review, review-analysis mode) so the arrow preempts
+  // background review/pre-analysis work and appears promptly; otherwise (live
+  // Coach play, arrow off) it stays at NORMAL.
   const startBase = () => {
     baseController?.abort();
     const g = activeGame();
@@ -151,7 +155,7 @@ export function useChessBoard() {
       .evaluate({
         fen: g.fen(),
         depth: getAnalysisDepth(),
-        priority: "normal",
+        priority: capabilities().bestMoveArrow !== "off" ? "interactive" : "normal",
         signal: ctrl.signal,
         onInfo: (info) => {
           if (info.score) {

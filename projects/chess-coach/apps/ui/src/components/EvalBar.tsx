@@ -64,14 +64,8 @@ export const EvalBar: Component<EvalBarProps> = (props) => {
 
   return (
     <div class={styles["eval-bar"]}>
-      <div
-        class={topColorClass()}
-        style={{ transform: `scaleY(${topScale()})` }}
-      />
-      <div
-        class={bottomColorClass()}
-        style={{ transform: `scaleY(${bottomScale()})` }}
-      />
+      <div class={topColorClass()} style={{ transform: `scaleY(${topScale()})` }} />
+      <div class={bottomColorClass()} style={{ transform: `scaleY(${bottomScale()})` }} />
       <div class={styles["eval-value"]} style={{ color: valueColor() }}>
         {displayValue()}
       </div>

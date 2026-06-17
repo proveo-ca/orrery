@@ -1,7 +1,7 @@
 .eval-bar {
   position: absolute;
   left: -2rem;
-  width: calc(var(--square-size) * 0.50);
+  width: calc(var(--square-size) * 0.5);
   height: var(--board-size);
   background: var(--eval-bar-bg);
   border-radius: 12px;

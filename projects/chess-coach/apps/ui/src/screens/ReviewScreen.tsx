@@ -73,7 +73,13 @@ export const ReviewScreen: Component = () => {
     const g = activeGame();
     if (!g) return [];
     const a = gameAnalysis();
-    return resolveAnnotations(g.moves, a.cpDeltas, a.wasBestMoves, a.bestMoveUcis, blunderThresholdCp());
+    return resolveAnnotations(
+      g.moves,
+      a.cpDeltas,
+      a.wasBestMoves,
+      a.bestMoveUcis,
+      blunderThresholdCp(),
+    );
   });
 
   useBlunderArrow(annotations, () => gameAnalysis().bestMoveUcis);
@@ -85,7 +91,7 @@ export const ReviewScreen: Component = () => {
             ...REVIEW_CAPABILITIES,
             historyNav: true,
             freeColorControl: true,
-            bestMoveArrow: reviewAnalysisMode() ? "player-only" : "off",
+            bestMoveArrow: reviewAnalysisMode() ? "both" : "player-only",
           }
         : REVIEW_CAPABILITIES,
     );
@@ -128,9 +134,7 @@ export const ReviewScreen: Component = () => {
     const orig = originalFenHistory();
     if (activeGame() && orig.length > 0) {
       const current = fenHistory();
-      const diverged =
-        current.length !== orig.length ||
-        current.some((fen, i) => fen !== orig[i]);
+      const diverged = current.length !== orig.length || current.some((fen, i) => fen !== orig[i]);
       if (diverged) {
         if (analysisBranchPly() == null) {
           const branchIndex = branchIndexFrom(current, orig);

@@ -14,12 +14,10 @@ vi.mock("~/store/coachStore", () => ({
 }));
 
 vi.mock("~/services/api", () => ({
-  postMove: vi
-    .fn()
-    .mockResolvedValue({
-      move: "e7e5",
-      fen: "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2",
-    }),
+  postMove: vi.fn().mockResolvedValue({
+    move: "e7e5",
+    fen: "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2",
+  }),
 }));
 
 vi.mock("~/store/gameStore", () => ({

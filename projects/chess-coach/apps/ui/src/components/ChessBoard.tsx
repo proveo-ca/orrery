@@ -6,17 +6,22 @@ import type { Component } from "solid-js";
 import styles from "~/components/ChessBoard.module.css";
 import { ChessBoardArrow } from "~/components/ChessBoardArrow.tsx";
 import { ChessSquare } from "~/components/ChessSquare";
-import { Button } from "~/components/common/Button";
-import { Modal } from "~/components/common/Modal";
+import { Button } from "~/components/common/Button.tsx";
+import { Modal } from "~/components/common/Modal.tsx";
 import { EvalBar } from "~/components/EvalBar";
 import { PromotionModal } from "~/components/PromotionModal";
 import { useChessBoard } from "~/hooks/useChessBoard";
-import type { MoveSquares } from "~/store/gameStore";
 import { capabilities } from "~/store/capabilitiesStore";
 import { adviceArrow, adviceHoveredSquares, setShowNewGame } from "~/store/coachStore";
-import { getExpectedReviewId, hasRecordedReview } from "~/store/gameHistoryStore";
-import { startingFen } from "~/store/gameStore";
-import { isResigned } from "~/store/gameStore";
+import { getExpectedReviewId, hasRecordedReview } from "~/store/gameHistoryStore.ts";
+import {
+  currentIndex,
+  fenHistory,
+  game,
+  isResigned,
+  type MoveSquares,
+  startingFen,
+} from "~/store/gameStore";
 import { activePlayerColor, opponentPieceSet, playerPieceSet } from "~/store/settingsStore";
 import { isTravelling } from "~/store/travelStore";
 
@@ -45,8 +50,6 @@ export const ChessBoard: Component = () => {
   const isCheck = () => activeGame().inCheck();
   const isCheckmate = () => activeGame().isCheckmate();
   const isStalemate = () => activeGame().isStalemate();
-  const isGameOver = () =>
-    capabilities().aiOpponent && !isTravelling() && (activeGame().isGameOver() || isResigned());
   const turn = () => activeGame().turn();
 
   // ── Touch-drag (mobile) ──────────────────────────────────────────────
@@ -121,6 +124,12 @@ export const ChessBoard: Component = () => {
       lastTouchSquare = null;
     }
   });
+  const isReplaying = () => currentIndex() < fenHistory().length - 1;
+  // End-game banner is shown only in the final game state — never while
+  // replaying a past move or time-travelling. `game()` is the authoritative
+  // live instance, so checkmate/stalemate read the true terminal position.
+  const isGameOver = () =>
+    !isReplaying() && !isTravelling() && (game().isGameOver() || isResigned());
 
   return (
     <div class={styles["board-layout-wrapper"]}>
@@ -247,35 +256,6 @@ export const ChessBoard: Component = () => {
             )}
           </Show>
 
-          <Modal
-            open={isGameOver()}
-            position="absolute"
-            dismissible={false}
-            showCloseButton={false}
-            overlayClass={styles["game-over-overlay"]}
-            contentClass={styles["game-over-banner"]}
-          >
-            <h1 class={styles.result}>
-              {isResigned()
-                ? "Resignation"
-                : isCheckmate()
-                  ? "Checkmate"
-                  : isStalemate()
-                    ? "Stalemate"
-                    : "Draw"}
-            </h1>
-            <div class={styles["game-over-actions"]}>
-              <Button primary onClick={() => setShowNewGame(true)}>
-                Another Game
-              </Button>
-              <Show when={hasRecordedReview(activeGame().pgn(), startingFen())}>
-                <Button primary href={`/review/${getExpectedReviewId(activeGame().pgn(), startingFen())}`}>
-                  Review Game
-                </Button>
-              </Show>
-            </div>
-          </Modal>
-
           <PromotionModal
             pending={board.pendingPromotion()}
             onSelect={board.resolvePromotion}
@@ -283,6 +263,34 @@ export const ChessBoard: Component = () => {
           />
         </div>
       </div>
+      <Modal
+        open={isGameOver()}
+        position="absolute"
+        dismissible={false}
+        showCloseButton={false}
+        overlayClass={styles["game-over-overlay"]}
+        contentClass={styles["game-over-banner"]}
+      >
+        <h1 class={styles.result}>
+          {isResigned()
+            ? "Resignation"
+            : game().isCheckmate()
+              ? "Checkmate"
+              : game().isStalemate()
+                ? "Stalemate"
+                : "Draw"}
+        </h1>
+        <div class={styles["game-over-actions"]}>
+          <Button primary onClick={() => setShowNewGame(true)}>
+            Another Game
+          </Button>
+          <Show when={hasRecordedReview(game().pgn(), startingFen())}>
+            <Button primary href={`/review/${getExpectedReviewId(game().pgn(), startingFen())}`}>
+              Review Game
+            </Button>
+          </Show>
+        </div>
+      </Modal>
     </div>
   );
 };

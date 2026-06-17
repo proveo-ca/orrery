@@ -100,9 +100,7 @@ function annotatePgn(pgn: string, moves: MoveRecord[]): string {
   // header tokens as moves, corrupting the PGN with misplaced {hint} markers.
   const blankMatch = pgn.match(/\n\s*\n/);
   const prefix = blankMatch ? pgn.slice(0, blankMatch.index! + blankMatch[0].length) : "";
-  const body = blankMatch
-    ? pgn.slice(blankMatch.index! + blankMatch[0].length).trim()
-    : pgn.trim();
+  const body = blankMatch ? pgn.slice(blankMatch.index! + blankMatch[0].length).trim() : pgn.trim();
 
   const tokens = body.match(/\{[^}]*\}|\d+\.\s*\.{2}|\d+\.|\S+/g);
   if (!tokens) return pgn;

@@ -39,7 +39,7 @@ note right of Queue
   circuit breaker (>4 restarts / 10 s → `givenUp`, reject all).
 end note
 
-Base   --> Queue : evaluate(normal,  onInfo)
+Base   --> Queue : evaluate(interactive | normal, onInfo)
 Hover  --> Queue : evaluate(interactive, onInfo)
 Hint   --> Queue : evaluate(interactive)
 Review --> Queue : evaluate(background)
@@ -71,8 +71,8 @@ end note
 note as Priorities
   == Priority tiers (Priority = interactive | normal | background) ==
   |= tier |= rank |= consumers |= intent |
-  |  interactive | 2 | hover eval · hint | must feel instant; preempts lower tiers |
-  |  normal      | 1 | best-move-arrow base analysis | live but non-urgent |
+  |  interactive | 2 | hover eval · hint · best-move-arrow base (when arrow shown) | must feel instant; preempts lower tiers |
+  |  normal      | 1 | best-move-arrow base analysis (live play, arrow off) | live but non-urgent |
   |  background  | 0 | review · live pre-analysis | bulk; must never block play |
   --
   **Scheduling**

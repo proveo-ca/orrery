@@ -104,7 +104,13 @@ export const MoveList: Component<Props> = (props) => {
     const g = props.game;
     if (!g) return [];
     const a = analysisSignal();
-    return resolveAnnotations(g.moves, a.cpDeltas, a.wasBestMoves, a.bestMoveUcis, blunderThresholdCp());
+    return resolveAnnotations(
+      g.moves,
+      a.cpDeltas,
+      a.wasBestMoves,
+      a.bestMoveUcis,
+      blunderThresholdCp(),
+    );
   };
   const rows = () =>
     props.game ? pairMovesIntoRows(props.game.moves, props.game.startingFen) : [];
