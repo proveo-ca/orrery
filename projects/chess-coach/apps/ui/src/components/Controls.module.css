@@ -21,7 +21,11 @@
   justify-content: center;
 }
 
-@media (max-width: 719px) {
+/* Stack the New Game menu vertically on mobile/tablet devices. The board nav
+   switches to the desktop sidebar at 720px, but tablets (iPad portrait 768px+)
+   are still touch "mobile devices" where the horizontal row is cramped, so this
+   uses a wider breakpoint than the rest of the app's 719px phone split. */
+@media (max-width: 1024px) {
   .new-game-panel {
     flex-direction: column;
   }

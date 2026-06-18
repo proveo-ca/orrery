@@ -92,7 +92,8 @@ export const REVIEW_CAPABILITIES: ScreenCapabilities = {
   aiOpponent: false,
   blunderDetection: false,
   continuousAnalysis: true,
-  // "off" by default; ReviewScreen flips it to "player-only" in branch mode.
+  // "off" default (game-list view, no active game); ReviewScreen sets
+  // "player-only" for standard review and "both" in branch/analysis mode.
   bestMoveArrow: "off",
   commentary: hasLlm,
   persistGame: false,

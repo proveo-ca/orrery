@@ -114,11 +114,13 @@ export class EnginePool {
   private restartWindowStart = 0;
   private givenUp = false;
 
-  constructor(opts: {
-    maxWorkers?: number;
-    factory?: EngineWorkerFactory;
-    now?: () => number;
-  } = {}) {
+  constructor(
+    opts: {
+      maxWorkers?: number;
+      factory?: EngineWorkerFactory;
+      now?: () => number;
+    } = {},
+  ) {
     this.factory = opts.factory ?? defaultFactory;
     this.now = opts.now ?? (() => Date.now());
     const cores = typeof navigator !== "undefined" ? navigator.hardwareConcurrency : 4;

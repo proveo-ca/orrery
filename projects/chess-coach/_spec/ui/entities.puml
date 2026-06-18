@@ -235,7 +235,8 @@ package "Hooks  [src/hooks/]" {
       .. Notes ..
       hover engine debounce: 150ms (all stop/go + eval requests)
       integrates: useMoveExecutor · useCoachBehavior · useHoverEvaluator
-      base analysis (arrow) → enginePool.evaluate(normal, onInfo)
+      base analysis (arrow) → enginePool.evaluate(onInfo,
+        interactive when bestMoveArrow shown, else normal)
       hover eval → enginePool.evaluate(interactive, onInfo)
         the two run as separate pool jobs, so hovering no longer
         interrupts the base search — best-move arrow stays stable

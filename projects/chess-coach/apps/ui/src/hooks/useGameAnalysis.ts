@@ -147,10 +147,7 @@ function seedFromCache(cached: CachedAnalysis | null, moveCount: number): Analys
   };
 }
 
-function sanitizeNonPlayerPlies(
-  game: GameRecord,
-  state: AnalysisState,
-): void {
+function sanitizeNonPlayerPlies(game: GameRecord, state: AnalysisState): void {
   const chess = new Chess(game.startingFen);
   for (let i = 0; i < game.moves.length; i++) {
     const m = game.moves[i];

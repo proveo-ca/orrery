@@ -51,7 +51,8 @@ const [settingsState, setSettingsState] = createPersistedStore("chess_coach_sett
 export const colorPref = () => settingsState.colorPref;
 export const activePlayerColor = () => settingsState.activePlayerColor;
 export const difficulty = () => settingsState.difficulty;
-export const blunderThresholdCp = () => BLUNDER_THRESHOLD_CP_BY_DIFFICULTY[settingsState.difficulty];
+export const blunderThresholdCp = () =>
+  BLUNDER_THRESHOLD_CP_BY_DIFFICULTY[settingsState.difficulty];
 export const blunderLabel = () => BLUNDER_LABEL_BY_DIFFICULTY[settingsState.difficulty];
 export const playerIdentity = () => settingsState.playerIdentity;
 export const opponentIdentity = () => settingsState.opponentIdentity;

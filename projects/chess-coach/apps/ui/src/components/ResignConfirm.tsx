@@ -37,7 +37,14 @@ export const ResignConfirm: Component<ResignConfirmProps> = (props) => {
 
   return (
     <Modal open={props.open} onClose={props.onClose} title="Resign?" position="fixed">
-      <div style={{ display: "flex", "flex-direction": "column", gap: "1rem", "align-items": "center" }}>
+      <div
+        style={{
+          display: "flex",
+          "flex-direction": "column",
+          gap: "1rem",
+          "align-items": "center",
+        }}
+      >
         <p style={{ margin: 0 }}>{msg()}</p>
         <div style={{ display: "flex", gap: "0.75rem" }}>
           <Button onClick={props.onConfirm}>Yes, resign</Button>

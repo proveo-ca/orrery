@@ -2,7 +2,6 @@
 import { Chess, type Square } from "chess.js";
 import { createEffect } from "solid-js";
 
-import type { StockfishAnalysis } from "~/types/Stockfish";
 import { capabilities } from "~/store/capabilitiesStore";
 import {
   setHoverAdvice,
@@ -12,11 +11,15 @@ import {
 } from "~/store/coachStore";
 import { currentFen } from "~/store/gameStore";
 import { blunderLabel, blunderThresholdCp } from "~/store/settingsStore";
+import type { StockfishAnalysis } from "~/types/Stockfish";
 import { logger } from "~/utils/logger";
 
 export type HoverEval = { id: number; from: Square; to: Square; fen: string };
 
-function scoreToHumanCp(s: { kind: "cp" | "mate"; value: number }, scoreSideIsHuman: boolean): number {
+function scoreToHumanCp(
+  s: { kind: "cp" | "mate"; value: number },
+  scoreSideIsHuman: boolean,
+): number {
   if (s.kind === "cp") return scoreSideIsHuman ? s.value : -s.value;
   const dist = Math.abs(s.value);
   const mag = 100000 - dist * 100; // preserve mate distance (M1 >> M10)

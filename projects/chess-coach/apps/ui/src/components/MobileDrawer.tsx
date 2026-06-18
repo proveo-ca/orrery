@@ -216,7 +216,11 @@ export const MobileDrawer: Component = () => {
         <NewGamePanel />
       </Modal>
 
-      <ResignConfirm open={showResignConfirm()} onClose={() => setShowResignConfirm(false)} onConfirm={confirmResign} />
+      <ResignConfirm
+        open={showResignConfirm()}
+        onClose={() => setShowResignConfirm(false)}
+        onConfirm={confirmResign}
+      />
 
       <Credits open={showCredits()} onClose={() => setShowCredits(false)} />
     </div>

@@ -1,7 +1,8 @@
 import { createMemo } from "solid-js";
 import { For } from "solid-js";
-import { isMobileDevice } from "~/services/runtimeMode";
+
 import styles from "~/components/common/MatrixOverlay.module.css";
+import { isMobileDevice } from "~/services/runtimeMode";
 
 interface MatrixOverlayProps {
   density?: number;
@@ -25,9 +26,7 @@ const rand = (min: number, max: number) => Math.random() * (max - min) + min;
 
 const makeDrop = (id: number, color: string, speed: number): Drop => {
   const height = Math.floor(rand(14, 36));
-  const chars = Array.from({ length: height }, () =>
-    Math.random() > 0.5 ? "1" : "0",
-  ).join("\n");
+  const chars = Array.from({ length: height }, () => (Math.random() > 0.5 ? "1" : "0")).join("\n");
   const duration = (rand(24, 55) / speed).toFixed(2) + "s";
   const delay = (-rand(0, 4)).toFixed(2) + "s";
   return {
