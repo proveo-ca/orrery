@@ -1,4 +1,7 @@
 // SPEC: _spec/chess-coach/ui/components.puml
+import type { CoachEmotion } from "~/types/coach";
+import type { MoveSquares } from "~/types/game";
+import type { PieceSet } from "~/types/settings";
 import { Chess, type Color, type Square } from "chess.js";
 import { createEffect, createMemo, createSignal, onCleanup, untrack } from "solid-js";
 
@@ -6,35 +9,13 @@ import { enginePool } from "~/engine/EnginePool";
 import { useCoachBehavior } from "~/hooks/useCoachBehavior";
 import { type HoverEval, useHoverEvaluator } from "~/hooks/useHoverEvaluator";
 import { useMoveExecutor } from "~/hooks/useMoveExecutor";
+import type { PromotionPiece } from "~/types/chess";
 import { getAnalysisDepth } from "~/services/runtimeMode";
 import { capabilities } from "~/store/capabilitiesStore";
-import {
-  type CoachEmotion,
-  baseAdvice,
-  baseCoachEmotion,
-  clearHoverOverride,
-  clearPendingTravel,
-  pendingTravel,
-  setAdviceArrow,
-  setAdviceHoveredSquares,
-  setHoverAdvice,
-  setHoverEmotion,
-} from "~/store/coachStore";
+import { baseAdvice, baseCoachEmotion, clearHoverOverride, clearPendingTravel, pendingTravel, setAdviceArrow, setAdviceHoveredSquares, setHoverAdvice, setHoverEmotion } from "~/store/coachStore";
 import { setBaseEvalScore as setSharedEval } from "~/store/evalStore";
-import {
-  type MoveSquares,
-  currentFen,
-  currentIndex,
-  fenHistory,
-  game as latestGame,
-  moveHistory,
-} from "~/store/gameStore";
-import {
-  type PieceSet,
-  activePlayerColor,
-  opponentPieceSet,
-  playerPieceSet,
-} from "~/store/settingsStore";
+import { currentFen, currentIndex, fenHistory, game as latestGame, moveHistory } from "~/store/gameStore";
+import { activePlayerColor, opponentPieceSet, playerPieceSet } from "~/store/settingsStore";
 import { isTravelling, travelFen, travelIndex, travelMoveHistory } from "~/store/travelStore";
 import type { StockfishAnalysis } from "~/types/Stockfish";
 import { logger } from "~/utils/logger";
@@ -64,7 +45,6 @@ export function useChessBoard() {
   // render the picker; the resolver is held here and invoked by the UI's
   // select/cancel handlers. Cancelling resolves with `null` and
   // moveExecutor returns cancelled:true so selection is preserved.
-  type PromotionPiece = "q" | "r" | "b" | "n";
   const [pendingPromotion, setPendingPromotion] = createSignal<{
     color: Color;
     pieceSet: PieceSet;

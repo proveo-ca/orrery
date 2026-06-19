@@ -1,36 +1,14 @@
+import type { PlayerIdentity } from "~/types/settings";
+import type { GameRecord, GameResult, MoveRecord } from "~/types/game";
 import { polyglotHashFromPgn } from "~/engine/polyglotZobrist";
 import { deleteAnalysisCache, migrateAnalysisCache } from "~/hooks/useGameAnalysis";
 import { createPersistedStore } from "~/store/createPersistedStore";
-import type { PlayerIdentity } from "~/store/settingsStore";
 
 export const getExpectedReviewId = (pgn: string, fen: string): string =>
   polyglotHashFromPgn(pgn, fen);
 
 export const hasRecordedReview = (pgn: string, fen: string): boolean =>
   getGameById(polyglotHashFromPgn(pgn, fen)) !== null;
-
-export type MoveRecord = {
-  san: string;
-  hasPressedHint: boolean;
-  isAI: boolean;
-};
-
-export type GameResult = "win" | "loss" | "draw" | "ongoing";
-
-export type GameRecord = {
-  id: string;
-  startedAt: string;
-  endedAt: string | null;
-  result: GameResult;
-  pgn: string;
-  startingFen: string;
-  playerColor: "w" | "b";
-  difficulty: string;
-  moves: MoveRecord[];
-  playerRace?: PlayerIdentity;
-  opponentRace?: PlayerIdentity;
-  opponentName?: string;
-};
 
 type GameHistoryState = {
   games: GameRecord[];

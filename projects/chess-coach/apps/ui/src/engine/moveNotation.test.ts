@@ -34,7 +34,9 @@ describe("uciMatchesSan", () => {
   });
 
   it("matches a promotion move", () => {
-    const fen = "4k3/4P3/8/8/8/8/8/4K3 w - - 0 1";
+    // Black king on h8 (not e8) so the e7 pawn can legally promote on e8;
+    // the new queen checks the king along the 8th rank, hence the "+" SAN.
+    const fen = "7k/4P3/8/8/8/8/8/4K3 w - - 0 1";
     expect(uciMatchesSan(fen, "e7e8q", "e8=Q+")).toBe(true);
   });
 

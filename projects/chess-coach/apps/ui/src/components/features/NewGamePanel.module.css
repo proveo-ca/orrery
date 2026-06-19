@@ -1,0 +1,34 @@
+.new-game-panel {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--border-radius-md);
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: center;
+  justify-content: center;
+}
+
+/* Stack the New Game menu vertically on mobile/tablet devices. The board nav
+   switches to the desktop sidebar at 720px, but tablets (iPad portrait 768px+)
+   are still touch "mobile devices" where the horizontal row is cramped, so this
+   uses a wider breakpoint than the rest of the app's 719px phone split. */
+@media (max-width: 1024px) {
+  .new-game-panel {
+    flex-direction: column;
+  }
+
+  .new-game-panel > select,
+  .new-game-panel > button {
+    width: 100%;
+  }
+}
+
+.start-btn {
+  background-color: var(--primary-color);
+  color: var(--surface-color);
+  font-weight: 600;
+}
+
+.start-btn:hover:not(:disabled) {
+  background-color: var(--primary-hover);
+  color: var(--surface-color);
+}

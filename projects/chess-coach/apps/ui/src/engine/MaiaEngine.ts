@@ -1,6 +1,6 @@
 // SPEC: _spec/chess-coach/ui/components.puml
+import type { Difficulty } from "~/types/settings";
 import { UciDriver } from "~/engine/UciDriver";
-import type { Difficulty } from "~/store/settingsStore";
 
 /**
  * Wrapper around the Maia (lc0) WASM chess engine running in a Web Worker.

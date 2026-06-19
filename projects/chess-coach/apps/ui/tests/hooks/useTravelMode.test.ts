@@ -13,14 +13,12 @@ vi.mock("~/store", () => ({
   setHoverEmotion: vi.fn(),
 }));
 
-vi.mock("~/engine/UciDriver", () => ({
-  UciDriver: vi.fn(function (this: any) {
-    this.send = vi.fn();
-    this.readUntil = vi
-      .fn()
-      .mockResolvedValue(["info depth 12 pv e7e5 g1f3 b8c6", "bestmove e7e5 ponder g1f3"]);
-    this.stop = vi.fn();
-  }),
+vi.mock("~/engine/EnginePool", () => ({
+  enginePool: {
+    // Static best move; the second iteration's e7e5 is illegal (pawn already
+    // moved), so the timeline-builder breaks after one continuation.
+    evaluate: vi.fn().mockResolvedValue({ bestMove: "e7e5", score: null, depth: 12 }),
+  },
 }));
 
 vi.mock("~/store/travelStore", () => ({

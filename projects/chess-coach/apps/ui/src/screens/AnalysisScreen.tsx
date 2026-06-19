@@ -1,13 +1,13 @@
 import { onCleanup, onMount } from "solid-js";
 import type { Component } from "solid-js";
 
-import styles from "~/App.module.css";
-import { OpponentCaptures, PlayerCaptures } from "~/components/CapturedPieces";
-import { ChessBoard } from "~/components/ChessBoard";
-import { DebugControls } from "~/components/DebugControls";
-import { FenLoader } from "~/components/FenLoader";
-import { MobileDrawer } from "~/components/MobileDrawer";
-import { Sidebar } from "~/components/Sidebar";
+import { OpponentCaptures, PlayerCaptures } from "~/components/atoms/CapturedPieces";
+import { ChessBoard } from "~/components/features/ChessBoard";
+import { DebugControls } from "~/components/atoms/DebugControls";
+import { FenLoader } from "~/components/atoms/FenLoader";
+import { MobileDrawer } from "~/components/features/MobileDrawer";
+import { Screen } from "~/components/primitives/Screen";
+import { Sidebar } from "~/components/features/Sidebar";
 import { ANALYSIS_CAPABILITIES, setCapabilities } from "~/store/capabilitiesStore";
 import { inProgressGame } from "~/store/gameHistoryStore";
 import { persistFreshStart } from "~/store/gameStore";
@@ -40,21 +40,21 @@ export const AnalysisScreen: Component = () => {
   });
 
   return (
-    <div class={styles["app-container"]}>
-      <div class={`${styles["sidebar-inset"]} mobile-nav-clear`}>
+    <Screen>
+      <Screen.SidebarInset class="mobile-nav-clear">
         <FenLoader />
-      </div>
-      <div class={styles["board-area"]}>
-        <div class={styles["board-column"]}>
+      </Screen.SidebarInset>
+      <Screen.BoardArea>
+        <Screen.BoardColumn>
           <OpponentCaptures />
           <ChessBoard />
           <PlayerCaptures />
-        </div>
+        </Screen.BoardColumn>
         <Sidebar />
-      </div>
+      </Screen.BoardArea>
 
       <DebugControls />
       <MobileDrawer />
-    </div>
+    </Screen>
   );
 };

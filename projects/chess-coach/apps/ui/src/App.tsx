@@ -2,7 +2,7 @@ import { useLocation } from "@solidjs/router";
 import { Show, createEffect, onMount } from "solid-js";
 import type { ParentComponent } from "solid-js";
 
-import { LoadingOverlay } from "~/components/common/LoadingOverlay";
+import { LoadingOverlay } from "~/components/features/LoadingOverlay";
 import { useGlobalShortcuts } from "~/hooks/useGlobalShortcuts";
 import { dispatchCoachEvent, isAppReady } from "~/store/coachStore";
 import "~/theme.css";

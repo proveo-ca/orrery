@@ -2,41 +2,25 @@
 import { createSignal, onMount } from "solid-js";
 import type { Component } from "solid-js";
 
-import styles from "~/App.module.css";
-import { OpponentCaptures, PlayerCaptures } from "~/components/CapturedPieces";
-import { ChessBoard } from "~/components/ChessBoard";
-import { CoachAvatar } from "~/components/CoachAvatar.tsx";
-import { CoachPanel } from "~/components/CoachPanel.tsx";
-import { HistoryOverlay } from "~/components/common/HistoryOverlay";
-import { LightSpeedOverlay } from "~/components/common/LightSpeedOverlay";
-import { Modal } from "~/components/common/Modal";
-import {
-  DebugControls,
-  debugHistoryOverlay,
-  debugLightSpeedOverlay,
-} from "~/components/DebugControls";
-import { MobileDrawer } from "~/components/MobileDrawer";
-import { Sidebar } from "~/components/Sidebar";
+import { OpponentCaptures, PlayerCaptures } from "~/components/atoms/CapturedPieces";
+import { ChessBoard } from "~/components/features/ChessBoard";
+import { CoachAvatar } from "~/components/atoms/CoachAvatar.tsx";
+import { CoachPanel } from "~/components/features/CoachPanel.tsx";
+import { HistoryOverlay } from "~/components/primitives/HistoryOverlay";
+import { LightSpeedOverlay } from "~/components/atoms/LightSpeedOverlay";
+import { Modal } from "~/components/atoms/Modal";
+import { DebugControls, debugHistoryOverlay, debugLightSpeedOverlay } from "~/components/atoms/DebugControls";
+import { MobileDrawer } from "~/components/features/MobileDrawer";
+import { Screen } from "~/components/primitives/Screen";
+import { Sidebar } from "~/components/features/Sidebar";
 import { useGameRecorder } from "~/hooks/useGameRecorder";
 import { useLivePreAnalysis } from "~/hooks/useLivePreAnalysis";
 import { fetchHello, postAdviceStream, postMove } from "~/services/api";
 import { checkEngineSupport } from "~/services/browserSupport";
 import { accumulateStream } from "~/services/streamUtils";
 import { COACH_CAPABILITIES, setCapabilities } from "~/store/capabilitiesStore";
-import {
-  dispatchCoachEvent,
-  setAdvice,
-  setBestMovePhrases,
-  setThinkingPhrases,
-} from "~/store/coachStore";
-import {
-  addMoveSan,
-  currentFen,
-  currentIndex,
-  fenHistory,
-  game,
-  restoreGame,
-} from "~/store/gameStore";
+import { dispatchCoachEvent, setAdvice, setBestMovePhrases, setThinkingPhrases } from "~/store/coachStore";
+import { addMoveSan, currentFen, currentIndex, fenHistory, game, restoreGame } from "~/store/gameStore";
 import { activePlayerColor, difficulty } from "~/store/settingsStore";
 import { isTravelling } from "~/store/travelStore";
 import { logger } from "~/utils/logger";
@@ -127,28 +111,26 @@ export const CoachScreen: Component = () => {
   const isReplaying = () => currentIndex() < fenHistory().length - 1;
 
   return (
-    <div
-      classList={{ [styles["app-container"]]: true, highlight: isTravelling() || isReplaying() }}
-    >
+    <Screen highlight={isTravelling() || isReplaying()}>
       <HistoryOverlay active={debugHistoryOverlay() || (isReplaying() && !isTravelling())} />
       <LightSpeedOverlay active={debugLightSpeedOverlay() || isTravelling()} />
 
-      <div class={styles["coach-header"]}>
+      <Screen.Header>
         <CoachAvatar />
-      </div>
+      </Screen.Header>
 
-      <div class={styles["board-area"]}>
-        <div class={styles["board-column"]}>
+      <Screen.BoardArea>
+        <Screen.BoardColumn>
           <OpponentCaptures />
           <ChessBoard />
           <PlayerCaptures />
-        </div>
+        </Screen.BoardColumn>
         <Sidebar />
-      </div>
+      </Screen.BoardArea>
 
-      <div class={styles.footer}>
+      <Screen.Footer>
         <CoachPanel />
-      </div>
+      </Screen.Footer>
 
       <Modal
         open={!!unsupportedReason()}
@@ -172,6 +154,6 @@ export const CoachScreen: Component = () => {
 
       <DebugControls />
       <MobileDrawer />
-    </div>
+    </Screen>
   );
 };

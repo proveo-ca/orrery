@@ -1,8 +1,8 @@
 import { render, screen } from "@solidjs/testing-library";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { MoveList } from "~/components/MoveList";
-import type { GameRecord } from "~/store/gameHistoryStore";
+import { MoveList } from "~/components/features/MoveList";
+import type { GameRecord } from "~/types/game";
 
 beforeEach(() => {
   // jsdom polyfill for MoveList responsive pagination
@@ -84,5 +84,54 @@ describe("MoveList after loading PGN in ReviewScreen (Black player)", () => {
     expect(ply0?.textContent).not.toContain("+8");
     expect(ply2?.textContent).not.toContain("-12");
     expect(ply2?.textContent).not.toContain("+8");
+  });
+});
+
+describe("MoveList annotation icons", () => {
+  // Human plays White (plies 0,2,4,6); the AI replies on the odd plies, which
+  // resolveAnnotations skips. The analysis is crafted so each annotation tag
+  // backed by a CoachEmotionIcon appears exactly once:
+  //   ply0 best (best move, small cp) · ply2 inaccuracy (mid cp, not best) ·
+  //   ply4 blunder (large cp) · ply6 forced (best AND blunder).
+  const annotatedGame: GameRecord = {
+    id: "annotated-game",
+    startedAt: new Date().toISOString(),
+    endedAt: new Date().toISOString(),
+    result: "win",
+    pgn: "",
+    startingFen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+    playerColor: "w",
+    difficulty: "intermediate",
+    moves: [
+      { san: "e4", hasPressedHint: false, isAI: false }, // 0 → best
+      { san: "e5", hasPressedHint: false, isAI: true },
+      { san: "Nf3", hasPressedHint: false, isAI: false }, // 2 → inaccuracy
+      { san: "Nc6", hasPressedHint: false, isAI: true },
+      { san: "Bb5", hasPressedHint: false, isAI: false }, // 4 → blunder
+      { san: "a6", hasPressedHint: false, isAI: true },
+      { san: "Bxc6", hasPressedHint: false, isAI: false }, // 6 → forced
+      { san: "dxc6", hasPressedHint: false, isAI: true },
+    ],
+  };
+
+  it("displays a CoachEmotionIcon for every emotion-backed annotation", () => {
+    render(() => (
+      <MoveList
+        game={annotatedGame}
+        analysis={{
+          cpDeltas: [-10, null, -60, null, -300, null, -300, null],
+          wasBestMoves: [true, false, false, false, false, false, true, false],
+          bestMoveUcis: ["e2e4", null, "g1f3", null, null, null, "f1c6", null],
+          loading: false,
+        }}
+      />
+    ));
+
+    // Every CoachEmotionIcon renders as <svg role="img"> with the emotion's
+    // accessible label (best→happy, blunder→shocked, inaccuracy→thinking,
+    // forced→shrug). getByRole throws if any is missing.
+    for (const label of ["best move", "blunder", "inaccuracy", "forced"]) {
+      expect(screen.getByRole("img", { name: label })).toBeTruthy();
+    }
   });
 });

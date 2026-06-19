@@ -5,11 +5,10 @@ import { createSignal } from "solid-js";
 import { capabilities } from "~/store/capabilitiesStore";
 import { clearAdvice, dispatchCoachEvent, setAdvice } from "~/store/coachStore";
 import { colorPref, setActivePlayerColor } from "~/store/settingsStore";
+import type { MoveSquares } from "~/types/game";
 
 const STARTING_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 const STORAGE_KEY = "chess_coach_game_state";
-
-export type MoveSquares = { from: string; to: string };
 
 // ── Internal state ──────────────────────────────────────────────────────
 let _game = new Chess();

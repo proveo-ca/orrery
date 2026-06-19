@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import type { GameRecord } from "~/types/game";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock the engine pool so analyzeGameToCache resolves deterministically and we
@@ -9,7 +10,6 @@ vi.mock("~/engine/EnginePool", () => ({
 }));
 
 import { analyzeGameToCache } from "~/hooks/useGameAnalysis";
-import type { GameRecord } from "~/store/gameHistoryStore";
 
 const STARTING_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 const GID = "seed-prefix-test";

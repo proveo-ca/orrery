@@ -2,41 +2,25 @@ import { useNavigate, useParams } from "@solidjs/router";
 import { Show, createEffect, createMemo, createSignal, on, onCleanup } from "solid-js";
 import type { Component } from "solid-js";
 
-import styles from "~/App.module.css";
-import { OpponentCaptures, PlayerCaptures } from "~/components/CapturedPieces";
-import { ChessBoard } from "~/components/ChessBoard";
-import { Button } from "~/components/common/Button";
-import { Label } from "~/components/common/Label";
-import { MatrixOverlay } from "~/components/common/MatrixOverlay";
-import { GameHistoryFilters } from "~/components/GameHistoryFilters";
-import { GameHistoryList } from "~/components/GameHistoryList";
-import { MobileDrawer } from "~/components/MobileDrawer";
-import { MoveList } from "~/components/MoveList";
-import { Sidebar } from "~/components/Sidebar";
+import { OpponentCaptures, PlayerCaptures } from "~/components/atoms/CapturedPieces";
+import { ChessBoard } from "~/components/features/ChessBoard";
+import { Button } from "~/components/primitives/Button";
+import { Label } from "~/components/primitives/Label";
+import { MatrixOverlay } from "~/components/atoms/MatrixOverlay";
+import { GameHistoryFilters } from "~/components/primitives/GameHistoryFilters";
+import { GameHistoryList } from "~/components/atoms/GameHistoryList";
+import { MobileDrawer } from "~/components/features/MobileDrawer";
+import { MoveList } from "~/components/features/MoveList";
+import { Screen } from "~/components/primitives/Screen";
+import { Sidebar } from "~/components/features/Sidebar";
 import { resolveAnnotations } from "~/engine/moveAnnotations";
 import { useBlunderArrow } from "~/hooks/useBlunderArrow";
 import { useGameAnalysis } from "~/hooks/useGameAnalysis";
 import { useGameHistoryFilters } from "~/hooks/useGameHistoryFilters";
 import { REVIEW_CAPABILITIES, setCapabilities } from "~/store/capabilitiesStore";
 import { gameHistory, getGameById } from "~/store/gameHistoryStore";
-import {
-  fenHistory,
-  loadGame,
-  reviewAnalysisMode,
-  setSavedReviewBranchIndex,
-  setReviewAnalysisMode,
-  setSavedReviewPgn,
-  setSavedReviewStartingFen,
-} from "~/store/gameStore";
-import {
-  activePlayerColor,
-  blunderThresholdCp,
-  opponentIdentity,
-  playerIdentity,
-  setActivePlayerColor,
-  setOpponentIdentity,
-  setPlayerIdentity,
-} from "~/store/settingsStore";
+import { fenHistory, loadGame, reviewAnalysisMode, setSavedReviewBranchIndex, setReviewAnalysisMode, setSavedReviewPgn, setSavedReviewStartingFen } from "~/store/gameStore";
+import { activePlayerColor, blunderThresholdCp, opponentIdentity, playerIdentity, setActivePlayerColor, setOpponentIdentity, setPlayerIdentity } from "~/store/settingsStore";
 
 export const ReviewScreen: Component = () => {
   const params = useParams<{ id?: string }>();
@@ -164,12 +148,12 @@ export const ReviewScreen: Component = () => {
   });
 
   return (
-    <div classList={{ [styles["app-container"]]: true, highlight: reviewAnalysisMode() }}>
+    <Screen highlight={reviewAnalysisMode()}>
       <Show
         when={activeGame()}
         fallback={
           <>
-            <div class={styles["sidebar-inset"]}>
+            <Screen.SidebarInset>
               <GameHistoryFilters
                 colorFilter={filters.colorFilter()}
                 setColorFilter={filters.setColorFilter}
@@ -182,12 +166,12 @@ export const ReviewScreen: Component = () => {
                 goToPrev={filters.goToPrev}
                 goToNext={filters.goToNext}
               />
-            </div>
-            <div class={styles["board-area"]}>
+            </Screen.SidebarInset>
+            <Screen.BoardArea>
               <GameHistoryList games={filters.visibleGames()} activeId={params.id} />
               <Sidebar />
-            </div>
-            <div class={styles.footer}>
+            </Screen.BoardArea>
+            <Screen.Footer>
               <div
                 style={{
                   color: "rgba(255,255,255,0.6)",
@@ -206,7 +190,7 @@ export const ReviewScreen: Component = () => {
                   Back to Main Menu
                 </Button>
               </div>
-            </div>
+            </Screen.Footer>
           </>
         }
       >
@@ -220,7 +204,7 @@ export const ReviewScreen: Component = () => {
 
           return (
             <>
-              <div class={`${styles["sidebar-inset"]} mobile-nav-clear`}>
+              <Screen.SidebarInset class="mobile-nav-clear">
                 <Label variant="title" color={resultColor}>
                   {resultLabel} ({colorLabel})
                 </Label>
@@ -228,20 +212,20 @@ export const ReviewScreen: Component = () => {
                 <Button primary onClick={() => navigate(-1)}>
                   Back
                 </Button>
-              </div>
+              </Screen.SidebarInset>
 
-              <div class={styles["board-area"]}>
-                <div class={styles["board-column"]}>
+              <Screen.BoardArea>
+                <Screen.BoardColumn>
                   <OpponentCaptures />
                   <ChessBoard />
                   <PlayerCaptures />
-                </div>
+                </Screen.BoardColumn>
                 <Sidebar />
-              </div>
+              </Screen.BoardArea>
 
-              <div class={styles.footer}>
+              <Screen.Footer>
                 <MoveList game={g()} activePly={analysisBranchPly()} analysis={gameAnalysis()} />
-              </div>
+              </Screen.Footer>
             </>
           );
         }}
@@ -252,6 +236,6 @@ export const ReviewScreen: Component = () => {
       </Show>
 
       <MobileDrawer />
-    </div>
+    </Screen>
   );
 };

@@ -1,10 +1,6 @@
 import { capabilities } from "~/store/capabilitiesStore";
 import { createPersistedStore } from "~/store/createPersistedStore";
-
-export type PlayerColorPref = "w" | "b" | "random";
-export type Difficulty = "intermediate" | "advanced" | "expert";
-export type PieceSet = "cburnett" | "selena" | "gord" | "manuel";
-export type PlayerIdentity = "Human" | "Cat" | "Dog" | "Rat";
+import type { Difficulty, PieceSet, PlayerColorPref, PlayerIdentity } from "~/types/settings";
 
 export const DEFAULT_OPPONENT_PIECE_SET: PieceSet = "selena";
 

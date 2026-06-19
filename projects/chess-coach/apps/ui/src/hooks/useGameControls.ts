@@ -16,37 +16,9 @@ import { capabilities } from "~/store/capabilitiesStore";
  * mount one).
  */
 export const [pendingHintUci, setPendingHintUci] = createSignal<string | null>(null);
-import {
-  clearHoverOverride,
-  dispatchCoachEvent,
-  setAdvice,
-  setAdviceArrow,
-  setAdviceHoveredSquares,
-} from "~/store/coachStore";
-import {
-  currentFen,
-  currentIndex,
-  fenHistory,
-  goBack,
-  goForward,
-  isResigned,
-  loadGame,
-  resignGame,
-  reviewAnalysisMode,
-  savedReviewBranchIndex,
-  savedReviewPgn,
-  savedReviewStartingFen,
-  setReviewAnalysisMode,
-  setViewIndex,
-} from "~/store/gameStore";
-import {
-  exitTravel,
-  isTravelling,
-  travelBack,
-  travelFenHistory,
-  travelForward,
-  travelIndex,
-} from "~/store/travelStore";
+import { clearHoverOverride, dispatchCoachEvent, setAdvice, setAdviceArrow, setAdviceHoveredSquares } from "~/store/coachStore";
+import { currentFen, currentIndex, fenHistory, goBack, goForward, isResigned, loadGame, resignGame, reviewAnalysisMode, savedReviewBranchIndex, savedReviewPgn, savedReviewStartingFen, setReviewAnalysisMode, setViewIndex } from "~/store/gameStore";
+import { exitTravel, isTravelling, travelBack, travelFenHistory, travelForward, travelIndex } from "~/store/travelStore";
 
 export const useGameControls = () => {
   const { requestHint, pendingHint } = useHint();

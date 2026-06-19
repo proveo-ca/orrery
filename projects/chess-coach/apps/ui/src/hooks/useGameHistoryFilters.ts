@@ -1,7 +1,8 @@
+import type { GameRecord } from "~/types/game";
 import { useSearchParams } from "@solidjs/router";
 import { createMemo, createSignal } from "solid-js";
 
-import { type GameRecord, gameHistory } from "~/store/gameHistoryStore";
+import { gameHistory } from "~/store/gameHistoryStore";
 
 export function useGameHistoryFilters() {
   const [searchParams, setSearchParams] = useSearchParams();
