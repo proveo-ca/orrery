@@ -52,18 +52,6 @@
   }
 }
 
-@media (pointer: coarse) {
-  .matrix {
-    opacity: var(--overlay-opacity, 0.12);
-  }
-  .drop {
-    animation-duration: 1.6s !important;
-    text-shadow: none;
-    mask-image: none;
-    -webkit-mask-image: none;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .drop {
     animation: none !important;

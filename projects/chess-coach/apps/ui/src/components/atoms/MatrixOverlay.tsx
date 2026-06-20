@@ -1,8 +1,6 @@
-import { createMemo } from "solid-js";
-import { For } from "solid-js";
+import { createMemo, createSignal, onMount, onCleanup, For } from "solid-js";
 
 import styles from "~/components/atoms/MatrixOverlay.module.css";
-import { isMobileDevice } from "~/services/runtimeMode";
 
 interface MatrixOverlayProps {
   density?: number;
@@ -40,16 +38,32 @@ const makeDrop = (id: number, color: string, speed: number): Drop => {
   };
 };
 
+const clamp = (val: number, min: number, max: number) => Math.max(min, Math.min(max, val));
+
 export const MatrixOverlay = (props: MatrixOverlayProps) => {
-  const isMobile = isMobileDevice();
-  const density = Math.floor((props.density ?? 60) * (isMobile ? 0.33 : 1));
-  const baseSpeed = (props.speed ?? 1) * (isMobile ? 0.5 : 1);
-  const max = Math.floor((props.maxDrops ?? 240) * (isMobile ? 0.5 : 1));
-  const count = Math.min(density, max);
+  const [aspect, setAspect] = createSignal(
+    typeof window !== "undefined" ? window.innerWidth / window.innerHeight : 16 / 9
+  );
+
+  onMount(() => {
+    const handleResize = () => setAspect(window.innerWidth / window.innerHeight);
+    window.addEventListener("resize", handleResize);
+    onCleanup(() => window.removeEventListener("resize", handleResize));
+  });
+
+  const scale = () => aspect() / 1.77;
+  const densityFactor = () => clamp(scale(), 0.25, 1.0);
+  const speedFactor = () => clamp(scale(), 0.5, 1.0);
+  const maxFactor = () => clamp(scale(), 0.5, 1.0);
+
+  const density = () => Math.floor((props.density ?? 60) * densityFactor());
+  const baseSpeed = () => (props.speed ?? 1) * speedFactor();
+  const max = () => Math.floor((props.maxDrops ?? 240) * maxFactor());
+  const count = () => Math.min(density(), max());
   const color = props.color ?? "var(--matrix-color)";
 
   const drops = createMemo<Drop[]>(() =>
-    Array.from({ length: count }, (_, i) => makeDrop(i, color, baseSpeed)),
+    Array.from({ length: count() }, (_, i) => makeDrop(i, color, baseSpeed())),
   );
 
   return (
