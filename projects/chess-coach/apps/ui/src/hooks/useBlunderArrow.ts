@@ -1,7 +1,7 @@
 // SPEC: _spec/chess-coach/ui/components.puml
+import type { AnnotationTag } from "~/types/analysis";
 import { createEffect, on } from "solid-js";
 
-import type { AnnotationTag } from "~/engine/moveAnnotations";
 import { useHint } from "~/hooks/useHint";
 import { setAdviceArrow } from "~/store/coachStore";
 import { currentIndex, fenHistory } from "~/store/gameStore";
@@ -20,11 +20,6 @@ export function useBlunderArrow(
 ) {
   const { requestHint, stopHint } = useHint();
 
-  // Track currentIndex, annotations, AND bestMoveUcis so the arrow updates
-  // when progressive analysis catches up to the viewed ply (not just on
-  // navigation). Without this, navigating to a blunder before analysis
-  // reaches it would silently miss the arrow because `on(currentIndex)`
-  // alone never re-fires when the annotation data arrives later.
   createEffect(
     on([() => currentIndex(), annotations, bestMoveUcis], ([idx, annots, bestMoves], prev) => {
       const indexChanged = !prev || prev[0] !== idx;
@@ -53,9 +48,6 @@ export function useBlunderArrow(
         return;
       }
 
-      // Fallback: live Stockfish search (blunders only, only on navigation —
-      // if analysis is still running it will eventually provide the cached
-      // UCI and the effect will re-fire via the tracked bestMoveUcis).
       if (!isBlunder || !indexChanged) return;
       const fens = fenHistory();
       const fenBefore = fens[plyIndex];

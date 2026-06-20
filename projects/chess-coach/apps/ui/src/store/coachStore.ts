@@ -1,16 +1,8 @@
 // SPEC: _spec/chess-coach/ui/components.puml
 import { createEffect, createRoot, createSignal } from "solid-js";
 import { createStore } from "solid-js/store";
-export type CoachEmotion =
-  | "idle"
-  | "watching"
-  | "watching--left"
-  | "watching--right"
-  | "thinking"
-  | "happy"
-  | "shocked"
-  | "sleepy"
-  | "sleeping";
+
+import type { CoachEmotion } from "~/types/coach";
 
 type CoachState = {
   // "base" state (driven by game events / API)

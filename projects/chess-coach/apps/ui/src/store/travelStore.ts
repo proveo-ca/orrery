@@ -1,7 +1,6 @@
 // SPEC: _spec/chess-coach/ui/components.puml
+import type { MoveSquares } from "~/types/game";
 import { createStore } from "solid-js/store";
-
-import type { MoveSquares } from "~/store/gameStore";
 
 type TravelState = {
   active: boolean;

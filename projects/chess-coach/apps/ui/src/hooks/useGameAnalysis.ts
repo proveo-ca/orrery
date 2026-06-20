@@ -1,8 +1,9 @@
+import type { EvalResult, GameAnalysis, PositionEval } from "~/types/analysis";
+import type { GameRecord } from "~/types/game";
 import { Chess } from "chess.js";
 import { createEffect, createSignal, on, onCleanup } from "solid-js";
 
-import { enginePool, type EvalResult } from "~/engine/EnginePool";
-import type { GameRecord } from "~/store/gameHistoryStore";
+import { enginePool } from "~/engine/EnginePool";
 
 /** Search depth for review analysis. Shared by the Review screen and the
  *  CoachScreen live pre-analysis so both write interchangeable cache entries. */
@@ -11,15 +12,6 @@ export const ANALYSIS_DEPTH = 20;
 const MAX_ANALYSIS_LANES = 3;
 /** Persist + emit progress after this many freshly-analyzed plies. */
 const FLUSH_EVERY = 2;
-
-export type PositionEval = { kind: "cp" | "mate"; value: number };
-
-export type GameAnalysis = {
-  cpDeltas: (number | null)[];
-  wasBestMoves: boolean[];
-  bestMoveUcis: (string | null)[];
-  loading: boolean;
-};
 
 const EMPTY: GameAnalysis = { cpDeltas: [], wasBestMoves: [], bestMoveUcis: [], loading: false };
 

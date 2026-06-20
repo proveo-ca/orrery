@@ -1,0 +1,168 @@
+.square {
+  width: var(--square-size);
+  height: var(--square-size);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  position: relative;
+}
+
+.square.light {
+  background-color: var(--board-light);
+}
+.square.dark {
+  background-color: var(--board-dark);
+}
+
+/* =========================================
+   Coordinates (Ranks & Files)
+   ========================================= */
+.coordinate {
+  position: absolute;
+  font-size: clamp(8px, 2.5vw, 12px);
+  font-weight: bold;
+  user-select: none;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.rank-label {
+  top: 2px;
+  left: 4px;
+}
+
+.file-label {
+  bottom: 0px;
+  right: 4px;
+}
+
+/* Contrast colors based on square background */
+.square.light .coordinate {
+  color: var(--board-dark);
+}
+.square.dark .coordinate {
+  color: var(--board-light);
+}
+
+/* =========================================
+   Overlays (::before)
+   ========================================= */
+.square::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  transition: background-color 0.15s ease;
+}
+
+/* Selected Piece */
+.square.selected::before {
+  background-color: var(--square-selected-bg);
+}
+
+/* Valid Hover */
+.square.hovered::before {
+  background-color: var(--square-hover-bg);
+  border: 2px solid var(--square-hover-border);
+  box-sizing: border-box;
+}
+
+/* Invalid Hover / Click */
+.square.invalid::before {
+  background-color: var(--square-invalid-bg);
+}
+.square.invalid {
+  cursor: not-allowed;
+}
+
+/* =========================================
+   Move Indicators (::after)
+   ========================================= */
+.square::after {
+  position: absolute;
+  pointer-events: none;
+  z-index: 2;
+  transition: all 0.2s ease;
+}
+
+/* Dot for empty valid move */
+.square.valid-move::after {
+  content: "";
+  width: 30%;
+  height: 30%;
+  background-color: rgba(var(--shadow-rgb), 0.2);
+  border-radius: 50%;
+}
+
+/* Red ring for capture (kill) */
+.square.capture::after {
+  content: "";
+  width: 80%;
+  height: 80%;
+  background-color: transparent;
+  border: clamp(3px, 1vw, 5px) solid var(--square-capture-border);
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+
+.last-move-indicator {
+  position: absolute;
+  width: 75%;
+  height: 75%;
+  border: clamp(2px, 0.8vw, 4px) solid var(--square-last-move-border);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 3;
+  box-sizing: border-box;
+}
+
+/* Blue ring for advice highlight */
+.square.advice-highlight::after {
+  content: "";
+  width: 80%;
+  height: 80%;
+  background-color: transparent;
+  border: clamp(3px, 1vw, 5px) solid var(--primary-color);
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(var(--primary-rgb), 0.5);
+  box-sizing: border-box;
+}
+
+/* =========================================
+   Pieces
+   ========================================= */
+.piece {
+  width: 90%;
+  height: 90%;
+  -webkit-touch-callout: none;
+  user-select: none;
+  position: relative;
+  z-index: 10;
+  pointer-events: auto; /* Allow dragging, clicks will bubble up to the square */
+  cursor: grab;
+}
+.piece:active {
+  cursor: grabbing;
+}
+
+/* Hide source piece while touch-dragging (ghost replaces it) */
+.square.dragging .piece {
+  opacity: 0;
+}
+
+/* =========================================
+   Check / Mate / Stalemate States
+   ========================================= */
+.square.in-check {
+  background: radial-gradient(circle, var(--square-check-color) 0%, transparent 80%);
+}
+
+.square.in-checkmate {
+  background-color: var(--square-checkmate-bg);
+}
+
+.square.in-stalemate {
+  background: radial-gradient(circle, var(--square-stalemate-color) 0%, transparent 80%);
+}

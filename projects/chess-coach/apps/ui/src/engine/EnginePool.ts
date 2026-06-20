@@ -1,6 +1,7 @@
 // SPEC: _spec/chess-coach/ui/components.puml
 import { DEFAULT_STOCKFISH_WORKER_URL } from "~/engine/StockfishEngine";
 import { parseStockfishMessage } from "~/utils/stockfishParser";
+import type { EvalResult, PositionEval } from "~/types/analysis";
 
 /**
  * Central Stockfish scheduler.
@@ -25,9 +26,7 @@ import { parseStockfishMessage } from "~/utils/stockfishParser";
  */
 
 export type Priority = "interactive" | "normal" | "background";
-export type PositionEval = { kind: "cp" | "mate"; value: number };
 export type EvalInfo = { depth?: number; score?: PositionEval; pv?: string[] };
-export type EvalResult = { bestMove: string | null; score: PositionEval | null; depth: number };
 
 export interface EvalRequest {
   fen: string;

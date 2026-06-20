@@ -5,13 +5,9 @@ import { postMove } from "~/services/api";
 import { resolveMode } from "~/services/runtimeMode";
 import { capabilities } from "~/store/capabilitiesStore";
 import { setAdvice, setCoachEmotion } from "~/store/coachStore";
-import {
-  addMove,
-  addMoveSan,
-  game as gameFromStore,
-  isThreefoldRepetition,
-} from "~/store/gameStore";
+import { addMove, addMoveSan, game as gameFromStore, isThreefoldRepetition } from "~/store/gameStore";
 import { difficulty } from "~/store/settingsStore";
+import type { PromotionPiece } from "~/types/chess";
 import type { StockfishAnalysis } from "~/types/Stockfish";
 import { logger } from "~/utils/logger";
 
@@ -104,8 +100,6 @@ function getGameOverState(isHumanTurn: boolean) {
   }
   return null;
 }
-
-type PromotionPiece = "q" | "r" | "b" | "n";
 
 type ExecuteMoveParams = {
   game: Chess;

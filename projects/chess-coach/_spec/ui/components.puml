@@ -127,34 +127,23 @@ package "Hooks  [src/hooks/]" {
 
 package "Components  [src/components/]" {
 
-  package "Board Components" {
-    rectangle "ChessBoard"      as ChessBoard
+  ' Features = compose atoms/primitives + coordinate hooks/stores into a working unit.
+  package "Features  [components/features/]" {
+    rectangle "ChessBoard"   as ChessBoard
     note bottom of ChessBoard
       8×8 grid · drag+drop · touch-drag
       piece animation · last-move highlight
       best-move arrow (green) · advice arrow (blue)
       EvalBar overlay · GameOver modal · PromotionModal
       board flips on activePlayerColor change
+      composes ChessSquare + ChessBoardArrow (atoms)
     end note
-    rectangle "ChessSquare"     as ChessSquare
-    rectangle "ChessBoardArrow" as ChessBoardArrow
-    rectangle "CapturedPieces"  as CapturedPieces
-    rectangle "EvalBar"         as EvalBar
-    rectangle "PromotionModal"  as PromotionModal
-  }
-
-  package "Coach Components" {
     rectangle "CoachPanel" as CoachPanel
     note right of CoachPanel
       parses SAN notation · interactive spans
       hover/click → board arrow highlight
       "Why?" button if hoverBlunder=true
     end note
-    rectangle "CoachAvatar"      as CoachAvatar
-    rectangle "CoachEmotionIcon" as CoachEmotionIcon
-  }
-
-  package "Navigation Components" {
     rectangle "Sidebar" as Sidebar
     note right of Sidebar
       hint · resign · new game · flip board
@@ -168,38 +157,74 @@ package "Components  [src/components/]" {
       with SettingsPanel + resign/flip/credits +
       route shortcuts (Coach/Analysis/Review).
     end note
-    rectangle "Controls"      as Controls
-    rectangle "DualNavButton" as DualNavButton
-  }
-
-  package "Game UI Components" {
     rectangle "MoveList" as MoveList
     note right of MoveList
       2-column layout · CP delta · annotation badges
       best | blunder | inaccuracy | hint | forced
       ROWS_PER_PAGE=8 · swipe on mobile
     end note
-    rectangle "GameHistoryList" as GameHistoryList
-    rectangle "FenLoader"       as FenLoader
+    rectangle "Controls"       as Controls
+    rectangle "NewGamePanel"   as NewGamePanel
+    rectangle "Settings"       as Settings
+    rectangle "LoadingOverlay" as LoadingOverlay
+    note right of LoadingOverlay
+      full-screen loading splash — reads coachStore
+      (progress) + composes CoachAvatar (atom).
+    end note
+  }
+
+  ' Atoms = single responsibility wired to state (store/hook/effect), minimal JSX.
+  package "Atoms  [components/atoms/]" {
+    rectangle "ChessSquare"     as ChessSquare
+    rectangle "ChessBoardArrow" as ChessBoardArrow
+    rectangle "CapturedPieces"  as CapturedPieces
+    rectangle "CoachAvatar"     as CoachAvatar
+    note right of CoachAvatar
+      animated SVG cat · reads coachEmotion()
+      `sleeping` prop forces the loading pose
+    end note
     rectangle "TurnLabel"       as TurnLabel
-    rectangle "NewGamePanel"    as NewGamePanel
-    rectangle "Settings"        as Settings
+    rectangle "GameHistoryList" as GameHistoryList
     rectangle "Credits"         as Credits
     rectangle "DebugControls"   as DebugControls
-  }
-
-  package "Overlays" {
-    rectangle "LoadingOverlay"    as LoadingOverlay
-    rectangle "HistoryOverlay"    as HistoryOverlay
+    rectangle "FenLoader"       as FenLoader
+    rectangle "ResignConfirm"   as ResignConfirm
+    rectangle "Modal"           as Modal
+    note right of Modal
+      reusable dialog — owns a focus-trap createEffect,
+      so it lives in atoms/ (not a pure primitive).
+    end note
+    rectangle "MatrixOverlay"     as MatrixOverlay
     rectangle "LightSpeedOverlay" as LightSpeedOverlay
-    rectangle "Modal"             as Modal
   }
 
-  package "Common  [components/common/]" {
+  ' Primitives = presentational, props-driven shared kit (was components/common/).
+  package "Primitives  [components/primitives/]" {
     rectangle "Button / IconButton / MenuButton" as Buttons
     rectangle "Select / Toggle / Label"          as Inputs
-    rectangle "Modal / Divider / ProgressBar"    as Utility
+    rectangle "Divider / ProgressBar"            as Utility
     rectangle "icons.tsx (40+ SVG icons)"        as Icons
+    rectangle "ColorSelector"      as ColorSelector
+    rectangle "EvalBar"            as EvalBar
+    rectangle "CoachEmotionIcon"   as CoachEmotionIcon
+    rectangle "PromotionModal"     as PromotionModal
+    rectangle "GameHistoryFilters" as GameHistoryFilters
+    rectangle "DualNavButton"      as DualNavButton
+    rectangle "SplashScreen"       as SplashScreen
+    note right of SplashScreen
+      shared splash shell: centered content +
+      avatar slot + title. Composed by MenuScreen,
+      LanScreen and LoadingOverlay (one stylesheet).
+    end note
+    rectangle "Screen"             as Screen
+    note right of Screen
+      gameplay layout shell — owns the app-container
+      grid + compound regions (Header · SidebarInset ·
+      BoardArea · BoardColumn · Footer). Composed by
+      CoachScreen · AnalysisScreen · ReviewScreen
+      (replaced the shared App.module.css).
+    end note
+    rectangle "HistoryOverlay (presentational overlay)" as Overlays
   }
 }
 
@@ -341,9 +366,8 @@ UseGameAnalysis ..> MoveAnnot : resolveAnnotations
 ' ══════════════════════════════════════════════════════════════
 ' LAYOUT
 ' ══════════════════════════════════════════════════════════════
-"Navigation Components" -[hidden]down- "Game UI Components"
-"Game UI Components" -[hidden]down--- "Board Components"
-"Board Components" -[hidden]down- "Coach Components"
+"Features  [components/features/]" -[hidden]down- "Atoms  [components/atoms/]"
+"Atoms  [components/atoms/]" -[hidden]down- "Primitives  [components/primitives/]"
 
 "Screens  [src/screens/]" -[hidden] "Capabilities  [capabilitiesStore.ts]"
 "Capabilities  [capabilitiesStore.ts]" -[hidden]down-- "Components  [src/components/]"

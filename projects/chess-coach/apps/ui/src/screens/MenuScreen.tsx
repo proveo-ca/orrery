@@ -1,23 +1,18 @@
 // SPEC: _spec/chess-coach/ui/components.puml
+import type { Difficulty, PlayerIdentity } from "~/types/settings";
 import { useNavigate } from "@solidjs/router";
 import type { Component } from "solid-js";
 
-import { CoachAvatar } from "~/components/CoachAvatar";
-import { Label } from "~/components/common/Label";
-import { MenuButton } from "~/components/common/MenuButton";
-import { Select } from "~/components/common/Select";
-import styles from "~/components/common/SplashScreen.module.css";
-import { Credits } from "~/components/Credits";
+import { CoachAvatar } from "~/components/atoms/CoachAvatar";
+import { Credits } from "~/components/atoms/Credits";
+import { Label } from "~/components/primitives/Label";
+import { MenuButton } from "~/components/primitives/MenuButton";
+import { Select } from "~/components/primitives/Select";
+import { SplashScreen } from "~/components/primitives/SplashScreen";
+import styles from "~/screens/MenuScreen.module.css";
 import { setShowCredits, showCredits } from "~/store/coachStore";
 import { gameHistory } from "~/store/gameHistoryStore";
-import {
-  difficulty,
-  playerIdentity,
-  setDifficulty,
-  setPlayerIdentity,
-  type Difficulty,
-  type PlayerIdentity,
-} from "~/store/settingsStore";
+import { difficulty, playerIdentity, setDifficulty, setPlayerIdentity } from "~/store/settingsStore";
 
 const IDENTITY_OPTIONS: PlayerIdentity[] = ["Human", "Cat", "Dog", "Rat"];
 
@@ -25,11 +20,7 @@ export const MenuScreen: Component = () => {
   const navigate = useNavigate();
 
   return (
-    <div class={styles["splash-content"]}>
-      <div class={styles["splash-avatar-wrapper"]}>
-        <CoachAvatar />
-      </div>
-      <h2 class={styles["splash-title"]}>Wanna play Chess?</h2>
+    <SplashScreen title="Wanna play Chess?" avatar={<CoachAvatar />}>
       <div class={styles["identity-row"]}>
         <label class={styles["identity-label"]} for="player-identity">
           I am:
@@ -73,6 +64,6 @@ export const MenuScreen: Component = () => {
         Credits
       </MenuButton>
       <Credits open={showCredits()} onClose={() => setShowCredits(false)} />
-    </div>
+    </SplashScreen>
   );
 };

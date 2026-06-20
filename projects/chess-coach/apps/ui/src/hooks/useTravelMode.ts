@@ -1,41 +1,21 @@
 // SPEC: _spec/chess-coach/ui/components.puml
+import type { MoveSquares } from "~/types/game";
 import { Chess } from "chess.js";
 import { createSignal } from "solid-js";
 
-import { DEFAULT_STOCKFISH_WORKER_URL } from "~/engine/StockfishEngine.ts";
-import { UciDriver } from "~/engine/UciDriver.ts";
+import { enginePool } from "~/engine/EnginePool";
 import { postExplainStream } from "~/services/api";
 import { accumulateStream } from "~/services/streamUtils";
 import { clearPendingTravel, setHoverAdvice, setHoverEmotion } from "~/store/coachStore";
-import { type MoveSquares, currentFen } from "~/store/gameStore";
+import { currentFen } from "~/store/gameStore";
 import { startTravel } from "~/store/travelStore";
 
 /**
- * Requests the best line (PV) from a dedicated Stockfish worker,
- * then plays it out move-by-move to build a fake timeline.
+ * Requests the best line (PV) from the shared engine pool, then plays it
+ * out move-by-move to build a fake timeline.
  */
-export function useTravelMode(workerPath: string = DEFAULT_STOCKFISH_WORKER_URL) {
+export function useTravelMode() {
   const [loading, setLoading] = createSignal(false);
-
-  const getBestUci = async (
-    driver: UciDriver,
-    fen: string,
-    depth: number = 12,
-  ): Promise<string> => {
-    driver.send("ucinewgame");
-    driver.send(`position fen ${fen}`);
-    driver.send(`go depth ${depth}`);
-
-    const lines = await driver.readUntil("bestmove", 15000);
-    for (const line of lines) {
-      if (line.startsWith("bestmove")) {
-        const tokens = line.trim().split(/\s+/);
-        const uci = tokens[1];
-        return uci && uci !== "(none)" ? uci : "";
-      }
-    }
-    return "";
-  };
 
   const activateTravel = async (blunderFen: string, blunderSan: string, fenBefore?: string) => {
     setLoading(true);
@@ -55,22 +35,25 @@ export function useTravelMode(workerPath: string = DEFAULT_STOCKFISH_WORKER_URL)
       setHoverAdvice,
     ).catch((err) => console.error("Failed to fetch explanation stream", err));
 
-    const driver = new UciDriver(workerPath);
-    driver.send("uci"); // Ensure initialized
-
     try {
       const fens: string[] = [blunderFen];
       const moves: (MoveSquares | null)[] = [null];
 
-      let current = new Chess(blunderFen);
+      const current = new Chess(blunderFen);
       for (let i = 0; i < 8; i++) {
-        const uci = await getBestUci(driver, current.fen());
-        if (!uci) break;
+        // Route through the shared pool. Travel is a user-initiated "Why?"
+        // request, so it runs at interactive priority (preempts background work).
+        const { bestMove } = await enginePool.evaluate({
+          fen: current.fen(),
+          depth: 12,
+          priority: "interactive",
+        });
+        if (!bestMove) break;
 
         try {
-          const from = uci.slice(0, 2);
-          const to = uci.slice(2, 4);
-          const promotion = uci.length > 4 ? uci[4] : undefined;
+          const from = bestMove.slice(0, 2);
+          const to = bestMove.slice(2, 4);
+          const promotion = bestMove.length > 4 ? bestMove[4] : undefined;
           const result = current.move({ from, to, promotion });
           if (!result) break;
 
@@ -91,7 +74,6 @@ export function useTravelMode(workerPath: string = DEFAULT_STOCKFISH_WORKER_URL)
       setHoverEmotion("shocked");
     } finally {
       setLoading(false);
-      driver.stop();
     }
   };
 

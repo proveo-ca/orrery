@@ -5,12 +5,7 @@ import { lastAIMoveInfo, lastHumanMoveInfo } from "~/hooks/useMoveExecutor";
 import { lastCoachEvent } from "~/store/coachStore";
 import { finalizeGame, inProgressGame, pushMove, startNewRecord } from "~/store/gameHistoryStore";
 import { game as gameFromStore } from "~/store/gameStore";
-import {
-  activePlayerColor,
-  difficulty,
-  opponentIdentity,
-  playerIdentity,
-} from "~/store/settingsStore";
+import { activePlayerColor, difficulty, opponentIdentity, playerIdentity } from "~/store/settingsStore";
 
 const STARTING_FEN_FALLBACK = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 

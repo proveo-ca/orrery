@@ -1,10 +1,9 @@
 // SPEC: _spec/chess-coach/ui/components.puml
-import type { MoveRecord } from "~/store/gameHistoryStore";
+import type { AnnotationTag, MoveRow } from "~/types/analysis";
+import type { MoveRecord } from "~/types/game";
 
 export const BLUNDER_THRESHOLD_CP = -200;
 export const INACCURACY_THRESHOLD_CP = -50;
-
-export type AnnotationTag = "best" | "blunder" | "inaccuracy" | "hint" | "forced";
 
 /**
  * Pure annotation resolver. Combines the stored move records with
@@ -60,14 +59,6 @@ export function formatCp(cp: number): string {
   if (cp <= -10000) return "M-";
   return cp > 0 ? `+${cp}` : `${cp}`;
 }
-
-export type MoveRow = {
-  turn: number;
-  white: MoveRecord | null;
-  whiteIndex: number;
-  black: MoveRecord | null;
-  blackIndex: number;
-};
 
 /**
  * Pair a flat half-move list into `{ turn, white, black }` rows suitable

@@ -3,35 +3,9 @@ import { onCleanup, onMount } from "solid-js";
 
 import { useTravelMode } from "~/hooks/useTravelMode";
 import { capabilities } from "~/store/capabilitiesStore";
-import {
-  clearHoverOverride,
-  coachEmotion,
-  dispatchCoachEvent,
-  hoverBlunder,
-  hoverBlunderFen,
-  hoverBlunderSan,
-  pendingTravel,
-} from "~/store/coachStore";
-import {
-  currentIndex,
-  fenHistory,
-  goBack,
-  goForward,
-  loadGame,
-  reviewAnalysisMode,
-  savedReviewBranchIndex,
-  savedReviewPgn,
-  savedReviewStartingFen,
-  setReviewAnalysisMode,
-  setViewIndex,
-} from "~/store/gameStore";
-import {
-  exitTravel,
-  isTravelling,
-  travelBack,
-  travelForward,
-  travelIndex,
-} from "~/store/travelStore";
+import { clearHoverOverride, coachEmotion, dispatchCoachEvent, hoverBlunder, hoverBlunderFen, hoverBlunderSan, pendingTravel } from "~/store/coachStore";
+import { currentIndex, fenHistory, goBack, goForward, loadGame, reviewAnalysisMode, savedReviewBranchIndex, savedReviewPgn, savedReviewStartingFen, setReviewAnalysisMode, setViewIndex } from "~/store/gameStore";
+import { exitTravel, isTravelling, travelBack, travelForward, travelIndex } from "~/store/travelStore";
 
 export function useGlobalShortcuts() {
   const { activateTravel, loading } = useTravelMode();
