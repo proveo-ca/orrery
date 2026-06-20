@@ -50,6 +50,7 @@ models/**/resolve/
 # ==========================================
 .aider/
 .aider*
+.cecli
 .claude
 .cursor/rules/nx-rules.mdc
 
