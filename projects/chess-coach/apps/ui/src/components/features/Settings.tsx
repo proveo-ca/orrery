@@ -4,6 +4,7 @@ import type { Component } from "solid-js";
 
 import { Button } from "~/components/primitives/Button";
 import { Modal } from "~/components/atoms/Modal";
+import { PlayerNameField } from "~/components/features/PlayerNameField";
 import { Select } from "~/components/primitives/Select";
 import { Toggle } from "~/components/primitives/Toggle";
 import styles from "~/components/features/Settings.module.css";
@@ -32,6 +33,12 @@ export const SettingsPanel: Component<{ onDismiss?: () => void }> = (props) => {
 
   return (
     <div class={styles.settings}>
+      <div class={styles.row}>
+        <label class={styles.label} for="settings-player-name">
+          Name:
+        </label>
+        <PlayerNameField id="settings-player-name" />
+      </div>
       <div class={styles.row}>
         <label class={styles.label} for="settings-player-identity">
           I am:

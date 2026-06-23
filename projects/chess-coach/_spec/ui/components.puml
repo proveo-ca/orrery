@@ -112,8 +112,10 @@ package "Hooks  [src/hooks/]" {
   }
 
   package "Recording & Travel Hooks" {
-    [useGameRecorder] as UseGameRecorder
-    [useTravelMode]   as UseTravelMode
+    [useGameRecorder]     as UseGameRecorder
+    [useTravelMode]       as UseTravelMode
+    [useSharedGameImport] as UseSharedGameImport
+    [useShareGame]        as UseShareGame
   }
 
   package "UX Hooks" {
@@ -166,6 +168,13 @@ package "Components  [src/components/]" {
     rectangle "Controls"       as Controls
     rectangle "NewGamePanel"   as NewGamePanel
     rectangle "Settings"       as Settings
+    rectangle "PlayerNameField" as PlayerNameField
+    note right of PlayerNameField
+      player display-name input + 🎲 re-roll
+      (unique-names-generator → "Sneaky Otter").
+      Bound to settingsStore.playerName; shared by
+      MenuScreen · NewGamePanel · SettingsPanel.
+    end note
     rectangle "LoadingOverlay" as LoadingOverlay
     note right of LoadingOverlay
       full-screen loading splash — reads coachStore
@@ -201,7 +210,7 @@ package "Components  [src/components/]" {
   ' Primitives = presentational, props-driven shared kit (was components/common/).
   package "Primitives  [components/primitives/]" {
     rectangle "Button / IconButton / MenuButton" as Buttons
-    rectangle "Select / Toggle / Label"          as Inputs
+    rectangle "Select / Toggle / Label / Input"  as Inputs
     rectangle "Divider / ProgressBar"            as Utility
     rectangle "icons.tsx (40+ SVG icons)"        as Icons
     rectangle "ColorSelector"      as ColorSelector
@@ -250,10 +259,22 @@ package "Services  [src/services/]" {
     desktop → HttpCoachService
     web-full | web-no-llm → WebWorkerCoachService
   end note
+  [gameShare] as GameShare
+  note right of GameShare
+    encode/decode a GameRecord ↔ URL-hash
+    payload (lz-string), for "share a game by
+    link". decode is hostile-input-hardened
+    (size caps, field validation, id re-derive).
+    Analysis cache is NOT shared (recomputed).
+  end note
 }
 
 HttpCoachService      ..|> CoachServiceIF
 WebWorkerCoachService ..|> CoachServiceIF
+
+UseSharedGameImport --> GameShare    : decodeGame
+UseSharedGameImport --> HistoryStore : importGameRecord
+UseShareGame        --> GameShare    : buildShareUrl
 
 ' ══════════════════════════════════════════════════════════════
 ' WEB ENGINE

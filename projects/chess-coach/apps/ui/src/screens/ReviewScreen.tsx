@@ -17,15 +17,20 @@ import { resolveAnnotations } from "~/engine/moveAnnotations";
 import { useBlunderArrow } from "~/hooks/useBlunderArrow";
 import { useGameAnalysis } from "~/hooks/useGameAnalysis";
 import { useGameHistoryFilters } from "~/hooks/useGameHistoryFilters";
+import { useShareGame } from "~/hooks/useShareGame";
+import { useSharedGameImport } from "~/hooks/useSharedGameImport";
 import { REVIEW_CAPABILITIES, setCapabilities } from "~/store/capabilitiesStore";
 import { gameHistory, getGameById } from "~/store/gameHistoryStore";
 import { fenHistory, loadGame, reviewAnalysisMode, setSavedReviewBranchIndex, setReviewAnalysisMode, setSavedReviewPgn, setSavedReviewStartingFen } from "~/store/gameStore";
 import { activePlayerColor, blunderThresholdCp, opponentIdentity, playerIdentity, setActivePlayerColor, setOpponentIdentity, setPlayerIdentity } from "~/store/settingsStore";
+import { formatGameLabel } from "~/utils/gameTitle";
 
 export const ReviewScreen: Component = () => {
   const params = useParams<{ id?: string }>();
   const navigate = useNavigate();
   const filters = useGameHistoryFilters();
+  const { importError, importing } = useSharedGameImport();
+  const { share, shareMsg } = useShareGame();
 
   let prevPlayerIdentity = playerIdentity();
   let prevOpponentIdentity = opponentIdentity();
@@ -184,7 +189,13 @@ export const ReviewScreen: Component = () => {
                 }}
               >
                 <span>
-                  {params.id ? "Game not found. Pick one above." : "Pick a game above to review."}
+                  {importing()
+                    ? "Loading shared game…"
+                    : importError()
+                      ? importError()
+                      : params.id
+                        ? "Game not found. Pick one above."
+                        : "Pick a game above to review."}
                 </span>
                 <Button primary href="/">
                   Back to Main Menu
@@ -208,7 +219,11 @@ export const ReviewScreen: Component = () => {
                 <Label variant="title" color={resultColor}>
                   {resultLabel} ({colorLabel})
                 </Label>
-                <Label variant="title">vs {g().opponentName}</Label>
+                <Label variant="title">{formatGameLabel(g())}</Label>
+                <Button onClick={() => void share(g())}>Share</Button>
+                <Show when={shareMsg()}>
+                  <Label variant="caption">{shareMsg()}</Label>
+                </Show>
                 <Button primary onClick={() => navigate(-1)}>
                   Back
                 </Button>

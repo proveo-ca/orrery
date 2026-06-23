@@ -4,6 +4,9 @@ import { For, Show } from "solid-js";
 import type { Component } from "solid-js";
 
 import styles from "~/components/atoms/GameHistoryList.module.css";
+import { ShareIcon } from "~/components/primitives/icons";
+import { useShareGame } from "~/hooks/useShareGame";
+import { formatGameLabel } from "~/utils/gameTitle";
 
 interface Props {
   games: GameRecord[];
@@ -46,12 +49,8 @@ const resultClass = (r: GameRecord["result"]): string => {
   }
 };
 
-const buildTitle = (g: GameRecord): string => {
-  const opponent = g.opponentName || g.opponentRace || "Opponent";
-  return `vs ${opponent}`;
-};
-
 export const GameHistoryList: Component<Props> = (props) => {
+  const { share, shareMsg } = useShareGame();
   return (
     <div class={styles.wrapper} role="list" aria-label="Recent games">
       <Show
@@ -60,22 +59,37 @@ export const GameHistoryList: Component<Props> = (props) => {
       >
         <For each={props.games}>
           {(g) => (
-            <A
-              role="listitem"
-              href={`/review/${g.id}`}
-              class={styles.tile}
-              classList={{ [styles["tile--active"]]: props.activeId === g.id }}
-              data-game-id={g.id}
-            >
-              <div class={styles.header}>
-                <span class={`${styles.result} ${resultClass(g.result)}`}>{g.result}</span>
-                <span class={styles.date}>{formatDate(g.startedAt)}</span>
-              </div>
-              <div class={styles.preview}>{buildTitle(g)}</div>
-              <div class={styles.preview}>{movePreview(g)}</div>
-            </A>
+            <div class={styles.item} role="listitem">
+              <A
+                href={`/review/${g.id}`}
+                class={styles.tile}
+                classList={{ [styles["tile--active"]]: props.activeId === g.id }}
+                data-game-id={g.id}
+              >
+                <div class={styles.header}>
+                  <span class={`${styles.result} ${resultClass(g.result)}`}>{g.result}</span>
+                  <span class={styles.date}>{formatDate(g.startedAt)}</span>
+                </div>
+                <div class={styles.preview}>{formatGameLabel(g)}</div>
+                <div class={styles.preview}>{movePreview(g)}</div>
+              </A>
+              <button
+                type="button"
+                class={styles.share}
+                title="Share game"
+                aria-label={`Share game: ${formatGameLabel(g)}`}
+                onClick={() => void share(g)}
+              >
+                <ShareIcon size={16} />
+              </button>
+            </div>
           )}
         </For>
+      </Show>
+      <Show when={shareMsg()}>
+        <div class={styles.shareMsg} role="status">
+          {shareMsg()}
+        </div>
       </Show>
     </div>
   );

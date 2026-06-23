@@ -135,6 +135,8 @@ package "Stores  [src/store/]" {
     blunderThresholdCp(): number
     blunderLabel(): string
     playerIdentity(): PlayerIdentity
+    opponentIdentity(): PlayerIdentity
+    playerName(): string  (default: random funny name)
     playerPieceSet(): PieceSet
     opponentPieceSet(): PieceSet
     imLost(): boolean
@@ -143,6 +145,8 @@ package "Stores  [src/store/]" {
     setActivePlayerColor(c)
     setDifficulty(d)
     setPlayerIdentity(id)
+    setOpponentIdentity(id)
+    setPlayerName(v)
     setImLost(v)
     .. Types ..
     PlayerColorPref: w | b | random
@@ -165,14 +169,17 @@ package "Stores  [src/store/]" {
     inProgressGame(): GameRecord | null
     getGameById(id): GameRecord | null
     .. Mutations ..
-    startNewRecord(id, fen, color, diff)
+    startNewRecord(id, fen, color, diff,
+      playerRace?, opponentRace?, playerName?)
     pushMove(moveRecord)
     patchMoveAt(index, patch)
     finalizeGame(result, pgn)
+    importGameRecord(record): string  (from share link; re-derives id, dedupes)
     discardInProgress()
     .. Types ..
     GameRecord: {id, startedAt, endedAt, result,
-      pgn, startingFen, playerColor, difficulty, moves[]}
+      pgn, startingFen, playerColor, difficulty, moves[],
+      playerRace?, opponentRace?, playerName?, opponentName?}
     MoveRecord: {san, hasPressedHint, isAI}
     GameResult: win | loss | draw | ongoing
     id = Polyglot-Zobrist hash of move sequence
@@ -419,6 +426,26 @@ package "Hooks  [src/hooks/]" {
       reads: lastCoachEvent() mirror signal
     }
 
+    class useSharedGameImport <<side-effect>> {
+      .. Returns ..
+      importError(): string | null
+      importing(): boolean
+      .. Behaviour ..
+      onMount + hashchange: read #g= →
+        gameShare.decodeGame → importGameRecord
+        → navigate(/review/:id, replace)
+      invalid payload: error + clear hash
+    }
+
+    class useShareGame {
+      .. Returns ..
+      share(record): Promise<void>
+      shareMsg(): string | null
+      .. Behaviour ..
+      buildShareUrl → navigator.share, else
+        clipboard, else prompt; URL-length guard
+    }
+
     class useTravelMode {
       .. Returns ..
       activateTravel(blunderFen,
@@ -545,6 +572,18 @@ package "Services  [src/services/]" {
     .. Notes ..
     clears placeholder on first chunk
     supports AbortSignal · optional text prefix
+  }
+
+  class gameShare {
+    encodeGame(record): string
+    decodeGame(param): GameRecord | null
+    buildShareUrl(record): string
+    .. Notes ..
+    lz-string compress ↔ URL-hash payload
+    envelope {v:1, g} (id stripped, recomputed)
+    decode hardened: size caps, per-field
+    validation, fresh-object build, FEN/PGN
+    parse check, polyglot id re-derive
   }
 
   HttpCoachService      ..|> CoachService

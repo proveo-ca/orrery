@@ -5,6 +5,7 @@ import type { Component } from "solid-js";
 
 import { CoachAvatar } from "~/components/atoms/CoachAvatar";
 import { Credits } from "~/components/atoms/Credits";
+import { PlayerNameField } from "~/components/features/PlayerNameField";
 import { Label } from "~/components/primitives/Label";
 import { MenuButton } from "~/components/primitives/MenuButton";
 import { Select } from "~/components/primitives/Select";
@@ -21,6 +22,12 @@ export const MenuScreen: Component = () => {
 
   return (
     <SplashScreen title="Wanna play Chess?" avatar={<CoachAvatar />}>
+      <div class={styles["identity-row"]}>
+        <label class={styles["identity-label"]} for="player-name">
+          Name:
+        </label>
+        <PlayerNameField id="player-name" />
+      </div>
       <div class={styles["identity-row"]}>
         <label class={styles["identity-label"]} for="player-identity">
           I am:
