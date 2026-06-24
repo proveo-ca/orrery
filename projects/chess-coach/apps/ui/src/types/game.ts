@@ -22,5 +22,6 @@ export type GameRecord = {
   moves: MoveRecord[];
   playerRace?: PlayerIdentity;
   opponentRace?: PlayerIdentity;
+  playerName?: string;
   opponentName?: string;
 };

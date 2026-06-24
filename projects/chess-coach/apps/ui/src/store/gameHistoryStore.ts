@@ -37,10 +37,11 @@ export const startNewRecord = (
   difficulty: string,
   playerRace?: PlayerIdentity,
   opponentRace?: PlayerIdentity,
+  playerName?: string,
 ) => {
-  const opponentName = opponentRace
-    ? `Selena (${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)})`
-    : undefined;
+  // Base name only; difficulty stays in its own field and the player-vs label
+  // is composed from name + color (see formatGameLabel).
+  const opponentName = opponentRace ? "Selena" : undefined;
 
   setState("inProgress", {
     id,
@@ -54,6 +55,7 @@ export const startNewRecord = (
     moves: [],
     playerRace,
     opponentRace,
+    playerName: playerName?.trim() || undefined,
     opponentName,
   });
 };
@@ -126,6 +128,29 @@ export const finalizeGame = (result: GameResult, pgn: string) => {
     for (const g of evicted) deleteAnalysisCache(g.id);
     return { games: kept.slice(0, MAX_GAMES), inProgress: null };
   });
+};
+
+/**
+ * Insert a game received from a share link into the local history. Re-derives
+ * the polyglot id from the PGN (never trusts an incoming id), dedupes against
+ * existing games and the in-progress game (returns the existing id without
+ * touching state), and otherwise prepends + evicts past MAX_GAMES exactly like
+ * finalizeGame — but leaves the in-progress game untouched. The analysis cache
+ * is not imported; it recomputes from scratch when the game opens in Review.
+ */
+export const importGameRecord = (record: GameRecord): string => {
+  const id = polyglotHashFromPgn(record.pgn, record.startingFen);
+  const existing = getGameById(id);
+  if (existing) return existing.id;
+
+  const imported: GameRecord = { ...record, id };
+  setState((s) => {
+    const kept = [imported, ...s.games.filter((g) => g.id !== id)];
+    const evicted = kept.slice(MAX_GAMES);
+    for (const g of evicted) deleteAnalysisCache(g.id);
+    return { games: kept.slice(0, MAX_GAMES), inProgress: s.inProgress };
+  });
+  return id;
 };
 
 export const discardInProgress = () => {

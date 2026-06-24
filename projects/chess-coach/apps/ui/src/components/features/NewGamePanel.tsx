@@ -3,6 +3,7 @@ import type { Component } from "solid-js";
 
 import { Button } from "~/components/primitives/Button";
 import { ColorSelector } from "~/components/primitives/ColorSelector";
+import { PlayerNameField } from "~/components/features/PlayerNameField";
 import { Select } from "~/components/primitives/Select";
 import { Toggle } from "~/components/primitives/Toggle";
 import styles from "~/components/features/NewGamePanel.module.css";
@@ -59,6 +60,7 @@ export const NewGamePanel: Component = () => {
 
   return (
     <div class={styles["new-game-panel"]}>
+      <PlayerNameField />
       <ColorSelector value={colorPref()} onChange={setColorPref} />
       <Select
         class={styles["difficulty-select"]}

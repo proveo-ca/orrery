@@ -60,6 +60,26 @@ export const HintIcon: Component<IconProps> = (props) => {
   );
 };
 
+export const ShareIcon: Component<IconProps> = (props) => {
+  const s = () => props.size ?? 20;
+  return (
+    <svg
+      width={s()}
+      height={s()}
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path d="M13 6h2a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h2" />
+      <polyline points="7,5 10,2 13,5" />
+      <line x1="10" y1="2" x2="10" y2="11" />
+    </svg>
+  );
+};
+
 export const PlusCircleIcon: Component<IconProps> = (props) => {
   const s = () => props.size ?? 20;
   return (

@@ -14,8 +14,10 @@
   white-space: nowrap;
 }
 
-.identity-row select {
+.identity-row select,
+.identity-row input {
   flex: 1;
+  min-width: 0;
 }
 
 .menu-options {

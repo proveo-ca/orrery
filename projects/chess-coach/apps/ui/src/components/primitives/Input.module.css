@@ -1,0 +1,26 @@
+.common-input {
+  border-radius: var(--border-radius-md);
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 0.9rem;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: var(--surface-color);
+  transition: border-color 0.25s;
+  color: inherit;
+}
+.common-input:hover:not(:disabled) {
+  border-color: var(--primary-hover);
+}
+.common-input:focus,
+.common-input:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+.common-input::placeholder {
+  color: var(--text-color);
+  opacity: 0.5;
+}
+.common-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
