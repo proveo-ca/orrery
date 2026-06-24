@@ -40,6 +40,7 @@ import {
   setPlayerIdentity,
 } from "~/store/settingsStore";
 import { formatGameLabel } from "~/utils/gameTitle";
+import { canGoBackInApp } from "~/utils/navHistory";
 
 export const ReviewScreen: Component = () => {
   const params = useParams<{ id?: string }>();
@@ -244,9 +245,18 @@ export const ReviewScreen: Component = () => {
                   }}
                 >
                   <Button onClick={() => void share(g())}>Share</Button>
-                  <Button primary onClick={() => navigate(-1)}>
-                    Back
-                  </Button>
+                  <Show
+                    when={canGoBackInApp()}
+                    fallback={
+                      <Button primary href="/">
+                        Back to Main Menu
+                      </Button>
+                    }
+                  >
+                    <Button primary onClick={() => navigate(-1)}>
+                      Back
+                    </Button>
+                  </Show>
                 </div>
                 <div style={{ "min-height": "1.25rem", "margin-top": "0.5rem" }}>
                   <Show when={shareMsg()}>

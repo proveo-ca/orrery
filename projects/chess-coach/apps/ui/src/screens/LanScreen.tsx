@@ -3,6 +3,7 @@ import { type Component, Show, createEffect, createSignal, onCleanup, onMount } 
 
 import { OpponentCaptures, PlayerCaptures } from "~/components/atoms/CapturedPieces";
 import { MultiplayerBoard } from "~/components/features/MultiplayerBoard";
+import { PlayerNameField } from "~/components/features/PlayerNameField";
 import { TailscaleChecklist } from "~/components/features/TailscaleChecklist";
 import { Button } from "~/components/primitives/Button";
 import { IconButton } from "~/components/primitives/IconButton";
@@ -40,7 +41,7 @@ import {
   setSeat,
   started,
 } from "~/store/roomStore";
-import { playerIdentity } from "~/store/settingsStore";
+import { playerName } from "~/store/settingsStore";
 import type { Color, ConnStatus, PeerTransport, Seat, SignalPayload } from "~/types/multiplayer";
 
 const START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -92,7 +93,6 @@ const ConnIndicator: Component = () => (
  */
 export const LanScreen: Component = () => {
   const [transport, setTransport] = createSignal<PeerTransport | null>(null);
-  const [name, setName] = createSignal<string>(playerIdentity());
   const [desiredRole, setDesiredRole] = createSignal<Seat>("player");
   const [incomingOffer, setIncomingOffer] = createSignal<SignalPayload | null>(null);
   const [offerLink, setOfferLink] = createSignal("");
@@ -101,7 +101,7 @@ export const LanScreen: Component = () => {
   const [error, setError] = createSignal("");
 
   const mp = useMultiplayerGame(transport, () =>
-    role() === "guest" ? { identity: { name: name() }, desiredRole: desiredRole() } : null,
+    role() === "guest" ? { identity: { name: playerName() }, desiredRole: desiredRole() } : null,
   );
 
   // Capability preset reacts to seat + started — the board stays locked
@@ -134,7 +134,7 @@ export const LanScreen: Component = () => {
     setRole("host");
     setSeat("player");
     setMyPeerId(HOST_SELF_ID);
-    addPlayer(HOST_SELF_ID, { name: name() });
+    addPlayer(HOST_SELF_ID, { name: playerName() });
     setConnectionStatus("offering");
     await invite();
   };
@@ -231,12 +231,7 @@ export const LanScreen: Component = () => {
                   <label class={styles.fieldLabel} for="lan-name">
                     Your name
                   </label>
-                  <Input
-                    id="lan-name"
-                    placeholder="Your name"
-                    value={name()}
-                    onInput={(e) => setName(e.currentTarget.value)}
-                  />
+                  <PlayerNameField id="lan-name" />
                 </div>
                 <Show
                   when={incomingOffer()}
