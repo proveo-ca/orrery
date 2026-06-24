@@ -1,4 +1,3 @@
-import type { GameRecord } from "~/types/game";
 import { A } from "@solidjs/router";
 import { For, Show } from "solid-js";
 import type { Component } from "solid-js";
@@ -6,6 +5,7 @@ import type { Component } from "solid-js";
 import styles from "~/components/atoms/GameHistoryList.module.css";
 import { ShareIcon } from "~/components/primitives/icons";
 import { useShareGame } from "~/hooks/useShareGame";
+import type { GameRecord } from "~/types/game";
 import { formatGameLabel } from "~/utils/gameTitle";
 
 interface Props {

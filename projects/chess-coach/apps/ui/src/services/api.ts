@@ -1,7 +1,7 @@
-// SPEC: _spec/chess-coach/ui/components.puml
-import type { Difficulty } from "~/types/settings";
 import { resolveMode } from "~/services/runtimeMode";
 import { setLlmProgress } from "~/store/coachStore";
+// SPEC: _spec/chess-coach/ui/components.puml
+import type { Difficulty } from "~/types/settings";
 
 const RUNTIME_MODE = resolveMode();
 const API_URL = RUNTIME_MODE.kind === "desktop" ? RUNTIME_MODE.apiUrl : window.location.origin;

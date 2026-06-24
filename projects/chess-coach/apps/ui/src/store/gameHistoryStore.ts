@@ -1,8 +1,8 @@
-import type { PlayerIdentity } from "~/types/settings";
-import type { GameRecord, GameResult, MoveRecord } from "~/types/game";
 import { polyglotHashFromPgn } from "~/engine/polyglotZobrist";
 import { deleteAnalysisCache, migrateAnalysisCache } from "~/hooks/useGameAnalysis";
 import { createPersistedStore } from "~/store/createPersistedStore";
+import type { GameRecord, GameResult, MoveRecord } from "~/types/game";
+import type { PlayerIdentity } from "~/types/settings";
 
 export const getExpectedReviewId = (pgn: string, fen: string): string =>
   polyglotHashFromPgn(pgn, fen);

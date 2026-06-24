@@ -239,6 +239,8 @@ package "Components  [src/components/]" {
     rectangle "Button / IconButton / MenuButton" as Buttons
     rectangle "Select / Toggle / Label / Input"  as Inputs
     rectangle "Divider / ProgressBar"            as Utility
+    rectangle "Collapsible (accordion step)"     as Collapsible
+    rectangle "QrCode (qrcode → data URL)"       as QrCode
     rectangle "icons.tsx (40+ SVG icons)"        as Icons
     rectangle "ColorSelector"      as ColorSelector
     rectangle "EvalBar"            as EvalBar

@@ -1,12 +1,11 @@
-import type { PieceSet } from "~/types/settings";
 import type { Color } from "chess.js";
 import { For, Show } from "solid-js";
 import type { Component } from "solid-js";
 
 import { Modal } from "~/components/atoms/Modal";
 import styles from "~/components/primitives/PromotionModal.module.css";
-
 import type { PromotionPiece } from "~/types/chess";
+import type { PieceSet } from "~/types/settings";
 
 export type PendingPromotion = {
   color: Color;

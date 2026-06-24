@@ -1,8 +1,8 @@
 import { createEffect, createSignal } from "solid-js";
 import type { Component } from "solid-js";
 
-import { Button } from "~/components/primitives/Button";
 import { Modal } from "~/components/atoms/Modal";
+import { Button } from "~/components/primitives/Button";
 import { baseEvalScore } from "~/store/evalStore";
 import { activePlayerColor } from "~/store/settingsStore";
 

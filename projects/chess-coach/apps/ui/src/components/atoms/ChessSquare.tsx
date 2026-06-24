@@ -1,12 +1,12 @@
-// SPEC: _spec/chess-coach/ui/components.puml
-import type { MoveSquares } from "~/types/game";
-import type { PieceSet } from "~/types/settings";
 import type { Color, PieceSymbol, Square } from "chess.js";
 import clsx from "clsx";
 import { createEffect, on } from "solid-js";
 import type { Component } from "solid-js";
 
 import styles from "~/components/atoms/ChessSquare.module.css";
+// SPEC: _spec/chess-coach/ui/components.puml
+import type { MoveSquares } from "~/types/game";
+import type { PieceSet } from "~/types/settings";
 
 /** Grid-square offset from `from` to `to`, accounting for board flip. */
 function squareOffset(from: string, to: string, flipped: boolean): { dx: number; dy: number } {

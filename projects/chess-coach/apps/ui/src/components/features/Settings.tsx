@@ -1,14 +1,14 @@
-import type { PlayerIdentity } from "~/types/settings";
 import { useNavigate } from "@solidjs/router";
 import type { Component } from "solid-js";
 
-import { Button } from "~/components/primitives/Button";
 import { Modal } from "~/components/atoms/Modal";
 import { PlayerNameField } from "~/components/features/PlayerNameField";
+import styles from "~/components/features/Settings.module.css";
+import { Button } from "~/components/primitives/Button";
 import { Select } from "~/components/primitives/Select";
 import { Toggle } from "~/components/primitives/Toggle";
-import styles from "~/components/features/Settings.module.css";
 import { imLost, playerIdentity, setImLost, setPlayerIdentity } from "~/store/settingsStore";
+import type { PlayerIdentity } from "~/types/settings";
 
 type Props = {
   open: boolean;

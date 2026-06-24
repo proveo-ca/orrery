@@ -1,18 +1,17 @@
-// SPEC: _spec/chess-coach/ui/components.puml
-import type { AnnotationTag, GameAnalysis } from "~/types/analysis";
-import type { GameRecord, MoveRecord } from "~/types/game";
 import { For, Show, createSignal, onCleanup, onMount } from "solid-js";
 import type { Component } from "solid-js";
 
+import styles from "~/components/features/MoveList.module.css";
 import { CoachEmotionIcon } from "~/components/primitives/CoachEmotionIcon";
 import { ChevronLeftIcon, ChevronRightIcon, HintIcon } from "~/components/primitives/icons";
-import styles from "~/components/features/MoveList.module.css";
 import { formatCp, pairMovesIntoRows, resolveAnnotations } from "~/engine/moveAnnotations";
 import { useGameAnalysis } from "~/hooks/useGameAnalysis";
 import { useMoveListPagination } from "~/hooks/useMoveListPagination";
-
 import { setViewIndex } from "~/store/gameStore";
 import { blunderThresholdCp } from "~/store/settingsStore";
+// SPEC: _spec/chess-coach/ui/components.puml
+import type { AnnotationTag, GameAnalysis } from "~/types/analysis";
+import type { GameRecord, MoveRecord } from "~/types/game";
 
 // ── Presentational sub-components ──────────────────────────────────────
 

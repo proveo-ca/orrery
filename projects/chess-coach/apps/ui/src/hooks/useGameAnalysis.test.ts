@@ -1,6 +1,7 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
 // @vitest-environment jsdom
 import type { GameRecord } from "~/types/game";
-import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock the engine pool so analyzeGameToCache resolves deterministically and we
 // can count exactly which plies got (re-)analyzed.

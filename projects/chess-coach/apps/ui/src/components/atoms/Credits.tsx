@@ -1,8 +1,8 @@
 import { Show } from "solid-js";
 import type { Component } from "solid-js";
 
-import { Modal } from "~/components/atoms/Modal";
 import styles from "~/components/atoms/Credits.module.css";
+import { Modal } from "~/components/atoms/Modal";
 import { capabilities } from "~/store/capabilitiesStore";
 
 type Props = {

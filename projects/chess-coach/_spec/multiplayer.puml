@@ -13,6 +13,7 @@ package "Tailscale tailnet  (100.x — WireGuard overlay, no NAT)" {
 
   package "Host browser = room authority" as HostPkg {
     [SolidJS UI · LanScreen] as HostUI
+    [TailscaleChecklist\n(onboarding gate)] as Onboard
     [useMultiplayerGame\n(authoritative gameStore)] as HostHook
     [roomStore\n(seats · colors · started · identities)] as HostRoom
     [HostHubTransport\n(1→N RTCDataChannel)] as HostHub
@@ -35,6 +36,10 @@ P1User --> HostUI  : "Create room · pick color · move · Start"
 P2User --> BlackUI : "Join · pick/swap color · move · Start"
 ObsUser --> ObsUI  : "Join (spectate)"
 
+' ── Onboarding: gate the lobby on tailnet connectivity ──
+HostUI   --> Onboard : "wraps room setup (step 3)"
+Onboard  ..> Onboard : "detectPlatform() — UA → install help\nprobeTailnet() — 100.x ICE candidate (best-effort)"
+
 ' ── Host-side wiring ──
 HostUI   --> HostHook
 HostHook --> HostRoom : "seats · colors · swap · observer cap ≤4 · start gate"
@@ -55,6 +60,17 @@ note bottom of HostHub
   Signaling is MANUAL & out-of-band, one exchange per joiner:
     host offer → QR/link ──scan──▶ joiner answer → QR/link ──scan──▶ host
   Non-trickle ICE → each offer/answer fits a single QR.
+end note
+
+note right of Onboard
+  3-step collapsible (services/platform.ts, services/tailscale.ts):
+    1. **Verify connected** — probeTailnet() looks for a 100.64.0.0/10
+       host ICE candidate. Browsers may hide it, so detection is
+       best-effort + a manual "I'm connected" override.
+    2. **Get it running** — UA-tailored install steps + download/docs
+       links (desktop Linux/macOS/Windows · mobile iOS/Android).
+    3. **Choose side & invite** — the room setup (seats + invite link
+       and scannable QR). Gated until step 1 is satisfied.
 end note
 
 note bottom of HostRoom

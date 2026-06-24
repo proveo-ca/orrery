@@ -1,7 +1,7 @@
-// SPEC: _spec/chess-coach/ui/components.puml
-import type { Difficulty } from "~/types/settings";
 import { MaiaEngine } from "~/engine/MaiaEngine.ts";
 import { type EvalResult, StockfishEngine } from "~/engine/StockfishEngine.ts";
+// SPEC: _spec/chess-coach/ui/components.puml
+import type { Difficulty } from "~/types/settings";
 
 export class EngineBridge {
   // Full strength for coaching/evaluations

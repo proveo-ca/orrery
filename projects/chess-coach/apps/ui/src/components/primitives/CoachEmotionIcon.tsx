@@ -1,5 +1,6 @@
-import type { CoachEmotion } from "~/types/coach";
 import type { Component } from "solid-js";
+
+import type { CoachEmotion } from "~/types/coach";
 
 interface IconProps {
   emotion: CoachEmotion;

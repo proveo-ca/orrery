@@ -1,5 +1,3 @@
-// SPEC: _spec/chess-coach/ui/components.puml
-import type { MoveSquares } from "~/types/game";
 import { Chess } from "chess.js";
 import { createSignal } from "solid-js";
 
@@ -9,6 +7,8 @@ import { accumulateStream } from "~/services/streamUtils";
 import { clearPendingTravel, setHoverAdvice, setHoverEmotion } from "~/store/coachStore";
 import { currentFen } from "~/store/gameStore";
 import { startTravel } from "~/store/travelStore";
+// SPEC: _spec/chess-coach/ui/components.puml
+import type { MoveSquares } from "~/types/game";
 
 /**
  * Requests the best line (PV) from the shared engine pool, then plays it

@@ -1,8 +1,8 @@
 import { Show, createMemo } from "solid-js";
 import type { Component } from "solid-js";
 
-import { Label } from "~/components/primitives/Label";
 import styles from "~/components/atoms/TurnLabel.module.css";
+import { Label } from "~/components/primitives/Label";
 import { currentFen, currentIndex, fenHistory } from "~/store/gameStore";
 import { isTravelling } from "~/store/travelStore";
 

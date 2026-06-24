@@ -1,0 +1,17 @@
+.qr,
+.placeholder {
+  display: block;
+  margin: 0 auto;
+  border-radius: 0.5rem;
+  background-color: #fff;
+  /* Quiet-zone padding so the code stays scannable against the page. */
+  padding: 0.5rem;
+}
+
+.placeholder {
+  width: 200px;
+  height: 200px;
+  max-width: 100%;
+  aspect-ratio: 1;
+  opacity: 0.4;
+}

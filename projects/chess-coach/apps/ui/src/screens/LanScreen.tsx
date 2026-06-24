@@ -1,12 +1,17 @@
 // SPEC: _spec/chess-coach/multiplayer.puml
-import { A } from "@solidjs/router";
 import { type Component, Show, createEffect, createSignal, onCleanup, onMount } from "solid-js";
 
 import { OpponentCaptures, PlayerCaptures } from "~/components/atoms/CapturedPieces";
 import { ChessBoard } from "~/components/features/ChessBoard";
+import { TailscaleChecklist } from "~/components/features/TailscaleChecklist";
+import { Button } from "~/components/primitives/Button";
+import { Input } from "~/components/primitives/Input";
+import { Label } from "~/components/primitives/Label";
+import { QrCode } from "~/components/primitives/QrCode";
 import { Screen } from "~/components/primitives/Screen";
 import { SplashScreen } from "~/components/primitives/SplashScreen";
 import { HOST_SELF_ID, useMultiplayerGame } from "~/hooks/useMultiplayerGame";
+import styles from "~/screens/LanScreen.module.css";
 import { GuestLinkTransport, HostHubTransport } from "~/services/peer";
 import { buildSignalLink, parseSignalHash } from "~/services/signaling";
 import {
@@ -34,7 +39,6 @@ import {
   started,
 } from "~/store/roomStore";
 import { playerIdentity } from "~/store/settingsStore";
-import styles from "~/screens/LanScreen.module.css";
 import type { Color, PeerTransport, Seat, SignalPayload } from "~/types/multiplayer";
 
 const START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -58,7 +62,9 @@ const COLOR_LABEL: Record<Color, string> = { w: "White", b: "Black" };
  * Serverless peer-to-peer multiplayer over WebRTC (Tailscale for connectivity).
  * Host-hub topology: the room creator's browser relays moves; the other player
  * and up to four observers connect via a manual link signaling exchange. Pure
- * human-vs-human — no AI, coach, or backend involved.
+ * human-vs-human — no AI, coach, or backend involved. The lobby is fronted by a
+ * Tailscale onboarding checklist (TailscaleChecklist) so newcomers get on the
+ * tailnet before exchanging invites.
  */
 export const LanScreen: Component = () => {
   const [transport, setTransport] = createSignal<PeerTransport | null>(null);
@@ -170,14 +176,10 @@ export const LanScreen: Component = () => {
         </span>
         <Show when={seat() === "player" && !started()}>
           <Show when={!occupant() && myColor() !== color}>
-            <button class={styles.btn} onClick={() => mp.claimColor(color)}>
-              Take {COLOR_LABEL[color]}
-            </button>
+            <Button onClick={() => mp.claimColor(color)}>Take {COLOR_LABEL[color]}</Button>
           </Show>
           <Show when={occupant() && !mine() && myColor() != null && myColor() !== color}>
-            <button class={styles.btn} onClick={() => mp.swap()}>
-              Swap
-            </button>
+            <Button onClick={() => mp.swap()}>Swap</Button>
           </Show>
         </Show>
       </div>
@@ -194,140 +196,128 @@ export const LanScreen: Component = () => {
       when={started()}
       fallback={
         <SplashScreen title="Play LAN">
-          {/* ── Setup: choose to host or join ── */}
-          <Show when={role() == null}>
-            <div class={styles.lobby}>
-              <div class={styles.field}>
-                <label>Your name</label>
-                <input
-                  placeholder="Your name"
-                  value={name()}
-                  onInput={(e) => setName(e.currentTarget.value)}
-                />
-              </div>
-              <Show
-                when={incomingOffer()}
-                fallback={
-                  <>
-                    <button class={`${styles.btn} ${styles["btn--primary"]}`} onClick={createRoom}>
-                      Create room
-                    </button>
-                    <p class={styles.hint}>
-                      Everyone must be on the same Tailscale tailnet. To join an existing room,
-                      open the host's invite link.
-                    </p>
-                  </>
-                }
-              >
-                <div class={styles.row}>
-                  <button
-                    classList={{
-                      [styles.btn]: true,
-                      [styles["btn--primary"]]: desiredRole() === "player",
-                    }}
-                    onClick={() => setDesiredRole("player")}
-                  >
-                    Play
-                  </button>
-                  <button
-                    classList={{
-                      [styles.btn]: true,
-                      [styles["btn--primary"]]: desiredRole() === "observer",
-                    }}
-                    onClick={() => setDesiredRole("observer")}
-                  >
-                    Spectate
-                  </button>
-                </div>
-                <button class={`${styles.btn} ${styles["btn--primary"]}`} onClick={join}>
-                  Join game
-                </button>
-              </Show>
-            </div>
-          </Show>
-
-          {/* ── Guest: hand the reply back to the host ── */}
-          <Show when={sharingAnswer() && answerLink()}>
-            <div class={styles.lobby}>
-              <p class={styles.hint}>
-                Send this reply back to the host, then wait to be admitted.
-              </p>
-              <div class={styles.linkBox} data-testid="answer-link">
-                {answerLink()}
-              </div>
-              <button class={styles.btn} onClick={() => copy(answerLink())}>
-                Copy reply
-              </button>
-              <p class={styles.status}>Status: {connectionStatus()}</p>
-            </div>
-          </Show>
-
-          {/* ── Lobby: seats, colors, ready/start ── */}
-          <Show when={inLobby()}>
-            <div class={styles.lobby}>
-              <div class={styles.seats}>
-                {seatCard("w")}
-                {seatCard("b")}
-              </div>
-              <p class={styles.status}>
-                {players().length}/2 players · {observers().length} watching ·{" "}
-                {connectionStatus()}
-              </p>
-
-              <Show when={seat() === "player"}>
-                <button
-                  class={`${styles.btn} ${styles["btn--primary"]}`}
-                  disabled={myColor() == null}
-                  onClick={() => mp.setReady(!iAmReady())}
-                >
-                  {iAmReady() ? "Ready ✓ — waiting…" : "Start Game"}
-                </button>
-              </Show>
-
-              {/* Host: invite more participants */}
-              <Show when={role() === "host"}>
+          <TailscaleChecklist>
+            {/* ── Setup: choose to host or join ── */}
+            <Show when={role() == null}>
+              <div class={styles.lobby}>
                 <div class={styles.field}>
-                  <span class={styles.hint}>Invite a player or spectator:</span>
-                  <Show
-                    when={offerLink()}
-                    fallback={
-                      <button class={styles.btn} onClick={invite}>
-                        Create invite link
-                      </button>
-                    }
-                  >
-                    <div class={styles.linkBox} data-testid="invite-link">
-                      {offerLink()}
-                    </div>
-                    <div class={styles.row}>
-                      <button class={styles.btn} onClick={() => copy(offerLink())}>
-                        Copy link
-                      </button>
-                      <button class={styles.btn} onClick={invite}>
-                        New link
-                      </button>
-                    </div>
-                    <input
-                      placeholder="Paste their reply here"
-                      value={answerInput()}
-                      onInput={(e) => setAnswerInput(e.currentTarget.value)}
-                    />
-                    <button class={styles.btn} onClick={admit}>
-                      Admit
-                    </button>
-                  </Show>
+                  <label class={styles.fieldLabel} for="lan-name">
+                    Your name
+                  </label>
+                  <Input
+                    id="lan-name"
+                    placeholder="Your name"
+                    value={name()}
+                    onInput={(e) => setName(e.currentTarget.value)}
+                  />
                 </div>
-              </Show>
-            </div>
-          </Show>
+                <Show
+                  when={incomingOffer()}
+                  fallback={
+                    <>
+                      <Button primary onClick={createRoom}>
+                        Create room
+                      </Button>
+                      <Label variant="caption">
+                        To join an existing room, open the host's invite link instead.
+                      </Label>
+                    </>
+                  }
+                >
+                  <div class={styles.row}>
+                    <Button
+                      primary={desiredRole() === "player"}
+                      onClick={() => setDesiredRole("player")}
+                    >
+                      Play
+                    </Button>
+                    <Button
+                      primary={desiredRole() === "observer"}
+                      onClick={() => setDesiredRole("observer")}
+                    >
+                      Spectate
+                    </Button>
+                  </div>
+                  <Button primary onClick={join}>
+                    Join game
+                  </Button>
+                </Show>
+              </div>
+            </Show>
 
-          <Show when={error()}>
-            <p class={styles.error}>{error()}</p>
-          </Show>
+            {/* ── Guest: hand the reply back to the host ── */}
+            <Show when={sharingAnswer() && answerLink()}>
+              <div class={styles.lobby}>
+                <Label variant="muted">
+                  Send this reply back to the host (scan or copy), then wait to be admitted.
+                </Label>
+                <QrCode value={answerLink()} size={180} alt="Reply QR code" />
+                <div class={styles.linkBox} data-testid="answer-link">
+                  {answerLink()}
+                </div>
+                <Button onClick={() => copy(answerLink())}>Copy reply</Button>
+                <Label variant="caption">Status: {connectionStatus()}</Label>
+              </div>
+            </Show>
 
-          <A href="/" style={{ "margin-top": "1rem", "text-align": "center" }}>
+            {/* ── Lobby: seats, colors, ready/start ── */}
+            <Show when={inLobby()}>
+              <div class={styles.lobby}>
+                <div class={styles.seats}>
+                  {seatCard("w")}
+                  {seatCard("b")}
+                </div>
+                <Label variant="caption">
+                  {players().length}/2 players · {observers().length} watching ·{" "}
+                  {connectionStatus()}
+                </Label>
+
+                <Show when={seat() === "player"}>
+                  <Button
+                    primary
+                    disabled={myColor() == null}
+                    onClick={() => mp.setReady(!iAmReady())}
+                  >
+                    {iAmReady() ? "Ready ✓ — waiting…" : "Start Game"}
+                  </Button>
+                </Show>
+
+                {/* Host: invite more participants */}
+                <Show when={role() === "host"}>
+                  <div class={styles.field}>
+                    <Label variant="caption">Invite a player or spectator:</Label>
+                    <Show
+                      when={offerLink()}
+                      fallback={<Button onClick={invite}>Create invite link</Button>}
+                    >
+                      <QrCode value={offerLink()} size={180} alt="Invite QR code" />
+                      <div class={styles.linkBox} data-testid="invite-link">
+                        {offerLink()}
+                      </div>
+                      <div class={styles.row}>
+                        <Button onClick={() => copy(offerLink())}>Copy link</Button>
+                        <Button onClick={invite}>New link</Button>
+                      </div>
+                      <Input
+                        placeholder="Paste their reply here"
+                        value={answerInput()}
+                        onInput={(e) => setAnswerInput(e.currentTarget.value)}
+                      />
+                      <Button onClick={admit}>Admit</Button>
+                    </Show>
+                  </div>
+                </Show>
+              </div>
+            </Show>
+
+            <Show when={error()}>
+              <Label color="loss">{error()}</Label>
+            </Show>
+          </TailscaleChecklist>
+
+          <Button href="/" class={styles.backBtn}>
             Back to Menu
-          </A>
+          </Button>
         </SplashScreen>
       }
     >
@@ -361,14 +351,12 @@ export const LanScreen: Component = () => {
           </Show>
           <Show when={!gameOver() && seat() === "player"}>
             <div class={styles.row}>
-              <button class={styles.btn} onClick={() => mp.resign()}>
-                Resign
-              </button>
+              <Button onClick={() => mp.resign()}>Resign</Button>
             </div>
           </Show>
           <Show when={gameOver()}>
             <div class={styles.row}>
-              <A href="/">Back to Menu</A>
+              <Button href="/">Back to Menu</Button>
             </div>
           </Show>
         </Screen.Footer>

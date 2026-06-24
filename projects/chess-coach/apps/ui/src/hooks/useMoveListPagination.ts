@@ -1,7 +1,7 @@
-import type { MoveRow } from "~/types/analysis";
 import { createEffect, createMemo, createSignal } from "solid-js";
 
 import { currentIndex } from "~/store/gameStore";
+import type { MoveRow } from "~/types/analysis";
 
 const DEFAULT_ROWS_PER_PAGE = 8;
 

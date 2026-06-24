@@ -1,4 +1,3 @@
-import type { PlayerColorPref } from "~/types/settings";
 import clsx from "clsx";
 import type { Component } from "solid-js";
 import { Show } from "solid-js";
@@ -6,6 +5,7 @@ import { Show } from "solid-js";
 import { Button } from "~/components/primitives/Button";
 import styles from "~/components/primitives/ColorSelector.module.css";
 import { DiceIcon } from "~/components/primitives/icons";
+import type { PlayerColorPref } from "~/types/settings";
 
 interface Props {
   value: PlayerColorPref;

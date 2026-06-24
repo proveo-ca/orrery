@@ -3,24 +3,40 @@ import { createSignal, onMount } from "solid-js";
 import type { Component } from "solid-js";
 
 import { OpponentCaptures, PlayerCaptures } from "~/components/atoms/CapturedPieces";
-import { ChessBoard } from "~/components/features/ChessBoard";
 import { CoachAvatar } from "~/components/atoms/CoachAvatar.tsx";
-import { CoachPanel } from "~/components/features/CoachPanel.tsx";
-import { HistoryOverlay } from "~/components/primitives/HistoryOverlay";
+import {
+  DebugControls,
+  debugHistoryOverlay,
+  debugLightSpeedOverlay,
+} from "~/components/atoms/DebugControls";
 import { LightSpeedOverlay } from "~/components/atoms/LightSpeedOverlay";
 import { Modal } from "~/components/atoms/Modal";
-import { DebugControls, debugHistoryOverlay, debugLightSpeedOverlay } from "~/components/atoms/DebugControls";
+import { ChessBoard } from "~/components/features/ChessBoard";
+import { CoachPanel } from "~/components/features/CoachPanel.tsx";
 import { MobileDrawer } from "~/components/features/MobileDrawer";
-import { Screen } from "~/components/primitives/Screen";
 import { Sidebar } from "~/components/features/Sidebar";
+import { HistoryOverlay } from "~/components/primitives/HistoryOverlay";
+import { Screen } from "~/components/primitives/Screen";
 import { useGameRecorder } from "~/hooks/useGameRecorder";
 import { useLivePreAnalysis } from "~/hooks/useLivePreAnalysis";
 import { fetchHello, postAdviceStream, postMove } from "~/services/api";
 import { checkEngineSupport } from "~/services/browserSupport";
 import { accumulateStream } from "~/services/streamUtils";
 import { COACH_CAPABILITIES, setCapabilities } from "~/store/capabilitiesStore";
-import { dispatchCoachEvent, setAdvice, setBestMovePhrases, setThinkingPhrases } from "~/store/coachStore";
-import { addMoveSan, currentFen, currentIndex, fenHistory, game, restoreGame } from "~/store/gameStore";
+import {
+  dispatchCoachEvent,
+  setAdvice,
+  setBestMovePhrases,
+  setThinkingPhrases,
+} from "~/store/coachStore";
+import {
+  addMoveSan,
+  currentFen,
+  currentIndex,
+  fenHistory,
+  game,
+  restoreGame,
+} from "~/store/gameStore";
 import { activePlayerColor, difficulty } from "~/store/settingsStore";
 import { isTravelling } from "~/store/travelStore";
 import { logger } from "~/utils/logger";

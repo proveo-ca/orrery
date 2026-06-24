@@ -1,7 +1,7 @@
 // SPEC: _spec/chess-coach/ui/components.puml
 import { DEFAULT_STOCKFISH_WORKER_URL } from "~/engine/StockfishEngine";
-import { parseStockfishMessage } from "~/utils/stockfishParser";
 import type { EvalResult, PositionEval } from "~/types/analysis";
+import { parseStockfishMessage } from "~/utils/stockfishParser";
 
 /**
  * Central Stockfish scheduler.

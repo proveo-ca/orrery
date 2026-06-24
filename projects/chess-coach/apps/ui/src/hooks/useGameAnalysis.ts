@@ -1,9 +1,9 @@
-import type { EvalResult, GameAnalysis, PositionEval } from "~/types/analysis";
-import type { GameRecord } from "~/types/game";
 import { Chess } from "chess.js";
 import { createEffect, createSignal, on, onCleanup } from "solid-js";
 
 import { enginePool } from "~/engine/EnginePool";
+import type { EvalResult, GameAnalysis, PositionEval } from "~/types/analysis";
+import type { GameRecord } from "~/types/game";
 
 /** Search depth for review analysis. Shared by the Review screen and the
  *  CoachScreen live pre-analysis so both write interchangeable cache entries. */

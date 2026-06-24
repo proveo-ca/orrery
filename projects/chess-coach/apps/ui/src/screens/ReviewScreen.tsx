@@ -3,26 +3,42 @@ import { Show, createEffect, createMemo, createSignal, on, onCleanup } from "sol
 import type { Component } from "solid-js";
 
 import { OpponentCaptures, PlayerCaptures } from "~/components/atoms/CapturedPieces";
-import { ChessBoard } from "~/components/features/ChessBoard";
-import { Button } from "~/components/primitives/Button";
-import { Label } from "~/components/primitives/Label";
-import { MatrixOverlay } from "~/components/atoms/MatrixOverlay";
-import { GameHistoryFilters } from "~/components/primitives/GameHistoryFilters";
 import { GameHistoryList } from "~/components/atoms/GameHistoryList";
+import { MatrixOverlay } from "~/components/atoms/MatrixOverlay";
+import { ChessBoard } from "~/components/features/ChessBoard";
 import { MobileDrawer } from "~/components/features/MobileDrawer";
 import { MoveList } from "~/components/features/MoveList";
-import { Screen } from "~/components/primitives/Screen";
 import { Sidebar } from "~/components/features/Sidebar";
+import { Button } from "~/components/primitives/Button";
+import { GameHistoryFilters } from "~/components/primitives/GameHistoryFilters";
+import { Label } from "~/components/primitives/Label";
+import { Screen } from "~/components/primitives/Screen";
 import { resolveAnnotations } from "~/engine/moveAnnotations";
 import { useBlunderArrow } from "~/hooks/useBlunderArrow";
 import { useGameAnalysis } from "~/hooks/useGameAnalysis";
 import { useGameHistoryFilters } from "~/hooks/useGameHistoryFilters";
-import { useShareGame } from "~/hooks/useShareGame";
 import { useSharedGameImport } from "~/hooks/useSharedGameImport";
+import { useShareGame } from "~/hooks/useShareGame";
 import { REVIEW_CAPABILITIES, setCapabilities } from "~/store/capabilitiesStore";
 import { gameHistory, getGameById } from "~/store/gameHistoryStore";
-import { fenHistory, loadGame, reviewAnalysisMode, setSavedReviewBranchIndex, setReviewAnalysisMode, setSavedReviewPgn, setSavedReviewStartingFen } from "~/store/gameStore";
-import { activePlayerColor, blunderThresholdCp, opponentIdentity, playerIdentity, setActivePlayerColor, setOpponentIdentity, setPlayerIdentity } from "~/store/settingsStore";
+import {
+  fenHistory,
+  loadGame,
+  reviewAnalysisMode,
+  setSavedReviewBranchIndex,
+  setReviewAnalysisMode,
+  setSavedReviewPgn,
+  setSavedReviewStartingFen,
+} from "~/store/gameStore";
+import {
+  activePlayerColor,
+  blunderThresholdCp,
+  opponentIdentity,
+  playerIdentity,
+  setActivePlayerColor,
+  setOpponentIdentity,
+  setPlayerIdentity,
+} from "~/store/settingsStore";
 import { formatGameLabel } from "~/utils/gameTitle";
 
 export const ReviewScreen: Component = () => {

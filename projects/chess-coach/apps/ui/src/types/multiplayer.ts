@@ -81,3 +81,29 @@ export interface PeerTransport {
 
 export type SignalKind = "o" | "a";
 export type SignalPayload = { connId: string; sdp: string };
+
+// ── LAN onboarding (services/platform.ts, services/tailscale.ts) ──────────
+
+/** Detected client OS, used to tailor Tailscale install instructions. */
+export type OS = "linux" | "macos" | "windows" | "ios" | "android" | "unknown";
+
+export interface PlatformInfo {
+  os: OS;
+  /** Phone/tablet — drives "open the app / get it from the store" wording. */
+  isMobile: boolean;
+  /** Human label, e.g. "macOS", "Android". */
+  label: string;
+  /** Tailscale per-platform download landing page (redirects to store on mobile). */
+  downloadUrl: string;
+  /** Tailscale install/setup documentation for this platform. */
+  installDocsUrl: string;
+}
+
+/** Result of the best-effort tailnet connectivity probe. */
+export type TailnetStatus = "checking" | "connected" | "not-detected";
+
+export interface TailnetProbeResult {
+  status: Exclude<TailnetStatus, "checking">;
+  /** The matched 100.x address, when detected. */
+  address?: string;
+}

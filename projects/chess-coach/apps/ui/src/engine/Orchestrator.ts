@@ -1,12 +1,17 @@
-// SPEC: _spec/chess-coach/ui/components.puml
-import type { Difficulty } from "~/types/settings";
 import { ENGINE_CONFIG } from "~/engine/config";
 import { EngineBridge } from "~/engine/EngineBridge";
 import { fallbackAdvice, fallbackExplanation } from "~/engine/fallbackCommentary";
 import type { LlmClient } from "~/engine/LlmClient";
-import { buildPromptFromAnalysis, createMoveAnalysis, extractCommentary, type MoveAnalysis } from "~/engine/llmPromptFormat";
+import {
+  buildPromptFromAnalysis,
+  createMoveAnalysis,
+  extractCommentary,
+  type MoveAnalysis,
+} from "~/engine/llmPromptFormat";
 import { uciMatchesSan } from "~/engine/moveNotation";
 import { sanitizeExplanationText, isLowQualityLlmOutput } from "~/engine/textSanitizer";
+// SPEC: _spec/chess-coach/ui/components.puml
+import type { Difficulty } from "~/types/settings";
 
 export type TurnResult = { fen: string; move: string; advice: string };
 export type UiPhrases = { thinking: string[]; bestMove: string[] };
