@@ -1,5 +1,3 @@
-// SPEC: _spec/chess-coach/ui/components.puml
-import type { Difficulty, PlayerIdentity } from "~/types/settings";
 import { useNavigate } from "@solidjs/router";
 import type { Component } from "solid-js";
 
@@ -13,7 +11,14 @@ import { SplashScreen } from "~/components/primitives/SplashScreen";
 import styles from "~/screens/MenuScreen.module.css";
 import { setShowCredits, showCredits } from "~/store/coachStore";
 import { gameHistory } from "~/store/gameHistoryStore";
-import { difficulty, playerIdentity, setDifficulty, setPlayerIdentity } from "~/store/settingsStore";
+import {
+  difficulty,
+  playerIdentity,
+  setDifficulty,
+  setPlayerIdentity,
+} from "~/store/settingsStore";
+// SPEC: _spec/chess-coach/ui/components.puml
+import type { Difficulty, PlayerIdentity } from "~/types/settings";
 
 const IDENTITY_OPTIONS: PlayerIdentity[] = ["Human", "Cat", "Dog", "Rat"];
 
@@ -61,8 +66,8 @@ export const MenuScreen: Component = () => {
         <MenuButton onClick={() => navigate("/review")} disabled={gameHistory().length === 0}>
           Review
         </MenuButton>
+        <MenuButton onClick={() => navigate("/lan")}>Play LAN</MenuButton>
         <MenuButton disabled>Learn to Play</MenuButton>
-        <MenuButton disabled>Play LAN</MenuButton>
         <Label variant="caption" class={styles["coming-soon"]}>
           Coming soon!
         </Label>

@@ -5,7 +5,16 @@ import type { Component } from "solid-js";
 
 import styles from "~/components/features/CoachPanel.module.css";
 import { useTravelMode } from "~/hooks/useTravelMode";
-import { advice, hoverBlunder, hoverBlunderFen, hoverBlunderSan, panelMessage, pendingTravel, setAdviceArrow, setAdviceHoveredSquares } from "~/store/coachStore";
+import {
+  advice,
+  hoverBlunder,
+  hoverBlunderFen,
+  hoverBlunderSan,
+  panelMessage,
+  pendingTravel,
+  setAdviceArrow,
+  setAdviceHoveredSquares,
+} from "~/store/coachStore";
 import { currentFen } from "~/store/gameStore";
 import { isTravelling } from "~/store/travelStore";
 

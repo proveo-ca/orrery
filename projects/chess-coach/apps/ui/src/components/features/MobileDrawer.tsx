@@ -3,17 +3,26 @@ import { useLocation } from "@solidjs/router";
 import { Show, createSignal } from "solid-js";
 import type { Component } from "solid-js";
 
-import { CoachEmotionIcon } from "~/components/primitives/CoachEmotionIcon";
-import { Divider } from "~/components/primitives/Divider";
-import { IconButton } from "~/components/primitives/IconButton";
-import { BookIcon, CogIcon, FlagIcon, FlipBoardIcon, HintIcon, PlusCircleIcon, SearchIcon, StarIcon } from "~/components/primitives/icons";
-import { Modal } from "~/components/atoms/Modal";
 import { Credits } from "~/components/atoms/Credits";
-import { DualNavButton } from "~/components/primitives/DualNavButton";
+import { Modal } from "~/components/atoms/Modal";
+import { ResignConfirm } from "~/components/atoms/ResignConfirm";
 import styles from "~/components/features/MobileDrawer.module.css";
 import { NewGamePanel } from "~/components/features/NewGamePanel";
-import { ResignConfirm } from "~/components/atoms/ResignConfirm";
 import { SettingsPanel } from "~/components/features/Settings";
+import { CoachEmotionIcon } from "~/components/primitives/CoachEmotionIcon";
+import { Divider } from "~/components/primitives/Divider";
+import { DualNavButton } from "~/components/primitives/DualNavButton";
+import { IconButton } from "~/components/primitives/IconButton";
+import {
+  BookIcon,
+  CogIcon,
+  FlagIcon,
+  FlipBoardIcon,
+  HintIcon,
+  PlusCircleIcon,
+  SearchIcon,
+  StarIcon,
+} from "~/components/primitives/icons";
 import { useGameControls } from "~/hooks/useGameControls";
 import { useHintSparkle } from "~/hooks/useHintSparkle";
 import { capabilities } from "~/store/capabilitiesStore";

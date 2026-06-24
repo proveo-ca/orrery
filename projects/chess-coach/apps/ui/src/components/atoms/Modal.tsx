@@ -1,8 +1,8 @@
 import { Show, createEffect, createUniqueId, onCleanup } from "solid-js";
 import type { Component, JSX } from "solid-js";
 
-import { Button } from "~/components/primitives/Button";
 import styles from "~/components/atoms/Modal.module.css";
+import { Button } from "~/components/primitives/Button";
 
 export type ModalPosition = "fixed" | "absolute";
 

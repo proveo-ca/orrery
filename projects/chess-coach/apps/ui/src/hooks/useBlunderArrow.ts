@@ -1,10 +1,10 @@
-// SPEC: _spec/chess-coach/ui/components.puml
-import type { AnnotationTag } from "~/types/analysis";
 import { createEffect, on } from "solid-js";
 
 import { useHint } from "~/hooks/useHint";
 import { setAdviceArrow } from "~/store/coachStore";
 import { currentIndex, fenHistory } from "~/store/gameStore";
+// SPEC: _spec/chess-coach/ui/components.puml
+import type { AnnotationTag } from "~/types/analysis";
 
 /**
  * Side-effect hook: when the board is viewing a blunder or inaccuracy ply,

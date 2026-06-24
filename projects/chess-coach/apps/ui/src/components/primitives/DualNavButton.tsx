@@ -3,8 +3,8 @@ import { Show } from "solid-js";
 import type { Component } from "solid-js";
 
 import { Button } from "~/components/primitives/Button.tsx";
-import { ChevronLeftIcon, ChevronRightIcon } from "~/components/primitives/icons";
 import styles from "~/components/primitives/DualNavButton.module.css";
+import { ChevronLeftIcon, ChevronRightIcon } from "~/components/primitives/icons";
 
 interface DualNavButtonProps {
   onBack: () => void;

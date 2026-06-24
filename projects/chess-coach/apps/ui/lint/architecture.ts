@@ -16,12 +16,7 @@
 
 // A "side effect" = reaching into app state / IO, or a Solid lifecycle effect.
 const SIDE_EFFECT_IMPORT_PREFIXES = ["~/store", "~/services", "~/hooks"];
-const SIDE_EFFECT_CALLS = new Set([
-  "createEffect",
-  "createRenderEffect",
-  "onMount",
-  "onCleanup",
-]);
+const SIDE_EFFECT_CALLS = new Set(["createEffect", "createRenderEffect", "onMount", "onCleanup"]);
 
 const baseName = (filename: string): string =>
   (filename.split(/[\\/]/).pop() ?? "").replace(/\.(tsx|ts|jsx|js)$/, "");
@@ -109,10 +104,7 @@ const routeTargetInScreens = {
         for (const attr of node.attributes ?? []) {
           if (attr.type !== "JSXAttribute" || attr.name?.name !== "component") continue;
           const val = attr.value;
-          if (
-            val?.type === "JSXExpressionContainer" &&
-            val.expression?.type === "Identifier"
-          ) {
+          if (val?.type === "JSXExpressionContainer" && val.expression?.type === "Identifier") {
             targets.push({ name: val.expression.name, node: attr });
           }
         }
@@ -167,7 +159,10 @@ const ownCssModule = {
 const noCrossModuleTypes = {
   meta: {
     type: "problem",
-    docs: { description: "Types shared across folders must live in ~/types/, not be imported across modules." },
+    docs: {
+      description:
+        "Types shared across folders must live in ~/types/, not be imported across modules.",
+    },
   },
   create(context: any) {
     // Tests mirror the src layout (tests/hooks/… ≡ hooks), so resolve both.
@@ -206,7 +201,10 @@ const noCrossModuleTypes = {
 const enginePoolOnly = {
   meta: {
     type: "problem",
-    docs: { description: "Stockfish work must go through enginePool.evaluate(); don't spawn engines/workers directly." },
+    docs: {
+      description:
+        "Stockfish work must go through enginePool.evaluate(); don't spawn engines/workers directly.",
+    },
   },
   create(context: any) {
     const file = norm(context.filename);
@@ -228,7 +226,10 @@ const enginePoolOnly = {
       NewExpression(node: any) {
         if (node.callee?.type !== "Identifier") return;
         const name = node.callee.name;
-        if ((name === "StockfishEngine" || name === "MaiaEngine") && !file.endsWith("engine/EngineBridge.ts")) {
+        if (
+          (name === "StockfishEngine" || name === "MaiaEngine") &&
+          !file.endsWith("engine/EngineBridge.ts")
+        ) {
           context.report({
             node,
             message: `Instantiate ${name} only in EngineBridge. Consumers must use enginePool.evaluate() (Stockfish) or the EngineBridge facade.`,
@@ -237,7 +238,8 @@ const enginePoolOnly = {
         if (name === "EnginePool" && !file.endsWith("engine/EnginePool.ts") && !isTestFile(file)) {
           context.report({
             node,
-            message: "Don't construct EnginePool; import and use the shared `enginePool` singleton.",
+            message:
+              "Don't construct EnginePool; import and use the shared `enginePool` singleton.",
           });
         }
       },
@@ -253,7 +255,10 @@ const enginePoolOnly = {
 const capabilitiesSetInScreensOnly = {
   meta: {
     type: "problem",
-    docs: { description: "setCapabilities() may only be called from a screen; everything else reads capabilities() flags." },
+    docs: {
+      description:
+        "setCapabilities() may only be called from a screen; everything else reads capabilities() flags.",
+    },
   },
   create(context: any) {
     const file = norm(context.filename);

@@ -3,7 +3,12 @@ import { Chess, type Square } from "chess.js";
 import { createEffect } from "solid-js";
 
 import { capabilities } from "~/store/capabilitiesStore";
-import { setHoverAdvice, setHoverBlunder, setHoverEmotion, setPendingTravel } from "~/store/coachStore";
+import {
+  setHoverAdvice,
+  setHoverBlunder,
+  setHoverEmotion,
+  setPendingTravel,
+} from "~/store/coachStore";
 import { currentFen } from "~/store/gameStore";
 import { blunderLabel, blunderThresholdCp } from "~/store/settingsStore";
 import type { StockfishAnalysis } from "~/types/Stockfish";

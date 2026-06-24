@@ -2,12 +2,12 @@ import { onCleanup, onMount } from "solid-js";
 import type { Component } from "solid-js";
 
 import { OpponentCaptures, PlayerCaptures } from "~/components/atoms/CapturedPieces";
-import { ChessBoard } from "~/components/features/ChessBoard";
 import { DebugControls } from "~/components/atoms/DebugControls";
 import { FenLoader } from "~/components/atoms/FenLoader";
+import { ChessBoard } from "~/components/features/ChessBoard";
 import { MobileDrawer } from "~/components/features/MobileDrawer";
-import { Screen } from "~/components/primitives/Screen";
 import { Sidebar } from "~/components/features/Sidebar";
+import { Screen } from "~/components/primitives/Screen";
 import { ANALYSIS_CAPABILITIES, setCapabilities } from "~/store/capabilitiesStore";
 import { inProgressGame } from "~/store/gameHistoryStore";
 import { persistFreshStart } from "~/store/gameStore";

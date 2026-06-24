@@ -1,4 +1,4 @@
-  import { createSignal } from "solid-js";
+import { createSignal } from "solid-js";
 
 import { resolveMode } from "~/services/runtimeMode";
 
@@ -104,6 +104,37 @@ export const REVIEW_CAPABILITIES: ScreenCapabilities = {
   readOnly: false,
   opponentUsesPlayerPieceSet: false,
   flipBoard: false,
+};
+
+/**
+ * LAN multiplayer (human-vs-human, no AI/coach). Engine + coach features are
+ * all off. `freeColorControl: false` plus `activePlayerColor = my chosen color`
+ * restricts input to the player's own pieces on their own turn. `readOnly`
+ * starts true (board locked in the lobby) and the LanScreen flips it to false
+ * once both players have pressed Start — see useMultiplayerGame.
+ */
+export const LAN_PLAYER_CAPABILITIES: ScreenCapabilities = {
+  hint: false,
+  travel: false,
+  historyNav: false,
+  evalBarAlwaysVisible: false,
+  aiOpponent: false,
+  blunderDetection: false,
+  continuousAnalysis: false,
+  bestMoveArrow: "off",
+  commentary: false,
+  persistGame: false,
+  historyBranching: false,
+  freeColorControl: false,
+  readOnly: true,
+  opponentUsesPlayerPieceSet: false,
+  flipBoard: false,
+};
+
+/** Observers never interact with the board. */
+export const LAN_OBSERVER_CAPABILITIES: ScreenCapabilities = {
+  ...LAN_PLAYER_CAPABILITIES,
+  readOnly: true,
 };
 
 export const [capabilities, setCapabilities] = createSignal<ScreenCapabilities>(COACH_CAPABILITIES);

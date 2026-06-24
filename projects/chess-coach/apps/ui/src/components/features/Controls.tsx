@@ -2,13 +2,13 @@
 import { Show, createSignal } from "solid-js";
 import type { Component } from "solid-js";
 
+import { Credits } from "~/components/atoms/Credits";
+import { TurnLabel } from "~/components/atoms/TurnLabel";
+import styles from "~/components/features/Controls.module.css";
+import { Settings } from "~/components/features/Settings";
 import { Button } from "~/components/primitives/Button";
 import { CogIcon } from "~/components/primitives/icons";
 import { Label } from "~/components/primitives/Label";
-import styles from "~/components/features/Controls.module.css";
-import { Credits } from "~/components/atoms/Credits";
-import { Settings } from "~/components/features/Settings";
-import { TurnLabel } from "~/components/atoms/TurnLabel";
 import { useGameControls } from "~/hooks/useGameControls";
 import { capabilities } from "~/store/capabilitiesStore";
 import { reviewAnalysisMode } from "~/store/gameStore";

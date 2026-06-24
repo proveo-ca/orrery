@@ -1,7 +1,7 @@
-import type { MoveRecord } from "~/types/game";
 import { describe, expect, it } from "vitest";
 
 import { resolveAnnotations } from "~/engine/moveAnnotations";
+import type { MoveRecord } from "~/types/game";
 
 const human = (overrides: Partial<MoveRecord> = {}): MoveRecord => ({
   san: "e4",

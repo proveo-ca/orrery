@@ -3,8 +3,8 @@ import { For, Show } from "solid-js";
 import type { Component } from "solid-js";
 
 import { ColorSelector } from "~/components/primitives/ColorSelector";
-import { ChevronLeftIcon, ChevronRightIcon } from "~/components/primitives/icons";
 import styles from "~/components/primitives/GameHistoryFilters.module.css";
+import { ChevronLeftIcon, ChevronRightIcon } from "~/components/primitives/icons";
 
 interface Props {
   colorFilter: "w" | "b";

@@ -1,13 +1,21 @@
-// SPEC: _spec/chess-coach/ui/components.puml
-import type { PlayerIdentity } from "~/types/settings";
 import { createEffect, on } from "solid-js";
 
 import { lastAIError, lastAIMoveInfo, lastHumanMoveInfo } from "~/hooks/useMoveExecutor";
 import { postAdviceStream } from "~/services/api";
 import { accumulateStream } from "~/services/streamUtils";
 import { capabilities } from "~/store/capabilitiesStore";
-import { bestMovePhrases, clearAdvice, dispatchCoachEvent, setAdvice, setAdviceArrow, setAdviceHoveredSquares, thinkingPhrases } from "~/store/coachStore";
+import {
+  bestMovePhrases,
+  clearAdvice,
+  dispatchCoachEvent,
+  setAdvice,
+  setAdviceArrow,
+  setAdviceHoveredSquares,
+  thinkingPhrases,
+} from "~/store/coachStore";
 import { playerIdentity } from "~/store/settingsStore";
+// SPEC: _spec/chess-coach/ui/components.puml
+import type { PlayerIdentity } from "~/types/settings";
 import { logger } from "~/utils/logger";
 
 const BISHOP_CAPTURE_PHRASES: Record<PlayerIdentity, string[]> = {

@@ -1,8 +1,8 @@
-import type { PlayerIdentity } from "~/types/settings";
-import type { GameRecord, GameResult, MoveRecord } from "~/types/game";
 import { polyglotHashFromPgn } from "~/engine/polyglotZobrist";
 import { deleteAnalysisCache, migrateAnalysisCache } from "~/hooks/useGameAnalysis";
 import { createPersistedStore } from "~/store/createPersistedStore";
+import type { GameRecord, GameResult, MoveRecord } from "~/types/game";
+import type { PlayerIdentity } from "~/types/settings";
 
 export const getExpectedReviewId = (pgn: string, fen: string): string =>
   polyglotHashFromPgn(pgn, fen);
@@ -38,10 +38,12 @@ export const startNewRecord = (
   playerRace?: PlayerIdentity,
   opponentRace?: PlayerIdentity,
   playerName?: string,
+  opponentNameOverride?: string,
 ) => {
   // Base name only; difficulty stays in its own field and the player-vs label
-  // is composed from name + color (see formatGameLabel).
-  const opponentName = opponentRace ? "Selena" : undefined;
+  // is composed from name + color (see formatGameLabel). LAN games pass the
+  // opponent's real display name; coach games derive "Selena" from the race.
+  const opponentName = opponentNameOverride?.trim() || (opponentRace ? "Selena" : undefined);
 
   setState("inProgress", {
     id,

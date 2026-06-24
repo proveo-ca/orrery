@@ -22,6 +22,16 @@ The application is built to be deployed in two entirely different ways, sharing 
 - **Engines:** The UI still uses one local `stockfish.wasm` worker for instant hover evaluations and hints. However, the *backend* uses native Stockfish binaries and Maia (lc0) for the AI opponent's moves.
 - **LLM:** The backend connects to a local or remote Ollama instance via HTTP.
 
+## LAN / Online Multiplayer (serverless host-hub — Tailscale + WebRTC)
+A **human-vs-human** mode that needs **no backend**: the harness, Ktor, Maia and the LLM are not involved. It ships in the client-only web / PWA build and is reached from `/chess/lan` (`LanScreen`).
+
+- **Connectivity:** every participant installs **Tailscale** and joins the same tailnet; devices get stable `100.x` IPs with no NAT.
+- **Transport:** browsers talk **peer-to-peer over WebRTC `RTCDataChannel`**. Because the tailnet has no NAT, WebRTC connects via **host ICE candidates** — **no STUN / TURN / relay** (`iceServers: []`).
+- **Topology — host-hub:** the room creator's browser is the **hub** (room authority); the other player and observers each open a DataChannel to it. The host runs the authoritative `chess.js` game and relays every move + room-state update.
+- **Signaling (serverless):** WebRTC still needs a one-time offer/answer exchange. With no server this is **manual & out-of-band** — the host shows a **QR code / shareable link** (`/chess/lan#o=…`) and the joiner returns an answer QR/link (`#a=…`), one exchange per joiner. Non-trickle ICE keeps each blob to a single QR.
+- **Room:** two **player seats** plus **up to 4 optional observers**. **Colors are not assigned by default** — each player picks **White** or **Black** in the lobby and may select the opposite seat to **swap**; any color change resets both ready votes. Colors lock only when **both players press Start Game** (observers never required). The host browser **is** the room — if it closes, the room ends.
+- **Known risk:** mobile browsers may obfuscate the `100.x` host candidate with `.local` mDNS names; whether the tailnet path survives that must be validated on real devices before relying on the design.
+
 ## Rendering & UI (SolidJS)
 A minimal Single Page Application (SPA) using SolidJS.
 - **State Management:** FEN history and move history are stored client-side, allowing instant replayability without backend calls.

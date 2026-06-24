@@ -1,17 +1,27 @@
-import type { Difficulty, PlayerIdentity } from "~/types/settings";
 import type { Component } from "solid-js";
 
+import styles from "~/components/features/NewGamePanel.module.css";
+import { PlayerNameField } from "~/components/features/PlayerNameField";
 import { Button } from "~/components/primitives/Button";
 import { ColorSelector } from "~/components/primitives/ColorSelector";
-import { PlayerNameField } from "~/components/features/PlayerNameField";
 import { Select } from "~/components/primitives/Select";
 import { Toggle } from "~/components/primitives/Toggle";
-import styles from "~/components/features/NewGamePanel.module.css";
 import { setLastAIMoveInfo } from "~/hooks/useMoveExecutor";
 import { postMove, postNewGame } from "~/services/api";
 import { dispatchCoachEvent, setAdvice, setShowNewGame } from "~/store/coachStore";
 import { addMoveSan, resetGame } from "~/store/gameStore";
-import { activePlayerColor, colorPref, difficulty, imLost, playerIdentity, setColorPref, setDifficulty, setImLost, setPlayerIdentity } from "~/store/settingsStore";
+import {
+  activePlayerColor,
+  colorPref,
+  difficulty,
+  imLost,
+  playerIdentity,
+  setColorPref,
+  setDifficulty,
+  setImLost,
+  setPlayerIdentity,
+} from "~/store/settingsStore";
+import type { Difficulty, PlayerIdentity } from "~/types/settings";
 
 const IDENTITY_OPTIONS: PlayerIdentity[] = ["Human", "Cat", "Dog", "Rat"];
 

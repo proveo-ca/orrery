@@ -1,0 +1,35 @@
+.card {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  background-color: var(--panel-bg);
+  /* Reset button defaults so the <button> variant matches the <div> variant. */
+  color: inherit;
+  font: inherit;
+  text-align: center;
+}
+
+button.card {
+  cursor: pointer;
+}
+
+button.card:hover {
+  border-color: var(--text-muted);
+}
+
+.selected {
+  border-color: var(--primary-color);
+}
+
+.label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}

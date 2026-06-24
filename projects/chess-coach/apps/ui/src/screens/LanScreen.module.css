@@ -1,5 +1,161 @@
-.coming-soon {
-  font-size: 0.75rem;
-  margin-top: -0.4rem;
+/* Layout only — buttons/inputs/labels come from the design-system primitives
+   (Button, Input, Label) so colors and fonts track the theme automatically. */
+
+/* Resign-only sidebar — mirrors the shared Sidebar so it reserves the same
+   --sidebar-width (keeping the board centered) and collapses on mobile. */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem;
+  width: var(--sidebar-width);
+  flex-shrink: 0;
+  margin-top: 1rem;
+}
+
+@media (max-width: 719px) {
+  .sidebar {
+    display: none;
+  }
+}
+
+/* Mobile control cluster — fixed top-right (the desktop sidebar is hidden),
+   mirroring the Coach screen's MobileDrawer rather than dropping to the page
+   bottom. Carries connectivity + history nav + resign. */
+.mobileNav {
+  display: none;
+}
+
+@media (max-width: 719px) {
+  .mobileNav {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    position: fixed;
+    top: 0.75rem;
+    right: 0.75rem;
+    z-index: 1000;
+  }
+}
+
+/* Live peer connectivity readout (sidebar on desktop, top-right nav on mobile). */
+.conn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  color: var(--text-muted);
+}
+
+.connLabel {
+  font-size: 0.7rem;
+}
+
+.conn[data-status="connected"] {
+  color: var(--result-win);
+}
+
+.conn[data-status="connecting"],
+.conn[data-status="offering"],
+.conn[data-status="awaitingAnswer"] {
+  color: var(--result-draw);
+}
+
+.conn[data-status="disconnected"] {
+  color: var(--result-loss);
+}
+
+.lobby {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
   text-align: center;
+}
+
+.row {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.row > * {
+  flex: 1;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  text-align: left;
+}
+
+.fieldLabel {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* Seat/role picker row — the cards themselves are the SelectCard atom. */
+.seats {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.seatName {
+  font-weight: 600;
+  min-height: 1.2em;
+}
+
+.swatch {
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 0.25rem;
+  border: 1px solid var(--border-color);
+  display: inline-block;
+}
+
+/* Literal chess-piece colors — these represent the White/Black sides. */
+.swatch--w {
+  background: #f3f3f3;
+}
+
+.swatch--b {
+  background: #222;
+}
+
+.linkBox {
+  font-family: ui-monospace, monospace;
+  font-size: 0.7rem;
+  word-break: break-all;
+  background-color: var(--panel-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  max-height: 6rem;
+  overflow: auto;
+  text-align: left;
+  color: var(--text-muted);
+}
+
+/* Positioning context for the shared GameOverBanner overlay (covers the board). */
+.boardWrap {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+.gameHeader {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  align-items: center;
+  font-size: 0.9rem;
+}
+
+.backBtn {
+  margin-top: 1rem;
 }

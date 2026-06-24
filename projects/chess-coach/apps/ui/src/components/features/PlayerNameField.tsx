@@ -1,8 +1,8 @@
 import type { Component } from "solid-js";
 
+import styles from "~/components/features/PlayerNameField.module.css";
 import { IconButton } from "~/components/primitives/IconButton";
 import { Input } from "~/components/primitives/Input";
-import styles from "~/components/features/PlayerNameField.module.css";
 import { playerName, setPlayerName } from "~/store/settingsStore";
 import { randomName } from "~/utils/randomName";
 

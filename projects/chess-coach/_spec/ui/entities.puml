@@ -57,6 +57,19 @@ package "Capabilities  [capabilitiesStore.ts]" {
     historyNav=T, evalBarAlwaysVisible=T, readOnly=T,
     persistGame=F
     (historyBranching=T when game loaded)
+
+    **LAN_PLAYER_CAPABILITIES** (both players)
+    aiOpponent=F, commentary=F, hint=F,
+    blunderDetection=F, continuousAnalysis=F,
+    persistGame=F, freeColorControl=F,
+    flipBoard=F, historyBranching=F
+    readOnly = !roomStore.started()
+      (board locked until both press Start;
+       freeColorControl=F + activePlayerColor = chosen color
+       restrict input to own color on own turn)
+
+    **LAN_OBSERVER_CAPABILITIES**
+    LAN_PLAYER + readOnly=T (always)
   end note
 }
 
@@ -200,6 +213,45 @@ package "Stores  [src/store/]" {
     exitTravel()
   }
 
+  class roomStore {
+    .. Selectors ..
+    role(): "host" | "guest"
+    seat(): "player" | "observer"
+    myColor(): "w" | "b" | null      // chosen in lobby, may change
+    connectionStatus(): ConnStatus
+    players(): Player[]              // ≤2, each with chosen color
+    observers(): Member[]            // ≤4
+    started(): boolean
+    bothReady(): boolean
+    isMyTurn(): boolean
+    gameOver(): GameOverInfo | null
+    .. Mutations ..
+    setRole(r) / setConnectionStatus(s)
+    addMember(peerId, seat, identity)    // host only
+    removeMember(peerId)
+    claimColor(peerId, color)            // take an empty color seat
+    swapColors()                         // exchange the two players
+    setReady(peerId, v)                  // start vote
+    setStarted(v) / setGameOver(info)
+    reset()
+    .. Types ..
+    ConnStatus: idle | offering | awaitingAnswer |
+      connecting | connected | disconnected
+    Player: {peerId, identity:{name,pieceSet?},
+      color: "w"|"b"|null, ready: boolean}
+    Member: {peerId, identity}
+    Room: ≤2 players + observers (cap 4, optional)
+    .. Notes ..
+    Host browser is authoritative; guests/observers
+      mirror RoomState broadcasts. Ephemeral — not persisted.
+    Colors are NOT assigned by default — each player picks
+      White/Black in the lobby; selecting the opposite seat
+      swaps both players. ANY color change resets both ready
+      votes (colors lock only when both press Start).
+    Start gate: 2 players with distinct colors && both ready;
+      observers never required (room can start with zero).
+  }
+
   class createPersistedStore <<factory>> {
     createPersistedStore(key, initialValue)
     merges localStorage + initialValue
@@ -304,6 +356,39 @@ package "Hooks  [src/hooks/]" {
       .. Notes ..
       owns: AbortController · setTimeout ref
       QUEEN_CAPTURE_PHRASES[PlayerIdentity]
+    }
+  }
+
+  package "Multiplayer Hooks" {
+
+    class useMultiplayerGame {
+      .. Input ..
+      transport: PeerTransport
+      .. Reactive subscriptions (createEffect) ..
+      on lastHumanMoveInfo (own move):
+        host  → addMoveSan locally + broadcast(MoveApplied)
+        guest → transport.send(Move{san})
+      .. Inbound message handlers ..
+      Hello        → (host) add as player / observer (≤4) / ROOM_FULL
+      ClaimColor   → (host) seat color if free; reset ready votes
+      SwapColor    → (host) exchange the two players' colors;
+                       reset ready votes
+      Move         → (host) authoritative addMoveSan + rebroadcast
+      MoveApplied  → (guest/obs) reconcile via addMoveSan / loadFen
+      StartRequest → (host) record ready; 2 distinct colors
+                       && both → started
+      RoomState    → (guest/obs) mirror players · colors ·
+                       started · gameOver
+      Resign       → (host) end game + broadcast
+      .. Side effects ..
+      setActivePlayerColor(myColor)   // re-applied on color change:
+        flips orientation + input gate when a player swaps colors
+      roomStore mutations
+      .. Notes ..
+      Pure human-vs-human: aiOpponent=F so useMoveExecutor
+        never calls postMove — this hook relays instead
+        (mirrors useCoachBehavior's signal-reaction pattern).
+      No CoachService / harness / LLM involvement.
     }
   }
 
@@ -424,6 +509,17 @@ package "Hooks  [src/hooks/]" {
       on GAME_OVER event: finalizeGame(pgn)
       per move: pushMove → gameHistoryStore
       reads: lastCoachEvent() mirror signal
+    }
+
+    class useLanGameRecorder <<side-effect>> {
+      .. Behaviour ..
+      LAN twin of useGameRecorder, driven by room/game
+        stores instead of coach signals (engine-free board)
+      on roomStore.started: startNewRecord(myColor,
+        playerName, opponentName)  (players only)
+      per ply (fenHistory grows): pushMove → gameHistoryStore
+      on roomStore.gameOver: finalizeGame(result-from-my-POV)
+      onCleanup: discardInProgress if unfinished
     }
 
     class useSharedGameImport <<side-effect>> {
@@ -586,8 +682,70 @@ package "Services  [src/services/]" {
     parse check, polyglot id re-derive
   }
 
+  interface PeerTransport {
+    createOffer(): Promise<string>          // encodable SDP
+    acceptOffer(offer): Promise<string>     // → answer SDP
+    acceptAnswer(answer): Promise<void>
+    send(peerId, msg): void
+    broadcast(msg): void                    // host only
+    onMessage(cb: (peerId, msg) => void)
+    onStateChange(cb: (peerId, state) => void)
+    close()
+    .. Notes ..
+    Vendor-agnostic seam (parallels CoachService).
+    WebRTC RTCDataChannel · iceServers: [] ·
+      non-trickle ICE (full SDP fits one QR).
+    No STUN/TURN/relay — Tailscale 100.x host
+      ICE candidates give a direct path.
+  }
+
+  class HostHubTransport {
+    .. Notes ..
+    Room creator (White). Manages N RTCPeerConnections +
+      DataChannels (Black + observers ≤4). broadcast()
+      fans a message to every peer; mints a fresh offer
+      per joiner. Room authority.
+  }
+
+  class GuestLinkTransport {
+    .. Notes ..
+    Single RTCDataChannel to the host (Black or observer).
+    Produces an answer from the host's offer.
+  }
+
+  class signaling {
+    encodeSdp(sdp): string                  // base64url
+    decodeSdp(payload): string
+    buildLink(kind: "o"|"a", payload): string  // …/lan#o= / #a=
+    parseHash(): {kind, payload} | null
+    toQr(text): SVG
+    fromCamera(): Promise<string>           // getUserMedia + decode
+    .. Notes ..
+    Manual out-of-band signaling — one offer/answer
+      exchange per joiner; no signaling server.
+  }
+
+  class MultiplayerMessage <<wire protocol>> {
+    Hello:        {identity, desiredRole: player | observer}
+    ClaimColor:   {color: "w" | "b"}
+    SwapColor:    {}
+    RoomState:    {players[], observers[], started,
+      gameOver, fen, moveHistory}
+    Move:         {san} | {from, to, promotion?}
+    MoveApplied:  {san, fen, gameOver?}
+    StartRequest: {ready: boolean}
+    Resign:       {}
+    RoomFull:     {}
+    Bye:          {peerId}
+    .. Notes ..
+    JSON over the DataChannel. Host echoes authoritative
+      MoveApplied / RoomState to keep peers in sync.
+  }
+
   HttpCoachService      ..|> CoachService
   WebWorkerCoachService ..|> CoachService
+  HostHubTransport      ..|> PeerTransport
+  GuestLinkTransport    ..|> PeerTransport
 }
 
 ' ══════════════════════════════════════════════════════════════

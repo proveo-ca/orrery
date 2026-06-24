@@ -1,8 +1,8 @@
 import { Show, createSignal } from "solid-js";
 import type { Component } from "solid-js";
 
-import { Button } from "~/components/primitives/Button";
 import styles from "~/components/atoms/FenLoader.module.css";
+import { Button } from "~/components/primitives/Button";
 import { loadFen } from "~/store/gameStore";
 
 const FEN_REGEX =

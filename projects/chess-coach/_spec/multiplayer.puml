@@ -1,0 +1,117 @@
+@startuml chess-coach-multiplayer
+' SPEC: _spec/chess-coach/multiplayer.puml
+!includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+skinparam componentStyle rectangle
+
+title Chess Coach · Serverless LAN/Online Multiplayer\n(host-hub over Tailscale + WebRTC — no backend)
+
+actor "Player 1\n(room creator / host)" as P1User
+actor "Player 2" as P2User
+actor "Observer ×0–4\n(optional)" as ObsUser
+
+package "Tailscale tailnet  (100.x — WireGuard overlay, no NAT)" {
+
+  package "Host browser = room authority" as HostPkg {
+    [SolidJS UI · LanScreen\n(history nav · game-over end screen)] as HostUI
+    [TailscaleChecklist\n(onboarding gate)] as Onboard
+    [useMultiplayerGame\n(authoritative gameStore)] as HostHook
+    [roomStore\n(seats · colors · started · identities)] as HostRoom
+    [HostHubTransport\n(1→N RTCDataChannel)] as HostHub
+    [useLanGameRecorder + useLivePreAnalysis\n→ gameHistoryStore + analysis cache] as HostRec
+  }
+
+  package "Guest browser = player / observer" as BlackPkg {
+    [SolidJS UI · LanScreen\n(history nav · game-over end screen)] as BlackUI
+    [useMultiplayerGame\n(mirror gameStore)] as BlackHook
+    [GuestLinkTransport\n(1 link to host)] as BlackLink
+    [useLanGameRecorder + useLivePreAnalysis\n→ gameHistoryStore + analysis cache] as BlackRec
+  }
+
+  package "Observer browser ×0–4  (read-only)" as ObsPkg {
+    [SolidJS UI · LanScreen] as ObsUI
+    [GuestLinkTransport] as ObsLink
+  }
+}
+
+' ── Players drive their own browser ──
+P1User --> HostUI  : "Create room · pick color · move · Start"
+P2User --> BlackUI : "Join · pick/swap color · move · Start"
+ObsUser --> ObsUI  : "Join (spectate)"
+
+' ── Onboarding: gate the lobby on tailnet connectivity ──
+HostUI   --> Onboard : "wraps room setup (step 3)"
+Onboard  ..> Onboard : "detectPlatform() — UA → install help\nprobeTailnet() — 100.x ICE candidate (best-effort)"
+
+' ── Host-side wiring ──
+HostUI   --> HostHook
+HostHook --> HostRoom : "seats · colors · swap · observer cap ≤4 · start gate"
+HostHook --> HostHub  : "broadcast(RoomState · MoveApplied)"
+HostUI   --> HostRec  : "each player records their own game"
+
+' ── Guest-side wiring ──
+BlackUI   --> BlackHook
+BlackHook --> BlackLink : "send(Hello · ClaimColor · Move · StartRequest)"
+BlackUI   --> BlackRec  : "each player records their own game"
+
+' ── Data path: direct P2P over the tailnet, host = hub ──
+BlackLink <-> HostHub : "RTCDataChannel\n(moves · room state)\nhost ICE candidate 100.x"
+ObsLink   <-> HostHub : "RTCDataChannel\n(room-state broadcast)"
+
+note bottom of HostHub
+  **Serverless.** No Ktor / no relay / no STUN / no TURN.
+  Tailscale supplies mutual 100.x reachability, so WebRTC
+  connects directly via host ICE candidates.
+  Signaling is MANUAL & out-of-band, one exchange per joiner:
+    host offer → QR/link ──scan──▶ joiner answer → QR/link ──scan──▶ host
+  Non-trickle ICE → each offer/answer fits a single QR.
+  SDP is MINIFIED (keep only ICE ufrag/pwd, DTLS fingerprint,
+  setup role + candidate lines; rebuild the fixed boilerplate on
+  decode — browsers accept a canonical remote desc), then
+  lz-string-compressed (transit-safe, no '+'). ~half the link
+  size; verified to parse on Chromium/WebKit/Firefox, with a raw
+  fallback for any SDP that doesn't fit the expected shape.
+end note
+
+note right of Onboard
+  3-step collapsible (services/platform.ts, services/tailscale.ts):
+    1. **Verify connected** — probeTailnet() looks for a 100.64.0.0/10
+       host ICE candidate. Browsers may hide it, so detection is
+       best-effort + a manual "I'm connected" override.
+    2. **Get it running** — UA-tailored install steps + download/docs
+       links (desktop Linux/macOS/Windows · mobile iOS/Android).
+    3. **Choose side & invite** — the room setup (seats + invite link
+       and scannable QR). Gated until step 1 is satisfied.
+end note
+
+note bottom of HostRoom
+  Host browser **is** the room (authority); if it closes, the room ends.
+  Seats: two players + observers ≤4 (optional).
+  **Colors are NOT assigned by default** — each player picks White
+  or Black in the lobby and may select the opposite seat to swap.
+  Any color change resets both ready votes. Both players must agree
+  on colors and press **Start Game**. Overflow joiners get ROOM_FULL.
+  **Recoverable drop:** RTC "disconnected"/"failed" is held (seat kept,
+  status = reconnecting) for a 15s grace window — ICE may re-validate
+  the path on its own (restartIce() nudged on foreground) — before the
+  game is declared over. Terminal "closed" ends it immediately.
+end note
+
+note top of HostPkg
+  Pure **human-vs-human**: no AI opponent, no coach/LLM, no harness —
+  CoachService / postMove are never invoked.
+  Ships in the client-only web / PWA build over HTTPS.
+end note
+
+note bottom of BlackRec
+  **Reviewable like a Coach game.** Each player's browser records the
+  live game (useLanGameRecorder, driven by roomStore/gameStore — the
+  coach-signal-based useGameRecorder doesn't fit the engine-free board)
+  and warms per-ply analysis at background priority (useLivePreAnalysis,
+  via the shared EnginePool — the only Stockfish use in LAN, for review
+  only). On game over the record is finalized; the end screen links to
+  /review/:id. History-nav buttons step through past plies WITHOUT the
+  eval bar; relayed moves snap the view back to live so the shared game
+  is never branched.
+end note
+
+@enduml

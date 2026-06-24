@@ -21,6 +21,8 @@ When you add, rename, or remove a component, hook, store, or service:
 | `_spec/chess-coach/sequence.puml` | Move, hint, and advice request flows (end-to-end) |
 | `_spec/chess-coach/web-llm-integration.puml` | WebLLM model loading and Linux/WebGPU workaround |
 | `_spec/chess-coach/architecture.puml` | Top-level system architecture |
+| `_spec/chess-coach/multiplayer.puml` | Serverless LAN/online multiplayer: host-hub topology over Tailscale + WebRTC (no backend) |
+| `_spec/chess-coach/multiplayer-sequence.puml` | Multiplayer flows: pairing handshake (QR/link), start gate, move relay, resign/disconnect |
 | `_spec/chess-coach/api/components.puml` | Ktor API component breakdown |
 | `_spec/chess-coach/harness/components.puml` | Harness daemon components |
 | `_spec/chess-coach/harness/lifecycle.puml` | Harness lifecycle and agent orchestration |

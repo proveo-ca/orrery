@@ -1,14 +1,12 @@
-// SPEC: _spec/chess-coach/ui/components.puml
-import type { MoveSquares } from "~/types/game";
 import type { Color, PieceSymbol, Square } from "chess.js";
 import { For, Show, createEffect, createSignal } from "solid-js";
 import type { Component } from "solid-js";
 
-import styles from "~/components/features/ChessBoard.module.css";
 import { ChessBoardArrow } from "~/components/atoms/ChessBoardArrow.tsx";
 import { ChessSquare } from "~/components/atoms/ChessSquare";
+import { GameOverBanner } from "~/components/features/GameOverBanner";
+import styles from "~/components/features/ChessBoard.module.css";
 import { Button } from "~/components/primitives/Button.tsx";
-import { Modal } from "~/components/atoms/Modal.tsx";
 import { EvalBar } from "~/components/primitives/EvalBar";
 import { PromotionModal } from "~/components/primitives/PromotionModal";
 import { useChessBoard } from "~/hooks/useChessBoard";
@@ -18,6 +16,8 @@ import { getExpectedReviewId, hasRecordedReview } from "~/store/gameHistoryStore
 import { currentIndex, fenHistory, game, isResigned, startingFen } from "~/store/gameStore";
 import { activePlayerColor, opponentPieceSet, playerPieceSet } from "~/store/settingsStore";
 import { isTravelling } from "~/store/travelStore";
+// SPEC: _spec/chess-coach/ui/components.puml
+import type { MoveSquares } from "~/types/game";
 
 const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"];
 const RANKS = ["8", "7", "6", "5", "4", "3", "2", "1"];
@@ -257,34 +257,27 @@ export const ChessBoard: Component = () => {
           />
         </div>
       </div>
-      <Modal
+      <GameOverBanner
         open={isGameOver()}
-        position="absolute"
-        dismissible={false}
-        showCloseButton={false}
-        overlayClass={styles["game-over-overlay"]}
-        contentClass={styles["game-over-banner"]}
-      >
-        <h1 class={styles.result}>
-          {isResigned()
+        heading={
+          isResigned()
             ? "Resignation"
             : game().isCheckmate()
               ? "Checkmate"
               : game().isStalemate()
                 ? "Stalemate"
-                : "Draw"}
-        </h1>
-        <div class={styles["game-over-actions"]}>
-          <Button primary onClick={() => setShowNewGame(true)}>
-            Another Game
+                : "Draw"
+        }
+      >
+        <Button primary onClick={() => setShowNewGame(true)}>
+          Another Game
+        </Button>
+        <Show when={hasRecordedReview(game().pgn(), startingFen())}>
+          <Button href={`/review/${getExpectedReviewId(game().pgn(), startingFen())}`}>
+            Review Game
           </Button>
-          <Show when={hasRecordedReview(game().pgn(), startingFen())}>
-            <Button primary href={`/review/${getExpectedReviewId(game().pgn(), startingFen())}`}>
-              Review Game
-            </Button>
-          </Show>
-        </div>
-      </Modal>
+        </Show>
+      </GameOverBanner>
     </div>
   );
 };

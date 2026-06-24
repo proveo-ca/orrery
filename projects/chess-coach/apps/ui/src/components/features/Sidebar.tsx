@@ -3,21 +3,37 @@ import { useLocation } from "@solidjs/router";
 import { Show, createSignal } from "solid-js";
 import type { Component } from "solid-js";
 
-import { CoachEmotionIcon } from "~/components/primitives/CoachEmotionIcon";
-import { Divider } from "~/components/primitives/Divider";
-import { IconButton } from "~/components/primitives/IconButton";
-import { BookIcon, CogIcon, FlagIcon, FlipBoardIcon, HintIcon, PlusCircleIcon, SearchIcon, StarIcon } from "~/components/primitives/icons";
-import { Modal } from "~/components/atoms/Modal";
 import { Credits } from "~/components/atoms/Credits";
-import { DualNavButton } from "~/components/primitives/DualNavButton";
-import { NewGamePanel } from "~/components/features/NewGamePanel";
+import { Modal } from "~/components/atoms/Modal";
 import { ResignConfirm } from "~/components/atoms/ResignConfirm";
+import { NewGamePanel } from "~/components/features/NewGamePanel";
 import { Settings } from "~/components/features/Settings";
 import styles from "~/components/features/Sidebar.module.css";
+import { CoachEmotionIcon } from "~/components/primitives/CoachEmotionIcon";
+import { Divider } from "~/components/primitives/Divider";
+import { DualNavButton } from "~/components/primitives/DualNavButton";
+import { IconButton } from "~/components/primitives/IconButton";
+import {
+  BookIcon,
+  CogIcon,
+  FlagIcon,
+  FlipBoardIcon,
+  HintIcon,
+  PlusCircleIcon,
+  SearchIcon,
+  StarIcon,
+} from "~/components/primitives/icons";
 import { useGameControls } from "~/hooks/useGameControls";
 import { useHintSparkle } from "~/hooks/useHintSparkle";
 import { capabilities } from "~/store/capabilitiesStore";
-import { setShowCredits, setShowNewGame, setShowSettings, showCredits, showNewGame, showSettings } from "~/store/coachStore";
+import {
+  setShowCredits,
+  setShowNewGame,
+  setShowSettings,
+  showCredits,
+  showNewGame,
+  showSettings,
+} from "~/store/coachStore";
 import { resetGame, reviewAnalysisMode } from "~/store/gameStore";
 import { activePlayerColor, setActivePlayerColor } from "~/store/settingsStore";
 import { isTravelling, travelFenHistory, travelIndex } from "~/store/travelStore.ts";

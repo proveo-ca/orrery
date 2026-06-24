@@ -1,0 +1,44 @@
+/* End-of-game banner overlaying the board. Shared by the Coach board and LAN;
+   the caller provides the relative positioning context the overlay fills. The
+   card itself inherits the Modal's theme-aware surface (light in light theme,
+   dark in dark theme) — only the accent border + layout are added here. */
+.overlay {
+  background: rgba(var(--shadow-rgb), 0.4);
+  border-radius: 4px;
+  z-index: 30;
+  pointer-events: auto; /* block board interaction */
+}
+
+.banner {
+  border: 2px solid var(--primary-color);
+  text-align: center;
+}
+
+.inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.result {
+  margin: 0;
+  letter-spacing: 4px;
+  font-weight: bold;
+  text-transform: uppercase;
+  font-size: clamp(1.2rem, 5vw, 2rem);
+  color: var(--text-strong);
+}
+
+.detail {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}

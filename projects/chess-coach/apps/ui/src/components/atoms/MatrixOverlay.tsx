@@ -42,7 +42,7 @@ const clamp = (val: number, min: number, max: number) => Math.max(min, Math.min(
 
 export const MatrixOverlay = (props: MatrixOverlayProps) => {
   const [aspect, setAspect] = createSignal(
-    typeof window !== "undefined" ? window.innerWidth / window.innerHeight : 16 / 9
+    typeof window !== "undefined" ? window.innerWidth / window.innerHeight : 16 / 9,
   );
 
   onMount(() => {
