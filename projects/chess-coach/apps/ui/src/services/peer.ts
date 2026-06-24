@@ -36,8 +36,25 @@ function nextConnId(): string {
   return `c${_idSeq}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-function isClosedState(s: RTCPeerConnectionState): boolean {
-  return s === "failed" || s === "disconnected" || s === "closed";
+/**
+ * Map the raw RTCPeerConnection state to our coarser PeerState. Crucially
+ * `disconnected`/`failed` are RECOVERABLE (reported as "disconnected") — ICE can
+ * re-validate the same path (Tailscale's 100.x address survives Wi-Fi↔cellular
+ * handoffs), so the game layer holds the seat instead of ending the game. Only
+ * an explicit `closed` is terminal. `new`/`connecting` carry no signal.
+ */
+function mapConnState(s: RTCPeerConnectionState): PeerState | null {
+  switch (s) {
+    case "connected":
+      return "connected";
+    case "disconnected":
+    case "failed":
+      return "disconnected";
+    case "closed":
+      return "closed";
+    default:
+      return null;
+  }
 }
 
 /** Host side: one RTCPeerConnection + DataChannel per joiner, keyed by connId. */
@@ -87,6 +104,10 @@ export class HostHubTransport implements PeerTransport {
     }
   }
 
+  restartIce(): void {
+    for (const { pc } of this.peers.values()) pc.restartIce?.();
+  }
+
   close(): void {
     for (const { pc } of this.peers.values()) pc.close();
     for (const pc of this.pending.values()) pc.close();
@@ -111,9 +132,21 @@ export class HostHubTransport implements PeerTransport {
       }
     };
     pc.onconnectionstatechange = () => {
-      if (isClosedState(pc.connectionState)) {
+      const state = mapConnState(pc.connectionState);
+      if (!state) return;
+      if (state === "closed") {
+        // Keep recoverable peers in the map (dc stays "open"; outbound frames
+        // buffer and flush on recovery). Only drop on terminal close.
         this.peers.delete(connId);
         this.stateCb?.(connId, "closed");
+      } else if (state === "disconnected") {
+        pc.restartIce?.();
+        this.stateCb?.(connId, "disconnected");
+      } else if (dc.readyState === "open") {
+        // "connected" is only actionable once the channel can carry data. On
+        // initial connect dc.onopen fires it; this branch covers RECOVERY,
+        // where pc returns to connected while the dc was never closed.
+        this.stateCb?.(connId, "connected");
       }
     };
   }
@@ -141,8 +174,18 @@ export class GuestLinkTransport implements PeerTransport {
     this.pc = pc;
     pc.ondatachannel = (e) => this.wire(e.channel);
     pc.onconnectionstatechange = () => {
-      if (isClosedState(pc.connectionState)) {
+      const state = mapConnState(pc.connectionState);
+      if (!state) return;
+      if (state === "closed") {
         this.stateCb?.(GuestLinkTransport.HOST_ID, "closed");
+      } else if (state === "disconnected") {
+        pc.restartIce?.();
+        this.stateCb?.(GuestLinkTransport.HOST_ID, "disconnected");
+      } else if (this.dc?.readyState === "open") {
+        // Only after the channel is open (initial connect → dc.onopen; this
+        // branch is RECOVERY). Emitting on bare pc-connected would fire before
+        // the dc opens and the guest's hello would be dropped → no seat.
+        this.stateCb?.(GuestLinkTransport.HOST_ID, "connected");
       }
     };
     await pc.setRemoteDescription({ type: "offer", sdp: offer.sdp });
@@ -157,6 +200,10 @@ export class GuestLinkTransport implements PeerTransport {
 
   broadcast(msg: PeerMessage): void {
     this.send(GuestLinkTransport.HOST_ID, msg);
+  }
+
+  restartIce(): void {
+    this.pc?.restartIce?.();
   }
 
   close(): void {

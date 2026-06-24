@@ -38,10 +38,12 @@ export const startNewRecord = (
   playerRace?: PlayerIdentity,
   opponentRace?: PlayerIdentity,
   playerName?: string,
+  opponentNameOverride?: string,
 ) => {
   // Base name only; difficulty stays in its own field and the player-vs label
-  // is composed from name + color (see formatGameLabel).
-  const opponentName = opponentRace ? "Selena" : undefined;
+  // is composed from name + color (see formatGameLabel). LAN games pass the
+  // opponent's real display name; coach games derive "Selena" from the race.
+  const opponentName = opponentNameOverride?.trim() || (opponentRace ? "Selena" : undefined);
 
   setState("inProgress", {
     id,

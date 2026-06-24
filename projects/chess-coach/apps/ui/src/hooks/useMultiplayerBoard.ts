@@ -1,9 +1,9 @@
 // SPEC: _spec/chess-coach/ui/components.puml
-import { type Chess, type Color, type Square } from "chess.js";
+import { Chess, type Color, type Square } from "chess.js";
 import { createEffect, createMemo, createSignal } from "solid-js";
 
 import { capabilities } from "~/store/capabilitiesStore";
-import { addMove, currentIndex, game as latestGame, moveHistory } from "~/store/gameStore";
+import { addMove, currentFen, currentIndex, game as latestGame, moveHistory } from "~/store/gameStore";
 import { setLastLocalMove } from "~/store/roomStore";
 import { activePlayerColor, opponentPieceSet, playerPieceSet } from "~/store/settingsStore";
 import type { PromotionPiece } from "~/types/chess";
@@ -23,15 +23,23 @@ import { logger } from "~/utils/logger";
 export function useMultiplayerBoard() {
   // equals:false — the authoritative Chess instance is mutated in place, so
   // reference equality would hide moves from SolidJS. currentIndex() makes it
-  // re-run on every applied move (local or relayed).
+  // re-run on every applied move (local or relayed). When the history nav is
+  // viewing a past position, render a short-lived instance from that FEN; the
+  // live instance (full history for terminal-state checks) is used at latest.
   const game = createMemo(
     () => {
-      currentIndex();
-      return latestGame();
+      const idx = currentIndex();
+      const total = latestGame().history().length;
+      return idx === total ? latestGame() : new Chess(currentFen());
     },
     undefined,
     { equals: false },
   );
+
+  // Viewing a past position via the history nav. The board is read-only until
+  // the user steps back to the live position (mirrors the Coach board), so a
+  // stray move can never branch/destroy the shared game history.
+  const isReplaying = () => currentIndex() < latestGame().history().length;
 
   const [selectedSquare, setSelectedSquare] = createSignal<Square | null>(null);
   const [hoveredSquare, setHoveredSquare] = createSignal<Square | null>(null);
@@ -97,7 +105,7 @@ export function useMultiplayerBoard() {
   };
 
   const handleSquareClick = async (square: Square) => {
-    if (capabilities().readOnly) return;
+    if (capabilities().readOnly || isReplaying()) return;
     const g = game();
     const selected = selectedSquare();
 
@@ -126,7 +134,7 @@ export function useMultiplayerBoard() {
   };
 
   const handleSquareHover = (square: Square) => {
-    if (capabilities().readOnly) return;
+    if (capabilities().readOnly || isReplaying()) return;
     setHoveredSquare(square);
   };
 
@@ -135,7 +143,7 @@ export function useMultiplayerBoard() {
 
   const handleDragStart = (square: Square, e: DragEvent) => {
     const g = game();
-    if (capabilities().readOnly || !canTouch(g, square)) {
+    if (capabilities().readOnly || isReplaying() || !canTouch(g, square)) {
       e.preventDefault();
       return;
     }
@@ -197,5 +205,6 @@ export function useMultiplayerBoard() {
     lastMove,
     animationQueue,
     consumeAnimation,
+    isReplaying,
   };
 }

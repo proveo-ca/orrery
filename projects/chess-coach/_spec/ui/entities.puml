@@ -511,6 +511,17 @@ package "Hooks  [src/hooks/]" {
       reads: lastCoachEvent() mirror signal
     }
 
+    class useLanGameRecorder <<side-effect>> {
+      .. Behaviour ..
+      LAN twin of useGameRecorder, driven by room/game
+        stores instead of coach signals (engine-free board)
+      on roomStore.started: startNewRecord(myColor,
+        playerName, opponentName)  (players only)
+      per ply (fenHistory grows): pushMove → gameHistoryStore
+      on roomStore.gameOver: finalizeGame(result-from-my-POV)
+      onCleanup: discardInProgress if unfinished
+    }
+
     class useSharedGameImport <<side-effect>> {
       .. Returns ..
       importError(): string | null

@@ -64,6 +64,19 @@ Guest -> Host: Resign { color: black }
 Host -> Host: end game → gameOver
 Host -> Guest: RoomState { gameOver }
 Host -> Obs: RoomState { gameOver }
-note over Host, Obs: host disconnect → all channels close → room ends.\npeer disconnect → host frees the spot + rebroadcasts RoomState.
+
+== Drop & reconnect (recoverable) ==
+note over Guest: phone backgrounds → RTCPeerConnection "disconnected"/"failed"
+Guest -> Guest: connectionStatus = connecting ("reconnecting…")
+note over Host: peer "disconnected" (recoverable, NOT terminal):\nhold the seat, start a 15s grace timer, status = connecting
+alt page returns within grace (ICE re-validates the 100.x path;\nrestartIce() nudged on visibilitychange)
+  Guest -> Host: RTCPeerConnection "connected"
+  Host -> Guest: RoomState { latest fen } (resync)
+  Host -> Host: clear grace timer, status = connected
+else grace expires (or terminal "closed")
+  Host -> Host: dropPeer → gameOver { "Opponent disconnected." }
+  Host -> Obs: RoomState { gameOver }
+end
+note over Host, Obs: host drop → all channels close → room ends (host is the authority).\nFull-background reconnect still needs a persistent signaling path (manual QR can't auto-re-exchange SDP).
 
 @enduml

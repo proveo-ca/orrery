@@ -1,7 +1,7 @@
 // SPEC: _spec/chess-coach/multiplayer.puml
 import { createEffect, createSignal, onCleanup } from "solid-js";
 
-import { addMoveSan, currentFen, game, loadFen } from "~/store/gameStore";
+import { addMoveSan, currentFen, game, loadFen, setViewIndex } from "~/store/gameStore";
 import {
   OBSERVER_CAP,
   addObserver,
@@ -85,6 +85,18 @@ export function useMultiplayerGame(
   let helloSent = false;
   const [synced, setSynced] = createSignal(false);
 
+  // A peer in the recoverable `disconnected` state is held for this long before
+  // the game is declared over, giving a backgrounded phone a chance to come back.
+  const RECONNECT_GRACE_MS = 15_000;
+  const graceTimers = new Map<string, ReturnType<typeof setTimeout>>();
+  const clearGrace = (peerId: string) => {
+    const timer = graceTimers.get(peerId);
+    if (timer) {
+      clearTimeout(timer);
+      graceTimers.delete(peerId);
+    }
+  };
+
   // Bind transport callbacks as soon as one exists.
   createEffect(() => {
     const t = transport();
@@ -119,12 +131,24 @@ export function useMultiplayerGame(
   });
 
   onCleanup(() => {
+    for (const timer of graceTimers.values()) clearTimeout(timer);
+    graceTimers.clear();
     bound?.close();
     bound = null;
   });
 
   function broadcastRoom(t: PeerTransport): void {
-    t.broadcast({ t: "roomState", snapshot: snapshot(currentFen()) });
+    // Snapshot the latest authoritative position (game().fen()), not currentFen()
+    // — the host may be reviewing history, and a (re)joining peer must sync to
+    // live, not to whatever ply the host happens to be viewing.
+    t.broadcast({ t: "roomState", snapshot: snapshot(game().fen()) });
+  }
+
+  // Reset the history-view cursor to the latest ply. Called before applying a
+  // relayed move so a player who stepped back through the move history doesn't
+  // branch (and destroy) the shared game when the next move lands.
+  function snapToLive(): void {
+    setViewIndex(game().history().length);
   }
 
   function startIfReady(t: PeerTransport): void {
@@ -167,6 +191,7 @@ export function useMultiplayerGame(
         if (!started()) broadcastRoom(t);
         break;
       case "move": {
+        snapToLive(); // a relayed move always appends to the latest position
         try {
           addMoveSan(msg.san);
         } catch {
@@ -210,7 +235,11 @@ export function useMultiplayerGame(
       }
       case "moveApplied": {
         if (msg.gameOver) setGameOver(msg.gameOver);
-        if (currentFen() === msg.fen) return; // our own optimistic move — already applied
+        // Compare the live position (not currentFen, which follows the history
+        // view cursor) so our own optimistic move is deduped even while the
+        // local player is reviewing an earlier position.
+        if (game().fen() === msg.fen) return;
+        snapToLive(); // append to the latest position, never a replayed one
         try {
           addMoveSan(msg.san);
         } catch {
@@ -225,17 +254,45 @@ export function useMultiplayerGame(
     }
   }
 
+  // Drop a peer for good: vacate its seat and, if it was a mid-game player, end
+  // the game. Called on a terminal `closed` or when the reconnect grace expires.
+  function dropPeer(t: PeerTransport, peerId: string): void {
+    clearGrace(peerId);
+    const wasPlayer = players().some((p) => p.peerId === peerId);
+    removeMember(peerId);
+    if (wasPlayer && started() && !gameOver()) {
+      setGameOver({ result: "draw", message: "Opponent disconnected." });
+      setConnectionStatus("disconnected");
+    }
+    broadcastRoom(t);
+  }
+
   function handlePeerState(t: PeerTransport, peerId: string, state: PeerState): void {
     if (t.role === "host") {
-      if (state === "connected") setConnectionStatus("connected");
-      if (state === "closed") {
-        const wasPlayer = players().some((p) => p.peerId === peerId);
-        removeMember(peerId);
-        if (wasPlayer && started() && !gameOver()) {
-          setGameOver({ result: "draw", message: "Opponent disconnected." });
-          setConnectionStatus("disconnected"); // reflect the live drop in the indicator
+      if (state === "connected") {
+        clearGrace(peerId);
+        setConnectionStatus("connected");
+        // Resync a (re)connected peer to the authoritative position mid-game.
+        if (started()) broadcastRoom(t);
+      } else if (state === "disconnected") {
+        // Recoverable: hold the seat through a grace window instead of ending
+        // the game outright. A mid-game player drop shows "reconnecting"; if it
+        // doesn't come back in time, the timer drops the peer for good.
+        const isPlayer = players().some((p) => p.peerId === peerId);
+        if (isPlayer && started() && !gameOver()) {
+          setConnectionStatus("connecting");
+          if (!graceTimers.has(peerId)) {
+            graceTimers.set(
+              peerId,
+              setTimeout(() => dropPeer(t, peerId), RECONNECT_GRACE_MS),
+            );
+          }
+        } else {
+          // A lobby/observer drop has no seat to hold — release it immediately.
+          dropPeer(t, peerId);
         }
-        broadcastRoom(t);
+      } else if (state === "closed") {
+        dropPeer(t, peerId);
       }
     } else {
       if (state === "connected" && !helloSent) {
@@ -245,6 +302,8 @@ export function useMultiplayerGame(
           t.broadcast({ t: "hello", identity: intent.identity, desiredRole: intent.desiredRole });
         }
       }
+      // Guests can't end the game (host is authoritative) — just reflect the
+      // link state. `disconnected` reads as "reconnecting" while ICE retries.
       setConnectionStatus(
         state === "connected" ? "connected" : state === "closed" ? "disconnected" : "connecting",
       );

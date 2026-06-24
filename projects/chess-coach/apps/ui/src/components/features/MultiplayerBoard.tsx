@@ -53,7 +53,7 @@ export const MultiplayerBoard: Component = () => {
     const touch = e.touches[0];
     if (!touch) return;
     const sq = squareFromTouch(touch);
-    if (!sq || capabilities().readOnly) return;
+    if (!sq || capabilities().readOnly || board.isReplaying()) return;
 
     const g = game();
     const piece = g.get(sq);

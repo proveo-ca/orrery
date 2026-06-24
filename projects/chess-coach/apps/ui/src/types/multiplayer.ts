@@ -68,7 +68,13 @@ export type PeerMessage =
 
 // ── Transport (implemented in services/peer.ts) ──────────────────────────
 
-export type PeerState = "connecting" | "connected" | "closed";
+/**
+ * `disconnected` is the RECOVERABLE state (ICE dropped — e.g. a phone briefly
+ * backgrounded — but may re-validate the existing path on its own). `closed` is
+ * terminal. The game layer holds the seat during `disconnected` (grace window)
+ * and only ends the game on `closed` or when the grace window expires.
+ */
+export type PeerState = "connecting" | "connected" | "disconnected" | "closed";
 
 /**
  * Vendor-agnostic peer transport (mirrors the CoachService seam). The game
@@ -83,6 +89,9 @@ export interface PeerTransport {
   send(peerId: string, msg: PeerMessage): void;
   /** Send to every connected peer (host) — a guest sends only to the host. */
   broadcast(msg: PeerMessage): void;
+  /** Best-effort ICE restart on all connections — nudge recovery when the page
+   *  returns to the foreground after a network blip. */
+  restartIce(): void;
   close(): void;
 }
 

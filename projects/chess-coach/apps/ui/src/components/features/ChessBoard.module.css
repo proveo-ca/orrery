@@ -43,39 +43,5 @@
   transform: translate(-50%, -50%);
 }
 
-/* =========================================
-   Game Over States
-   ========================================= */
-.game-over-overlay {
-  background: rgba(var(--shadow-rgb), 0.4);
-  border-radius: 4px;
-  z-index: 30;
-  pointer-events: auto; /* block board interaction */
-}
-
-.game-over-banner {
-  background: rgba(var(--shadow-rgb), 0.85);
-  color: var(--white);
-  border: 2px solid var(--primary-color);
-  border-radius: 8px;
-  box-shadow: 0 4px 15px rgba(var(--shadow-rgb), 0.5);
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  justify-content: center;
-
-  h1 {
-    padding: 1rem 2rem 2rem;
-    letter-spacing: 4px;
-    font-weight: bold;
-    text-transform: uppercase;
-    font-size: clamp(1.2rem, 5vw, 2rem);
-    text-shadow: 0 2px 4px rgba(var(--shadow-rgb), 0.5);
-  }
-}
-
-.game-over-actions {
-  display: flex;
-  align-items: stretch;
-  gap: 1rem;
-}
+/* Game-over banner moved to the shared GameOverBanner feature component
+   (components/features/GameOverBanner.{tsx,module.css}). */

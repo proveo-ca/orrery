@@ -65,18 +65,27 @@ package "Screens  [src/screens/]" {
   note right of LanScreen
     serverless P2P multiplayer (Tailscale + WebRTC)
     mounts LAN_PLAYER / LAN_OBSERVER capabilities
-    calls useMultiplayerGame()
+    calls useMultiplayerGame() · useLanGameRecorder() ·
+      useLivePreAnalysis()  (recorded + analyzed → reviewable
+      at /review/:id, like a Coach game)
     lobby: create / join · QR + link signaling ·
       players pick/swap colors · observers ≤4 · Start Game
     host browser = room authority (relays all moves)
     layout: lobby = SplashScreen (no board, like MenuScreen) —
       Tailscale onboarding + room setup. Once started,
-      the board-centric Screen grid: matchup header,
-      board centered, sidebar = connectivity status + Resign
+      the board-centric Screen grid: matchup header (+ mobile
+      connectivity readout), board centered, sidebar =
+      connectivity status + history nav + Resign
+    history nav: DualNavButton bound straight to gameStore
+      (engine-free); MultiplayerBoard replays past plies and
+      locks input while replaying. NO eval bar, ever.
+    end screen: shared GameOverBanner (Resignation / Checkmate /
+      Stalemate / Draw / Opponent Left) → Review Game · Back to Menu
     renders MultiplayerBoard (coach/engine-free) — NOT ChessBoard
     composition: SplashScreen · Screen · MultiplayerBoard ·
       CapturedPieces · TailscaleChecklist · QR encode/scan ·
-      ConnIndicator (live WebRTC status, SignalIcon)
+      ConnIndicator (live WebRTC status, SignalIcon) ·
+      DualNavButton · GameOverBanner
   end note
 }
 
@@ -136,6 +145,17 @@ package "Hooks  [src/hooks/]" {
       announces it through setLastLocalMove for relay.
       Deliberately NOT useChessBoard — no Stockfish, advice,
       emotions, hints, or blunder analysis.
+      Renders the viewed position during history nav (isReplaying)
+      and locks input while replaying.
+    end note
+    [useLanGameRecorder] as UseLanGameRecorder
+    note right of UseLanGameRecorder
+      records the LAN game into gameHistoryStore (start on
+      `started`, append plies as the position grows, finalize on
+      roomStore.gameOver — mapped to the player's win/loss/draw).
+      The coach-signal-driven useGameRecorder doesn't fit the
+      engine-free board, so this drives off room + game stores.
+      Players only (observers don't record).
     end note
   }
 
@@ -178,7 +198,7 @@ package "Components  [src/components/]" {
       8×8 grid · drag+drop · touch-drag
       piece animation · last-move highlight
       best-move arrow (green) · advice arrow (blue)
-      EvalBar overlay · GameOver modal · PromotionModal
+      EvalBar overlay · GameOverBanner · PromotionModal
       board flips on activePlayerColor change
       composes ChessSquare + ChessBoardArrow (atoms)
     end note
@@ -187,8 +207,16 @@ package "Components  [src/components/]" {
       LAN board (coach/engine-free twin of ChessBoard).
       8×8 grid · drag+drop · touch-drag · piece animation
       last-move highlight · PromotionModal · flips on color.
-      NO EvalBar / arrows / advice / GameOver modal.
+      NO EvalBar / arrows / advice. (The GameOverBanner is
+      rendered by LanScreen over the board, not here.)
       composes ChessSquare; drives useMultiplayerBoard.
+    end note
+    rectangle "GameOverBanner" as GameOverBanner
+    note bottom of GameOverBanner
+      Shared end-of-game banner over the board (Modal,
+      board-absolute, non-dismissible). Caller passes the
+      headline, optional detail, and action buttons.
+      Used by ChessBoard (Coach) and LanScreen (LAN).
     end note
     rectangle "CoachPanel" as CoachPanel
     note right of CoachPanel
@@ -448,17 +476,23 @@ UseTravelMode    --> CoachServiceIF : postExplainStream()
 RuntimeMode --> HttpCoachService      : desktop
 RuntimeMode --> WebWorkerCoachService : web-full | web-no-llm
 
-' ── Multiplayer wiring (LanScreen, serverless P2P — no engine/coach) ──
+' ── Multiplayer wiring (LanScreen, serverless P2P — engine only for review) ──
 LanScreen           ..> UseMultiplayerGame  : calls
+LanScreen           ..> UseLanGameRecorder  : calls
+LanScreen           ..> UseLivePreAnalysis  : calls (warms review cache)
 LanScreen           --> MultiplayerBoard    : renders (started)
+LanScreen           --> GameOverBanner      : renders (gameOver && !replaying)
+LanScreen           --> DualNavButton       : history nav → gameStore goBack/goForward/setViewIndex
 MultiplayerBoard    ..> UseMultiplayerBoard : uses
-UseMultiplayerBoard --> GameStore           : addMove (local move)
+UseMultiplayerBoard --> GameStore           : addMove (local move) · currentFen (replay)
 UseMultiplayerBoard ..> RoomStore           : setLastLocalMove
 UseMultiplayerBoard ..> UseMultiplayerGame  : roomStore.lastLocalMove → relay
-UseMultiplayerGame  --> GameStore           : addMoveSan · loadFen · resignGame
-UseMultiplayerGame  --> RoomStore           : seats · colors · started · connectionStatus
+UseMultiplayerGame  --> GameStore           : addMoveSan · loadFen · setViewIndex (snap-to-live)
+UseMultiplayerGame  --> RoomStore           : seats · colors · started · connectionStatus · gameOver
 UseMultiplayerGame  --> SettingsStore       : setActivePlayerColor(myColor)
 UseMultiplayerGame  --> PeerTransportIF     : send · broadcast · onMessage
+UseLanGameRecorder  --> HistoryStore        : startNewRecord · pushMove · finalizeGame
+UseLanGameRecorder  ..> RoomStore           : started · gameOver · myColor (record trigger)
 Signaling          ..> PeerTransportIF    : encodes offer/answer (QR/link)
 HostHubTransport   <..> GuestLinkTransport : RTCDataChannel\n(direct over Tailscale 100.x)
 

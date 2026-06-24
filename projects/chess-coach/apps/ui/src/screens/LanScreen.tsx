@@ -2,10 +2,12 @@
 import { type Component, Show, createEffect, createSignal, onCleanup, onMount } from "solid-js";
 
 import { OpponentCaptures, PlayerCaptures } from "~/components/atoms/CapturedPieces";
+import { GameOverBanner } from "~/components/features/GameOverBanner";
 import { MultiplayerBoard } from "~/components/features/MultiplayerBoard";
 import { PlayerNameField } from "~/components/features/PlayerNameField";
 import { TailscaleChecklist } from "~/components/features/TailscaleChecklist";
 import { Button } from "~/components/primitives/Button";
+import { DualNavButton } from "~/components/primitives/DualNavButton";
 import { IconButton } from "~/components/primitives/IconButton";
 import { FlagIcon, SignalIcon } from "~/components/primitives/icons";
 import { Input } from "~/components/primitives/Input";
@@ -13,6 +15,8 @@ import { Label } from "~/components/primitives/Label";
 import { QrCode } from "~/components/primitives/QrCode";
 import { Screen } from "~/components/primitives/Screen";
 import { SplashScreen } from "~/components/primitives/SplashScreen";
+import { useLanGameRecorder } from "~/hooks/useLanGameRecorder";
+import { useLivePreAnalysis } from "~/hooks/useLivePreAnalysis";
 import { HOST_SELF_ID, useMultiplayerGame } from "~/hooks/useMultiplayerGame";
 import styles from "~/screens/LanScreen.module.css";
 import { GuestLinkTransport, HostHubTransport } from "~/services/peer";
@@ -22,7 +26,17 @@ import {
   LAN_PLAYER_CAPABILITIES,
   setCapabilities,
 } from "~/store/capabilitiesStore";
-import { loadFen } from "~/store/gameStore";
+import { getExpectedReviewId, hasRecordedReview } from "~/store/gameHistoryStore";
+import {
+  currentIndex,
+  fenHistory,
+  game,
+  goBack,
+  goForward,
+  loadFen,
+  setViewIndex,
+  startingFen,
+} from "~/store/gameStore";
 import {
   addPlayer,
   connectionStatus,
@@ -104,6 +118,11 @@ export const LanScreen: Component = () => {
     role() === "guest" ? { identity: { name: playerName() }, desiredRole: desiredRole() } : null,
   );
 
+  // Record the LAN game + warm its review analysis as moves land, so it can be
+  // reviewed at /review/:id afterwards exactly like a Coach game.
+  useLanGameRecorder();
+  useLivePreAnalysis();
+
   // Capability preset reacts to seat + started — the board stays locked
   // (readOnly) in the lobby and unlocks for players once the game starts.
   createEffect(() => {
@@ -120,6 +139,15 @@ export const LanScreen: Component = () => {
     setCapabilities(LAN_PLAYER_CAPABILITIES);
     const parsed = parseSignalHash();
     if (parsed?.kind === "o") setIncomingOffer(parsed.payload);
+
+    // Coming back to the foreground after the OS suspended the tab (e.g. the
+    // phone was locked) is the moment to nudge a dropped connection back —
+    // best-effort ICE restart; recovery is mostly ICE re-validating the path.
+    const onVisible = () => {
+      if (document.visibilityState === "visible") transport()?.restartIce();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    onCleanup(() => document.removeEventListener("visibilitychange", onVisible));
   });
 
   onCleanup(() => {
@@ -214,6 +242,40 @@ export const LanScreen: Component = () => {
     !started() && role() != null && (role() === "host" || connectionStatus() === "connected");
   const sharingAnswer = () =>
     role() === "guest" && connectionStatus() !== "connected" && !started();
+
+  // History navigation — straight gameStore cursor control, deliberately
+  // engine-free (no hint/eval machinery, so the LAN board never pulls in
+  // Stockfish). The board renders the viewed position and locks input while
+  // replaying; relayed moves snap back to live (see useMultiplayerGame).
+  const latestPly = () => fenHistory().length - 1;
+  const replaying = () => currentIndex() < latestPly();
+  const historyNav = () => (
+    <DualNavButton
+      onBack={goBack}
+      onForward={goForward}
+      backDisabled={currentIndex() === 0}
+      forwardDisabled={!replaying()}
+      inverted={replaying()}
+      label={replaying() ? "History" : undefined}
+      showBackToLive={replaying()}
+      onBackToLive={() => setViewIndex(latestPly())}
+    />
+  );
+
+  // Terminal-state headline, mirroring the Coach end screen. Checkmate /
+  // stalemate / draw read from the final position; the two non-terminal endings
+  // (resignation, opponent disconnect) are told apart by the verdict.
+  const gameOverHeading = () => {
+    const g = game();
+    if (g.isCheckmate()) return "Checkmate";
+    if (g.isStalemate()) return "Stalemate";
+    if (g.isDraw()) return "Draw";
+    return gameOver()?.result === "draw" ? "Opponent Left" : "Resignation";
+  };
+  const reviewId = () =>
+    hasRecordedReview(game().pgn(), startingFen())
+      ? getExpectedReviewId(game().pgn(), startingFen())
+      : null;
 
   return (
     // Two distinct layouts: the lobby is a MenuScreen-style splash (no board) —
@@ -357,19 +419,43 @@ export const LanScreen: Component = () => {
               <span class={`${styles.swatch} ${styles["swatch--b"]}`} />
             </span>
           </div>
+          {/* On mobile the sidebar is hidden and the footer can fall below the
+              board (under the browser chrome), so the connectivity readout lives
+              in the always-visible header here. */}
+          <div class={styles.headerStatusMobile}>
+            <ConnIndicator />
+          </div>
         </Screen.Header>
 
         <Screen.BoardArea>
           <Screen.BoardColumn>
             <OpponentCaptures />
-            <MultiplayerBoard />
+            {/* Relative wrapper so the game-over banner overlays just the board,
+                mirroring the Coach end screen. */}
+            <div class={styles.boardWrap}>
+              <MultiplayerBoard />
+              <GameOverBanner
+                open={!!gameOver() && !replaying()}
+                heading={gameOverHeading()}
+                detail={gameOver()?.message}
+              >
+                <Show when={reviewId()}>
+                  <Button primary href={`/review/${reviewId()}`}>
+                    Review Game
+                  </Button>
+                </Show>
+                <Button href="/">Back to Menu</Button>
+              </GameOverBanner>
+            </div>
             <PlayerCaptures />
           </Screen.BoardColumn>
-          {/* Sidebar — live connectivity status + Resign. Reserves --sidebar-width
-              so the board stays centered against the offset header/footer (like the
-              other screens). Hidden on mobile; both live in the footer there. */}
+          {/* Sidebar — connectivity, move-history nav, Resign. Reserves
+              --sidebar-width so the board stays centered against the offset
+              header/footer (like the other screens). Hidden on mobile, where
+              these live in the footer instead. */}
           <div class={styles.sidebar}>
             <ConnIndicator />
+            {historyNav()}
             <Show when={!gameOver() && seat() === "player"}>
               <IconButton label="Resign" onClick={() => mp.resign()} aria-label="Resign">
                 <FlagIcon />
@@ -379,22 +465,13 @@ export const LanScreen: Component = () => {
         </Screen.BoardArea>
 
         <Screen.Footer>
-          {/* Connectivity is always visible on mobile, where the sidebar is hidden. */}
-          <div class={styles.statusMobile}>
-            <ConnIndicator />
-          </div>
-          <Show when={gameOver()}>
-            <div class={styles.banner}>{gameOver()!.message}</div>
-          </Show>
+          {/* History nav is carried in the footer on mobile, where the sidebar
+              is hidden (connectivity sits in the header — see above). */}
+          <div class={styles.mobileControls}>{historyNav()}</div>
           {/* Resign is reachable here on mobile, where the sidebar is hidden. */}
           <Show when={!gameOver() && seat() === "player"}>
             <div class={styles.mobileResign}>
               <Button onClick={() => mp.resign()}>Resign</Button>
-            </div>
-          </Show>
-          <Show when={gameOver()}>
-            <div class={styles.row}>
-              <Button href="/">Back to Menu</Button>
             </div>
           </Show>
         </Screen.Footer>
