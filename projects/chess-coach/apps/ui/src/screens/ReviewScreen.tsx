@@ -220,13 +220,23 @@ export const ReviewScreen: Component = () => {
                   {resultLabel} ({colorLabel})
                 </Label>
                 <Label variant="title">{formatGameLabel(g())}</Label>
-                <Button onClick={() => void share(g())}>Share</Button>
-                <Show when={shareMsg()}>
-                  <Label variant="caption">{shareMsg()}</Label>
-                </Show>
-                <Button primary onClick={() => navigate(-1)}>
-                  Back
-                </Button>
+                <div
+                  style={{
+                    display: "flex",
+                    "justify-content": "center",
+                    gap: "0.75rem",
+                  }}
+                >
+                  <Button onClick={() => void share(g())}>Share</Button>
+                  <Button primary onClick={() => navigate(-1)}>
+                    Back
+                  </Button>
+                </div>
+                <div style={{ "min-height": "1.25rem", "margin-top": "0.5rem" }}>
+                  <Show when={shareMsg()}>
+                    <Label variant="caption">{shareMsg()}</Label>
+                  </Show>
+                </div>
               </Screen.SidebarInset>
 
               <Screen.BoardArea>

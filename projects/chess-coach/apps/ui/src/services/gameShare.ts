@@ -11,12 +11,20 @@ import type { PlayerIdentity } from "~/types/settings";
  * "share a game by link" feature. The payload rides in the URL *hash* (never
  * sent to the server) and is decoded into the recipient's localStorage.
  *
+ * Shared games carry only bare moves and the two players' identities — no
+ * coaching layer. The recomputable `id` and the whole `moves` array are left
+ * out of the payload (the move list is rebuilt from the PGN on decode), and
+ * `{hint}` annotations are stripped from the PGN, so hints never travel. The
+ * per-game analysis cache (blunder arrows, best moves) is likewise not shared;
+ * it is recomputed on the recipient's side. Dropping the redundant move list
+ * roughly halves the URL length.
+ *
  * Wire format: lz-string `compressToEncodedURIComponent(JSON.stringify({ v, g }))`,
- * where `g` is the GameRecord minus its recomputable `id`. `decodeGame` treats
- * the input as fully hostile: it caps sizes, validates every field, builds a
- * fresh object (never spreads untrusted input — anti prototype-pollution), and
- * re-derives the `id` from the PGN. The per-game analysis cache is intentionally
- * NOT shared; it is recomputed on the recipient's side.
+ * where `g` is the GameRecord minus `id`, minus `moves`, and with PGN hint
+ * markers stripped. `decodeGame` treats the input as fully hostile: it caps
+ * sizes, validates every field, rebuilds a fresh object (never spreads
+ * untrusted input — anti prototype-pollution), reconstructs the moves from the
+ * PGN, and re-derives the `id` from the PGN.
  */
 
 export const SHARE_VERSION = 1;
@@ -44,10 +52,47 @@ const isoOr = (v: unknown, fallback: string | null): string | null => {
   return fallback;
 };
 
+/** Strip `{hint}` (and any other) PGN comments so shared games carry bare moves. */
+const stripPgnComments = (pgn: string): string => pgn.replace(/\{[^}]*\}\s*/g, "");
+
 export function encodeGame(record: GameRecord): string {
-  const { id, ...rest } = record;
-  void id; // recomputed on decode — never travels in the payload
-  return compressToEncodedURIComponent(JSON.stringify({ v: SHARE_VERSION, g: rest }));
+  // The `id` is recomputed on decode and the `moves` list is reconstructed from
+  // the PGN, so neither travels in the payload; hints are stripped from the PGN.
+  const { id, moves, pgn, ...rest } = record;
+  void id;
+  void moves;
+  const g = { ...rest, pgn: stripPgnComments(pgn) };
+  return compressToEncodedURIComponent(JSON.stringify({ v: SHARE_VERSION, g }));
+}
+
+/**
+ * Rebuild the move list from a shared game's bare PGN. Mirrors gameStore's
+ * `loadGame` (`new Chess(fen)` → `loadPgn`) so the recipient replays the same
+ * moves. Hints are intentionally not shared, so `hasPressedHint` is always
+ * false; `isAI` is whichever side isn't the sharer's `playerColor`. Returns
+ * null on an illegal starting FEN or an unparseable PGN.
+ */
+function movesFromPgn(
+  pgn: string,
+  startingFen: string,
+  playerColor: "w" | "b",
+): MoveRecord[] | null {
+  let game: Chess;
+  try {
+    game = new Chess(startingFen);
+  } catch {
+    return null;
+  }
+  try {
+    game.loadPgn(pgn);
+  } catch {
+    return null;
+  }
+  return game.history({ verbose: true }).map((m) => ({
+    san: m.san,
+    hasPressedHint: false,
+    isAI: m.color !== playerColor,
+  }));
 }
 
 export function decodeGame(param: string): GameRecord | null {
@@ -74,23 +119,10 @@ export function decodeGame(param: string): GameRecord | null {
   if (pgn === null || startingFen === null || difficulty === null) return null;
   if (g.playerColor !== "w" && g.playerColor !== "b") return null;
   if (!RESULTS.includes(g.result as GameResult)) return null;
-  if (!Array.isArray(g.moves) || g.moves.length > MAX_MOVES) return null;
 
-  // Starting position must be a legal FEN (chess.js throws otherwise).
-  try {
-    new Chess(startingFen);
-  } catch {
-    return null;
-  }
-
-  const moves: MoveRecord[] = [];
-  for (const m of g.moves) {
-    if (typeof m !== "object" || m === null) return null;
-    const mm = m as Record<string, unknown>;
-    const san = clampStr(mm.san, MAX_STR_LEN);
-    if (san === null) return null;
-    moves.push({ san, hasPressedHint: mm.hasPressedHint === true, isAI: mm.isAI === true });
-  }
+  // Rebuild the move list from the bare PGN (also validates the FEN + PGN).
+  const moves = movesFromPgn(pgn, startingFen, g.playerColor);
+  if (moves === null || moves.length > MAX_MOVES) return null;
 
   // Re-derive the review id; reject a PGN that doesn't parse.
   const id = polyglotHashFromPgn(pgn, startingFen);
