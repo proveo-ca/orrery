@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LAN WebRTC spike</title>
+    <style>
+      body { font-family: system-ui, sans-serif; margin: 1rem; max-width: 40rem; }
+      h1 { font-size: 1.1rem; }
+      textarea { width: 100%; height: 6rem; font-family: ui-monospace, monospace; font-size: 0.7rem; }
+      button { padding: 0.6rem 1rem; margin: 0.25rem 0.25rem 0.25rem 0; font-size: 0.95rem; }
+      #log { white-space: pre-wrap; font-family: ui-monospace, monospace; font-size: 0.75rem;
+             background: #f4f4f4; padding: 0.5rem; border-radius: 0.4rem; max-height: 16rem; overflow: auto; }
+      .ok { color: #137333; font-weight: 600; }
+      .bad { color: #c5221f; font-weight: 600; }
+      section { border: 1px solid #ccc; border-radius: 0.5rem; padding: 0.75rem; margin: 0.75rem 0; }
+    </style>
+  </head>
+  <body>
+    <h1>LAN WebRTC datachannel spike</h1>
+    <p>
+      Validates the serverless plan: can two mobile browsers open a WebRTC DataChannel directly
+      over the Tailscale tailnet (no STUN/TURN)? Run on two phones both signed into the same
+      tailnet, then exchange the blobs by hand (copy/paste via Messages, AirDrop, etc.).
+      After "connected", tap <b>Show ICE path</b> — the selected candidate pair should be the
+      <code>100.x</code> Tailscale addresses.
+    </p>
+
+    <section>
+      <b>A — Host</b>
+      <div><button id="mkOffer">1. Create offer</button></div>
+      <textarea id="offerOut" placeholder="offer appears here → send to B"></textarea>
+      <textarea id="answerIn" placeholder="paste B's answer here"></textarea>
+      <div><button id="acceptAnswer">3. Accept answer</button></div>
+    </section>
+
+    <section>
+      <b>B — Guest</b>
+      <textarea id="offerIn" placeholder="paste A's offer here"></textarea>
+      <div><button id="mkAnswer">2. Create answer</button></div>
+      <textarea id="answerOut" placeholder="answer appears here → send back to A"></textarea>
+    </section>
+
+    <section>
+      <button id="send">Send ping</button>
+      <button id="ice">Show ICE path</button>
+    </section>
+
+    <div id="log"></div>
+
+    <script>
+      const $ = (id) => document.getElementById(id);
+      const log = (m, cls) => {
+        const line = document.createElement("div");
+        if (cls) line.className = cls;
+        line.textContent = m;
+        $("log").appendChild(line);
+        $("log").scrollTop = $("log").scrollHeight;
+      };
+
+      let pc = null;
+      let dc = null;
+
+      function wireChannel(channel) {
+        dc = channel;
+        dc.onopen = () => log("DataChannel OPEN — connected!", "ok");
+        dc.onclose = () => log("DataChannel closed", "bad");
+        dc.onmessage = (e) => log("recv: " + e.data);
+      }
+
+      function newPc() {
+        const p = new RTCPeerConnection({ iceServers: [] }); // Tailscale = direct, no STUN/TURN
+        p.oniceconnectionstatechange = () => log("ice: " + p.iceConnectionState);
+        p.onconnectionstatechange = () => log("conn: " + p.connectionState);
+        return p;
+      }
+
+      function waitIce(p) {
+        return new Promise((resolve) => {
+          if (p.iceGatheringState === "complete") return resolve();
+          const t = setTimeout(resolve, 3000);
+          p.addEventListener("icegatheringstatechange", () => {
+            if (p.iceGatheringState === "complete") { clearTimeout(t); resolve(); }
+          });
+        });
+      }
+
+      $("mkOffer").onclick = async () => {
+        pc = newPc();
+        wireChannel(pc.createDataChannel("spike"));
+        await pc.setLocalDescription(await pc.createOffer());
+        await waitIce(pc);
+        $("offerOut").value = pc.localDescription.sdp;
+        log("offer ready — copy it to B");
+      };
+
+      $("mkAnswer").onclick = async () => {
+        pc = newPc();
+        pc.ondatachannel = (e) => wireChannel(e.channel);
+        await pc.setRemoteDescription({ type: "offer", sdp: $("offerIn").value.trim() });
+        await pc.setLocalDescription(await pc.createAnswer());
+        await waitIce(pc);
+        $("answerOut").value = pc.localDescription.sdp;
+        log("answer ready — copy it back to A");
+      };
+
+      $("acceptAnswer").onclick = async () => {
+        await pc.setRemoteDescription({ type: "answer", sdp: $("answerIn").value.trim() });
+        log("answer accepted — waiting for channel…");
+      };
+
+      $("send").onclick = () => {
+        if (dc && dc.readyState === "open") { dc.send("ping " + Date.now()); log("sent ping"); }
+        else log("channel not open", "bad");
+      };
+
+      $("ice").onclick = async () => {
+        if (!pc) return;
+        const stats = await pc.getStats();
+        let pairId = null;
+        stats.forEach((r) => {
+          if (r.type === "candidate-pair" && (r.selected || r.state === "succeeded")) pairId = r;
+        });
+        if (!pairId) { log("no selected candidate pair yet", "bad"); return; }
+        const local = stats.get(pairId.localCandidateId);
+        const remote = stats.get(pairId.remoteCandidateId);
+        log("local : " + (local && local.address) + ":" + (local && local.port) + " (" + (local && local.candidateType) + ")");
+        log("remote: " + (remote && remote.address) + ":" + (remote && remote.port) + " (" + (remote && remote.candidateType) + ")");
+        const ok = (a) => a && (a.startsWith("100.") || a.includes(":")); // 100.x v4 or tailnet v6
+        if (ok(local && local.address) && ok(remote && remote.address))
+          log("Using the tailnet path ✓ — serverless plan is viable.", "ok");
+        else
+          log("NOT a 100.x pair — mDNS/host-candidate obfuscation may be blocking the tailnet path.", "bad");
+      };
+    </script>
+  </body>
+</html>

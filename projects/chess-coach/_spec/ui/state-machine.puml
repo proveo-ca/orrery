@@ -31,7 +31,7 @@ state "Active Screen" as ActiveScreen {
   state "Coach" as SC_COACH : CoachScreen\nplaying with Selena
   state "Analysis" as SC_ANALYSIS : AnalysisScreen\nsolo analysis scratch-pad
   state "Review" as SC_REVIEW : ReviewScreen
-  state "Lan" as SC_LAN : LanScreen (placeholder)
+  state "Lan" as SC_LAN : LanScreen\nserverless P2P multiplayer (Tailscale + WebRTC)
 
   SC_MENU --> SC_COACH     : navigate("/selena")
   SC_MENU --> SC_ANALYSIS  : navigate("/analysis")
@@ -52,11 +52,14 @@ state "Capability Preset" as CapPreset {
   state "ANALYSIS" as CAP_ANALYSIS : continuousAnalysis T · bestMoveArrow=both\nfreeColorControl T · historyBranching T\nflipBoard T · persistGame F
   state "REVIEW" as CAP_REVIEW : continuousAnalysis T\nreadOnly T · historyBranching T ·\nhistoryNav F · persistGame F
   state "REVIEW+historyNav" as CAP_REVIEW_NAV : REVIEW preset +\nhistoryNav T (when activeGame() exists)
+  state "LAN_PLAYER" as CAP_LAN_P : aiOpponent F · commentary F · hint F\nfreeColorControl F · persistGame F\nreadOnly = !roomStore.started()
+  state "LAN_OBSERVER" as CAP_LAN_O : LAN_PLAYER + readOnly T (always)
 
   [*] --> CAP_COACH : default on app init
   SC_COACH    : setCapabilities(COACH_CAPABILITIES)
   SC_ANALYSIS : setCapabilities(ANALYSIS_CAPABILITIES)
   SC_REVIEW   : setCapabilities(REVIEW_CAPABILITIES) →\n  activeGame() ? CAP_REVIEW_NAV : CAP_REVIEW
+  SC_LAN      : setCapabilities(role == observer\n  ? LAN_OBSERVER_CAPABILITIES : LAN_PLAYER_CAPABILITIES)
 }
 
 ' ══════════════════════════════════════════════════════════════
@@ -179,6 +182,47 @@ state "Review Analysis Sub-State" as ReviewAnalysis {
 }
 
 ' ══════════════════════════════════════════════════════════════
+' MULTIPLAYER CONNECTION  (roomStore — LanScreen only, serverless)
+' ══════════════════════════════════════════════════════════════
+
+state "Multiplayer Connection" as ConnFSM {
+  state "Idle"           as CN_IDLE : LanScreen mounted, no peer
+  state "Offering"       as CN_OFFER : host createOffer → QR/link (#o=)
+  state "AwaitingAnswer" as CN_WAIT : offer shown, awaiting answer scan
+  state "Connecting"     as CN_CONN : answer accepted, ICE over Tailscale 100.x
+  state "Connected"      as CN_OK : RTCDataChannel open
+  state "Disconnected"   as CN_GONE : peer/host left, channel closed
+
+  [*] --> CN_IDLE
+  CN_IDLE  --> CN_OFFER : Create game (host)
+  CN_OFFER --> CN_WAIT  : ICE gathering complete (non-trickle)
+  CN_WAIT  --> CN_CONN  : host scans/pastes peer answer
+  CN_IDLE  --> CN_CONN  : guest opens #o= link → createAnswer (#a=)
+  CN_CONN  --> CN_OK    : datachannel.onopen
+  CN_OK    --> CN_GONE  : onclose / iceConnectionState = failed
+  CN_GONE  --> CN_IDLE  : reset / new room
+}
+
+' ══════════════════════════════════════════════════════════════
+' ROOM LIFECYCLE  (roomStore — host-authoritative)
+' ══════════════════════════════════════════════════════════════
+
+state "Room Lifecycle" as RoomFSM {
+  state "Lobby"    as RM_LOBBY : players pick / swap colors (none default) ·\nobservers ≤4 (optional) · identities shown
+  state "Started"  as RM_START : both players pressed Start Game\nboards unlock for players
+  state "Playing"  as RM_PLAY : authoritative moves relayed\nguest → host → broadcast
+  state "GameOver" as RM_OVER : checkmate / draw / resign /\nplayer disconnect
+
+  [*] --> RM_LOBBY : Create room
+  RM_LOBBY --> RM_LOBBY : claimColor / swapColors →\nreset both ready votes
+  RM_LOBBY --> RM_START : 2 players · distinct colors · both ready\n(observers NOT required)
+  RM_START --> RM_PLAY  : started broadcast → first move
+  RM_PLAY  --> RM_OVER  : game-ending move / resign / disconnect
+  RM_OVER  --> RM_LOBBY : new game (host)
+  RM_LOBBY --> [*] : host closes browser → room ends
+}
+
+' ══════════════════════════════════════════════════════════════
 ' CROSS-DIMENSION CONSTRAINTS
 ' ══════════════════════════════════════════════════════════════
 
@@ -190,6 +234,9 @@ note as CONSTRAINTS
   ReviewScreen  → REVIEW ± historyNav → ReadOnly (GameDetail)
                                        → Normal (GameList)
                   → REVIEW → AnalysisBranch (new moves past game end)
+  LanScreen     → LAN_PLAYER → ReadOnly (lobby / opponent's turn)
+                             → Normal (started & my turn, own color only)
+                → LAN_OBSERVER → ReadOnly (always)
 
   **Capability gating in components:**
   · hint button      → capabilities().hint
@@ -207,6 +254,19 @@ note as CONSTRAINTS
   · analysisDepth   → desktop=12, web-desktop=10, mobile=8
   · CoachService    → desktop → HttpCoachService
                        web-*  → WebWorkerCoachService
+
+  **Multiplayer (LanScreen — roomStore, serverless):**
+  · WebRTC host-hub over Tailscale — NO backend
+    (CoachService / postMove never invoked, aiOpponent=F)
+  · host browser = room authority; relays all moves
+  · signaling: manual QR/link, one exchange per joiner
+  · colors NOT assigned by default — players pick White/Black in
+    the lobby; select the opposite seat to swap. ANY color change
+    resets both ready votes.
+  · start gate: 2 players · distinct colors · both ready
+    (observers optional)
+  · input: freeColorControl=F + activePlayerColor = chosen color →
+    move own color on own turn; readOnly until started
 
   **reviewAnalysisMode stores (gameStore.ts):**
   · reviewAnalysisMode       → true when ReviewScreen user branches
@@ -231,6 +291,11 @@ note top
      HistoryOverlay, idle, AwaitingHuman, false)
     (web-no-llm, ReviewScreen, REVIEW+historyNav, AnalysisBranch,
      MatrixOverlay, idle, AwaitingHuman, true)
+
+    **LanScreen** adds two more orthogonal dimensions
+    (connection, room) — see Multiplayer Connection +
+    Room Lifecycle above. It uses neither the Coach Emotion
+    FSM nor the Game Phase loop (no AI, no harness).
 end note
 
 @enduml

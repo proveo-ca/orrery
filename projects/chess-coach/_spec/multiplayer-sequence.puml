@@ -1,0 +1,69 @@
+@startuml chess-coach-multiplayer-sequence
+' SPEC: _spec/chess-coach/multiplayer-sequence.puml
+!includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+
+actor "Player 1\n(host)" as W
+participant "Host browser\n(room authority)" as Host
+participant "Guest browser\n(player / observer)" as Guest
+actor "Player 2" as B
+participant "Observer browser\n(×0–4, optional)" as Obs
+
+== Create room (host) ==
+W -> Host: Create room + identity
+Host -> Host: new RTCPeerConnection · createOffer\ngather ICE (non-trickle, iceServers:[])
+Host -> W: render QR + link  (…/chess/lan#o=<sdp>)
+note over Host: connection: Offering → AwaitingAnswer\nroom: Lobby (host seated, no color yet)
+
+== Join (manual, out-of-band signaling) ==
+note over W, B: share the offer QR/link out-of-band (show screen / message)
+B -> Guest: open #o= link · enter identity · join as player
+Guest -> Guest: setRemote(offer) · createAnswer\ngather ICE (non-trickle)
+Guest -> B: render QR + link  (…/chess/lan#a=<sdp>)
+note over W, B: Player 2 returns the answer QR/link out-of-band
+W -> Host: scan / paste answer
+Host -> Host: setRemote(answer) → RTCDataChannel opens
+Guest -> Host: Hello { identity, desiredRole: player }
+Host -> Host: add as player, no color yet\n(else observer ≤4 / else ROOM_FULL)
+Host -> Guest: RoomState broadcast
+Host -> Obs: RoomState broadcast (to all connected peers)
+note over Host: connection: Connected · room: Lobby
+
+== Add observer (optional, repeat ≤4) ==
+note over Host, Obs: host taps "Add player" → fresh offer QR; same\noffer→answer exchange. Host assigns observer or replies ROOM_FULL.
+
+== Color selection & swap (lobby) ==
+W -> Host: ClaimColor { white }
+B -> Guest: select a color seat (e.g. Black)
+Guest -> Host: ClaimColor { black }
+Host -> Host: validate distinct colors · update seats · reset ready votes
+Host -> Guest: RoomState { players, colors }
+Host -> Obs: RoomState broadcast
+note over W, B: selecting the opposite (occupied) seat → SwapColor:\nhost exchanges both players' colors. ANY color change\nresets both ready votes (colors lock only at Start).
+
+== Start gate (both players agree on colors; observers optional) ==
+W -> Host: StartRequest { ready: true }
+B -> Guest: press Start Game
+Guest -> Host: StartRequest { ready: true }
+Host -> Host: 2 players · distinct colors · both ready → started = true
+Host -> Guest: RoomState { started: true }
+Host -> Obs: RoomState { started: true }
+note over Host, Obs: boards unlock for players; observers stay read-only.\nchanging a color after Start clears that ready vote
+
+== Move relay (guest player to move — host is authoritative) ==
+B -> Guest: drag piece (legal · their turn · own chosen color)
+Guest -> Guest: addMove → lastHumanMoveInfo\n(aiOpponent=F → no AI turn)
+Guest -> Host: Move { san }
+Host -> Host: authoritative addMoveSan → new FEN
+Host -> Guest: MoveApplied { san, fen }  (echo / confirm)
+Host -> Obs: MoveApplied broadcast
+note over Host: the host's own move applies locally first,\nthen the host broadcasts MoveApplied the same way
+
+== Resign / disconnect / game over ==
+B -> Guest: Resign
+Guest -> Host: Resign { color: black }
+Host -> Host: end game → gameOver
+Host -> Guest: RoomState { gameOver }
+Host -> Obs: RoomState { gameOver }
+note over Host, Obs: host disconnect → all channels close → room ends.\npeer disconnect → host frees the spot + rebroadcasts RoomState.
+
+@enduml

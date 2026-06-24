@@ -14,7 +14,8 @@ title Chess Coach UI · Components\n(see entities.puml for API details)
 package "Capabilities  [capabilitiesStore.ts]" {
   [ScreenCapabilities]
   note right of ScreenCapabilities
-    COACH · ANALYSIS · REVIEW presets
+    COACH · ANALYSIS · REVIEW ·
+    LAN_PLAYER · LAN_OBSERVER presets
     see entities.puml for flag definitions
   end note
 }
@@ -62,13 +63,21 @@ package "Screens  [src/screens/]" {
 
   rectangle "LanScreen" as LanScreen
   note right of LanScreen
-    placeholder ("Coming soon")
+    serverless P2P multiplayer (Tailscale + WebRTC)
+    mounts LAN_PLAYER / LAN_OBSERVER capabilities
+    calls useMultiplayerGame()
+    lobby: create / join · QR + link signaling ·
+      players pick/swap colors · observers ≤4 · Start Game
+    host browser = room authority (relays all moves)
+    composition: ChessBoard · CapturedPieces ·
+      SplashScreen · QR encode/scan
   end note
 }
 
 CoachScreen    ..> ScreenCapabilities : setCapabilities (COACH)
 AnalysisScreen ..> ScreenCapabilities : setCapabilities (ANALYSIS)
 ReviewScreen   ..> ScreenCapabilities : setCapabilities (REVIEW)
+LanScreen      ..> ScreenCapabilities : setCapabilities (LAN_PLAYER | LAN_OBSERVER)
 
 ' ══════════════════════════════════════════════════════════════
 ' STORES
@@ -80,6 +89,12 @@ package "Stores  [src/store/]" {
   [settingsStore]    as SettingsStore
   [gameHistoryStore] as HistoryStore
   [travelStore]      as TravelStore
+  [roomStore]        as RoomStore
+  note right of RoomStore
+    multiplayer room state (LanScreen): role, seats +
+    chosen colors, identities, started, connectionStatus.
+    Host-authoritative · ephemeral (not persisted).
+  end note
 }
 
 ' ══════════════════════════════════════════════════════════════
@@ -96,6 +111,18 @@ package "Hooks  [src/hooks/]" {
   package "Coach Hooks" {
     [useMoveExecutor]  as UseMoveExecutor
     [useCoachBehavior] as UseCoachBehavior
+  }
+
+  package "Multiplayer Hooks" {
+    [useMultiplayerGame] as UseMultiplayerGame
+    note right of UseMultiplayerGame
+      reacts to lastHumanMoveInfo (mirrors useCoachBehavior):
+        host → addMoveSan + broadcast · guest → send(Move)
+      applies inbound moves via addMoveSan / loadFen
+      owns seat/color claim + swap · observer cap · start gate
+      (color change resets ready votes) · setActivePlayerColor
+      no CoachService / postMove (aiOpponent=F)
+    end note
   }
 
   package "Game Control Hooks" {
@@ -267,10 +294,31 @@ package "Services  [src/services/]" {
     (size caps, field validation, id re-derive).
     Analysis cache is NOT shared (recomputed).
   end note
+
+  [PeerTransport] as PeerTransportIF
+  note right of PeerTransportIF
+    interface: createOffer · acceptOffer→answer ·
+    acceptAnswer · send · broadcast · onMessage ·
+    onStateChange · close
+    --
+    Vendor-agnostic transport seam (mirrors CoachService).
+    WebRTC RTCDataChannel · iceServers:[] · non-trickle ICE.
+    No backend — Tailscale supplies the 100.x network path.
+  end note
+  [HostHubTransport]   as HostHubTransport
+  [GuestLinkTransport] as GuestLinkTransport
+  [signaling]          as Signaling
+  note right of Signaling
+    SDP ⇄ base64url codec · #o= / #a= deep links ·
+    QR encode/scan. Manual, out-of-band signaling —
+    one offer/answer exchange per joiner, no server.
+  end note
 }
 
 HttpCoachService      ..|> CoachServiceIF
 WebWorkerCoachService ..|> CoachServiceIF
+HostHubTransport      ..|> PeerTransportIF
+GuestLinkTransport    ..|> PeerTransportIF
 
 UseSharedGameImport --> GameShare    : decodeGame
 UseSharedGameImport --> HistoryStore : importGameRecord
@@ -374,6 +422,16 @@ UseTravelMode    --> CoachServiceIF : postExplainStream()
 
 RuntimeMode --> HttpCoachService      : desktop
 RuntimeMode --> WebWorkerCoachService : web-full | web-no-llm
+
+' ── Multiplayer wiring (LanScreen, serverless P2P) ──
+LanScreen          ..> UseMultiplayerGame : calls
+UseMoveExecutor    ..> UseMultiplayerGame : lastHumanMoveInfo\n(aiOpponent=F → relay, no AI turn)
+UseMultiplayerGame --> GameStore          : addMoveSan · loadFen · resignGame
+UseMultiplayerGame --> RoomStore          : seats · colors · started · connectionStatus
+UseMultiplayerGame --> SettingsStore      : setActivePlayerColor(myColor)
+UseMultiplayerGame --> PeerTransportIF    : send · broadcast · onMessage
+Signaling          ..> PeerTransportIF    : encodes offer/answer (QR/link)
+HostHubTransport   <..> GuestLinkTransport : RTCDataChannel\n(direct over Tailscale 100.x)
 
 WebWorkerCoachService --> OrchestratorWorker : postMessage
 OrchestratorWorker    --> Orchestrator       : hosts

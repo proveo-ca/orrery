@@ -1,0 +1,75 @@
+@startuml chess-coach-multiplayer
+' SPEC: _spec/chess-coach/multiplayer.puml
+!includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+skinparam componentStyle rectangle
+
+title Chess Coach · Serverless LAN/Online Multiplayer\n(host-hub over Tailscale + WebRTC — no backend)
+
+actor "Player 1\n(room creator / host)" as P1User
+actor "Player 2" as P2User
+actor "Observer ×0–4\n(optional)" as ObsUser
+
+package "Tailscale tailnet  (100.x — WireGuard overlay, no NAT)" {
+
+  package "Host browser = room authority" as HostPkg {
+    [SolidJS UI · LanScreen] as HostUI
+    [useMultiplayerGame\n(authoritative gameStore)] as HostHook
+    [roomStore\n(seats · colors · started · identities)] as HostRoom
+    [HostHubTransport\n(1→N RTCDataChannel)] as HostHub
+  }
+
+  package "Guest browser = player / observer" as BlackPkg {
+    [SolidJS UI · LanScreen] as BlackUI
+    [useMultiplayerGame\n(mirror gameStore)] as BlackHook
+    [GuestLinkTransport\n(1 link to host)] as BlackLink
+  }
+
+  package "Observer browser ×0–4  (read-only)" as ObsPkg {
+    [SolidJS UI · LanScreen] as ObsUI
+    [GuestLinkTransport] as ObsLink
+  }
+}
+
+' ── Players drive their own browser ──
+P1User --> HostUI  : "Create room · pick color · move · Start"
+P2User --> BlackUI : "Join · pick/swap color · move · Start"
+ObsUser --> ObsUI  : "Join (spectate)"
+
+' ── Host-side wiring ──
+HostUI   --> HostHook
+HostHook --> HostRoom : "seats · colors · swap · observer cap ≤4 · start gate"
+HostHook --> HostHub  : "broadcast(RoomState · MoveApplied)"
+
+' ── Guest-side wiring ──
+BlackUI   --> BlackHook
+BlackHook --> BlackLink : "send(Hello · ClaimColor · Move · StartRequest)"
+
+' ── Data path: direct P2P over the tailnet, host = hub ──
+BlackLink <-> HostHub : "RTCDataChannel\n(moves · room state)\nhost ICE candidate 100.x"
+ObsLink   <-> HostHub : "RTCDataChannel\n(room-state broadcast)"
+
+note bottom of HostHub
+  **Serverless.** No Ktor / no relay / no STUN / no TURN.
+  Tailscale supplies mutual 100.x reachability, so WebRTC
+  connects directly via host ICE candidates.
+  Signaling is MANUAL & out-of-band, one exchange per joiner:
+    host offer → QR/link ──scan──▶ joiner answer → QR/link ──scan──▶ host
+  Non-trickle ICE → each offer/answer fits a single QR.
+end note
+
+note bottom of HostRoom
+  Host browser **is** the room (authority); if it closes, the room ends.
+  Seats: two players + observers ≤4 (optional).
+  **Colors are NOT assigned by default** — each player picks White
+  or Black in the lobby and may select the opposite seat to swap.
+  Any color change resets both ready votes. Both players must agree
+  on colors and press **Start Game**. Overflow joiners get ROOM_FULL.
+end note
+
+note top of HostPkg
+  Pure **human-vs-human**. No AI, no LLM, no harness —
+  CoachService / postMove are never invoked.
+  Ships in the client-only web / PWA build over HTTPS.
+end note
+
+@enduml

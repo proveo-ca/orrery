@@ -61,8 +61,8 @@ export const MenuScreen: Component = () => {
         <MenuButton onClick={() => navigate("/review")} disabled={gameHistory().length === 0}>
           Review
         </MenuButton>
+        <MenuButton onClick={() => navigate("/lan")}>Play LAN</MenuButton>
         <MenuButton disabled>Learn to Play</MenuButton>
-        <MenuButton disabled>Play LAN</MenuButton>
         <Label variant="caption" class={styles["coming-soon"]}>
           Coming soon!
         </Label>
