@@ -16,15 +16,19 @@ interface QrCodeProps {
  * Renders `value` as a scannable QR code (dark-on-white, so it scans under any
  * theme). Generation is async via the `qrcode` lib; we show a small placeholder
  * until the data URL resolves.
+ *
+ * Error correction is "L": the signaling payloads (a base64url WebRTC SDP) are
+ * large, so the lowest redundancy keeps the QR version — and therefore the
+ * module count — down, yielding bigger, more camera-scannable cells.
  */
 export function QrCode(props: QrCodeProps) {
   const [dataUrl] = createResource(
-    () => ({ value: props.value, size: props.size ?? 200 }),
+    () => ({ value: props.value, size: props.size ?? 240 }),
     ({ value, size }) =>
       toDataURL(value, {
         width: size,
-        margin: 1,
-        errorCorrectionLevel: "M",
+        margin: 2,
+        errorCorrectionLevel: "L",
         color: { dark: "#1a1a1aff", light: "#ffffffff" },
       }).catch(() => ""),
   );
@@ -34,8 +38,8 @@ export function QrCode(props: QrCodeProps) {
       <img
         class={styles.qr}
         src={dataUrl()}
-        width={props.size ?? 200}
-        height={props.size ?? 200}
+        width={props.size ?? 240}
+        height={props.size ?? 240}
         alt={props.alt ?? "QR code"}
       />
     </Show>

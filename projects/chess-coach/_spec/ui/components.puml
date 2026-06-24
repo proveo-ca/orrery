@@ -69,8 +69,14 @@ package "Screens  [src/screens/]" {
     lobby: create / join · QR + link signaling ·
       players pick/swap colors · observers ≤4 · Start Game
     host browser = room authority (relays all moves)
-    composition: ChessBoard · CapturedPieces ·
-      SplashScreen · QR encode/scan
+    layout: lobby = SplashScreen (no board, like MenuScreen) —
+      Tailscale onboarding + room setup. Once started,
+      the board-centric Screen grid: matchup header,
+      board centered, sidebar = connectivity status + Resign
+    renders MultiplayerBoard (coach/engine-free) — NOT ChessBoard
+    composition: SplashScreen · Screen · MultiplayerBoard ·
+      CapturedPieces · TailscaleChecklist · QR encode/scan ·
+      ConnIndicator (live WebRTC status, SignalIcon)
   end note
 }
 
@@ -115,13 +121,21 @@ package "Hooks  [src/hooks/]" {
 
   package "Multiplayer Hooks" {
     [useMultiplayerGame] as UseMultiplayerGame
+    [useMultiplayerBoard] as UseMultiplayerBoard
     note right of UseMultiplayerGame
-      reacts to lastHumanMoveInfo (mirrors useCoachBehavior):
+      reacts to roomStore.lastLocalMove (set by useMultiplayerBoard):
         host → addMoveSan + broadcast · guest → send(Move)
       applies inbound moves via addMoveSan / loadFen
       owns seat/color claim + swap · observer cap · start gate
       (color change resets ready votes) · setActivePlayerColor
-      no CoachService / postMove (aiOpponent=F)
+      no engine / coach / CoachService / postMove
+    end note
+    note right of UseMultiplayerBoard
+      coach- & engine-free board interaction (select / move /
+      promote / drag). Applies the local move via addMove and
+      announces it through setLastLocalMove for relay.
+      Deliberately NOT useChessBoard — no Stockfish, advice,
+      emotions, hints, or blunder analysis.
     end note
   }
 
@@ -160,12 +174,21 @@ package "Components  [src/components/]" {
   package "Features  [components/features/]" {
     rectangle "ChessBoard"   as ChessBoard
     note bottom of ChessBoard
+      Coach / Analysis / Review board (engine-backed).
       8×8 grid · drag+drop · touch-drag
       piece animation · last-move highlight
       best-move arrow (green) · advice arrow (blue)
       EvalBar overlay · GameOver modal · PromotionModal
       board flips on activePlayerColor change
       composes ChessSquare + ChessBoardArrow (atoms)
+    end note
+    rectangle "MultiplayerBoard" as MultiplayerBoard
+    note bottom of MultiplayerBoard
+      LAN board (coach/engine-free twin of ChessBoard).
+      8×8 grid · drag+drop · touch-drag · piece animation
+      last-move highlight · PromotionModal · flips on color.
+      NO EvalBar / arrows / advice / GameOver modal.
+      composes ChessSquare; drives useMultiplayerBoard.
     end note
     rectangle "CoachPanel" as CoachPanel
     note right of CoachPanel
@@ -250,9 +273,9 @@ package "Components  [src/components/]" {
     rectangle "DualNavButton"      as DualNavButton
     rectangle "SplashScreen"       as SplashScreen
     note right of SplashScreen
-      shared splash shell: centered content +
-      avatar slot + title. Composed by MenuScreen,
-      LanScreen and LoadingOverlay (one stylesheet).
+      shared splash shell: centered content + avatar
+      slot + title (optional `wide` column). Composed by
+      MenuScreen, LanScreen lobby and LoadingOverlay.
     end note
     rectangle "Screen"             as Screen
     note right of Screen
@@ -425,13 +448,17 @@ UseTravelMode    --> CoachServiceIF : postExplainStream()
 RuntimeMode --> HttpCoachService      : desktop
 RuntimeMode --> WebWorkerCoachService : web-full | web-no-llm
 
-' ── Multiplayer wiring (LanScreen, serverless P2P) ──
-LanScreen          ..> UseMultiplayerGame : calls
-UseMoveExecutor    ..> UseMultiplayerGame : lastHumanMoveInfo\n(aiOpponent=F → relay, no AI turn)
-UseMultiplayerGame --> GameStore          : addMoveSan · loadFen · resignGame
-UseMultiplayerGame --> RoomStore          : seats · colors · started · connectionStatus
-UseMultiplayerGame --> SettingsStore      : setActivePlayerColor(myColor)
-UseMultiplayerGame --> PeerTransportIF    : send · broadcast · onMessage
+' ── Multiplayer wiring (LanScreen, serverless P2P — no engine/coach) ──
+LanScreen           ..> UseMultiplayerGame  : calls
+LanScreen           --> MultiplayerBoard    : renders (started)
+MultiplayerBoard    ..> UseMultiplayerBoard : uses
+UseMultiplayerBoard --> GameStore           : addMove (local move)
+UseMultiplayerBoard ..> RoomStore           : setLastLocalMove
+UseMultiplayerBoard ..> UseMultiplayerGame  : roomStore.lastLocalMove → relay
+UseMultiplayerGame  --> GameStore           : addMoveSan · loadFen · resignGame
+UseMultiplayerGame  --> RoomStore           : seats · colors · started · connectionStatus
+UseMultiplayerGame  --> SettingsStore       : setActivePlayerColor(myColor)
+UseMultiplayerGame  --> PeerTransportIF     : send · broadcast · onMessage
 Signaling          ..> PeerTransportIF    : encodes offer/answer (QR/link)
 HostHubTransport   <..> GuestLinkTransport : RTCDataChannel\n(direct over Tailscale 100.x)
 

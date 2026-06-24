@@ -10,6 +10,15 @@ export type Seat = "player" | "observer";
 /** Topology role: the room creator hosts (relays); everyone else is a guest. */
 export type Role = "host" | "guest";
 
+/** Lifecycle of the local participant's peer connection (roomStore signal). */
+export type ConnStatus =
+  | "idle"
+  | "offering"
+  | "awaitingAnswer"
+  | "connecting"
+  | "connected"
+  | "disconnected";
+
 export type Identity = { name: string; pieceSet?: PieceSet };
 
 /** A seated player. `color` is null until claimed in the lobby. */

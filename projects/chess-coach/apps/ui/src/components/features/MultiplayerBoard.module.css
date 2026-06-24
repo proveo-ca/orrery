@@ -1,0 +1,44 @@
+/* Board layout for LAN multiplayer. Mirrors the Coach board's layout but
+   without the eval-bar row / game-over overlay (the LAN screen has neither). */
+.board-layout-wrapper {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  justify-content: center;
+  align-items: stretch;
+  width: 100%;
+}
+
+.chessboard-container {
+  display: flex;
+  justify-content: center;
+}
+
+.chessboard {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  width: var(--board-size);
+  height: var(--board-size);
+  border: 4px solid var(--board-border);
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(var(--shadow-rgb), 0.3);
+  position: relative;
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  overflow: hidden; /* clip pieces sliding outside the board edge */
+}
+
+/* Floating ghost that follows the finger during touch-drag. */
+.touch-ghost {
+  position: fixed;
+  width: var(--square-size);
+  height: var(--square-size);
+  pointer-events: none;
+  z-index: 100;
+  opacity: 0.85;
+  transform: translate(-50%, -50%);
+}

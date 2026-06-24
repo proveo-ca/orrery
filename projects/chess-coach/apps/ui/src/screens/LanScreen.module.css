@@ -1,6 +1,76 @@
 /* Layout only — buttons/inputs/labels come from the design-system primitives
    (Button, Input, Label) so colors and fonts track the theme automatically. */
 
+/* Resign-only sidebar — mirrors the shared Sidebar so it reserves the same
+   --sidebar-width (keeping the board centered) and collapses on mobile. */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem;
+  width: var(--sidebar-width);
+  flex-shrink: 0;
+  margin-top: 1rem;
+}
+
+@media (max-width: 719px) {
+  .sidebar {
+    display: none;
+  }
+}
+
+/* Footer Resign — visible only on mobile, where the sidebar is hidden. */
+.mobileResign {
+  display: none;
+}
+
+@media (max-width: 719px) {
+  .mobileResign {
+    display: flex;
+    justify-content: center;
+  }
+}
+
+/* Live peer connectivity readout (sidebar on desktop, footer on mobile). */
+.conn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  color: var(--text-muted);
+}
+
+.connLabel {
+  font-size: 0.7rem;
+}
+
+.conn[data-status="connected"] {
+  color: var(--result-win);
+}
+
+.conn[data-status="connecting"],
+.conn[data-status="offering"],
+.conn[data-status="awaitingAnswer"] {
+  color: var(--result-draw);
+}
+
+.conn[data-status="disconnected"] {
+  color: var(--result-loss);
+}
+
+/* The footer connectivity readout shows only on mobile (sidebar carries it on desktop). */
+.statusMobile {
+  display: none;
+}
+
+@media (max-width: 719px) {
+  .statusMobile {
+    display: flex;
+    justify-content: center;
+  }
+}
+
 .lobby {
   display: flex;
   flex-direction: column;

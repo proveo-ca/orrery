@@ -3,6 +3,7 @@ import { createSignal } from "solid-js";
 
 import type {
   Color,
+  ConnStatus,
   GameOverInfo,
   Identity,
   MemberInfo,
@@ -11,14 +12,6 @@ import type {
   RoomSnapshot,
   Seat,
 } from "~/types/multiplayer";
-
-export type ConnStatus =
-  | "idle"
-  | "offering"
-  | "awaitingAnswer"
-  | "connecting"
-  | "connected"
-  | "disconnected";
 
 /** Max spectators per room (the two players are separate). */
 export const OBSERVER_CAP = 4;
@@ -31,6 +24,9 @@ const [players, setPlayers] = createSignal<PlayerInfo[]>([]);
 const [observers, setObservers] = createSignal<MemberInfo[]>([]);
 const [started, setStarted] = createSignal(false);
 const [gameOver, setGameOver] = createSignal<GameOverInfo | null>(null);
+// The local player's most recent move, announced by the multiplayer board so
+// useMultiplayerGame can relay it to peers. Coach-free (no lastHumanMoveInfo).
+const [lastLocalMove, setLastLocalMove] = createSignal<{ san: string; fen: string } | null>(null);
 
 export {
   role,
@@ -41,12 +37,14 @@ export {
   observers,
   started,
   gameOver,
+  lastLocalMove,
   setRole,
   setSeat,
   setMyPeerId,
   setConnectionStatus,
   setStarted,
   setGameOver,
+  setLastLocalMove,
 };
 
 /** The local participant's chosen color, derived from the players list. */
@@ -137,4 +135,5 @@ export const reset = (): void => {
   setObservers([]);
   setStarted(false);
   setGameOver(null);
+  setLastLocalMove(null);
 };

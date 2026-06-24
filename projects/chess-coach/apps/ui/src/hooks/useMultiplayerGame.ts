@@ -1,7 +1,6 @@
 // SPEC: _spec/chess-coach/multiplayer.puml
 import { createEffect, createSignal, onCleanup } from "solid-js";
 
-import { lastHumanMoveInfo } from "~/hooks/useMoveExecutor";
 import { addMoveSan, currentFen, game, loadFen } from "~/store/gameStore";
 import {
   OBSERVER_CAP,
@@ -11,6 +10,7 @@ import {
   canStart,
   claimColor as claimColorMut,
   gameOver,
+  lastLocalMove,
   myColor,
   myPeerId,
   observers,
@@ -68,10 +68,10 @@ export type MultiplayerActions = {
 };
 
 /**
- * Wires a {@link PeerTransport} to the game + room stores. Mirrors the
- * decoupled coach pattern: `useMoveExecutor` emits `lastHumanMoveInfo` (and,
- * with `aiOpponent: false`, makes no AI call), and this hook reacts to relay
- * the move. The host is authoritative; guests/observers mirror its broadcasts.
+ * Wires a {@link PeerTransport} to the game + room stores. The LAN board
+ * ({@link useMultiplayerBoard}) applies the local move and announces it via
+ * `lastLocalMove`; this hook reacts to relay it to peers. No engine or coach is
+ * involved. The host is authoritative; guests/observers mirror its broadcasts.
  *
  * @param transport accessor — null until the LanScreen has created one.
  * @param joinIntent accessor — a guest's identity/role, announced on connect.
@@ -94,21 +94,21 @@ export function useMultiplayerGame(
     t.onPeerStateChange((peerId, state) => handlePeerState(t, peerId, state));
   });
 
-  // Relay the local player's own move (fires via lastHumanMoveInfo).
+  // Relay the local player's own move. The multiplayer board announces it via
+  // `lastLocalMove` (coach-free — no dependency on useMoveExecutor).
   createEffect(() => {
-    const info = lastHumanMoveInfo();
-    if (!info) return;
+    const move = lastLocalMove();
+    if (!move) return;
     const t = transport();
     if (!t) return;
-    const fen = currentFen();
-    if (fen === lastSyncedFen) return; // already relayed / applied
-    lastSyncedFen = fen;
+    if (move.fen === lastSyncedFen) return; // already relayed / applied
+    lastSyncedFen = move.fen;
     if (t.role === "host") {
       const over = computeGameOver();
       if (over) setGameOver(over);
-      t.broadcast({ t: "moveApplied", san: info.san, fen, gameOver: over });
+      t.broadcast({ t: "moveApplied", san: move.san, fen: move.fen, gameOver: over });
     } else {
-      t.broadcast({ t: "move", san: info.san });
+      t.broadcast({ t: "move", san: move.san });
     }
   });
 
@@ -233,6 +233,7 @@ export function useMultiplayerGame(
         removeMember(peerId);
         if (wasPlayer && started() && !gameOver()) {
           setGameOver({ result: "draw", message: "Opponent disconnected." });
+          setConnectionStatus("disconnected"); // reflect the live drop in the indicator
         }
         broadcastRoom(t);
       }

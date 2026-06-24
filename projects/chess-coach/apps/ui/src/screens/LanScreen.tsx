@@ -2,9 +2,11 @@
 import { type Component, Show, createEffect, createSignal, onCleanup, onMount } from "solid-js";
 
 import { OpponentCaptures, PlayerCaptures } from "~/components/atoms/CapturedPieces";
-import { ChessBoard } from "~/components/features/ChessBoard";
+import { MultiplayerBoard } from "~/components/features/MultiplayerBoard";
 import { TailscaleChecklist } from "~/components/features/TailscaleChecklist";
 import { Button } from "~/components/primitives/Button";
+import { IconButton } from "~/components/primitives/IconButton";
+import { FlagIcon, SignalIcon } from "~/components/primitives/icons";
 import { Input } from "~/components/primitives/Input";
 import { Label } from "~/components/primitives/Label";
 import { QrCode } from "~/components/primitives/QrCode";
@@ -39,7 +41,7 @@ import {
   started,
 } from "~/store/roomStore";
 import { playerIdentity } from "~/store/settingsStore";
-import type { Color, PeerTransport, Seat, SignalPayload } from "~/types/multiplayer";
+import type { Color, ConnStatus, PeerTransport, Seat, SignalPayload } from "~/types/multiplayer";
 
 const START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
@@ -57,6 +59,28 @@ function extractPayload(text: string, kind: "o" | "a"): SignalPayload | null {
 }
 
 const COLOR_LABEL: Record<Color, string> = { w: "White", b: "Black" };
+
+/** Human-readable label for each peer connection state. */
+const CONN_LABEL: Record<ConnStatus, string> = {
+  idle: "Offline",
+  offering: "Waiting…",
+  awaitingAnswer: "Waiting…",
+  connecting: "Connecting…",
+  connected: "Connected",
+  disconnected: "Disconnected",
+};
+
+/** Live WebRTC peer connectivity readout (icon + label, colored by state). */
+const ConnIndicator: Component = () => (
+  <div
+    class={styles.conn}
+    data-status={connectionStatus()}
+    title={`Opponent connection: ${CONN_LABEL[connectionStatus()]}`}
+  >
+    <SignalIcon />
+    <span class={styles.connLabel}>{CONN_LABEL[connectionStatus()]}</span>
+  </div>
+);
 
 /**
  * Serverless peer-to-peer multiplayer over WebRTC (Tailscale for connectivity).
@@ -192,10 +216,13 @@ export const LanScreen: Component = () => {
     role() === "guest" && connectionStatus() !== "connected" && !started();
 
   return (
+    // Two distinct layouts: the lobby is a MenuScreen-style splash (no board) —
+    // Tailscale onboarding + room setup — and once the game starts we switch to
+    // the board-centric Screen grid (matchup header, board, Resign sidebar).
     <Show
       when={started()}
       fallback={
-        <SplashScreen title="Play LAN">
+        <SplashScreen title="Play LAN" wide>
           <TailscaleChecklist>
             {/* ── Setup: choose to host or join ── */}
             <Show when={role() == null}>
@@ -251,7 +278,7 @@ export const LanScreen: Component = () => {
                 <Label variant="muted">
                   Send this reply back to the host (scan or copy), then wait to be admitted.
                 </Label>
-                <QrCode value={answerLink()} size={180} alt="Reply QR code" />
+                <QrCode value={answerLink()} size={260} alt="Reply QR code" />
                 <div class={styles.linkBox} data-testid="answer-link">
                   {answerLink()}
                 </div>
@@ -290,7 +317,7 @@ export const LanScreen: Component = () => {
                       when={offerLink()}
                       fallback={<Button onClick={invite}>Create invite link</Button>}
                     >
-                      <QrCode value={offerLink()} size={180} alt="Invite QR code" />
+                      <QrCode value={offerLink()} size={260} alt="Invite QR code" />
                       <div class={styles.linkBox} data-testid="invite-link">
                         {offerLink()}
                       </div>
@@ -321,7 +348,7 @@ export const LanScreen: Component = () => {
         </SplashScreen>
       }
     >
-      {/* ── Game in progress ── */}
+      {/* ── Game in progress: board-centric Screen layout ── */}
       <Screen>
         <Screen.Header>
           <div class={styles.gameHeader}>
@@ -340,17 +367,33 @@ export const LanScreen: Component = () => {
         <Screen.BoardArea>
           <Screen.BoardColumn>
             <OpponentCaptures />
-            <ChessBoard />
+            <MultiplayerBoard />
             <PlayerCaptures />
           </Screen.BoardColumn>
+          {/* Sidebar — live connectivity status + Resign. Reserves --sidebar-width
+              so the board stays centered against the offset header/footer (like the
+              other screens). Hidden on mobile; both live in the footer there. */}
+          <div class={styles.sidebar}>
+            <ConnIndicator />
+            <Show when={!gameOver() && seat() === "player"}>
+              <IconButton label="Resign" onClick={() => mp.resign()} aria-label="Resign">
+                <FlagIcon />
+              </IconButton>
+            </Show>
+          </div>
         </Screen.BoardArea>
 
         <Screen.Footer>
+          {/* Connectivity is always visible on mobile, where the sidebar is hidden. */}
+          <div class={styles.statusMobile}>
+            <ConnIndicator />
+          </div>
           <Show when={gameOver()}>
             <div class={styles.banner}>{gameOver()!.message}</div>
           </Show>
+          {/* Resign is reachable here on mobile, where the sidebar is hidden. */}
           <Show when={!gameOver() && seat() === "player"}>
-            <div class={styles.row}>
+            <div class={styles.mobileResign}>
               <Button onClick={() => mp.resign()}>Resign</Button>
             </div>
           </Show>

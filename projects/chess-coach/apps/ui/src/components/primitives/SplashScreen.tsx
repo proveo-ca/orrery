@@ -8,6 +8,8 @@ interface SplashScreenProps {
   title?: string;
   /** Optional avatar/illustration rendered in the centered avatar slot. */
   avatar?: JSX.Element;
+  /** Widen the content column (e.g. LanScreen's lobby, which holds a checklist). */
+  wide?: boolean;
   /** Render as a fixed, full-viewport backdrop (used by LoadingOverlay). */
   fullscreen?: boolean;
   /** Inline styles applied to the fullscreen backdrop (e.g. opacity transition). */
@@ -17,12 +19,18 @@ interface SplashScreenProps {
 
 /**
  * Shared splash layout shell: a centered content column with an optional
- * avatar slot and title. Composed by MenuScreen, LanScreen and LoadingOverlay
- * so the splash chrome lives in exactly one place (and one stylesheet).
+ * avatar slot and title. Composed by MenuScreen, LanScreen's lobby (with
+ * `wide`) and LoadingOverlay so the splash chrome lives in exactly one place
+ * (and one stylesheet).
  */
 export const SplashScreen: Component<SplashScreenProps> = (props) => {
   const content = (
-    <div class={styles["splash-content"]}>
+    <div
+      classList={{
+        [styles["splash-content"]]: true,
+        [styles["splash-content--wide"]]: !!props.wide,
+      }}
+    >
       <Show when={props.avatar}>
         <div class={styles["splash-avatar-wrapper"]}>{props.avatar}</div>
       </Show>

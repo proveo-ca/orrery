@@ -283,3 +283,24 @@ export const ArrowRightIcon: Component<IconProps> = (props) => {
     </svg>
   );
 };
+
+/** Wi-Fi / signal arcs — used for the LAN peer connectivity indicator. */
+export const SignalIcon: Component<IconProps> = (props) => {
+  const s = () => props.size ?? 20;
+  return (
+    <svg
+      width={s()}
+      height={s()}
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path d="M3 7.5a10 10 0 0 1 14 0" />
+      <path d="M5.8 10.6a6 6 0 0 1 8.4 0" />
+      <circle cx="10" cy="14.5" r="1" fill="currentColor" stroke="none" />
+    </svg>
+  );
+};
