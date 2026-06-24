@@ -17,8 +17,8 @@ The application is built to be deployed in two entirely different ways, sharing 
 ### 2. Docker Compose (Server/Desktop Mode)
 - **Target:** Default (no target specified).
 - **Hosting:** Local Docker Compose or remote VPS.
-- **Architecture:** Client-Server. The UI connects to a Ktor REST API.
-- **Orchestration:** A Kotlin CLI daemon (Harness) manages the execution loop, state (`game_state.fen`), and tool calling.
+- **Architecture:** Client-Server. The UI connects to a Bun REST server (`apps/server`).
+- **Orchestration:** The Bun server runs the execution loop **in-process** — managing state (`game_state.fen`) and engine/LLM I/O directly (no separate daemon or wire protocol). Prompt logic is shared with the web build via `@chess-coach/engine-core`.
 - **Engines:** The UI still uses one local `stockfish.wasm` worker for instant hover evaluations and hints. However, the *backend* uses native Stockfish binaries and Maia (lc0) for the AI opponent's moves.
 - **LLM:** The backend connects to a local or remote Ollama instance via HTTP.
 

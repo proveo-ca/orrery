@@ -601,7 +601,7 @@ package "Services  [src/services/]" {
 
   class HttpCoachService {
     .. Notes ..
-    desktop mode · HTTP to Kotlin backend
+    desktop mode · HTTP to Bun backend
     endpoints: /new · /hello · /move ·
       /advice · /explain
   }

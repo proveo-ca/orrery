@@ -24,16 +24,15 @@ package "Distribution 2: Docker Compose (Server Mode)" {
         [Stockfish Worker\n(Hints & Hover)] as DockerSFHint
     }
 
-    package "Docker Containers" {
-        [Ktor Backend API] as Ktor
-        [Kotlin Harness Daemon] as Harness
-        
+    package "Docker Container" {
+        [Bun Server\n(apps/server: API + in-process orchestrator)] as Bun
+
         package "Native Binaries" {
             [Stockfish] as NativeSF
             [Maia / lc0] as NativeMaia
         }
     }
-    
+
     [Ollama Server] as Ollama
 }
 
@@ -59,11 +58,10 @@ WebOrch <-> WebLLM : Prompt/Stream
 ' Docker Mode Connections
 User --> DockerUI
 DockerUI <-> DockerSFHint : Local UCI
-DockerUI <-> Ktor : HTTP REST
-Ktor <-> Harness : JSON-line stdin/stdout
-Harness <-> NativeSF : UCI
-Harness <-> NativeMaia : UCI
-Harness <-> Ollama : HTTP POST
+DockerUI <-> Bun : HTTP REST
+Bun <-> NativeSF : UCI (Bun.spawn)
+Bun <-> NativeMaia : UCI (Bun.spawn)
+Bun <-> Ollama : HTTP POST
 
 ' Serverless Multiplayer Connections (no server)
 User --> MpHostUI : Create room (host)

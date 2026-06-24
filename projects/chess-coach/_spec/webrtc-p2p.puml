@@ -1,0 +1,67 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+skinparam maxMessageSize 160
+
+title Chess Coach — P2P Multiplayer: Signaling + Move Exchange (proposed)
+
+participant "Player A WebView\n(UI)" as UIA
+participant "A Service\n(peer + signaling)" as SVCA
+participant "Signaling\n(Cloudflare DO/WS)" as SIG
+participant "STUN / TURN" as ICE
+participant "B Service\n(peer + signaling)" as SVCB
+participant "Player B WebView\n(UI)" as UIB
+
+== Pairing / signaling ==
+
+UIA -> SVCA : create game (room code / link)
+SVCA -> SIG : open WSS, register room
+UIB -> SVCB : join room <code>
+SVCB -> SIG : open WSS, join room
+SIG --> SVCA : peer joined
+
+SVCA -> ICE : gather candidates (STUN; TURN if needed)
+SVCA -> SIG : SDP offer + ICE candidates
+SIG --> SVCB : relay offer + candidates
+SVCB -> ICE : gather candidates
+SVCB -> SIG : SDP answer + ICE candidates
+SIG --> SVCA : relay answer + candidates
+
+note over SVCA, SVCB
+  Signaling only brokers SDP/ICE. Once the
+  DataChannel opens, signaling is idle until
+  reconnect. Direct P2P when NAT allows; TURN
+  relays otherwise (common on cellular).
+end note
+
+SVCA <--> SVCB : **DataChannel OPEN** (P2P or TURN-relayed)
+
+== In-game move exchange ==
+
+UIA -> UIA : human plays move (validated locally, chess.js)
+UIA -> SVCA : move {san, uci, fenAfter}
+SVCA -> SVCB : DataChannel: move
+SVCB -> UIB : apply opponent move to board
+note over UIB
+  Maia is NOT invoked — the opponent is human.
+  B's local Stockfish/WebLLM may still run hints
+  + coach commentary on the new position.
+end note
+UIB -> UIB : (optional) local eval + coach advice
+
+UIB -> SVCB : human replies move
+SVCB -> SVCA : DataChannel: move
+SVCA -> UIA : apply opponent move
+
+== Lifecycle / resume ==
+
+note over SVCA
+  Peer + signaling socket live in the foreground
+  service, so WebView recreation (rotation,
+  backgrounding) does not drop the connection.
+  Service persists FEN/move history for resume.
+end note
+
+UIA -> SVCA : WebView recreated -> re-attach
+SVCA --> UIA : replay current game state
+
+@enduml

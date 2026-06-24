@@ -1,0 +1,107 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+skinparam maxMessageSize 170
+
+title Chess Coach: Backend Orchestration Workflow (Maia + Commentary Agent + Stockfish)
+
+' The desktop backend is a single Bun server (apps/server) that runs the
+' orchestrator IN-PROCESS — no daemon, no JSON-line protocol. The web UI engine
+' (apps/ui/src/engine) mirrors this same workflow. The prompt-construction logic
+' is shared verbatim via @chess-coach/engine-core. See _spec/api/behavior.md for
+' exact values and _spec/api/ui-engine-parity.md for the parity map.
+
+participant "UI / api.ts\n(HttpCoachService)" as UI
+participant "Bun.serve handler\n(apps/server/app.ts)" as API
+participant "Orchestrator\n(in-process)" as ORCH
+participant "EngineBridge" as BRIDGE
+participant "StockfishEngine\n(Bun.spawn → stockfish)" as SF
+participant "MaiaEngine\n(Bun.spawn → lc0)" as MAIA
+participant "OllamaLlmClient\n(commentary agent)" as LLM
+
+note over API, LLM
+  All engine access is serialized by an async Mutex
+  (engines are single subprocesses). Unary requests
+  carry a per-request timeout → 504.
+end note
+
+== /move — generate the AI reply (unary) ==
+
+UI -> API : POST /move { humanMoveSan, fenAfterHuman, difficulty }
+note over API
+  fenAfterHuman is the position AFTER the human move
+  (applied client-side). If non-empty, writeFen(state).
+  humanMoveSan is logging-only; never re-applied.
+end note
+API -> API : if fenAfterHuman → stateManager.writeFen(...)
+API -> ORCH : executeTurn(humanMoveSan, difficulty)
+activate ORCH
+ORCH -> BRIDGE : getEvaluation(fen, depth=15)
+BRIDGE -> SF : position fen ... / go depth 15
+SF --> ORCH : EvalResult(bestMove, cp, isMate, mateIn)   ' logged only
+ORCH -> BRIDGE : getMaiaMove(fen, difficulty)
+BRIDGE -> MAIA : position fen ... / go nodes 1
+note right of MAIA
+  difficulty → weights: intermediate=maia-1100,
+  advanced=maia-1600, expert=maia-2200.
+  OwnBook + openings.bin, Temperature 0.5.
+  Restarts lc0 only when difficulty changes.
+end note
+MAIA --> ORCH : candidateMove (UCI, e.g. e7e5)
+ORCH -> BRIDGE : getFenAfterMove(fen, candidateMove)
+BRIDGE -> SF : position fen ... moves <m> / d
+SF --> ORCH : newFen (null ⇒ illegal → throw)
+ORCH -> ORCH : stateManager.writeFen(newFen)
+ORCH --> API : TurnResult(fen=newFen, move=candidateMove)
+deactivate ORCH
+API --> UI : 200 { fen, move }   ' board updates immediately
+
+== /advice — coaching commentary (streamed) ==
+
+UI -> API : POST /advice { humanMove, aiMove, fen }
+API -> ORCH : generateAdviceStream(humanMove, aiMove, currentFen)
+activate ORCH
+note over ORCH
+  safeHumanMove = humanMove.trim()==="" ? "e4" : humanMove
+  evalBefore = getEvaluation(currentFen, 15)
+  fenAfterMove = getFenAfterMove(currentFen, safeHumanMove)
+  evalAfter = fenAfterMove ? getEvaluation(fenAfterMove,15) : evalBefore
+  analysis = createMoveAnalysis(...)  ' engine-core, Type=standard
+  aiMove param accepted but UNUSED
+end note
+ORCH -> SF : getEvaluation ×1–2 (before/after)
+ORCH -> LLM : promptStream(SYSTEM_PROMPT, structuredPrompt,\nmodel, temp 0.7, maxTokens 256)
+LLM --> ORCH : token stream (buffered fully)
+ORCH -> ORCH : extractCommentary(buffer) — yield once if non-blank
+deactivate ORCH
+API --> UI : text/plain ReadableStream (chunked; drain-on-abort)
+
+== /explain — explain a move / blunder (streamed) ==
+
+UI -> API : POST /explain { fenBefore, fenAfter, isBlunder, moveSan }
+API -> ORCH : generateExplanationStream(fenBefore, fenAfter, isBlunder, moveSan)
+activate ORCH
+note over ORCH
+  evalBefore = getEvaluation(fenBefore, 15)
+  evalAfter  = getEvaluation(fenAfter, 15)
+  analysis   = createMoveAnalysis(..., isForcedBlunder=isBlunder) ' Type=explanation
+  prompt     = structuredPrompt + buildExplanationInstruction(tag)  ' engine-core
+end note
+ORCH -> LLM : promptStream(SYSTEM_PROMPT, prompt,\nEXPLANATION_TEMPERATURE 0.7, EXPLANATION_MAX_TOKENS 256)
+LLM --> ORCH : token stream → buffer → extractCommentary()
+deactivate ORCH
+API --> UI : text/plain ReadableStream (chunked)
+
+== /hello — warm up + UI phrases ==
+
+UI -> API : GET /hello
+API -> ORCH : generateUiPhrases()
+ORCH -> LLM : prompt("System","Ping", maxTokens=1)   ' VRAM warmup (best-effort)
+ORCH --> API : UiPhrases(thinking[5], bestMove[5])
+API --> UI : 200 { model=LLM_MODEL, greeting, thinking, bestMove }
+
+== /new — reset ==
+UI -> API : POST /new
+API -> API : stateManager.resetGame() → writeFen(startingFen)
+API --> UI : 200 { fen = startingFen }
+
+@enduml

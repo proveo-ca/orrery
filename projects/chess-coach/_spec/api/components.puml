@@ -2,77 +2,107 @@
 !includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
 skinparam componentStyle rectangle
 
-title Chess Coach API: Component Architecture
+title Chess Coach Backend: Component Architecture (Bun server)
 
 actor "SolidJS UI" as UI
 
-package "Ktor Backend Bridge (chess-coach-api)" {
+package "Bun Server (apps/server)" {
 
-    [HTTP Server\n(Netty)] as SERVER
+    [Bun.serve\n(HTTP)] as SERVER
 
-    package "Plugins" {
-        [ContentNegotiation\n(kotlinx.serialization)] as CONTENT
-        [StatusPages\n(structured JSON errors)] as STATUS
-        [CORS / DefaultHeaders\n(COOP + COEP)] as HEADERS
-        [staticFiles\n(SolidJS build)] as STATIC
+    package "HTTP layer (app.ts / http.ts)" {
+        [createFetchHandler\n(routes)] as ROUTER
+        [BASE_HEADERS\n(COOP + COEP + CORS)] as HEADERS
+        [errorResponse\n(structured JSON errors)] as STATUS
+        [serveStatic\n(SolidJS build, /chess/ + SPA)] as STATIC
+        [Mutex + withTimeout\n(serialize engines, 504)] as GUARD
     }
 
-    package "api.models" {
-        [MoveRequest\nMoveResponse\nAdviceRequest\nAdviceResponse\nNewGameResponse\nHelloResponse] as DTOS
-        [DaemonRequest\nDaemonResponse] as DAEMON_DTOS
-        [ErrorResponse] as ERR_DTO
-    }
-
-    package "api.routes" {
+    package "Routes" {
         [GET /hello] as EP_HELLO
         [POST /move] as EP_MOVE
-        [POST /advice] as EP_ADVICE
+        [POST /advice  (streamed)] as EP_ADVICE
+        [POST /explain (streamed)] as EP_EXPLAIN
         [POST /new] as EP_NEW
     }
 
-    package "api.services" {
-        [HarnessInvoker\n(Daemon lifecycle)] as INVOKER
-        [StateReader\n(File I/O)] as READER
+    package "Orchestration (in-process)" {
+        [Orchestrator] as ORCH
+        [EngineBridge] as BRIDGE
+        [StockfishEngine] as SF
+        [MaiaEngine] as MAIA
+        [UciDriver\n(Bun.spawn)] as UCI
+        [OllamaLlmClient] as LLM
+        [StateManager\n(game_state.fen)] as STATE
     }
 }
 
-package "External Systems" {
-    [Chess Coach Harness\n(Long-lived daemon)] as HARNESS
+package "@chess-coach/engine-core (shared TS)" {
+    [llmPromptFormat\n(prompt build, classify,\nextractCommentary, SYSTEM_PROMPT)] as CORE
+}
+
+package "External Processes / Services" {
+    [stockfish (native)] as NATIVE_SF
+    [lc0 + Maia weights] as LC0
+    [Ollama] as OLLAMA
     database "File System" as FS {
         [game_state.fen]
+        [openings.bin / syzygy]
     }
 }
 
 ' --- Relationships ---
-
 UI -> SERVER : "HTTP / JSON"
-SERVER --> STATIC : "GET / (index.html)"
-SERVER --> EP_HELLO
-SERVER --> EP_MOVE
-SERVER --> EP_ADVICE
-SERVER --> EP_NEW
+SERVER --> ROUTER
+ROUTER --> EP_HELLO
+ROUTER --> EP_MOVE
+ROUTER --> EP_ADVICE
+ROUTER --> EP_EXPLAIN
+ROUTER --> EP_NEW
+ROUTER --> STATIC : "GET /chess/* (index.html SPA fallback)"
 
-EP_MOVE --> INVOKER
-EP_ADVICE --> INVOKER
-EP_HELLO --> INVOKER
-EP_NEW --> READER : "resetGame() + readFen()"
+EP_HELLO  --> ORCH : "generateUiPhrases()"
+EP_MOVE   --> ORCH : "executeTurn() (unary)"
+EP_ADVICE --> ORCH : "generateAdviceStream()"
+EP_EXPLAIN --> ORCH : "generateExplanationStream()"
+EP_NEW    --> STATE : "resetGame() + readFen()"
 
-INVOKER --> HARNESS : "JSON-line protocol\n(stdin/stdout)"
-note right of INVOKER
-  Long-lived daemon process.
-  Mutex serialises write+read pairs.
-  Idle reaper shuts down after timeout.
-  Per-request timeout via withTimeout().
+ORCH --> BRIDGE : "eval / Maia move / FEN"
+ORCH --> LLM : "prompt / promptStream"
+ORCH --> CORE : "buildPromptFromAnalysis,\ncreateMoveAnalysis, extractCommentary"
+ORCH --> STATE : "read/write FEN"
+BRIDGE --> SF
+BRIDGE --> MAIA
+SF --> UCI
+MAIA --> UCI
+UCI --> NATIVE_SF : "UCI (stdin/stdout)"
+UCI --> LC0 : "UCI (stdin/stdout)"
+LLM --> OLLAMA : "POST /v1/chat/completions"
+STATE --> FS
+
+note right of GUARD
+  Async Mutex serializes engine access
+  (single subprocesses). Unary ops wrapped
+  in withTimeout(HARNESS_REQUEST_TIMEOUT_MS,
+  default 60s) → 504. No daemon, no JSON-line
+  protocol — the orchestrator runs in-process.
 end note
 
-HARNESS --> FS : "Updates State"
-READER --> FS : "Read game_state.fen"
+note bottom of EP_ADVICE
+  Streamed as a text/plain ReadableStream: the
+  orchestrator buffers the full LLM output,
+  runs extractCommentary, and emits a single
+  cleaned chunk. On client abort it keeps
+  draining the generator (stops writing).
+end note
 
-STATUS ..> ERR_DTO : "catches exceptions\n→ structured JSON"
+STATUS ..> ROUTER : "Timeout→504, bad JSON→400,\nelse→500 (ErrorResponse)"
 
-note top of SERVER
-  Back/Forward history traversal
-  is handled client-side by the UI.
+note top of CORE
+  The behaviour-defining prompt logic is shared
+  verbatim between this server and the browser
+  engine (apps/ui/src/engine) — one tested impl.
+  See _spec/api/behavior.md + ui-engine-parity.md.
 end note
 
 @enduml

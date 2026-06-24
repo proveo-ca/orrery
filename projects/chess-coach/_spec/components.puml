@@ -33,15 +33,11 @@ package "SolidJS Frontend (chess-coach-ui)" {
 }
 
 frame "Mode: desktop" as DESKTOP_MODE {
-  package "Ktor API (chess-coach-api)" as KTOR_PKG {
-    [HTTP Server\n(/move, /advice, /hello, /new)] as KTOR
-    [HarnessInvoker\n(daemon lifecycle)] as INVOKER
-  }
-
-  package "Kotlin Harness Daemon" as HARNESS_PKG {
-    [Orchestrator\n(execution loop)] as ORCH_DAEMON
+  package "Bun Server (apps/server)" as SERVER_PKG {
+    [Bun.serve\n(/move, /advice, /explain, /hello, /new)] as KTOR
+    [Orchestrator\n(in-process execution loop)] as ORCH_DAEMON
     [EngineBridge\n(facade)] as ENGINE_BRIDGE
-    [LlmClient\n(OpenAI-compatible)] as LLM_CLIENT_DAEMON
+    [OllamaLlmClient\n(OpenAI-compatible)] as LLM_CLIENT_DAEMON
   }
 
   package "Native Binaries" as NATIVE_PKG {
@@ -100,8 +96,7 @@ API_CLIENT --> HTTP_SVC : "desktop"
 API_CLIENT --> WW_SVC : "web-full / web-no-llm"
 
 HTTP_SVC --> KTOR : "HTTP JSON"
-KTOR --> INVOKER
-INVOKER --> ORCH_DAEMON : "JSON-line\n(stdin/stdout)"
+KTOR --> ORCH_DAEMON : "in-process call"
 ORCH_DAEMON --> ENGINE_BRIDGE : "Move / Eval"
 ENGINE_BRIDGE --> MAIA : "UCI (AI move)"
 ENGINE_BRIDGE --> NATIVE_SF : "UCI (eval + legality)"

@@ -61,7 +61,7 @@ note bottom of Orchestrator
   Separate thread → outside the main-thread pool's reach.
   Unifying it would mean moving ALL engines behind one
   worker (future work). On desktop these run server-side
-  (Ktor), so the browser holds only the pool workers.
+  (the Bun server), so the browser holds only the pool workers.
 end note
 
 ' ══════════════════════════════════════════════════════════════

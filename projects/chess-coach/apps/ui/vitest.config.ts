@@ -8,6 +8,9 @@ export default defineConfig({
   resolve: {
     alias: {
       "~": fileURLToPath(new URL("./src", import.meta.url)),
+      "@chess-coach/engine-core": fileURLToPath(
+        new URL("../../packages/engine-core/src/index.ts", import.meta.url),
+      ),
     },
   },
   define: {

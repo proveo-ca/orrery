@@ -1,6 +1,6 @@
 # Minimum System Requirements
 
-This project runs a fully localized AI Chess Coach, including a web UI, a Kotlin API, a Kotlin orchestration harness, and a local LLM, all containerized via Docker.
+This project runs a fully localized AI Chess Coach, including a web UI, a Bun server (REST API + in-process orchestration), and a local LLM, all containerized via Docker.
 
 ## Hardware Requirements
 
@@ -29,5 +29,5 @@ If you are experiencing out-of-memory (OOM) kills, ensure your Docker resource l
 
 1.  **Host OS (macOS/Linux):** ~4 GB
 2.  **Docker Engine / VM:** ~2 GB
-3.  **App Containers (UI + API + Harness):** ~1.5 GB
+3.  **App Container (UI + Bun server):** ~1.5 GB
 4.  **LLM Container (Weights + KV Cache):** ~8.5 GB

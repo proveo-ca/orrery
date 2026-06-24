@@ -2,14 +2,11 @@
 !includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
 actor User
 participant "SolidJS UI" as SolidJS
-participant "Stockfish Web Worker\n(stockfish-18-lite.js)" as StockfishWorker
-participant "Ktor Server" as Ktor
-participant "Harness Daemon" as Harness
-participant "State Analyzer" as Analyzer
-participant "Strategy Agent" as Strategy
-participant "Dialogue Agent" as Dialogue
-participant "Kotlin Tools (Validator/Bridge)" as Tools
-participant "Stockfish" as Stockfish
+participant "Stockfish Web Worker\n(hints / hover)" as StockfishWorker
+participant "Bun Server\n(apps/server)" as Server
+participant "Orchestrator\n(in-process)" as Orch
+participant "EngineBridge\n(→ native Stockfish / lc0)" as Engine
+participant "OllamaLlmClient" as Llm
 
 == Hint Request Flow (Local Worker) ==
 User -> SolidJS: Clicks "Get Hint"
@@ -33,35 +30,29 @@ SolidJS -> User: Renders historical FEN (no API call)
 
 == Standard Move Flow (Move + Advice) ==
 User -> SolidJS: Click-to-move (e2 -> e4)
-SolidJS -> Ktor: POST /move { humanMoveSan: "e4",\nfenAfterHuman: "<fen>", difficulty: "<difficulty>" }
-Ktor -> Harness: JSON-line: { command: "move", ... }
+SolidJS -> Server: POST /move { humanMoveSan: "e4",\nfenAfterHuman: "<fen>", difficulty: "<difficulty>" }
+Server -> Orch: executeTurn(humanMoveSan, difficulty)  ' in-process
 
-note over Harness, Stockfish: AI move generation (engine-assisted)
+note over Orch, Engine: AI move generation (Maia + Stockfish FEN derivation)
 
-Harness -> Tools: Validate and compute response move
-Tools -> Stockfish: UCI search (best move)
-Stockfish --> Tools: bestmove e7e5
-Tools --> Harness: AI move resolved
+Orch -> Engine: getEvaluation / getMaiaMove / getFenAfterMove
+Engine --> Orch: AI move (Maia) + resulting FEN (Stockfish)
 
-Harness --> Ktor: JSON-line: { fen: "<updated>", move: "e7e5" }
-Ktor --> SolidJS: HTTP 200 OK { fen: "<updated>", move: "e7e5" }
+Orch --> Server: { fen: "<updated>", move: "e7e5" }
+Server --> SolidJS: HTTP 200 OK { fen: "<updated>", move: "e7e5" }
 SolidJS -> User: Renders updated position
 
-SolidJS -> Ktor: POST /advice { humanMove: "e4", aiMove: "e7e5", fen: "<updated>" }
+SolidJS -> Server: POST /advice { humanMove: "e4", aiMove: "e7e5", fen: "<updated>" }
 
-note over Harness, Dialogue: Coaching commentary generation
+note over Orch, Llm: Coaching commentary generation
 
-Ktor -> Harness: JSON-line: { command: "advice", ... }
-Harness -> Analyzer: Analyze position (evaluation context)
-Analyzer -> Tools: Get Evaluation (FEN)
-Tools -> Stockfish: eval
-Stockfish --> Tools: score cp 45
-Tools --> Analyzer: Evaluation (+0.45)
-
-Harness -> Dialogue: Generate coaching advice
-Dialogue --> Harness: Advice text
-Harness --> Ktor: JSON-line: { advice: "..." }
-Ktor --> SolidJS: HTTP 200 OK { advice: "..." }
+Server -> Orch: generateAdviceStream(...)
+Orch -> Engine: getEvaluation (context)
+Engine --> Orch: score cp 45
+Orch -> Llm: promptStream(SYSTEM_PROMPT, structured prompt)  ' prompt via engine-core
+Llm --> Orch: commentary tokens (buffered → extractCommentary)
+Orch --> Server: single cleaned commentary chunk
+Server --> SolidJS: HTTP 200 text/plain stream
 SolidJS -> User: Displays coach advice (and emotion)
 
 @enduml

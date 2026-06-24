@@ -9,7 +9,8 @@
     "skipLibCheck": true,
 
     "paths": {
-      "~/*": ["./src/*"]
+      "~/*": ["./src/*"],
+      "@chess-coach/engine-core": ["../../packages/engine-core/src/index.ts"]
     },
 
     /* Bundler mode */

@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Chess Coach</string>
+    <string name="session_active">Chess Coach session active</string>
+</resources>

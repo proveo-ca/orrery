@@ -163,8 +163,12 @@ export default defineConfig({
     },
   ],
   resolve: {
+    dedupe: ["chess.js"],
     alias: {
       "~": fileURLToPath(new URL("./src", import.meta.url)),
+      "@chess-coach/engine-core": fileURLToPath(
+        new URL("../../packages/engine-core/src/index.ts", import.meta.url),
+      ),
     },
   },
   server: {

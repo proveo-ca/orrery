@@ -12,7 +12,7 @@ title Chess Coach UI · State Machine
 ' ══════════════════════════════════════════════════════════════
 
 state "Runtime Mode" as RuntimeMode {
-  state "desktop"    as R_DESKTOP : Ktor backend, HttpCoachService
+  state "desktop"    as R_DESKTOP : Bun server, HttpCoachService
   state "web-full"   as R_WEBFULL : Web workers + LLM commentary
   state "web-no-llm" as R_WEB_NL  : Web workers, no LLM
   [*] --> R_WEB_NL : default (VITE_TARGET unset, no VITE_API_URL)

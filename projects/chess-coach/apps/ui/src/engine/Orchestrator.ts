@@ -7,7 +7,7 @@ import {
   createMoveAnalysis,
   extractCommentary,
   type MoveAnalysis,
-} from "~/engine/llmPromptFormat";
+} from "@chess-coach/engine-core";
 import { uciMatchesSan } from "~/engine/moveNotation";
 import { sanitizeExplanationText, isLowQualityLlmOutput } from "~/engine/textSanitizer";
 // SPEC: _spec/chess-coach/ui/components.puml

@@ -1,9 +1,10 @@
+import { SYSTEM_PROMPT } from "@chess-coach/engine-core";
+
 export const ENGINE_CONFIG = {
   llm: {
     modelId: "chess-gemma-commentary-q0f32-MLC",
     wasmUrl: "gemma-3-270m-q0f32-webgpu.wasm",
-    systemPrompt:
-      "Generate professional chess commentary in the specified language. For Type=standard use 30–40 words. For Type=explanation, explain the best move briefly (≤50 words). Return exactly: Commentary, Predicted ELO, Verified Classification.",
+    systemPrompt: SYSTEM_PROMPT,
     defaultTemperature: 0.5,
     defaultMaxTokens: 128,
     explanationTemperature: 0.5,

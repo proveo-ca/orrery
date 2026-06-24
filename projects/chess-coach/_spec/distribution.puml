@@ -1,0 +1,83 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+skinparam componentStyle rectangle
+
+title Chess Coach — Android Distribution Topology (proposed)
+
+' Forward-looking design. Android = embedded thin server + WASM WebView + P2P.
+' See _spec/distribution.md and _spec/webrtc-p2p.puml.
+
+package "Android App — Player A" {
+
+  package "Foreground Service" as SVC_A {
+    [Embedded Go (net/http + tsnet)\nstatic host @127.0.0.1:PORT\nCOOP + COEP] as KTOR_A
+    [Session / FEN-history store\n(survives WebView churn)] as STATE_A
+    [WebRTC peer owner\n(native libwebrtc OR\nJS RTCPeerConnection)] as PEER_A
+    [Signaling client (WSS)] as SIG_A
+  }
+
+  package "WebView (web-full build)" as WV_A {
+    [SolidJS UI] as UI_A
+    [WebWorkerCoachService] as COACH_A
+    [Stockfish WASM\n(hints / eval)] as SF_A
+    [lc0.wasm Maia\n(vs-AI only)] as MAIA_A
+    [WebLLM gemma-3-270m\n(commentary)] as LLM_A
+  }
+
+  UI_A --> COACH_A
+  COACH_A --> SF_A
+  COACH_A --> MAIA_A
+  COACH_A --> LLM_A
+  WV_A --> KTOR_A : "loads UI over http://localhost"
+  UI_A <--> PEER_A : "moves via JS bridge\n(data channel)"
+  PEER_A --> STATE_A
+}
+
+cloud "Hosted tier (NOT in-app)" as CLOUD {
+  [Signaling rendezvous\nCloudflare Durable Object / WS] as SIGNAL
+  [STUN] as STUN
+  [TURN relay (coturn)\nfallback for mobile NAT] as TURN
+}
+
+package "Android App — Player B" {
+  [Embedded Go + Service\n(mirror of Player A)] as SVC_B
+  [WebView (web-full)\nlocal Stockfish + WebLLM] as WV_B
+  [WebRTC peer owner] as PEER_B
+}
+
+' --- Signaling path (rendezvous) ---
+SIG_A --> SIGNAL : "SDP offer/answer + ICE (WSS)"
+SVC_B --> SIGNAL : "SDP offer/answer + ICE (WSS)"
+
+' --- Connectivity ---
+PEER_A ..> STUN : "public addr discovery"
+PEER_B ..> STUN
+PEER_A <--> PEER_B : "P2P DataChannel: moves + chat\n(direct when possible)"
+PEER_A ..> TURN : "relayed media/data\nwhen P2P blocked"
+PEER_B ..> TURN
+
+note bottom of CLOUD
+  **Model A (shown):** open/public peers.
+  The in-app server stabilizes each peer's own side,
+  but two phones can't reach each other's localhost —
+  signaling + TURN must be hosted. TURN is the
+  reliability lever on cellular.
+  --
+  **Model B (alternative): Tailscale mesh.** If both
+  apps share a tailnet, each in-app server is directly
+  reachable by the peer (stable IP + MagicDNS). Drop
+  this whole hosted tier: WireGuard = direct path,
+  DERP = relay fallback. No STUN/TURN, no signaling,
+  and a plain WSS replaces WebRTC. Cost: both peers
+  must join the same tailnet (known group only).
+  See _spec/distribution.md §3.3.
+end note
+
+note top of WV_A
+  Coach is fully client-side per device:
+  each player runs their own Stockfish + WebLLM.
+  In live P2P the opponent's move arrives over the
+  data channel — Maia move-gen is bypassed.
+end note
+
+@enduml

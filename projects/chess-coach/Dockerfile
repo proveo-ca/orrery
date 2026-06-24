@@ -1,30 +1,15 @@
-# --- Stage 1: Build UI ---
+# --- Stage 1: Build UI (desktop target → HttpCoachService) ---
 FROM node:22-alpine AS ui-builder
-WORKDIR /ui
+# Mirror the repo layout so the Vite/tsconfig alias
+# `@chess-coach/engine-core` → ../../packages/engine-core/src resolves.
+WORKDIR /work/apps/ui
 COPY apps/ui/package.json ./
-
 RUN npm install
 COPY apps/ui/ ./
+COPY packages/ /work/packages/
+RUN npm run build:desktop
 
-RUN npm run build
-
-# --- Stage 2: Build Kotlin ---
-FROM eclipse-temurin:25-jdk-alpine AS kt-builder
-RUN apk add --no-cache bash
-WORKDIR /workspace
-
-# Copy root Gradle wrapper and settings
-COPY gradle/ ./gradle/
-COPY gradlew gradlew.bat settings.gradle.kts ./
-
-# Copy subprojects
-COPY apps/harness/ ./harness/
-COPY apps/api/ ./api/
-
-# Build both projects together
-RUN chmod +x gradlew && ./gradlew :api:installDist :harness:installDist --no-daemon
-
-# --- Stage 3: Build lc0 v0.29.0 ---
+# --- Stage 2: Build lc0 v0.29.0 ---
 FROM ubuntu:20.04 AS lc0-builder
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y \
@@ -37,17 +22,21 @@ RUN git clone -b release/0.29 --recurse-submodules https://github.com/LeelaChess
 WORKDIR /build/lc0-src
 RUN ./build.sh -Dgtest=false
 
-# --- Stage 4: Final Runtime ---
-FROM eclipse-temurin:25-jdk-noble
+# --- Stage 3: Final Runtime (Bun + native engines) ---
+FROM ubuntu:24.04 AS runtime
 RUN apt-get update && \
     apt-get install -y software-properties-common && \
     add-apt-repository -y universe && \
     apt-get update && \
-    apt-get install -y bash curl wget stockfish libopenblas0 zlib1g libstdc++6 libgcc-s1 p7zip-full && \
+    apt-get install -y bash curl wget stockfish libopenblas0 zlib1g libstdc++6 libgcc-s1 p7zip-full ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
 # Ubuntu installs games to /usr/games, which is not in the default PATH
 RUN ln -s /usr/games/stockfish /usr/local/bin/stockfish
+
+# Bun runtime (the server runs TypeScript directly; no build/install step,
+# the server has no runtime npm dependencies).
+COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 
 WORKDIR /app
 
@@ -71,17 +60,16 @@ RUN mkdir -p /app/syzygy && \
 
 ENV SYZYGY_PATH="/app/syzygy"
 
-# Copy Kotlin binaries
-COPY --from=kt-builder /workspace/harness/build/install/harness ./harness
-COPY --from=kt-builder /workspace/api/build/install/api ./api
+# Bun server (in-process orchestrator) + shared engine-core. Preserve the
+# ../../packages/engine-core relative layout that server/tsconfig.json paths expect.
+COPY apps/server/package.json apps/server/tsconfig.json ./server/
+COPY apps/server/src ./server/src
+COPY packages ./packages
 
-# Copy Skills directory for Context Injection
-COPY apps/harness/skills ./skills
-
-# Copy compiled UI to the 'static' folder for Ktor to serve
-COPY --from=ui-builder /ui/dist ./static
+# Compiled UI → /app/static/chess (served by the Bun server under /chess/)
+COPY --from=ui-builder /work/apps/ui/dist ./static
 
 EXPOSE 8080
 
-# Run the API (which now serves the UI too)
-CMD ["./api/bin/api"]
+# Run the Bun server (serves the UI and orchestrates native Stockfish + Maia + Ollama)
+CMD ["bun", "run", "/app/server/src/main.ts"]
