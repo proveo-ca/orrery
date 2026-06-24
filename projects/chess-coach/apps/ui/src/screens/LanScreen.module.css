@@ -20,19 +20,27 @@
   }
 }
 
-/* Footer Resign — visible only on mobile, where the sidebar is hidden. */
-.mobileResign {
+/* Mobile control cluster — fixed top-right (the desktop sidebar is hidden),
+   mirroring the Coach screen's MobileDrawer rather than dropping to the page
+   bottom. Carries connectivity + history nav + resign. */
+.mobileNav {
   display: none;
 }
 
 @media (max-width: 719px) {
-  .mobileResign {
+  .mobileNav {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    position: fixed;
+    top: 0.75rem;
+    right: 0.75rem;
+    z-index: 1000;
   }
 }
 
-/* Live peer connectivity readout (sidebar on desktop, footer on mobile). */
+/* Live peer connectivity readout (sidebar on desktop, top-right nav on mobile). */
 .conn {
   display: flex;
   flex-direction: column;
@@ -57,21 +65,6 @@
 
 .conn[data-status="disconnected"] {
   color: var(--result-loss);
-}
-
-/* Connectivity + history nav live in the footer on mobile (the sidebar that
-   carries them on desktop is hidden there). */
-.mobileControls {
-  display: none;
-}
-
-@media (max-width: 719px) {
-  .mobileControls {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-  }
 }
 
 .lobby {
@@ -105,33 +98,11 @@
   color: var(--text-muted);
 }
 
+/* Seat/role picker row — the cards themselves are the SelectCard atom. */
 .seats {
   display: flex;
   gap: 0.75rem;
   justify-content: center;
-}
-
-.seat {
-  flex: 1;
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-md);
-  padding: 0.75rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  align-items: center;
-  background-color: var(--panel-bg);
-}
-
-.seat--mine {
-  border-color: var(--primary-color);
-}
-
-.seatLabel {
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-muted);
 }
 
 .seatName {
@@ -183,19 +154,6 @@
   justify-content: center;
   align-items: center;
   font-size: 0.9rem;
-}
-
-/* Connectivity readout in the header — mobile only (the desktop sidebar carries
-   it there, and the mobile footer can scroll below the board). */
-.headerStatusMobile {
-  display: none;
-}
-
-@media (max-width: 719px) {
-  .headerStatusMobile {
-    display: flex;
-    justify-content: center;
-  }
 }
 
 .backBtn {

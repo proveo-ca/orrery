@@ -64,6 +64,12 @@ note bottom of HostHub
   Signaling is MANUAL & out-of-band, one exchange per joiner:
     host offer → QR/link ──scan──▶ joiner answer → QR/link ──scan──▶ host
   Non-trickle ICE → each offer/answer fits a single QR.
+  SDP is MINIFIED (keep only ICE ufrag/pwd, DTLS fingerprint,
+  setup role + candidate lines; rebuild the fixed boilerplate on
+  decode — browsers accept a canonical remote desc), then
+  lz-string-compressed (transit-safe, no '+'). ~half the link
+  size; verified to parse on Chromium/WebKit/Firefox, with a raw
+  fallback for any SDP that doesn't fit the expected shape.
 end note
 
 note right of Onboard

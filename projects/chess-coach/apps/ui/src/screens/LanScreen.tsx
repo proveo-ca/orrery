@@ -2,12 +2,14 @@
 import { type Component, Show, createEffect, createSignal, onCleanup, onMount } from "solid-js";
 
 import { OpponentCaptures, PlayerCaptures } from "~/components/atoms/CapturedPieces";
+import { SelectCard } from "~/components/atoms/SelectCard";
 import { GameOverBanner } from "~/components/features/GameOverBanner";
 import { MultiplayerBoard } from "~/components/features/MultiplayerBoard";
 import { PlayerNameField } from "~/components/features/PlayerNameField";
 import { TailscaleChecklist } from "~/components/features/TailscaleChecklist";
 import { Button } from "~/components/primitives/Button";
 import { DualNavButton } from "~/components/primitives/DualNavButton";
+import { HistoryOverlay } from "~/components/primitives/HistoryOverlay";
 import { IconButton } from "~/components/primitives/IconButton";
 import { FlagIcon, SignalIcon } from "~/components/primitives/icons";
 import { Input } from "~/components/primitives/Input";
@@ -217,11 +219,7 @@ export const LanScreen: Component = () => {
     const occupant = () => playerByColor(color);
     const mine = () => occupant()?.peerId === myPeerId();
     return (
-      <div
-        data-testid={`seat-${color}`}
-        classList={{ [styles.seat]: true, [styles["seat--mine"]]: mine() }}
-      >
-        <span class={styles.seatLabel}>{COLOR_LABEL[color]}</span>
+      <SelectCard label={COLOR_LABEL[color]} selected={mine()} testId={`seat-${color}`}>
         <span class={`${styles.swatch} ${styles[`swatch--${color}`]}`} />
         <span class={styles.seatName}>
           {occupant() ? `${occupant()!.identity.name}${mine() ? " (you)" : ""}` : "Open"}
@@ -234,7 +232,7 @@ export const LanScreen: Component = () => {
             <Button onClick={() => mp.swap()}>Swap</Button>
           </Show>
         </Show>
-      </div>
+      </SelectCard>
     );
   };
 
@@ -308,19 +306,22 @@ export const LanScreen: Component = () => {
                     </>
                   }
                 >
-                  <div class={styles.row}>
-                    <Button
-                      primary={desiredRole() === "player"}
+                  <Label variant="caption">Join as</Label>
+                  <div class={styles.seats}>
+                    <SelectCard
+                      label="Play"
+                      selected={desiredRole() === "player"}
                       onClick={() => setDesiredRole("player")}
                     >
-                      Play
-                    </Button>
-                    <Button
-                      primary={desiredRole() === "observer"}
+                      <span class={styles.seatName}>Take a seat</span>
+                    </SelectCard>
+                    <SelectCard
+                      label="Spectate"
+                      selected={desiredRole() === "observer"}
                       onClick={() => setDesiredRole("observer")}
                     >
-                      Spectate
-                    </Button>
+                      <span class={styles.seatName}>Just watch</span>
+                    </SelectCard>
                   </div>
                   <Button primary onClick={join}>
                     Join game
@@ -406,7 +407,10 @@ export const LanScreen: Component = () => {
       }
     >
       {/* ── Game in progress: board-centric Screen layout ── */}
-      <Screen>
+      <Screen highlight={replaying()}>
+        {/* Vignette while reviewing past plies, like the Coach screen. */}
+        <HistoryOverlay active={replaying()} />
+
         <Screen.Header>
           <div class={styles.gameHeader}>
             <span>
@@ -418,12 +422,6 @@ export const LanScreen: Component = () => {
               {playerByColor("b")?.identity.name ?? "Black"}{" "}
               <span class={`${styles.swatch} ${styles["swatch--b"]}`} />
             </span>
-          </div>
-          {/* On mobile the sidebar is hidden and the footer can fall below the
-              board (under the browser chrome), so the connectivity readout lives
-              in the always-visible header here. */}
-          <div class={styles.headerStatusMobile}>
-            <ConnIndicator />
           </div>
         </Screen.Header>
 
@@ -464,17 +462,18 @@ export const LanScreen: Component = () => {
           </div>
         </Screen.BoardArea>
 
-        <Screen.Footer>
-          {/* History nav is carried in the footer on mobile, where the sidebar
-              is hidden (connectivity sits in the header — see above). */}
-          <div class={styles.mobileControls}>{historyNav()}</div>
-          {/* Resign is reachable here on mobile, where the sidebar is hidden. */}
+        {/* Mobile: the desktop sidebar is hidden, so connectivity + history +
+            resign live in a fixed top-right cluster — mirrors the Coach
+            screen's MobileDrawer placement (not the bottom of the page). */}
+        <div class={styles.mobileNav}>
+          <ConnIndicator />
+          {historyNav()}
           <Show when={!gameOver() && seat() === "player"}>
-            <div class={styles.mobileResign}>
-              <Button onClick={() => mp.resign()}>Resign</Button>
-            </div>
+            <IconButton label="Resign" onClick={() => mp.resign()} aria-label="Resign">
+              <FlagIcon />
+            </IconButton>
           </Show>
-        </Screen.Footer>
+        </div>
       </Screen>
     </Show>
   );

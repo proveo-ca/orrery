@@ -68,24 +68,28 @@ package "Screens  [src/screens/]" {
     calls useMultiplayerGame() · useLanGameRecorder() ·
       useLivePreAnalysis()  (recorded + analyzed → reviewable
       at /review/:id, like a Coach game)
-    lobby: create / join · QR + link signaling ·
-      players pick/swap colors · observers ≤4 · Start Game
+    lobby: create / join · QR + link signaling · players
+      pick/swap colors (SelectCard) · guest Play/Spectate
+      (SelectCard) · observers ≤4 · Start Game
     host browser = room authority (relays all moves)
     layout: lobby = SplashScreen (no board, like MenuScreen) —
-      Tailscale onboarding + room setup. Once started,
-      the board-centric Screen grid: matchup header (+ mobile
-      connectivity readout), board centered, sidebar =
-      connectivity status + history nav + Resign
+      Tailscale onboarding + room setup. Once started, the
+      board-centric Screen grid: matchup header + board. Controls
+      (connectivity · history nav · Resign) in the right sidebar
+      on desktop; on mobile a fixed top-right cluster (like
+      MobileDrawer), NOT the page bottom.
     history nav: DualNavButton bound straight to gameStore
-      (engine-free); MultiplayerBoard replays past plies and
-      locks input while replaying. NO eval bar, ever.
+      (engine-free); MultiplayerBoard replays past plies and locks
+      input while replaying. HistoryOverlay vignette + Screen
+      highlight while reviewing. NO eval bar, ever.
     end screen: shared GameOverBanner (Resignation / Checkmate /
-      Stalemate / Draw / Opponent Left) → Review Game · Back to Menu
+      Stalemate / Draw / Opponent Left), hidden during replay
+      → Review Game · Back to Menu
     renders MultiplayerBoard (coach/engine-free) — NOT ChessBoard
     composition: SplashScreen · Screen · MultiplayerBoard ·
-      CapturedPieces · TailscaleChecklist · QR encode/scan ·
-      ConnIndicator (live WebRTC status, SignalIcon) ·
-      DualNavButton · GameOverBanner
+      CapturedPieces · SelectCard · TailscaleChecklist · QR
+      encode/scan · ConnIndicator (SignalIcon) · DualNavButton ·
+      HistoryOverlay · GameOverBanner
   end note
 }
 
@@ -265,6 +269,13 @@ package "Components  [src/components/]" {
     rectangle "ChessSquare"     as ChessSquare
     rectangle "ChessBoardArrow" as ChessBoardArrow
     rectangle "CapturedPieces"  as CapturedPieces
+    rectangle "SelectCard"      as SelectCard
+    note right of SelectCard
+      Bordered selectable card (LAN lobby): White/Black
+      seats + the guest's Play/Spectate choice. With onClick
+      the whole card is a button; otherwise it hosts its own
+      Take/Swap buttons. `selected` highlights the border.
+    end note
     rectangle "CoachAvatar"     as CoachAvatar
     note right of CoachAvatar
       animated SVG cat · reads coachEmotion()

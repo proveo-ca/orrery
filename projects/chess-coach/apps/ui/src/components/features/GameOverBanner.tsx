@@ -31,10 +31,14 @@ export const GameOverBanner: Component<GameOverBannerProps> = (props) => (
     overlayClass={styles.overlay}
     contentClass={styles.banner}
   >
-    <h1 class={styles.result}>{props.heading}</h1>
-    <Show when={props.detail}>
-      <p class={styles.detail}>{props.detail}</p>
-    </Show>
-    <div class={styles.actions}>{props.children}</div>
+    {/* Own flex wrapper — Modal nests children in a plain .modal-body block, so
+        a gap on the content element wouldn't reach the title/buttons. */}
+    <div class={styles.inner}>
+      <h1 class={styles.result}>{props.heading}</h1>
+      <Show when={props.detail}>
+        <p class={styles.detail}>{props.detail}</p>
+      </Show>
+      <div class={styles.actions}>{props.children}</div>
+    </div>
   </Modal>
 );

@@ -3,16 +3,33 @@ import { type Page, expect, test } from "@playwright/test";
 /**
  * Serverless LAN multiplayer (WebRTC host-hub). These drive two independent
  * browser contexts and connect them peer-to-peer over loopback host ICE
- * candidates — no STUN/TURN, mirroring the Tailscale design. Chromium only:
- * WebRTC datachannel + local-candidate behaviour is the most consistent there,
- * and the real cross-device Tailscale path is validated separately via the
- * public/lan-spike.html device check.
+ * candidates — no STUN/TURN, mirroring the Tailscale design.
+ *
+ * Runs on Chromium + WebKit (the full handshake, move relay, and color-swap all
+ * work). Firefox is exercised for the lobby/invite path but skips the live
+ * handshake: it assigns per-context mDNS (.local) ICE candidates that don't
+ * resolve between two contexts over loopback, so the DataChannel can't open in
+ * this single-machine test. Real cross-device play uses routable Tailscale
+ * 100.x candidates (validated separately via the public/lan-spike.html check).
  */
+const FIREFOX_LOOPBACK_SKIP =
+  "Firefox per-context mDNS (.local) ICE candidates don't resolve between two " +
+  "contexts over loopback, so the DataChannel can't open here. Real cross-device " +
+  "play uses routable Tailscale 100.x candidates (see public/lan-spike.html).";
+
 test.describe("LAN multiplayer (serverless WebRTC)", () => {
-  test.skip(
-    ({ browserName }) => browserName !== "chromium",
-    "WebRTC loopback e2e runs on Chromium only",
-  );
+  // The Tailscale checklist gates the room setup (step 3). Its in-browser probe
+  // only auto-detects the tailnet when the OS actually has Tailscale up AND the
+  // browser exposes the 100.x host candidate — Safari/Firefox hide host
+  // candidates behind mDNS *.local names, so the probe can't see it. The
+  // always-available manual override clears the gate; click it when present (on
+  // an auto-verified browser it never appears, so this is a no-op).
+  async function dismissTailscaleChecklist(page: Page) {
+    await page
+      .getByRole("button", { name: "I'm connected — continue" })
+      .click({ timeout: 8000 })
+      .catch(() => {});
+  }
 
   async function openLanViaMenu(page: Page, name: string) {
     await page.goto("/");
@@ -20,6 +37,7 @@ test.describe("LAN multiplayer (serverless WebRTC)", () => {
     await page.goto("/");
     await page.getByRole("button", { name: "Play LAN" }).click();
     await expect(page).toHaveURL(/\/lan/);
+    await dismissTailscaleChecklist(page);
     await page.getByPlaceholder("Your name").fill(name);
   }
 
@@ -37,6 +55,7 @@ test.describe("LAN multiplayer (serverless WebRTC)", () => {
     const invite = await readLink(host, "invite-link");
 
     await guest.goto(invite);
+    await dismissTailscaleChecklist(guest);
     await guest.getByPlaceholder("Your name").fill("Bob");
     await guest.getByRole("button", { name: "Join game" }).click();
     const answer = await readLink(guest, "answer-link");
@@ -56,7 +75,11 @@ test.describe("LAN multiplayer (serverless WebRTC)", () => {
     expect(invite).toContain("/chess/lan#o=");
   });
 
-  test("two browsers connect, pick colors, start, and relay moves", async ({ browser }) => {
+  test("two browsers connect, pick colors, start, and relay moves", async ({
+    browser,
+    browserName,
+  }) => {
+    test.skip(browserName === "firefox", FIREFOX_LOOPBACK_SKIP);
     const hostCtx = await browser.newContext();
     const guestCtx = await browser.newContext();
     const host = await hostCtx.newPage();
@@ -94,7 +117,8 @@ test.describe("LAN multiplayer (serverless WebRTC)", () => {
     }
   });
 
-  test("players can swap colors in the lobby", async ({ browser }) => {
+  test("players can swap colors in the lobby", async ({ browser, browserName }) => {
+    test.skip(browserName === "firefox", FIREFOX_LOOPBACK_SKIP);
     const hostCtx = await browser.newContext();
     const guestCtx = await browser.newContext();
     const host = await hostCtx.newPage();
