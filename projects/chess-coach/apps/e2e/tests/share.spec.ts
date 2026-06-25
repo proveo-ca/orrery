@@ -166,6 +166,61 @@ test.describe("Share a game by link", () => {
     await expect(moveList.locator("[title='Hint used']")).toHaveCount(0);
   });
 
+  test("a link opened in a second browser loads the game into Review (nothing shared but the URL)", async ({
+    browser,
+  }) => {
+    // Two genuinely separate browsers: each context has its own isolated
+    // localStorage, so the only thing crossing between them is the link itself.
+    const senderCtx = await browser.newContext();
+    const recipientCtx = await browser.newContext();
+    const sender = await senderCtx.newPage();
+    const recipient = await recipientCtx.newPage();
+
+    try {
+      // The sender generates the share link from their own browser.
+      await sender.goto("/");
+      const url = await buildShareUrl(sender);
+
+      // The recipient is a fresh browser with no prior history of its own.
+      await recipient.goto("/");
+      const before = await readHistory(recipient);
+      expect(before.games ?? []).toHaveLength(0);
+
+      // Opening the link is the entire handoff — no shared storage, no backend.
+      await recipient.goto(url);
+
+      // Lands on the clean /review/:id and renders the sender's game.
+      await expect(recipient).toHaveURL(/\/review\/[0-9a-f]{16}$/);
+      await expect(recipient.getByText("Juan (White) vs Selena (Black)")).toBeVisible({
+        timeout: 15_000,
+      });
+      const moveList = recipient.getByLabel("Move list");
+      await expect(moveList).toBeVisible({ timeout: 15_000 });
+      await expect(moveList.locator("[data-ply='2']")).toBeVisible();
+
+      // The game was imported into the recipient's *own* history, decoded purely
+      // from the URL (recomputed id, intact identity, no coaching layer).
+      const stored = await readHistory(recipient);
+      expect(stored.games).toHaveLength(1);
+      expect(stored.games[0].id).toMatch(/^[0-9a-f]{16}$/);
+      expect(stored.games[0].playerName).toBe("Juan");
+      expect(stored.games[0].moves).toHaveLength(6);
+      expect(
+        stored.games[0].moves.every((m: { hasPressedHint: boolean }) => !m.hasPressedHint),
+      ).toBe(true);
+
+      // The sender's browser never gained the game — it lived only in the link,
+      // confirming the two contexts share no state.
+      const senderHistory = await readHistory(sender);
+      expect(
+        (senderHistory.games ?? []).some((g: { playerName?: string }) => g.playerName === "Juan"),
+      ).toBe(false);
+    } finally {
+      await senderCtx.close();
+      await recipientCtx.close();
+    }
+  });
+
   test("an invalid share link shows an error and clears the hash", async ({ page }) => {
     await page.goto("/");
     await emptyHistory(page);

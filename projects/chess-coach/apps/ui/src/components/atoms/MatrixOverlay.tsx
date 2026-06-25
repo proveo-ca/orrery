@@ -52,7 +52,7 @@ export const MatrixOverlay = (props: MatrixOverlayProps) => {
   });
 
   const scale = () => aspect() / 1.77;
-  const densityFactor = () => clamp(scale(), 0.25, 1.0);
+  const densityFactor = () => clamp(scale(), 0.25, 0.5);
   const speedFactor = () => clamp(scale(), 0.5, 1.0);
   const maxFactor = () => clamp(scale(), 0.5, 1.0);
 
