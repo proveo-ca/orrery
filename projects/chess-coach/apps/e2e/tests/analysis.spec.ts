@@ -57,8 +57,8 @@ test.describe("Analysis screen", () => {
     await expect(c1.locator("img[alt='b q']")).toBeVisible({ timeout: 5_000 });
     await expect(c2.locator("img")).toHaveCount(0);
 
-    // Qc1 delivers mate against Ka1. The game-over modal is Coach-only,
-    // so it should NOT appear on the Analysis screen.
-    await expect(page.getByText("Checkmate")).not.toBeVisible({ timeout: 2_000 });
+    // Qc1 delivers mate against Ka1. The game-over result banner renders on
+    // every screen (no longer Coach-only), so it should appear here too.
+    await expect(page.getByText("Checkmate")).toBeVisible({ timeout: 5_000 });
   });
 });

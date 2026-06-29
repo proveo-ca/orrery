@@ -54,9 +54,12 @@ package "Capabilities  [capabilitiesStore.ts]" {
     (aiOpponent=F, readOnly=F)
 
     **REVIEW_CAPABILITIES**
-    historyNav=T, evalBarAlwaysVisible=T, readOnly=T,
-    persistGame=F
-    (historyBranching=T when game loaded)
+    historyNav=T, evalBarAlwaysVisible=T, readOnly=F,
+    persistGame=F, freeColorControl=T,
+    bestMoveArrow=player-only ("both" once branched
+      into free-analysis mode)
+    (historyBranching=T when game loaded — review is a
+      branchable board: pieces are interactive)
 
     **LAN_PLAYER_CAPABILITIES** (both players)
     aiOpponent=F, commentary=F, hint=F,

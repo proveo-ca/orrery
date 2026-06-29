@@ -41,7 +41,7 @@ add a shell — only packaging.
 | Medium | CoachService | Engines | LLM | Shell | Status |
 |---|---|---|---|---|---|
 | **Web (Cloudflare)** | WebWorker | Stockfish WASM + lc0.wasm | WebLLM (`gemma-3-270m`) or none | Pages/Workers (`build:web-full` / `web-no-llm`) | ✅ exists |
-| **Docker desktop** | Http | native Stockfish + lc0 | Ollama (qwen2.5 7B + chess-gemma) | `compose/chess-coach.yml` | ✅ exists |
+| **Docker desktop** | Http | native Stockfish + lc0 | Ollama (chess-gemma commentary) | `compose/chess-coach.yml` | ✅ exists |
 | **Desktop app** | Http *or* WebWorker | native *or* WASM | Ollama/llama.cpp sidecar *or* WebLLM | Tauri/Electron, or `bun build --compile` of `apps/server` | 🔭 proposed |
 | **Android** | **WebWorker** | **Stockfish WASM + lc0.wasm** | **WebLLM (`gemma-3-270m`)** | **WebView → embedded Go server (`tsnet`, localhost); foreground service** | 🏗 scaffolded (`apps/android`) |
 

@@ -1,46 +1,23 @@
 import { defineConfig } from "@playwright/test";
+import { TARGET, targetConfig } from "./target";
+
+// The SAME specs in ./tests run against multiple "targets" — wirings of the
+// identical apps/ui. `E2E_TARGET` selects one (default web-no-llm); each target
+// supplies its own baseURL, web servers, browser projects and ignore list. See
+// ./target.ts for the matrix and ./global-setup.ts for the desktop LLM preflight.
+const t = targetConfig();
 
 export default defineConfig({
   testDir: "./tests",
   timeout: 120_000,
   retries: 0,
+  globalSetup: "./global-setup.ts",
   use: {
-    baseURL: "http://localhost:5173/chess/",
+    baseURL: t.baseURL,
     headless: true,
   },
-  // Two servers run in parallel:
-  //   :5173 — `vite dev` for the fast e2e specs (no SW).
-  //   :8787 — `wrangler dev` against the production build, so the PWA spec
-  //           can exercise the real service worker + offline cache pipeline.
-  webServer: [
-    {
-      command: "npm run dev:web-no-llm:vite",
-      cwd: "../ui",
-      url: "http://localhost:5173/chess/",
-      reuseExistingServer: true,
-      timeout: 30_000,
-    },
-    {
-      command: "npm run preview",
-      cwd: "../ui",
-      url: "http://localhost:8787/chess/",
-      reuseExistingServer: true,
-      // `preview` runs the full vite build before booting wrangler dev.
-      timeout: 180_000,
-    },
-  ],
-  projects: [
-    { name: "chromium", use: { browserName: "chromium" } },
-    { name: "webkit", use: { browserName: "webkit" } },
-    { name: "firefox", use: { browserName: "firefox" } },
-    {
-      name: "brave",
-      use: {
-        browserName: "chromium",
-        launchOptions: {
-          args: ["--disable-features=BraveShieldsV2"],
-        },
-      },
-    },
-  ],
+  webServer: t.webServer,
+  testIgnore: t.testIgnore,
+  projects: t.projects,
+  metadata: { target: TARGET },
 });

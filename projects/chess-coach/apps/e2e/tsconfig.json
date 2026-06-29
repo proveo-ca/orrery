@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["node"],
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  // Scoped to the target-orchestration infra. The specs in tests/ are executed
+  // by Playwright (esbuild, no type-check) and predate any tsconfig; bringing
+  // them under tsc is a separate cleanup (a few stale @ts-expect-error directives).
+  "include": ["target.ts", "global-setup.ts", "playwright.config.ts"]
+}

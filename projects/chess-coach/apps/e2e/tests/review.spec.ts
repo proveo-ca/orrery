@@ -85,22 +85,23 @@ test.describe("Review screen", () => {
     // data-game-id is present (highlight class only applied when activeId matches in list view).
   });
 
-  test("pieces are not interactive in review mode", async ({ page }) => {
+  test("pieces are interactive in review mode (free-analysis branching)", async ({ page }) => {
     await page.goto(`review/${FIXTURE_ID}`);
 
-    // Jump to ply 1 so e4 is populated and e-file squares have pieces.
+    // Jump to a position where White (the human) is to move (after 1.e4 e5).
     const moveList = page.getByLabel("Move list");
     await expect(moveList).toBeVisible({ timeout: 15_000 });
-    await moveList.locator("[data-ply='0']").click();
+    await moveList.locator("[data-ply='1']").click();
 
-    const e4 = page.locator("[data-square='e4']");
-    await expect(e4.locator("img")).toBeVisible({ timeout: 5_000 });
-    // Clicking the pawn must NOT select it (no valid-move markers on empty squares).
-    await e4.click();
+    const d2 = page.locator("[data-square='d2']");
+    await expect(d2.locator("img")).toBeVisible({ timeout: 5_000 });
 
-    // No square should be flagged as a valid target.
-    const validSquares = page.locator("[class*='valid']");
-    await expect(validSquares).toHaveCount(0);
+    // Review is a branchable / free-analysis board (freeColorControl): clicking a
+    // piece selects it and lights up its legal destinations.
+    await d2.click();
+    await expect(page.locator("[data-square='d4']")).toHaveAttribute("class", /valid/, {
+      timeout: 5_000,
+    });
   });
 });
 
@@ -169,7 +170,7 @@ test.describe("Review best-move arrow (branch mode)", () => {
     }, fixture);
   });
 
-  test("green best-move arrow only renders on the human's turn", async ({ page }) => {
+  test("best-move arrow renders in review and through branching", async ({ page }) => {
     await page.goto(`review/${GAME_ID}`);
 
     const moveList = page.getByLabel("Move list");
@@ -186,21 +187,18 @@ test.describe("Review best-move arrow (branch mode)", () => {
       await dest.click();
     };
 
-    // Not branched yet → overlay is "off", no arrow.
-    await expect(arrow).toHaveCount(0);
-
-    // Branch with a White move → reviewAnalysisMode on, now Black (AI) to move.
-    await play("d2", "d4");
-
-    // Play Black's reply (freeColorControl allows it) → White (human) to move.
-    await play("d7", "d5");
-    // Human's turn → arrow must render.
+    // Plain review on the human's turn → arrow renders (player-only mode).
     await expect(arrow).toHaveCount(1, { timeout: 15_000 });
 
-    // Another White move → Black (AI) to move → arrow must disappear, even
-    // though base analysis keeps populating humanBestMove (the turn gate hides it).
+    // Branch with a White move → free-analysis mode (arrow for whichever side
+    // is to move). Play Black's reply, then it's White (human) to move.
+    await play("d2", "d4");
+    await play("d7", "d5");
+    await expect(arrow).toHaveCount(1, { timeout: 15_000 });
+
+    // Another White move → Black (AI) to move; the arrow keeps rendering.
     await play("c2", "c4");
-    await expect(arrow).toHaveCount(0, { timeout: 15_000 });
+    await expect(arrow).toHaveCount(1, { timeout: 15_000 });
   });
 });
 
