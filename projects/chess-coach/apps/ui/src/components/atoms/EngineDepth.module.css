@@ -1,0 +1,31 @@
+/* Depth readout circle with a green→blue split ring (the best-move and advice
+   arrow colours). The ring is a conic gradient revealed through a transparent
+   border via the two-background clip trick. */
+.depth {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 2.7rem;
+  height: 2.7rem;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  background:
+    linear-gradient(var(--bg-color), var(--bg-color)) padding-box,
+    conic-gradient(from 180deg, #4caf50 0deg 180deg, #2f6fe0 180deg 360deg) border-box;
+  color: var(--text-color);
+  font-variant-numeric: tabular-nums;
+}
+
+.num {
+  font-weight: 700;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.label {
+  font-size: 0.5rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}

@@ -20,27 +20,7 @@
   }
 }
 
-/* Mobile control cluster — fixed top-right (the desktop sidebar is hidden),
-   mirroring the Coach screen's MobileDrawer rather than dropping to the page
-   bottom. Carries connectivity + history nav + resign. */
-.mobileNav {
-  display: none;
-}
-
-@media (max-width: 719px) {
-  .mobileNav {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.4rem;
-    position: fixed;
-    top: 0.75rem;
-    right: 0.75rem;
-    z-index: 1000;
-  }
-}
-
-/* Live peer connectivity readout (sidebar on desktop, top-right nav on mobile). */
+/* Live peer connectivity readout (desktop sidebar + mobile control bar). */
 .conn {
   display: flex;
   flex-direction: column;
@@ -156,6 +136,38 @@
   font-size: 0.9rem;
 }
 
+.player {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* Time-control banner on the join screen (above the seat/spectate choice). */
+.timeBanner {
+  font-weight: 600;
+  padding: 0.4rem 0.75rem;
+  border-radius: 0.5rem;
+  background: var(--panel-bg);
+  border: 1px solid var(--border-color);
+}
+
 .backBtn {
   margin-top: 1rem;
+}
+
+.drawIcon {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.drawModal {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
+}
+
+.drawModalText {
+  margin: 0;
+  text-align: center;
 }

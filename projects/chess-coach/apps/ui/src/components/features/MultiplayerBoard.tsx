@@ -4,6 +4,7 @@ import { For, Show, createSignal } from "solid-js";
 import type { Component } from "solid-js";
 
 import { ChessSquare } from "~/components/atoms/ChessSquare";
+import { DrawBubbles } from "~/components/features/DrawBubbles";
 import styles from "~/components/features/MultiplayerBoard.module.css";
 import { PromotionModal } from "~/components/primitives/PromotionModal";
 import { useMultiplayerBoard } from "~/hooks/useMultiplayerBoard";
@@ -27,7 +28,11 @@ const squareFromTouch = (touch: Touch): Square | null => {
  * overlays: this screen is human-vs-human only. The Coach/Analysis/Review board
  * is the separate, engine-backed {@link ChessBoard}.
  */
-export const MultiplayerBoard: Component = () => {
+interface MultiplayerBoardProps {
+  onDrawBubbleClick?: () => void;
+}
+
+export const MultiplayerBoard: Component<MultiplayerBoardProps> = (props) => {
   const board = useMultiplayerBoard();
 
   const displayRanks = () => (activePlayerColor() === "w" ? RANKS : [...RANKS].reverse());
@@ -188,6 +193,8 @@ export const MultiplayerBoard: Component = () => {
               />
             )}
           </Show>
+
+          <DrawBubbles onOfferClick={props.onDrawBubbleClick} />
 
           <PromotionModal
             pending={board.pendingPromotion()}

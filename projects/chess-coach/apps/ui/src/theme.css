@@ -132,10 +132,11 @@
   }
 }
 
-/* Clear MobileDrawer fixed nav on mobile screens. */
+/* Hidden on mobile (e.g. the Coach header avatar, which moves into the
+   MobileSidebar bar above the board). */
 @media (max-width: 719px) {
-  .mobile-nav-clear {
-    padding-top: 1.5rem;
+  .desktop-only {
+    display: none;
   }
 }
 

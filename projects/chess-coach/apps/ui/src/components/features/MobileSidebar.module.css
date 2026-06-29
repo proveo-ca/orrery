@@ -1,0 +1,55 @@
+/* Mobile-only horizontal control bar, centred above the board. Hidden on
+   desktop, where the vertical Sidebar is used instead. */
+.bar {
+  display: none;
+}
+
+@media (max-width: 719px) {
+  .bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    width: 100%;
+    max-width: var(--board-size);
+    margin: 0 auto 0.6rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 1.6rem;
+    background: var(--panel-bg);
+    border: 1px solid var(--border-color);
+  }
+}
+
+/* Centre slot — a <span>, so it's excluded from the item <div> numbering. */
+.main {
+  order: 0;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  padding: 0 1rem;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+}
+
+/* Fan the (up to four) item <div>s out around the centre. nth-of-type counts
+   only the item divs — the centre <span> doesn't shift the numbering — so this
+   re-balances automatically as capability-gated items appear / disappear. */
+.bar > div:nth-of-type(1) {
+  order: -1;
+}
+.bar > div:nth-of-type(2) {
+  order: 1;
+}
+.bar > div:nth-of-type(3) {
+  order: -2;
+}
+.bar > div:nth-of-type(4) {
+  order: 2;
+}
+.bar > div:nth-of-type(n + 5) {
+  display: none;
+}

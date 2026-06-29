@@ -1,4 +1,4 @@
-import { type Page, expect, test } from "@playwright/test";
+import { type Browser, type Page, expect, test } from "@playwright/test";
 
 /**
  * Serverless LAN multiplayer (WebRTC host-hub). These drive two independent
@@ -67,6 +67,47 @@ test.describe("LAN multiplayer (serverless WebRTC)", () => {
     await expect(host.getByText(/2\/2 players/)).toBeVisible({ timeout: 25_000 });
     await expect(guest.getByText(/2\/2 players/)).toBeVisible({ timeout: 25_000 });
   }
+
+  /** connect → host White / guest Black → both Start → boards live. */
+  async function startGame(host: Page, guest: Page) {
+    await connect(host, guest);
+    await host.getByRole("button", { name: "Take White" }).click();
+    await guest.getByRole("button", { name: "Take Black" }).click();
+    await host.getByRole("button", { name: "Start Game" }).click();
+    await guest.getByRole("button", { name: "Start Game" }).click();
+    await expect(host.locator("[data-square='e2']")).toBeVisible({ timeout: 15_000 });
+    await expect(guest.locator("[data-square='e2']")).toBeVisible({ timeout: 15_000 });
+  }
+
+  /** Click-select the from-square, then the to-square (the board's move UI). */
+  async function move(page: Page, from: string, to: string) {
+    await page.locator(`[data-square='${from}']`).click();
+    await page.locator(`[data-square='${to}']`).click();
+  }
+
+  /** Spin up two browser contexts, run a started game, then tear them down. */
+  async function withStartedGame(
+    browser: Browser,
+    run: (host: Page, guest: Page) => Promise<void>,
+  ) {
+    const hostCtx = await browser.newContext();
+    const guestCtx = await browser.newContext();
+    const host = await hostCtx.newPage();
+    const guest = await guestCtx.newPage();
+    try {
+      await startGame(host, guest);
+      await run(host, guest);
+    } finally {
+      await hostCtx.close();
+      await guestCtx.close();
+    }
+  }
+
+  // The sidebar "Draw" button (mobile-nav twin is display:none on desktop, so
+  // it's out of the a11y tree and this stays a single match).
+  const drawButton = (page: Page) => page.getByRole("button", { name: "Draw", exact: true });
+  const offerBubble = (page: Page) => page.getByTestId("draw-offer-bubble");
+  const rejectBubble = (page: Page) => page.getByTestId("draw-reject-bubble");
 
   test("host renders a lobby and produces an invite link", async ({ page }) => {
     await openLanViaMenu(page, "Alice");
@@ -140,6 +181,190 @@ test.describe("LAN multiplayer (serverless WebRTC)", () => {
       await expect(host.getByTestId("seat-w")).toContainText("Bob", { timeout: 15_000 });
       await expect(guest.getByTestId("seat-w")).toContainText("Bob (you)", { timeout: 15_000 });
       await expect(guest.getByTestId("seat-b")).toContainText("Alice", { timeout: 15_000 });
+    } finally {
+      await hostCtx.close();
+      await guestCtx.close();
+    }
+  });
+
+  // ── Draw offers ───────────────────────────────────────────────────────────
+
+  test("offering a draw floats a 🤝 bubble on both ends", async ({ browser, browserName }) => {
+    test.skip(browserName === "firefox", FIREFOX_LOOPBACK_SKIP);
+    await withStartedGame(browser, async (host, guest) => {
+      await drawButton(host).click();
+      // 🤝 on the offerer's king, relayed to the opponent. No ⚔️ yet.
+      await expect(offerBubble(host)).toBeVisible({ timeout: 10_000 });
+      await expect(offerBubble(guest)).toBeVisible({ timeout: 10_000 });
+      await expect(rejectBubble(host)).toHaveCount(0);
+      await expect(rejectBubble(guest)).toHaveCount(0);
+    });
+  });
+
+  test("a pending offer persists across several moves", async ({ browser, browserName }) => {
+    test.skip(browserName === "firefox", FIREFOX_LOOPBACK_SKIP);
+    await withStartedGame(browser, async (host, guest) => {
+      await drawButton(host).click();
+      await expect(offerBubble(guest)).toBeVisible({ timeout: 10_000 });
+
+      // Three plies pass; an unanswered offer must stay on the board.
+      await move(host, "e2", "e4");
+      await expect(guest.locator("[data-square='e4'] img[alt='w p']")).toBeVisible({ timeout: 10_000 });
+      await move(guest, "e7", "e5");
+      await expect(host.locator("[data-square='e5'] img[alt='b p']")).toBeVisible({ timeout: 10_000 });
+      await move(host, "g1", "f3");
+      await expect(guest.locator("[data-square='f3'] img[alt='w n']")).toBeVisible({ timeout: 10_000 });
+
+      await expect(offerBubble(host)).toBeVisible();
+      await expect(offerBubble(guest)).toBeVisible();
+    });
+  });
+
+  test("accepting an offer ends the game as a draw", async ({ browser, browserName }) => {
+    test.skip(browserName === "firefox", FIREFOX_LOOPBACK_SKIP);
+    await withStartedGame(browser, async (host, guest) => {
+      await drawButton(host).click();
+      await expect(offerBubble(guest)).toBeVisible({ timeout: 10_000 });
+
+      // Recipient opens the modal by tapping the 🤝 bubble, then accepts.
+      await offerBubble(guest).click();
+      await guest.getByRole("button", { name: "Yes" }).click();
+
+      const draw = (page: Page) => page.getByRole("heading", { name: "Draw", exact: true });
+      await expect(draw(host)).toBeVisible({ timeout: 10_000 });
+      await expect(draw(guest)).toBeVisible({ timeout: 10_000 });
+
+      // Agreed → 🤝 on BOTH kings (mutual handshake), on both ends.
+      for (const page of [host, guest]) {
+        await expect(offerBubble(page)).toBeVisible();
+        await expect(page.getByTestId("draw-agree-bubble")).toBeVisible();
+      }
+    });
+  });
+
+  test("declining shows ⚔️, and the next move clears both bubbles", async ({
+    browser,
+    browserName,
+  }) => {
+    test.skip(browserName === "firefox", FIREFOX_LOOPBACK_SKIP);
+    await withStartedGame(browser, async (host, guest) => {
+      await drawButton(host).click();
+      await expect(offerBubble(guest)).toBeVisible({ timeout: 10_000 });
+
+      // Recipient declines via the sidebar button → ⚔️ on the refuser's king,
+      // both bubbles now showing on both ends.
+      await drawButton(guest).click();
+      await guest.getByRole("button", { name: "No" }).click();
+      await expect(rejectBubble(guest)).toBeVisible({ timeout: 10_000 });
+      await expect(rejectBubble(host)).toBeVisible({ timeout: 10_000 });
+      await expect(offerBubble(host)).toBeVisible();
+      await expect(offerBubble(guest)).toBeVisible();
+
+      // The next move clears both 🤝 and ⚔️ everywhere.
+      await move(host, "e2", "e4");
+      await expect(guest.locator("[data-square='e4'] img[alt='w p']")).toBeVisible({ timeout: 10_000 });
+      await expect(offerBubble(host)).toHaveCount(0, { timeout: 10_000 });
+      await expect(rejectBubble(host)).toHaveCount(0);
+      await expect(offerBubble(guest)).toHaveCount(0, { timeout: 10_000 });
+      await expect(rejectBubble(guest)).toHaveCount(0);
+    });
+  });
+
+  test("the offering player can cancel their own offer", async ({ browser, browserName }) => {
+    test.skip(browserName === "firefox", FIREFOX_LOOPBACK_SKIP);
+    await withStartedGame(browser, async (host, guest) => {
+      await drawButton(host).click();
+      await expect(offerBubble(host)).toBeVisible({ timeout: 10_000 });
+      await expect(offerBubble(guest)).toBeVisible({ timeout: 10_000 });
+
+      // Re-opening as the offerer shows the waiting state with a Cancel action.
+      await drawButton(host).click();
+      const cancel = host.getByRole("button", { name: "Cancel offer" });
+      await expect(cancel).toBeVisible();
+      await cancel.click();
+
+      await expect(offerBubble(host)).toHaveCount(0, { timeout: 10_000 });
+      await expect(offerBubble(guest)).toHaveCount(0, { timeout: 10_000 });
+    });
+  });
+
+  // ── Time control ────────────────────────────────────────────────────────
+
+  test("default time control follows the last Selena difficulty", async ({ page }) => {
+    const cases: [string, string][] = [
+      ["intermediate", "600"], // 10 min
+      ["advanced", "300"], //     5 min
+      ["expert", "180"], //       3 min
+    ];
+    for (const [diff, sec] of cases) {
+      await page.goto("/");
+      await page.evaluate((d) => {
+        localStorage.clear();
+        localStorage.setItem("chess_coach_settings_state", JSON.stringify({ difficulty: d }));
+      }, diff);
+      await page.goto("lan");
+      await dismissTailscaleChecklist(page);
+      await expect(page.getByTestId("time-control")).toHaveValue(sec);
+    }
+  });
+
+  test("the time control is shown when joining a room", async ({ browser }) => {
+    // No live handshake needed — the joiner reads the time control straight from
+    // the invite link, so this runs on every browser (incl. Firefox).
+    const hostCtx = await browser.newContext();
+    const guestCtx = await browser.newContext();
+    const host = await hostCtx.newPage();
+    const guest = await guestCtx.newPage();
+    try {
+      await openLanViaMenu(host, "Alice"); // cleared storage → intermediate → 10 min
+      await host.getByRole("button", { name: "Create room", exact: true }).click();
+      const invite = await readLink(host, "invite-link");
+
+      await guest.goto(invite);
+      await dismissTailscaleChecklist(guest);
+      const banner = guest.getByTestId("join-time-control");
+      await expect(banner).toContainText("Rapid Chess");
+      await expect(banner).toContainText("10 min");
+    } finally {
+      await hostCtx.close();
+      await guestCtx.close();
+    }
+  });
+
+  test("a player loses when their clock runs out", async ({ browser, browserName }) => {
+    test.skip(browserName === "firefox", FIREFOX_LOOPBACK_SKIP);
+    const hostCtx = await browser.newContext();
+    const guestCtx = await browser.newContext();
+    const host = await hostCtx.newPage();
+    const guest = await guestCtx.newPage();
+    try {
+      // Host on a 3-second clock (deep-link override) so White flags quickly.
+      await host.goto("/");
+      await host.evaluate(() => localStorage.clear());
+      await host.goto("lan?clock=3");
+      await dismissTailscaleChecklist(host);
+      await host.getByPlaceholder("Your name").fill("Alice");
+      await host.getByRole("button", { name: "Create room", exact: true }).click();
+      const invite = await readLink(host, "invite-link");
+
+      await guest.goto(invite);
+      await dismissTailscaleChecklist(guest);
+      await guest.getByPlaceholder("Your name").fill("Bob");
+      await guest.getByRole("button", { name: "Join game" }).click();
+      const answer = await readLink(guest, "answer-link");
+      await host.getByPlaceholder("Paste their reply here").fill(answer);
+      await host.getByRole("button", { name: "Admit", exact: true }).click();
+      await expect(host.getByText(/2\/2 players/)).toBeVisible({ timeout: 25_000 });
+
+      await host.getByRole("button", { name: "Take White" }).click();
+      await guest.getByRole("button", { name: "Take Black" }).click();
+      await host.getByRole("button", { name: "Start Game" }).click();
+      await guest.getByRole("button", { name: "Start Game" }).click();
+      await expect(host.locator("[data-square='e2']")).toBeVisible({ timeout: 15_000 });
+
+      // White (host) never moves; its 3s clock drains → Black wins on time.
+      await expect(host.getByText("White ran out of time.")).toBeVisible({ timeout: 15_000 });
+      await expect(guest.getByText("White ran out of time.")).toBeVisible({ timeout: 15_000 });
     } finally {
       await hostCtx.close();
       await guestCtx.close();

@@ -11,6 +11,7 @@ import {
 } from "~/components/atoms/DebugControls";
 import { LightSpeedOverlay } from "~/components/atoms/LightSpeedOverlay";
 import { Modal } from "~/components/atoms/Modal";
+import { BoardControls } from "~/components/features/BoardControls";
 import { ChessBoard } from "~/components/features/ChessBoard";
 import { CoachPanel } from "~/components/features/CoachPanel.tsx";
 import { MobileDrawer } from "~/components/features/MobileDrawer";
@@ -132,11 +133,15 @@ export const CoachScreen: Component = () => {
       <LightSpeedOverlay active={debugLightSpeedOverlay() || isTravelling()} />
 
       <Screen.Header>
-        <CoachAvatar />
+        {/* Desktop shows the avatar here; on mobile it moves into the bar. */}
+        <div class="desktop-only">
+          <CoachAvatar />
+        </div>
       </Screen.Header>
 
       <Screen.BoardArea>
         <Screen.BoardColumn>
+          <BoardControls center={<CoachAvatar compact />} />
           <OpponentCaptures />
           <ChessBoard />
           <PlayerCaptures />

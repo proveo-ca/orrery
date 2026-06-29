@@ -10,13 +10,21 @@
   z-index: 1;
 }
 
+/* Bar-sized variant for the MobileSidebar centre slot — % children scale with
+   it, so the whole cat shrinks proportionally and drops the top margin. */
+.cat.compact {
+  height: 5.8rem;
+  width: 6.56rem;
+  margin: 0;
+}
+
 .ear {
   position: absolute;
   top: -30%;
   height: 60%;
   width: 25%;
   background: var(--avatar-fur);
-  border: 2px solid var(--avatar-outline);
+  border: 3px solid var(--avatar-outline);
   transition:
     transform 0.3s ease,
     top 0.3s ease; /* Smooth ear movements */

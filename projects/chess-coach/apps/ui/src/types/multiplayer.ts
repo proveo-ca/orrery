@@ -36,6 +36,13 @@ export type GameOverInfo = {
   message: string;
 };
 
+export type DrawState = {
+  by: Color;
+  status: "pending" | "declined" | "agreed";
+};
+
+export type Clocks = { w: number; b: number };
+
 /**
  * Host-authoritative room state broadcast to every peer. Guests/observers
  * mirror this verbatim; they never mutate room membership locally.
@@ -45,6 +52,9 @@ export type RoomSnapshot = {
   observers: MemberInfo[];
   started: boolean;
   gameOver: GameOverInfo | null;
+  draw: DrawState | null;
+  timeControl: number | null;
+  clocks: Clocks | null;
   /** Current authoritative FEN, so a peer can sync the board on join/start. */
   fen: string;
 };
@@ -60,9 +70,13 @@ export type PeerMessage =
   | { t: "swapColor" }
   | { t: "roomState"; snapshot: RoomSnapshot }
   | { t: "move"; san: string }
-  | { t: "moveApplied"; san: string; fen: string; gameOver: GameOverInfo | null }
+  | { t: "moveApplied"; san: string; fen: string; gameOver: GameOverInfo | null; clocks?: Clocks | null }
   | { t: "startRequest"; ready: boolean }
   | { t: "resign" }
+  | { t: "drawOffer" }
+  | { t: "drawAccept" }
+  | { t: "drawDecline" }
+  | { t: "drawCancel" }
   | { t: "roomFull" }
   | { t: "bye"; peerId: string };
 
@@ -98,7 +112,9 @@ export interface PeerTransport {
 // ── Signaling payloads (encoded by services/signaling.ts) ─────────────────
 
 export type SignalKind = "o" | "a";
-export type SignalPayload = { connId: string; sdp: string };
+/** `tc` (offer only) carries the room's time control (seconds) so a joiner can
+ *  see it before connecting. */
+export type SignalPayload = { connId: string; sdp: string; tc?: number };
 
 // ── LAN onboarding (services/platform.ts, services/tailscale.ts) ──────────
 

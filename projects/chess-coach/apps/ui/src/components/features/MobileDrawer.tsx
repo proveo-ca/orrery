@@ -15,9 +15,9 @@ import { DualNavButton } from "~/components/primitives/DualNavButton";
 import { IconButton } from "~/components/primitives/IconButton";
 import {
   BookIcon,
-  CogIcon,
   FlagIcon,
   FlipBoardIcon,
+  HamburgerIcon,
   HintIcon,
   PlusCircleIcon,
   SearchIcon,
@@ -34,6 +34,12 @@ import { isTravelling, travelFenHistory, travelIndex } from "~/store/travelStore
 const isRoute = (pathname: string, route: string) =>
   pathname.endsWith(route) || pathname.includes(route + "/");
 
+/**
+ * Mobile hamburger (top-left) that opens the full menu — every desktop-Sidebar
+ * option (history nav, hint, resign, new game, flip, credits, settings) plus
+ * the screen routes. The quick actions live in the {@link MobileSidebar} bar;
+ * this is the complete set. Hidden on desktop, where the Sidebar shows.
+ */
 export const MobileDrawer: Component = () => {
   const location = useLocation();
   const [menuOpen, setMenuOpen] = createSignal(false);
@@ -53,89 +59,61 @@ export const MobileDrawer: Component = () => {
     handleResign: baseHandleResign,
   } = controls;
 
+  const close = () => setMenuOpen(false);
   const handleHint = () => {
     dismissHintSparkle();
     void baseHandleHint();
+    close();
   };
-
   const handleResign = () => {
-    setMenuOpen(false);
+    close();
     setShowResignConfirm(true);
   };
-
   const confirmResign = () => {
     setShowResignConfirm(false);
     baseHandleResign();
   };
-
   const inTimelineMode = () => isTravelling() || isReplaying() || reviewAnalysisMode();
 
   return (
-    <div class={styles["mobile-only"]}>
-      <div class={styles["top-left-nav"]}>
-        <Show when={capabilities().hint}>
-          <IconButton
-            label="Hint"
-            labelPosition="bottom"
-            class={hintSparkleClass()}
-            onClick={handleHint}
-            disabled={pendingHint() || isReplaying() || isTravelling()}
-            aria-label="Get a hint"
-          >
-            <HintIcon />
-          </IconButton>
-        </Show>
-        <Show when={!capabilities().aiOpponent && !capabilities().readOnly}>
-          <IconButton
-            label="New Game"
-            labelPosition="bottom"
-            onClick={() => resetGame()}
-            aria-label="New game"
-          >
-            <PlusCircleIcon />
-          </IconButton>
-        </Show>
-      </div>
+    <>
+      <button class={styles.hamburger} onClick={() => setMenuOpen(true)} aria-label="Open menu">
+        <HamburgerIcon />
+      </button>
 
-      <div class={styles["top-right-nav"]}>
-        <Show when={capabilities().historyNav}>
-          <DualNavButton
-            onBack={handleBack}
-            onForward={handleForward}
-            backDisabled={atStart() && !isTravelling()}
-            forwardDisabled={atLatest()}
-            inverted={inTimelineMode()}
-            label={
-              isTravelling()
-                ? `Timeline ${travelIndex()}/${travelFenHistory().length - 1}`
-                : inTimelineMode()
-                  ? "History"
-                  : undefined
-            }
-            showBackToLive={inTimelineMode()}
-            onBackToLive={handleBackToLive}
-          />
-        </Show>
-
-        <Show when={!inTimelineMode()}>
-          <IconButton
-            label="Settings"
-            labelPosition="bottom"
-            onClick={() => setMenuOpen(true)}
-            aria-label="Open menu"
-          >
-            <CogIcon />
-          </IconButton>
-        </Show>
-      </div>
-
-      <Modal open={menuOpen()} onClose={() => setMenuOpen(false)} title="Menu" position="fixed">
+      <Modal open={menuOpen()} onClose={close} title="Menu" position="fixed">
         <div class={styles["menu-modal"]}>
-          <SettingsPanel onDismiss={() => setMenuOpen(false)} />
-
-          <Divider />
+          <Show when={capabilities().historyNav}>
+            <DualNavButton
+              onBack={handleBack}
+              onForward={handleForward}
+              backDisabled={atStart() && !isTravelling()}
+              forwardDisabled={atLatest()}
+              inverted={inTimelineMode()}
+              label={
+                isTravelling()
+                  ? `Timeline ${travelIndex()}/${travelFenHistory().length - 1}`
+                  : inTimelineMode()
+                    ? "History"
+                    : undefined
+              }
+              showBackToLive={inTimelineMode()}
+              onBackToLive={handleBackToLive}
+            />
+          </Show>
 
           <div class={styles["menu-modal__icons"]}>
+            <Show when={capabilities().hint}>
+              <IconButton
+                label="Hint"
+                class={hintSparkleClass()}
+                onClick={handleHint}
+                disabled={pendingHint() || isReplaying() || isTravelling()}
+                aria-label="Get a hint"
+              >
+                <HintIcon />
+              </IconButton>
+            </Show>
             <Show when={capabilities().aiOpponent}>
               <IconButton
                 label="Resign"
@@ -146,12 +124,24 @@ export const MobileDrawer: Component = () => {
                 <FlagIcon />
               </IconButton>
             </Show>
+            <Show when={!capabilities().aiOpponent && !capabilities().readOnly}>
+              <IconButton
+                label="New Game"
+                onClick={() => {
+                  resetGame();
+                  close();
+                }}
+                aria-label="New game"
+              >
+                <PlusCircleIcon />
+              </IconButton>
+            </Show>
             <Show when={capabilities().flipBoard}>
               <IconButton
                 label="Flip"
                 onClick={() => {
                   setActivePlayerColor(activePlayerColor() === "w" ? "b" : "w");
-                  setMenuOpen(false);
+                  close();
                 }}
                 aria-label="Flip board"
               >
@@ -161,7 +151,7 @@ export const MobileDrawer: Component = () => {
             <IconButton
               label="Credits"
               onClick={() => {
-                setMenuOpen(false);
+                close();
                 setShowCredits(true);
               }}
               aria-label="Credits"
@@ -171,6 +161,8 @@ export const MobileDrawer: Component = () => {
           </div>
 
           <Divider />
+          <SettingsPanel onDismiss={close} />
+          <Divider />
 
           <div class={styles["menu-modal__icons"]}>
             <IconButton
@@ -178,7 +170,7 @@ export const MobileDrawer: Component = () => {
               href="/selena"
               primary={isRoute(location.pathname, "/selena")}
               disabled={isRoute(location.pathname, "/selena")}
-              onClick={() => setMenuOpen(false)}
+              onClick={close}
               aria-label="Coach"
             >
               <CoachEmotionIcon emotion="happy" />
@@ -188,7 +180,7 @@ export const MobileDrawer: Component = () => {
               href="/analysis"
               primary={isRoute(location.pathname, "/analysis")}
               disabled={isRoute(location.pathname, "/analysis")}
-              onClick={() => setMenuOpen(false)}
+              onClick={close}
               aria-label="Analysis"
             >
               <SearchIcon />
@@ -198,7 +190,7 @@ export const MobileDrawer: Component = () => {
               href="/review"
               primary={isRoute(location.pathname, "/review")}
               disabled={isRoute(location.pathname, "/review")}
-              onClick={() => setMenuOpen(false)}
+              onClick={close}
               aria-label="Review"
             >
               <BookIcon />
@@ -223,6 +215,6 @@ export const MobileDrawer: Component = () => {
       />
 
       <Credits open={showCredits()} onClose={() => setShowCredits(false)} />
-    </div>
+    </>
   );
 };

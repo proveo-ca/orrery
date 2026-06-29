@@ -84,7 +84,10 @@ function rebuildSdp(m: MiniSdp): string {
 
 export function encodeSignal(payload: SignalPayload): string {
   const mini = minifySdp(payload.sdp);
-  const wire = mini ? { i: payload.connId, ...mini } : { i: payload.connId, r: payload.sdp };
+  const tc = payload.tc != null ? { t: payload.tc } : {};
+  const wire = mini
+    ? { i: payload.connId, ...tc, ...mini }
+    : { i: payload.connId, ...tc, r: payload.sdp };
   // lz-string's URI-safe alphabet still emits '+', which some transports turn
   // into a space (corrupting a copy-pasted link). Map it to '.' — unreserved in
   // URLs and outside lz-string's alphabet, so the reverse is unambiguous.
@@ -112,7 +115,7 @@ export function decodeSignal(encoded: string): SignalPayload {
   } else {
     throw new Error("Invalid signaling payload");
   }
-  return { connId: o.i, sdp };
+  return { connId: o.i, sdp, tc: typeof o.t === "number" ? o.t : undefined };
 }
 
 /** Build a shareable link carrying an offer (`o`) or answer (`a`). */
