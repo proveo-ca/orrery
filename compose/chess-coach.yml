@@ -2,15 +2,21 @@ services:
   llm:
     image: ollama/ollama:latest
     container_name: gemma_llm
-    ports:
-      - "11434:11434"
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
+    # The app reaches Ollama over the compose network (gemma_llm:11434), so no
+    # host port publish is needed — and omitting it avoids clashing with a host
+    # Ollama already bound to :11434. Uncomment to reach it from the host:
+    # ports:
+    #   - "11434:11434"
+    #
+    # GPU is optional — the commentary model is tiny (~291MB) and runs on CPU.
+    # On an NVIDIA host, uncomment to accelerate:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
     environment:
       - LLM_COMMENTARY_MODEL=hf.co/NAKSTStudio/chess-gemma-commentary:Q8_0
     volumes:
@@ -30,8 +36,10 @@ services:
       context: ../projects/chess-coach
       dockerfile: Dockerfile
     container_name: chess_coach
+    # Host 8088 → container 8080. Off 8080 so it can't clash with the e2e
+    # desktop server (apps/server) or anything else already on host :8080.
     ports:
-      - "8080:8080"
+      - "8088:8080"
     environment:
       - OLLAMA_BASE_URL=http://gemma_llm:11434/v1
       - LLM_COMMENTARY_MODEL=hf.co/NAKSTStudio/chess-gemma-commentary:Q8_0

@@ -60,10 +60,12 @@ RUN mkdir -p /app/syzygy && \
 
 ENV SYZYGY_PATH="/app/syzygy"
 
-# Bun server (in-process orchestrator) + shared engine-core. Preserve the
-# ../../packages/engine-core relative layout that server/tsconfig.json paths expect.
-COPY apps/server/package.json apps/server/tsconfig.json ./server/
-COPY apps/server/src ./server/src
+# Bun server (in-process orchestrator) + shared engine-core. Mirror the repo
+# layout (apps/server + packages siblings) so the server/tsconfig.json alias
+# "@chess-coach/engine-core": ["../../packages/engine-core/src/index.ts"]
+# resolves: ../../packages from /app/apps/server → /app/packages.
+COPY apps/server/package.json apps/server/tsconfig.json ./apps/server/
+COPY apps/server/src ./apps/server/src
 COPY packages ./packages
 
 # Compiled UI → /app/static/chess (served by the Bun server under /chess/)
@@ -72,4 +74,4 @@ COPY --from=ui-builder /work/apps/ui/dist ./static
 EXPOSE 8080
 
 # Run the Bun server (serves the UI and orchestrates native Stockfish + Maia + Ollama)
-CMD ["bun", "run", "/app/server/src/main.ts"]
+CMD ["bun", "run", "/app/apps/server/src/main.ts"]
