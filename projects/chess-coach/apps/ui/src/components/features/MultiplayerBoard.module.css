@@ -1,5 +1,5 @@
-/* Board layout for LAN multiplayer. Mirrors the Coach board's layout but
-   without the eval-bar row / game-over overlay (the LAN screen has neither). */
+/* Board layout for LAN multiplayer. Mirrors the Coach board's layout; the
+   eval bar appears only for spectators (game-over overlay is on the screen). */
 .board-layout-wrapper {
   position: relative;
   z-index: 1;
@@ -9,6 +9,22 @@
   justify-content: center;
   align-items: stretch;
   width: 100%;
+}
+
+/* Spectator eval bar uses EvalBar's default (left:-2rem) on desktop, where the
+   gutter is wide. On a phone there's no room there, so tuck the slim bar into
+   the left gutter flush against the board and compact its value pill. The
+   compound selector outranks EvalBar's own `.eval-bar` rule. */
+@media (max-width: 719px) {
+  .board-layout-wrapper .eval-bar {
+    left: -0.75rem;
+    width: 0.9rem;
+  }
+
+  /* The numeric readout can't fit the slim phone bar; the fill conveys it. */
+  .board-layout-wrapper .eval-bar > :last-child {
+    display: none;
+  }
 }
 
 .chessboard-container {

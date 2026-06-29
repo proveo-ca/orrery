@@ -15,11 +15,14 @@ interface DualNavButtonProps {
   label?: string;
   showBackToLive?: boolean;
   onBackToLive?: () => void;
+  /** Lay arrows + "Back to Live" out in one row (same height) instead of a
+   *  stack — keeps the mobile control bar from growing when replay starts. */
+  inline?: boolean;
 }
 
 export const DualNavButton: Component<DualNavButtonProps> = (props) => {
   return (
-    <div class={styles.wrapper}>
+    <div class={clsx(styles.wrapper, props.inline && styles.inline)}>
       <Show when={props.label}>
         <span class={styles.label}>{props.label}</span>
       </Show>

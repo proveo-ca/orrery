@@ -90,7 +90,11 @@ package "Screens  [src/screens/]" {
     history nav: DualNavButton bound straight to gameStore
       (engine-free); MultiplayerBoard replays past plies and locks
       input while replaying. HistoryOverlay vignette + Screen
-      highlight while reviewing. NO eval bar, ever.
+      highlight while reviewing.
+    mobile review chrome: a *player* reviewing collapses the bar + header
+      to just their own clock (top-left) + history nav (top-right); a
+      *spectator* keeps both clocks + a live EvalBar (screen-computed) at
+      all times — the only engine use here, player boards stay engine-free.
     end screen: shared GameOverBanner (Resignation / Checkmate /
       Stalemate / Draw / Opponent Left), hidden during replay
       → Review Game · Back to Menu
@@ -236,8 +240,10 @@ package "Components  [src/components/]" {
       LAN board (coach/engine-free twin of ChessBoard).
       8×8 grid · drag+drop · touch-drag · piece animation
       last-move highlight · PromotionModal · flips on color.
-      NO EvalBar / arrows / advice. (The GameOverBanner is
-      rendered by LanScreen over the board, not here.)
+      NO arrows / advice. Optional spectator EvalBar (showEval +
+      evalScore props, score computed by LanScreen) — players
+      stay engine-free. (GameOverBanner is rendered by LanScreen
+      over the board, not here.)
       composes ChessSquare + DrawBubbles (draw 🤝/⚔️ overlay);
       drives useMultiplayerBoard.
     end note
@@ -278,16 +284,23 @@ package "Components  [src/components/]" {
     note right of MobileSidebar
       mobile-only horizontal control bar above the board, shared by
       every board screen. Compound: <Main> (centred per-screen slot)
-      + up to 4 <Item> quick actions; CSS fans the items out around
-      the centre (nth-of-type, no JS) and drops any 5th. Centre is
-      per-screen: CoachAvatar (Coach), EngineDepth (Analysis/Review),
-      blank (LAN). No settings/credits/routes (those → MobileDrawer).
+      + up to 4 <Item> quick actions; CSS (nth-of-type, no JS) stacks
+      the single-button items on the LEFT of centre and drops any 5th.
+      The nav <Item> (double-wide history arrows) owns the RIGHT alone —
+      balancing the left buttons so <Main> stays truly centred, whatever
+      is gated out. Centre is per-screen: CoachAvatar (Coach), EngineDepth
+      (Analysis/Review), ConnIndicator (LAN). No settings/credits/routes.
+      timeline prop (replay/travel): the bar collapses (board rises),
+      <Main> + non-nav items hide, and the lone nav <Item nav> floats
+      fixed to the top-right corner (mirrors the top-left hamburger).
     end note
     rectangle "BoardControls" as BoardControls
     note right of BoardControls
       the MobileSidebar quick actions for the engine-backed boards
       (Coach/Analysis/Review): hint · nav · flip · new game,
-      capability-gated. Renders bare MobileSidebar.Items.
+      capability-gated. Renders bare MobileSidebar.Items. Passes
+      timeline=inTimelineMode() and FLIP-animates the nav <Item>
+      between its in-bar dock and the top-right corner.
     end note
     rectangle "MoveList" as MoveList
     note right of MoveList

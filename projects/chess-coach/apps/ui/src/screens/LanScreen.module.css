@@ -142,6 +142,33 @@
   gap: 0.4rem;
 }
 
+@media (max-width: 719px) {
+  /* Reviewing past plies: pin the viewer's own clock to the top-left corner and
+     keep it always visible — it keeps ticking, so the player must see it —
+     while the names, swatches, "vs", and opponent clock hide and the board
+     rises. The history nav floats to the top-right (MobileSidebar timeline
+     mode), so the two never collide. */
+  .gameHeader.replaying {
+    position: fixed;
+    top: 0.75rem;
+    left: 0.75rem;
+    z-index: 1000;
+    gap: 0;
+    min-height: 0;
+  }
+
+  /* Drop the "vs" separator and the opponent's whole side (no data-mine). */
+  .gameHeader.replaying > :not(.player),
+  .gameHeader.replaying > .player:not([data-mine]) {
+    display: none;
+  }
+
+  /* On the viewer's own side keep only the clock (the [data-testid] span). */
+  .gameHeader.replaying > .player[data-mine] > :not([data-testid]) {
+    display: none;
+  }
+}
+
 /* Time-control banner on the join screen (above the seat/spectate choice). */
 .timeBanner {
   font-weight: 600;

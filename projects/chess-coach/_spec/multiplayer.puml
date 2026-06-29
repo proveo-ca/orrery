@@ -108,7 +108,16 @@ note bottom of HostRoom
   label). Host-authoritative: only the side-to-move's clock drains;
   `clocks` (remaining ms per colour) ride RoomState + MoveApplied. On
   flag-fall the host ends the game → the opponent wins (gameOver). The
-  Clock atom renders + ticks each side locally between updates.
+  Clock atom renders + ticks each side locally between updates. While a
+  *player* reviews history on mobile the matchup header collapses to just
+  their own clock pinned top-left (it keeps ticking, so it must stay
+  visible); names + opponent clock hide and the history nav floats
+  top-right (MobileSidebar timeline mode). *Spectators* never collapse:
+  they keep both clocks plus a live engine EvalBar (the screen evaluates
+  the viewed FEN through the pool — the only engine use on this screen,
+  player boards stay engine-free) at all times. Their control bar stays
+  single-row in review — arrows + Back to Live inline at equal height
+  (DualNavButton `inline`) — so the board never shifts vertically.
 end note
 
 note top of HostPkg

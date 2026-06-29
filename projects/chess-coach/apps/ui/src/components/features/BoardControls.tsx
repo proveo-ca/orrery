@@ -7,6 +7,7 @@ import { MobileSidebar } from "~/components/features/MobileSidebar";
 import { DualNavButton } from "~/components/primitives/DualNavButton";
 import { IconButton } from "~/components/primitives/IconButton";
 import { FlagIcon, FlipBoardIcon, HintIcon, PlusCircleIcon } from "~/components/primitives/icons";
+import { useFlip } from "~/hooks/useFlip";
 import { useGameControls } from "~/hooks/useGameControls";
 import { useHintSparkle } from "~/hooks/useHintSparkle";
 import { capabilities } from "~/store/capabilitiesStore";
@@ -22,7 +23,9 @@ import { isTravelling, travelFenHistory, travelIndex } from "~/store/travelStore
  * Resign's confirm dialog renders as a sibling of the bar (not an Item), so the
  * bar's fan-out / max-4 rules don't touch it.
  */
-export const BoardControls: Component<{ center?: JSX.Element }> = (props) => {
+export const BoardControls: Component<{ center?: JSX.Element; centerOverflow?: boolean }> = (
+  props,
+) => {
   const { hintSparkleClass, dismissHintSparkle } = useHintSparkle();
   const {
     atStart,
@@ -39,9 +42,14 @@ export const BoardControls: Component<{ center?: JSX.Element }> = (props) => {
   const [showResignConfirm, setShowResignConfirm] = createSignal(false);
   const inTimelineMode = () => isTravelling() || isReplaying() || reviewAnalysisMode();
 
+  // Slide the nav between its in-bar dock and the top-right corner as the bar
+  // collapses / re-expands on entering / leaving timeline mode.
+  let navEl: HTMLDivElement | undefined;
+  useFlip(() => navEl, inTimelineMode);
+
   return (
     <>
-      <MobileSidebar>
+      <MobileSidebar timeline={inTimelineMode()} centerOverflow={props.centerOverflow}>
         <MobileSidebar.Main>{props.center}</MobileSidebar.Main>
 
         <Show when={capabilities().hint}>
@@ -61,7 +69,7 @@ export const BoardControls: Component<{ center?: JSX.Element }> = (props) => {
         </Show>
 
         <Show when={capabilities().historyNav}>
-          <MobileSidebar.Item>
+          <MobileSidebar.Item nav ref={(el) => (navEl = el)}>
             <DualNavButton
               onBack={handleBack}
               onForward={handleForward}

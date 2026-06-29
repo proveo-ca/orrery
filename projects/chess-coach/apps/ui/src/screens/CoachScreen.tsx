@@ -141,7 +141,7 @@ export const CoachScreen: Component = () => {
 
       <Screen.BoardArea>
         <Screen.BoardColumn>
-          <BoardControls center={<CoachAvatar compact />} />
+          <BoardControls center={<CoachAvatar compact />} centerOverflow />
           <OpponentCaptures />
           <ChessBoard />
           <PlayerCaptures />

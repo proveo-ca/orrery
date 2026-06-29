@@ -21,6 +21,8 @@ import { QrCode } from "~/components/primitives/QrCode";
 import { Screen } from "~/components/primitives/Screen";
 import { Select } from "~/components/primitives/Select";
 import { SplashScreen } from "~/components/primitives/SplashScreen";
+import { enginePool } from "~/engine/EnginePool";
+import { useFlip } from "~/hooks/useFlip";
 import { useLanGameRecorder } from "~/hooks/useLanGameRecorder";
 import { useLivePreAnalysis } from "~/hooks/useLivePreAnalysis";
 import {
@@ -39,6 +41,7 @@ import {
 } from "~/store/capabilitiesStore";
 import { getExpectedReviewId, hasRecordedReview } from "~/store/gameHistoryStore";
 import {
+  currentFen,
   currentIndex,
   fenHistory,
   game,
@@ -70,6 +73,7 @@ import {
   timeControl,
 } from "~/store/roomStore";
 import { difficulty, playerName } from "~/store/settingsStore";
+import type { PositionEval } from "~/types/analysis";
 import type { Color, ConnStatus, PeerTransport, Seat, SignalPayload } from "~/types/multiplayer";
 import type { Difficulty } from "~/types/settings";
 
@@ -295,8 +299,48 @@ export const LanScreen: Component = () => {
   // replaying; relayed moves snap back to live (see useMultiplayerGame).
   const latestPly = () => fenHistory().length - 1;
   const replaying = () => currentIndex() < latestPly();
-  const historyNav = () => (
+
+  // Only players get the minimal review chrome (collapsed bar + own clock).
+  // Spectators keep the full matchup (both clocks) and eval bar at all times.
+  const isObserver = () => seat() === "observer";
+  const playerReplaying = () => replaying() && !isObserver();
+
+  // While a player replays, the mobile bar collapses and this nav slides to the
+  // top-right corner (see MobileSidebar timeline mode); FLIP the move.
+  let navEl: HTMLDivElement | undefined;
+  useFlip(() => navEl, playerReplaying);
+
+  // Spectator-only live eval of the viewed position, streamed depth-by-depth
+  // into the EvalBar. LAN is engine-free for players, so only observers ever
+  // pull Stockfish here; aborts + re-runs as the viewed FEN changes.
+  const [evalScore, setEvalScore] = createSignal<PositionEval | null>(null);
+  createEffect(() => {
+    if (!isObserver()) return;
+    const fen = currentFen();
+    const controller = new AbortController();
+    onCleanup(() => controller.abort());
+    enginePool
+      .evaluate({
+        fen,
+        depth: 18,
+        priority: "interactive",
+        signal: controller.signal,
+        onInfo: (info) => {
+          if (info.score && !controller.signal.aborted) setEvalScore(info.score);
+        },
+      })
+      .then((r) => {
+        if (r.score && !controller.signal.aborted) setEvalScore(r.score);
+      })
+      .catch(() => {});
+  });
+
+  // `inline` keeps the spectator control bar single-row (arrows + Back to Live
+  // side by side) so the board never shifts when replay starts; the desktop
+  // rail + the player's floated corner nav stay stacked.
+  const historyNav = (inline = false) => (
     <DualNavButton
+      inline={inline}
       onBack={goBack}
       onForward={goForward}
       backDisabled={currentIndex() === 0}
@@ -495,16 +539,24 @@ export const LanScreen: Component = () => {
         <HistoryOverlay active={replaying()} />
 
         <Screen.Header>
-          <div class={styles.gameHeader} data-testid="matchup">
-            <span class={styles.player}>
-              <span class={`${styles.swatch} ${styles["swatch--w"]}`} />{" "}
-              {playerByColor("w")?.identity.name ?? "White"}
+          {/* While a *player* replays on mobile this collapses to just their own
+              clock, pinned top-left (data-mine) — it keeps ticking, so it must
+              stay visible — while names + opponent clock hide. Spectators keep
+              the full matchup (both clocks) at all times. See the CSS. */}
+          <div
+            class={styles.gameHeader}
+            classList={{ [styles.replaying]: playerReplaying() }}
+            data-testid="matchup"
+          >
+            <span class={styles.player} data-mine={myColor() === "w" ? "" : undefined}>
+              <span class={`${styles.swatch} ${styles["swatch--w"]}`} />
+              <span>{playerByColor("w")?.identity.name ?? "White"}</span>
               <Clock color="w" />
             </span>
             <span>vs</span>
-            <span class={styles.player}>
+            <span class={styles.player} data-mine={myColor() === "b" ? "" : undefined}>
               <Clock color="b" />
-              {playerByColor("b")?.identity.name ?? "Black"}{" "}
+              <span>{playerByColor("b")?.identity.name ?? "Black"}</span>
               <span class={`${styles.swatch} ${styles["swatch--b"]}`} />
             </span>
           </div>
@@ -512,13 +564,15 @@ export const LanScreen: Component = () => {
 
         <Screen.BoardArea>
           <Screen.BoardColumn>
-            {/* Mobile control bar above the board — centre blank for LAN. */}
-            <MobileSidebar>
-              <MobileSidebar.Main />
-              <MobileSidebar.Item>
+            {/* Mobile control bar above the board. Connectivity is the centred
+                Main; Draw sits inner-left (the hint's spot on Coach), Resign
+                outer-left (Coach's resign spot), and the history nav is pinned
+                right. While a player replays it collapses to just the nav
+                (top-right); spectators keep the full bar. */}
+            <MobileSidebar timeline={playerReplaying()}>
+              <MobileSidebar.Main>
                 <ConnIndicator />
-              </MobileSidebar.Item>
-              <MobileSidebar.Item>{historyNav()}</MobileSidebar.Item>
+              </MobileSidebar.Main>
               <Show when={!gameOver() && seat() === "player"}>
                 <MobileSidebar.Item>
                   <IconButton onClick={onDrawAction} aria-label="Draw">
@@ -527,6 +581,11 @@ export const LanScreen: Component = () => {
                     </span>
                   </IconButton>
                 </MobileSidebar.Item>
+              </Show>
+              <MobileSidebar.Item nav ref={(el) => (navEl = el)}>
+                {historyNav(isObserver())}
+              </MobileSidebar.Item>
+              <Show when={!gameOver() && seat() === "player"}>
                 <MobileSidebar.Item>
                   <IconButton onClick={() => mp.resign()} aria-label="Resign">
                     <FlagIcon />
@@ -538,7 +597,11 @@ export const LanScreen: Component = () => {
             {/* Relative wrapper so the game-over banner overlays just the board,
                 mirroring the Coach end screen. */}
             <div class={styles.boardWrap}>
-              <MultiplayerBoard onDrawBubbleClick={onDrawAction} />
+              <MultiplayerBoard
+                onDrawBubbleClick={onDrawAction}
+                showEval={isObserver()}
+                evalScore={evalScore()}
+              />
               <GameOverBanner
                 open={!!gameOver() && !replaying()}
                 heading={gameOverHeading()}
