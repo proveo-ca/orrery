@@ -3,8 +3,10 @@ import { Show, createEffect, createMemo, createSignal, on, onCleanup } from "sol
 import type { Component } from "solid-js";
 
 import { OpponentCaptures, PlayerCaptures } from "~/components/atoms/CapturedPieces";
+import { EngineDepth } from "~/components/atoms/EngineDepth";
 import { GameHistoryList } from "~/components/atoms/GameHistoryList";
 import { MatrixOverlay } from "~/components/atoms/MatrixOverlay";
+import { BoardControls } from "~/components/features/BoardControls";
 import { ChessBoard } from "~/components/features/ChessBoard";
 import { MobileDrawer } from "~/components/features/MobileDrawer";
 import { MoveList } from "~/components/features/MoveList";
@@ -242,6 +244,7 @@ export const ReviewScreen: Component = () => {
                     display: "flex",
                     "justify-content": "center",
                     gap: "0.75rem",
+                    padding: "0.6rem 0",
                   }}
                 >
                   <Button onClick={() => void share(g())}>Share</Button>
@@ -267,6 +270,7 @@ export const ReviewScreen: Component = () => {
 
               <Screen.BoardArea>
                 <Screen.BoardColumn>
+                  <BoardControls center={<EngineDepth />} />
                   <OpponentCaptures />
                   <ChessBoard />
                   <PlayerCaptures />

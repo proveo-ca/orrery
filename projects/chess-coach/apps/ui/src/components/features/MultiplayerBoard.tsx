@@ -4,11 +4,14 @@ import { For, Show, createSignal } from "solid-js";
 import type { Component } from "solid-js";
 
 import { ChessSquare } from "~/components/atoms/ChessSquare";
+import { DrawBubbles } from "~/components/features/DrawBubbles";
 import styles from "~/components/features/MultiplayerBoard.module.css";
+import { EvalBar } from "~/components/primitives/EvalBar";
 import { PromotionModal } from "~/components/primitives/PromotionModal";
 import { useMultiplayerBoard } from "~/hooks/useMultiplayerBoard";
 import { capabilities } from "~/store/capabilitiesStore";
 import { activePlayerColor, opponentPieceSet, playerPieceSet } from "~/store/settingsStore";
+import type { PositionEval } from "~/types/analysis";
 
 const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"];
 const RANKS = ["8", "7", "6", "5", "4", "3", "2", "1"];
@@ -23,11 +26,20 @@ const squareFromTouch = (touch: Touch): Square | null => {
 
 /**
  * Chessboard for LAN multiplayer — pure board interaction (select / move /
- * promote / drag, mouse + touch). No engine, eval bar, advice arrows, or coach
- * overlays: this screen is human-vs-human only. The Coach/Analysis/Review board
- * is the separate, engine-backed {@link ChessBoard}.
+ * promote / drag, mouse + touch). Engine-free for players; the only engine
+ * touch is the optional spectator {@link EvalBar} (`showEval`), whose score is
+ * computed by the screen so players never pull in Stockfish. The
+ * Coach/Analysis/Review board is the separate engine-backed {@link ChessBoard}.
  */
-export const MultiplayerBoard: Component = () => {
+interface MultiplayerBoardProps {
+  onDrawBubbleClick?: () => void;
+  /** Show the engine eval bar (spectators only — LAN is engine-free for players). */
+  showEval?: boolean;
+  /** Eval of the viewed position (side-to-move relative), fed to the EvalBar. */
+  evalScore?: PositionEval | null;
+}
+
+export const MultiplayerBoard: Component<MultiplayerBoardProps> = (props) => {
   const board = useMultiplayerBoard();
 
   const displayRanks = () => (activePlayerColor() === "w" ? RANKS : [...RANKS].reverse());
@@ -99,6 +111,14 @@ export const MultiplayerBoard: Component = () => {
 
   return (
     <div class={styles["board-layout-wrapper"]}>
+      <Show when={props.showEval}>
+        <EvalBar
+          class={styles["eval-bar"]}
+          score={props.evalScore}
+          isFlipped={activePlayerColor() === "b"}
+          turn={turn()}
+        />
+      </Show>
       <div
         class={styles["chessboard-container"]}
         onMouseEnter={board.handleBoardMouseEnter}
@@ -188,6 +208,8 @@ export const MultiplayerBoard: Component = () => {
               />
             )}
           </Show>
+
+          <DrawBubbles onOfferClick={props.onDrawBubbleClick} />
 
           <PromotionModal
             pending={board.pendingPromotion()}

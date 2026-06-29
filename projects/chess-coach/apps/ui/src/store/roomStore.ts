@@ -2,8 +2,10 @@
 import { createSignal } from "solid-js";
 
 import type {
+  Clocks,
   Color,
   ConnStatus,
+  DrawState,
   GameOverInfo,
   Identity,
   MemberInfo,
@@ -24,6 +26,10 @@ const [players, setPlayers] = createSignal<PlayerInfo[]>([]);
 const [observers, setObservers] = createSignal<MemberInfo[]>([]);
 const [started, setStarted] = createSignal(false);
 const [gameOver, setGameOver] = createSignal<GameOverInfo | null>(null);
+const [draw, setDraw] = createSignal<DrawState | null>(null);
+// Initial per-player seconds (null = no limit) + live remaining ms per colour.
+const [timeControl, setTimeControl] = createSignal<number | null>(null);
+const [clocks, setClocks] = createSignal<Clocks | null>(null);
 // The local player's most recent move, announced by the multiplayer board so
 // useMultiplayerGame can relay it to peers. Coach-free (no lastHumanMoveInfo).
 const [lastLocalMove, setLastLocalMove] = createSignal<{ san: string; fen: string } | null>(null);
@@ -37,6 +43,9 @@ export {
   observers,
   started,
   gameOver,
+  draw,
+  timeControl,
+  clocks,
   lastLocalMove,
   setRole,
   setSeat,
@@ -44,6 +53,9 @@ export {
   setConnectionStatus,
   setStarted,
   setGameOver,
+  setDraw,
+  setTimeControl,
+  setClocks,
   setLastLocalMove,
 };
 
@@ -116,6 +128,9 @@ export const snapshot = (fen: string): RoomSnapshot => ({
   observers: observers(),
   started: started(),
   gameOver: gameOver(),
+  draw: draw(),
+  timeControl: timeControl(),
+  clocks: clocks(),
   fen,
 });
 
@@ -124,6 +139,9 @@ export const applySnapshot = (s: RoomSnapshot): void => {
   setObservers(s.observers);
   setStarted(s.started);
   setGameOver(s.gameOver);
+  setDraw(s.draw ?? null);
+  setTimeControl(s.timeControl ?? null);
+  setClocks(s.clocks ?? null);
 };
 
 export const reset = (): void => {
@@ -135,5 +153,8 @@ export const reset = (): void => {
   setObservers([]);
   setStarted(false);
   setGameOver(null);
+  setDraw(null);
+  setTimeControl(null);
+  setClocks(null);
   setLastLocalMove(null);
 };

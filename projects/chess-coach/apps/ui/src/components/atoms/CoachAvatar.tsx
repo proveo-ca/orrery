@@ -8,11 +8,19 @@ import { coachEmotion } from "~/store/coachStore";
 interface CoachAvatarProps {
   /** Force the sleeping pose, ignoring the live coach emotion (used by the loading splash). */
   sleeping?: boolean;
+  /** Bar-sized variant (used as the MobileSidebar centre slot). */
+  compact?: boolean;
 }
 
 export const CoachAvatar: Component<CoachAvatarProps> = (props) => {
   return (
-    <div class={clsx(styles.cat, props.sleeping ? styles.sleeping : styles[coachEmotion()])}>
+    <div
+      class={clsx(
+        styles.cat,
+        props.compact && styles.compact,
+        props.sleeping ? styles.sleeping : styles[coachEmotion()],
+      )}
+    >
       <div class={clsx(styles.ear, styles["ear--left"])}></div>
       <div class={clsx(styles.ear, styles["ear--right"])}></div>
       <div class={styles.face}>

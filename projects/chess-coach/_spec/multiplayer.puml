@@ -94,6 +94,30 @@ note bottom of HostRoom
   status = reconnecting) for a 15s grace window — ICE may re-validate
   the path on its own (restartIce() nudged on foreground) — before the
   game is declared over. Terminal "closed" ends it immediately.
+  **Draw offers** are host-authoritative too: DrawOffer/Accept/Decline/
+  Cancel intents resolve to a `draw` field in the room snapshot
+  (pending | declined, by colour). The UI floats a 🤝 bubble on the
+  offerer's king (DrawBubbles) until the recipient answers — the offer
+  persists across moves. Accept → gameOver(draw); Decline → ⚔️ on the
+  refuser's king (both bubbles) until the next move clears them; Cancel
+  withdraws it. Bubble tap == the sidebar "Draw" button.
+  **Time control** (per-player clock) is picked at room creation from a
+  dropdown; the default follows the last Selena difficulty (settingsStore):
+  Intermediate→10m · Advanced→5m · Expert→3m (0 = no limit). It rides in
+  the offer link (`tc`) so a joiner sees it before connecting (Rapid/Blitz
+  label). Host-authoritative: only the side-to-move's clock drains;
+  `clocks` (remaining ms per colour) ride RoomState + MoveApplied. On
+  flag-fall the host ends the game → the opponent wins (gameOver). The
+  Clock atom renders + ticks each side locally between updates. While a
+  *player* reviews history on mobile the matchup header collapses to just
+  their own clock pinned top-left (it keeps ticking, so it must stay
+  visible); names + opponent clock hide and the history nav floats
+  top-right (MobileSidebar timeline mode). *Spectators* never collapse:
+  they keep both clocks plus a live engine EvalBar (the screen evaluates
+  the viewed FEN through the pool — the only engine use on this screen,
+  player boards stay engine-free) at all times. Their control bar stays
+  single-row in review — arrows + Back to Live inline at equal height
+  (DualNavButton `inline`) — so the board never shifts vertically.
 end note
 
 note top of HostPkg

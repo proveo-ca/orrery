@@ -1,4 +1,5 @@
 // SPEC: _spec/chess-coach/ui/components.puml
+import clsx from "clsx";
 import { type Component } from "solid-js";
 
 import styles from "~/components/primitives/EvalBar.module.css";
@@ -8,6 +9,8 @@ interface EvalBarProps {
   isFlipped?: boolean;
   maxPawns?: number;
   turn?: "w" | "b";
+  /** Extra class on the bar root, for per-screen positioning overrides. */
+  class?: string;
 }
 
 export const EvalBar: Component<EvalBarProps> = (props) => {
@@ -63,7 +66,7 @@ export const EvalBar: Component<EvalBarProps> = (props) => {
   };
 
   return (
-    <div class={styles["eval-bar"]}>
+    <div class={clsx(styles["eval-bar"], props.class)}>
       <div class={topColorClass()} style={{ transform: `scaleY(${topScale()})` }} />
       <div class={bottomColorClass()} style={{ transform: `scaleY(${bottomScale()})` }} />
       <div class={styles["eval-value"]} style={{ color: valueColor() }}>

@@ -75,13 +75,26 @@ package "Screens  [src/screens/]" {
     layout: lobby = SplashScreen (no board, like MenuScreen) —
       Tailscale onboarding + room setup. Once started, the
       board-centric Screen grid: matchup header + board. Controls
-      (connectivity · history nav · Resign) in the right sidebar
-      on desktop; on mobile a fixed top-right cluster (like
-      MobileDrawer), NOT the page bottom.
+      (connectivity · history nav · Draw · Resign) in the right
+      sidebar on desktop; on mobile the shared MobileSidebar bar above
+      the board (centre blank — no coach), under the names + clocks.
+    draw offers: one "Draw" control (sidebar button + 🤝 bubble) ·
+      no offer → propose · pending → Modal ("Accept Draw?" for the
+      recipient · "Draw requested"/Cancel for the offerer waiting).
+      Accept ends as a draw; the 🤝/⚔️ board bubbles render in
+      MultiplayerBoard (DrawBubbles). See multiplayer.puml.
+    time control: Select dropdown at room creation (default from the
+      last Selena difficulty), shown again to the joiner from the offer
+      link; in-game each side's Clock atom shows in the matchup header.
+      Flag-fall → "Time Out" end screen. ?clock=<sec> deep-link override.
     history nav: DualNavButton bound straight to gameStore
       (engine-free); MultiplayerBoard replays past plies and locks
       input while replaying. HistoryOverlay vignette + Screen
-      highlight while reviewing. NO eval bar, ever.
+      highlight while reviewing.
+    mobile review chrome: a *player* reviewing collapses the bar + header
+      to just their own clock (top-left) + history nav (top-right); a
+      *spectator* keeps both clocks + a live EvalBar (screen-computed) at
+      all times — the only engine use here, player boards stay engine-free.
     end screen: shared GameOverBanner (Resignation / Checkmate /
       Stalemate / Draw / Opponent Left), hidden during replay
       → Review Game · Back to Menu
@@ -89,7 +102,7 @@ package "Screens  [src/screens/]" {
     composition: SplashScreen · Screen · MultiplayerBoard ·
       CapturedPieces · SelectCard · TailscaleChecklist · QR
       encode/scan · ConnIndicator (SignalIcon) · DualNavButton ·
-      HistoryOverlay · GameOverBanner
+      HistoryOverlay · GameOverBanner · Modal (draw offer)
   end note
 }
 
@@ -111,8 +124,11 @@ package "Stores  [src/store/]" {
   [roomStore]        as RoomStore
   note right of RoomStore
     multiplayer room state (LanScreen): role, seats +
-    chosen colors, identities, started, connectionStatus.
-    Host-authoritative · ephemeral (not persisted).
+    chosen colors, identities, started, connectionStatus,
+    gameOver, draw (pending/declined offer — drives the
+    🤝/⚔️ bubbles), timeControl (per-player seconds) +
+    clocks (remaining ms per colour). All mirrored to peers
+    in the snapshot. Host-authoritative · ephemeral.
   end note
 }
 
@@ -141,6 +157,13 @@ package "Hooks  [src/hooks/]" {
       applies inbound moves via addMoveSan / loadFen
       owns seat/color claim + swap · observer cap · start gate
       (color change resets ready votes) · setActivePlayerColor
+      resign + draw offers (offer/accept/decline/cancel),
+        host-authoritative: accept → gameOver(draw); a pending
+        offer persists across moves, a declined one clears on the
+        next move
+      time control: init clocks at start, deduct the mover's elapsed
+        each move (clocks ride MoveApplied), 250ms watch flags the
+        game → opponent wins on time
       no engine / coach / CoachService / postMove
     end note
     note right of UseMultiplayerBoard
@@ -185,6 +208,12 @@ package "Hooks  [src/hooks/]" {
 
   package "UX Hooks" {
     [useHintSparkle] as UseHintSparkle
+    [usePresence] as UsePresence
+    note right of UsePresence
+      mount/unmount with an exit grace period so a node can
+      animate out before leaving the DOM. Keeps presentational
+      primitives (ChatBubble) side-effect-free.
+    end note
   }
 }
 
@@ -211,9 +240,20 @@ package "Components  [src/components/]" {
       LAN board (coach/engine-free twin of ChessBoard).
       8×8 grid · drag+drop · touch-drag · piece animation
       last-move highlight · PromotionModal · flips on color.
-      NO EvalBar / arrows / advice. (The GameOverBanner is
-      rendered by LanScreen over the board, not here.)
-      composes ChessSquare; drives useMultiplayerBoard.
+      NO arrows / advice. Optional spectator EvalBar (showEval +
+      evalScore props, score computed by LanScreen) — players
+      stay engine-free. (GameOverBanner is rendered by LanScreen
+      over the board, not here.)
+      composes ChessSquare + DrawBubbles (draw 🤝/⚔️ overlay);
+      drives useMultiplayerBoard.
+    end note
+    rectangle "DrawBubbles" as DrawBubbles
+    note bottom of DrawBubbles
+      Draw-status overlay on the board grid: reads roomStore.draw
+      and floats a ChatBubble beside each king — 🤝 on the offerer
+      (tap = same action as the Draw button), ⚔️ on the refuser.
+      Cell % from the king square + activePlayerColor orientation;
+      presence/exit via usePresence.
     end note
     rectangle "GameOverBanner" as GameOverBanner
     note bottom of GameOverBanner
@@ -235,11 +275,32 @@ package "Components  [src/components/]" {
     end note
     rectangle "MobileDrawer" as MobileDrawer
     note right of MobileDrawer
-      mobile navigation: top-left hint+new-game,
-      top-right DualNavButton + cog (or Back-to-Live
-      when travelling/replaying); cog opens a Modal
-      with SettingsPanel + resign/flip/credits +
-      route shortcuts (Coach/Analysis/Review).
+      mobile hamburger (fixed top-left) → Modal with the FULL
+      desktop-Sidebar option set: history nav, hint, resign,
+      new game, flip, credits, SettingsPanel + route shortcuts
+      (Coach/Analysis/Review). Quick actions live in MobileSidebar.
+    end note
+    rectangle "MobileSidebar" as MobileSidebar
+    note right of MobileSidebar
+      mobile-only horizontal control bar above the board, shared by
+      every board screen. Compound: <Main> (centred per-screen slot)
+      + up to 4 <Item> quick actions; CSS (nth-of-type, no JS) stacks
+      the single-button items on the LEFT of centre and drops any 5th.
+      The nav <Item> (double-wide history arrows) owns the RIGHT alone —
+      balancing the left buttons so <Main> stays truly centred, whatever
+      is gated out. Centre is per-screen: CoachAvatar (Coach), EngineDepth
+      (Analysis/Review), ConnIndicator (LAN). No settings/credits/routes.
+      timeline prop (replay/travel): the bar collapses (board rises),
+      <Main> + non-nav items hide, and the lone nav <Item nav> floats
+      fixed to the top-right corner (mirrors the top-left hamburger).
+    end note
+    rectangle "BoardControls" as BoardControls
+    note right of BoardControls
+      the MobileSidebar quick actions for the engine-backed boards
+      (Coach/Analysis/Review): hint · nav · flip · new game,
+      capability-gated. Renders bare MobileSidebar.Items. Passes
+      timeline=inTimelineMode() and FLIP-animates the nav <Item>
+      between its in-bar dock and the top-right corner.
     end note
     rectangle "MoveList" as MoveList
     note right of MoveList
@@ -282,6 +343,18 @@ package "Components  [src/components/]" {
       `sleeping` prop forces the loading pose
     end note
     rectangle "TurnLabel"       as TurnLabel
+    rectangle "Clock"           as Clock
+    note right of Clock
+      one player's chess clock (LAN). Reads roomStore.clocks +
+      timeControl; ticks the side-to-move down locally between
+      host updates. Renders nothing in an untimed room.
+    end note
+    rectangle "EngineDepth"     as EngineDepth
+    note right of EngineDepth
+      MobileSidebar centre for Analysis/Review: a circle showing the
+      live Stockfish search depth (evalStore.baseEvalDepth) behind the
+      green best-move + blue advice arrows, with a green→blue ring.
+    end note
     rectangle "GameHistoryList" as GameHistoryList
     rectangle "Credits"         as Credits
     rectangle "DebugControls"   as DebugControls
@@ -325,6 +398,13 @@ package "Components  [src/components/]" {
       (replaced the shared App.module.css).
     end note
     rectangle "HistoryOverlay (presentational overlay)" as Overlays
+    rectangle "ChatBubble" as ChatBubble
+    note right of ChatBubble
+      presentational floating speech bubble (pops in; animates
+      out when `exiting`). Position/size from the caller, mount/
+      exit timing from usePresence — so it stays a pure primitive.
+      Used by DrawBubbles (🤝/⚔️).
+    end note
   }
 }
 
@@ -376,6 +456,8 @@ package "Services  [src/services/]" {
     SDP ⇄ base64url codec · #o= / #a= deep links ·
     QR encode/scan. Manual, out-of-band signaling —
     one offer/answer exchange per joiner, no server.
+    The offer payload also carries `tc` (time control sec)
+    so a joiner sees the clock before connecting.
   end note
 }
 
@@ -495,11 +577,25 @@ LanScreen           --> MultiplayerBoard    : renders (started)
 LanScreen           --> GameOverBanner      : renders (gameOver && !replaying)
 LanScreen           --> DualNavButton       : history nav → gameStore goBack/goForward/setViewIndex
 MultiplayerBoard    ..> UseMultiplayerBoard : uses
+LanScreen           --> Clock               : renders (matchup header, per side)
+CoachScreen         --> MobileSidebar        : bar above board (centre = CoachAvatar)
+AnalysisScreen      --> MobileSidebar        : bar above board (centre = EngineDepth)
+ReviewScreen        --> MobileSidebar        : bar above board (centre = EngineDepth)
+LanScreen           --> MobileSidebar        : bar above board (centre blank)
+MobileSidebar       --> BoardControls        : quick-action Items (coach screens)
+CoachScreen         --> MobileDrawer         : hamburger (full menu)
+Clock               ..> RoomStore           : clocks · timeControl
+LanScreen           ..> SettingsStore        : difficulty → default time control
+MultiplayerBoard    --> DrawBubbles         : renders (draw overlay)
+DrawBubbles         --> ChatBubble          : floats 🤝/⚔️ beside kings
+DrawBubbles         ..> UsePresence         : enter/exit animation
+DrawBubbles         ..> RoomStore           : draw (offerer/refuser color)
+DrawBubbles         ..> GameStore           : game (king squares)
 UseMultiplayerBoard --> GameStore           : addMove (local move) · currentFen (replay)
 UseMultiplayerBoard ..> RoomStore           : setLastLocalMove
 UseMultiplayerBoard ..> UseMultiplayerGame  : roomStore.lastLocalMove → relay
 UseMultiplayerGame  --> GameStore           : addMoveSan · loadFen · setViewIndex (snap-to-live)
-UseMultiplayerGame  --> RoomStore           : seats · colors · started · connectionStatus · gameOver
+UseMultiplayerGame  --> RoomStore           : seats · colors · started · connectionStatus · gameOver · draw
 UseMultiplayerGame  --> SettingsStore       : setActivePlayerColor(myColor)
 UseMultiplayerGame  --> PeerTransportIF     : send · broadcast · onMessage
 UseLanGameRecorder  --> HistoryStore        : startNewRecord · pushMove · finalizeGame

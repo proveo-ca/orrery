@@ -565,6 +565,18 @@ package "Hooks  [src/hooks/]" {
       shows sparkle after 10s idle delay
       dismissed state persists to localStorage
     }
+
+    class useFlip <<side-effect>> {
+      useFlip(el, trigger)
+      .. Notes ..
+      FLIP-animates el between two layout
+        positions on each trigger() change
+      measures in a post-layout rAF (robust to
+        effect ordering); no-op w/o WAAPI or
+        under prefers-reduced-motion
+      slides the history nav from its in-bar
+        dock to the top-right (timeline mode)
+    }
   }
 }
 

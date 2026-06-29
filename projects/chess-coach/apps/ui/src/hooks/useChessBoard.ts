@@ -18,7 +18,10 @@ import {
   setHoverAdvice,
   setHoverEmotion,
 } from "~/store/coachStore";
-import { setBaseEvalScore as setSharedEval } from "~/store/evalStore";
+import {
+  setBaseEvalScore as setSharedEval,
+  setBaseEvalDepth as setSharedEvalDepth,
+} from "~/store/evalStore";
 import {
   currentFen,
   currentIndex,
@@ -158,6 +161,7 @@ export function useChessBoard() {
             setBaseEvalScore(info.score);
             setSharedEval(info.score);
           }
+          if (info.depth) setSharedEvalDepth(info.depth);
           if (info.pv && info.pv.length > 0) setHumanBestMove(info.pv[0]);
         },
       })
@@ -273,6 +277,7 @@ export function useChessBoard() {
     setHumanBestMove(null);
     setBaseEvalScore(null);
     setSharedEval(null);
+    setSharedEvalDepth(0);
     setAdviceHoveredSquares([]);
     setAdviceArrow(null);
     if (!isTravelling()) {

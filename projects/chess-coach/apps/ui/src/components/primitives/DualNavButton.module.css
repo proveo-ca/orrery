@@ -81,9 +81,37 @@
 
 .back-to-live {
   width: 100%;
-  min-height: 1.65rem;
-  padding: 0.25rem 0.4rem;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.55rem;
   font-size: 0.62rem;
   line-height: 1;
   white-space: nowrap;
+}
+
+/* Single-row layout for the mobile control bar (spectators): arrows and
+   "Back to Live" sit side by side at the same height, so entering replay never
+   grows the bar — the chessboard stays put. The title is dropped (the inverted
+   arrows + button already signal review mode). */
+.inline {
+  flex-direction: row;
+  gap: 0.3rem;
+  position: relative;
+}
+
+.inline .label {
+  display: none;
+}
+
+/* Float "Back to Live" out of flow, just right of the arrows, so showing it
+   never widens the row — the arrows hold their exact position whether live or
+   reviewing. */
+.inline .back-to-live {
+  position: absolute;
+  left: calc(100% + 0.4rem);
+  top: 0;
+  height: 100%;
+  width: auto;
 }

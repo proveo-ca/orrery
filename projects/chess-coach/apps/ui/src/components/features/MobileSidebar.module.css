@@ -1,0 +1,107 @@
+/* Mobile-only horizontal control bar, centred above the board. Hidden on
+   desktop, where the vertical Sidebar is used instead. */
+.bar {
+  display: none;
+}
+
+@media (max-width: 719px) {
+  .bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    width: 100%;
+    max-width: var(--board-size);
+    margin: 0 auto 0.6rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 1.6rem;
+    background: var(--panel-bg);
+    border: 1px solid var(--border-color);
+  }
+
+  /* Replay / travel: collapse the bar so the board rises into its place, and
+     leave only the nav — which floats to the top-right corner (mirroring the
+     top-left hamburger). The dock → corner move is FLIP-animated in
+     BoardControls. */
+  .bar.timeline {
+    margin: 0;
+    padding: 0;
+    min-height: 0;
+    background: transparent;
+    border-color: transparent;
+  }
+
+  .bar.timeline > .main,
+  .bar.timeline > .item:not(.nav-item) {
+    display: none;
+  }
+
+  .bar.timeline > .nav-item {
+    position: fixed;
+    top: 0.75rem;
+    right: 0.75rem;
+    z-index: 1000;
+    padding: 0.3rem;
+    border-radius: 0.8rem;
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+  }
+}
+
+/* Centre slot — a <span>, so it's excluded from the item <div> numbering. */
+.main {
+  order: 0;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  padding: 0 1rem;
+}
+
+/* Coach screen: slim the bar so the centre avatar overflows it (peeks out),
+   and give the slot room so the surrounding quick-actions clear the avatar. */
+@media (max-width: 719px) {
+  .bar.center-overflow {
+    height: 3.2rem;
+    box-sizing: border-box;
+    overflow: visible;
+  }
+
+  .center-overflow > .main {
+    overflow: visible;
+    padding: 0 2rem;
+  }
+}
+
+.item {
+  display: flex;
+  align-items: center;
+}
+
+/* The single-button quick-actions stack on the LEFT in source order (1st sits
+   inner-left, nearest the centre); the centre <span> stays at 0. nth-of-type
+   counts only the item divs, so this re-balances as capability-gated items
+   appear / disappear. The double-wide history nav owns the right on its own —
+   one fat control balancing the row of single buttons (see .nav-item below). */
+.bar > div:nth-of-type(1) {
+  order: -1;
+}
+.bar > div:nth-of-type(2) {
+  order: -2;
+}
+.bar > div:nth-of-type(3) {
+  order: -3;
+}
+.bar > div:nth-of-type(4) {
+  order: -4;
+}
+.bar > div:nth-of-type(n + 5) {
+  display: none;
+}
+
+/* The history nav (arrows) is always pinned to the right of centre — whatever
+   its source slot — and is the only thing there: a double-wide control that
+   balances the single buttons on the left. Outranks the fan-out (0,3,0 > 0,2,1). */
+.bar > .item.nav-item {
+  order: 1;
+}

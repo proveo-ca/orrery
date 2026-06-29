@@ -3,7 +3,9 @@ import type { Component } from "solid-js";
 
 import { OpponentCaptures, PlayerCaptures } from "~/components/atoms/CapturedPieces";
 import { DebugControls } from "~/components/atoms/DebugControls";
+import { EngineDepth } from "~/components/atoms/EngineDepth";
 import { FenLoader } from "~/components/atoms/FenLoader";
+import { BoardControls } from "~/components/features/BoardControls";
 import { ChessBoard } from "~/components/features/ChessBoard";
 import { MobileDrawer } from "~/components/features/MobileDrawer";
 import { Sidebar } from "~/components/features/Sidebar";
@@ -46,6 +48,7 @@ export const AnalysisScreen: Component = () => {
       </Screen.SidebarInset>
       <Screen.BoardArea>
         <Screen.BoardColumn>
+          <BoardControls center={<EngineDepth />} />
           <OpponentCaptures />
           <ChessBoard />
           <PlayerCaptures />

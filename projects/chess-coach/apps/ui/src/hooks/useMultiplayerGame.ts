@@ -9,6 +9,8 @@ import {
   applySnapshot,
   canStart,
   claimColor as claimColorMut,
+  clocks,
+  draw,
   gameOver,
   lastLocalMove,
   myColor,
@@ -16,7 +18,9 @@ import {
   observers,
   players,
   removeMember,
+  setClocks,
   setConnectionStatus,
+  setDraw,
   setGameOver,
   setReady as setReadyMut,
   setSeat,
@@ -24,9 +28,11 @@ import {
   snapshot,
   started,
   swapColors,
+  timeControl,
 } from "~/store/roomStore";
 import { setActivePlayerColor } from "~/store/settingsStore";
 import type {
+  Clocks,
   Color,
   GameOverInfo,
   Identity,
@@ -43,6 +49,13 @@ const START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
 /** The host's own player id (peerId for guests is their WebRTC connId). */
 export const HOST_SELF_ID = "host";
+
+export const DRAW_AGREED_MESSAGE = "Draw by agreement.";
+export const OPPONENT_LEFT_MESSAGE = "Opponent disconnected.";
+
+/** Tells a flag-fall apart from a resignation in the end-screen heading. */
+export const isTimeoutMessage = (message?: string): boolean =>
+  !!message && message.includes("ran out of time");
 
 /** Derive a game-over verdict from the current position (no AI/coach involved). */
 function computeGameOver(): GameOverInfo | null {
@@ -65,6 +78,10 @@ export type MultiplayerActions = {
   swap: () => void;
   setReady: (ready: boolean) => void;
   resign: () => void;
+  offerDraw: () => void;
+  acceptDraw: () => void;
+  declineDraw: () => void;
+  cancelDraw: () => void;
 };
 
 /**
@@ -118,7 +135,9 @@ export function useMultiplayerGame(
     if (t.role === "host") {
       const over = computeGameOver();
       if (over) setGameOver(over);
-      t.broadcast({ t: "moveApplied", san: move.san, fen: move.fen, gameOver: over });
+      const nextClocks = tickClockOnMove();
+      t.broadcast({ t: "moveApplied", san: move.san, fen: move.fen, gameOver: over, clocks: nextClocks });
+      clearResolvedDrawOnMove(t);
     } else {
       t.broadcast({ t: "move", san: move.san });
     }
@@ -151,10 +170,91 @@ export function useMultiplayerGame(
     setViewIndex(game().history().length);
   }
 
+  // ── Chess clocks (host-authoritative; only the active colour's drains) ────
+  // `turnStartAt` is the host's timestamp for when the running colour's turn
+  // began. Each move deducts that colour's elapsed and hands the clock over.
+  let turnStartAt = 0;
+
+  function initClocks(): void {
+    const tc = timeControl();
+    if (tc == null) {
+      setClocks(null);
+      return;
+    }
+    setClocks({ w: tc * 1000, b: tc * 1000 });
+    turnStartAt = Date.now();
+  }
+
+  /** Deduct the mover's elapsed time and start the opponent's clock. */
+  function tickClockOnMove(): Clocks | null {
+    const c = clocks();
+    if (!c) return null;
+    const now = Date.now();
+    const mover: Color = game().turn() === "w" ? "b" : "w"; // turn() is already the next player
+    const next: Clocks = { ...c, [mover]: Math.max(0, c[mover] - (now - turnStartAt)) };
+    setClocks(next);
+    turnStartAt = now;
+    return next;
+  }
+
+  // The host watches the running clock and flags the game when it hits zero.
+  createEffect(() => {
+    const t = transport();
+    if (!t || t.role !== "host") return;
+    if (!started() || gameOver() || timeControl() == null) return;
+    const id = setInterval(() => {
+      const c = clocks();
+      if (!c || gameOver()) return;
+      const active = game().turn();
+      if (c[active] - (Date.now() - turnStartAt) > 0) return;
+      setClocks({ ...c, [active]: 0 });
+      setGameOver(
+        active === "w"
+          ? { result: "black", message: "White ran out of time." }
+          : { result: "white", message: "Black ran out of time." },
+      );
+      broadcastRoom(t);
+    }, 250);
+    onCleanup(() => clearInterval(id));
+  });
+
+  function hostOfferDraw(t: PeerTransport, color: Color): void {
+    if (draw()?.status === "pending") return;
+    setDraw({ by: color, status: "pending" });
+    broadcastRoom(t);
+  }
+
+  function hostRespondDraw(t: PeerTransport, color: Color, accept: boolean): void {
+    const d = draw();
+    if (!d || d.status !== "pending" || d.by === color) return;
+    if (accept) {
+      setGameOver({ result: "draw", message: DRAW_AGREED_MESSAGE });
+      setDraw({ by: d.by, status: "agreed" });
+    } else {
+      setDraw({ by: d.by, status: "declined" });
+    }
+    broadcastRoom(t);
+  }
+
+  function hostCancelDraw(t: PeerTransport, color: Color): void {
+    const d = draw();
+    if (!d || d.status !== "pending" || d.by !== color) return;
+    setDraw(null);
+    broadcastRoom(t);
+  }
+
+  function clearResolvedDrawOnMove(t: PeerTransport): void {
+    if (draw()?.status === "declined") {
+      setDraw(null);
+      broadcastRoom(t);
+    }
+  }
+
   function startIfReady(t: PeerTransport): void {
     if (started() || !canStart()) return;
     loadFen(START_FEN);
     lastSyncedFen = currentFen();
+    initClocks();
     setStarted(true);
     setSynced(true);
     broadcastRoom(t);
@@ -201,7 +301,9 @@ export function useMultiplayerGame(
         lastSyncedFen = fen;
         const over = computeGameOver();
         if (over) setGameOver(over);
-        t.broadcast({ t: "moveApplied", san: msg.san, fen, gameOver: over });
+        const nextClocks = tickClockOnMove();
+        t.broadcast({ t: "moveApplied", san: msg.san, fen, gameOver: over, clocks: nextClocks });
+        clearResolvedDrawOnMove(t);
         break;
       }
       case "resign": {
@@ -212,6 +314,22 @@ export function useMultiplayerGame(
             : { result: "white", message: "Black resigned." },
         );
         broadcastRoom(t);
+        break;
+      }
+      case "drawOffer": {
+        const c = players().find((p) => p.peerId === peerId)?.color;
+        if (c) hostOfferDraw(t, c);
+        break;
+      }
+      case "drawAccept":
+      case "drawDecline": {
+        const c = players().find((p) => p.peerId === peerId)?.color;
+        if (c) hostRespondDraw(t, c, msg.t === "drawAccept");
+        break;
+      }
+      case "drawCancel": {
+        const c = players().find((p) => p.peerId === peerId)?.color;
+        if (c) hostCancelDraw(t, c);
         break;
       }
     }
@@ -235,6 +353,7 @@ export function useMultiplayerGame(
       }
       case "moveApplied": {
         if (msg.gameOver) setGameOver(msg.gameOver);
+        if (msg.clocks !== undefined) setClocks(msg.clocks);
         // Compare the live position (not currentFen, which follows the history
         // view cursor) so our own optimistic move is deduped even while the
         // local player is reviewing an earlier position.
@@ -261,7 +380,7 @@ export function useMultiplayerGame(
     const wasPlayer = players().some((p) => p.peerId === peerId);
     removeMember(peerId);
     if (wasPlayer && started() && !gameOver()) {
-      setGameOver({ result: "draw", message: "Opponent disconnected." });
+      setGameOver({ result: "draw", message: OPPONENT_LEFT_MESSAGE });
       setConnectionStatus("disconnected");
     }
     broadcastRoom(t);
@@ -355,6 +474,46 @@ export function useMultiplayerGame(
         broadcastRoom(t);
       } else {
         t.broadcast({ t: "resign" });
+      }
+    },
+    offerDraw(): void {
+      const t = transport();
+      if (!t) return;
+      const c = myColor();
+      if (t.role === "host") {
+        if (c) hostOfferDraw(t, c);
+      } else {
+        t.broadcast({ t: "drawOffer" });
+      }
+    },
+    acceptDraw(): void {
+      const t = transport();
+      if (!t) return;
+      const c = myColor();
+      if (t.role === "host") {
+        if (c) hostRespondDraw(t, c, true);
+      } else {
+        t.broadcast({ t: "drawAccept" });
+      }
+    },
+    declineDraw(): void {
+      const t = transport();
+      if (!t) return;
+      const c = myColor();
+      if (t.role === "host") {
+        if (c) hostRespondDraw(t, c, false);
+      } else {
+        t.broadcast({ t: "drawDecline" });
+      }
+    },
+    cancelDraw(): void {
+      const t = transport();
+      if (!t) return;
+      const c = myColor();
+      if (t.role === "host") {
+        if (c) hostCancelDraw(t, c);
+      } else {
+        t.broadcast({ t: "drawCancel" });
       }
     },
   };

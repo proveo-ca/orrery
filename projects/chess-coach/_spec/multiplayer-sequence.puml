@@ -65,6 +65,36 @@ Host -> Host: end game → gameOver
 Host -> Guest: RoomState { gameOver }
 Host -> Obs: RoomState { gameOver }
 
+== Draw offer (host-authoritative; mirrored via RoomState.draw) ==
+B -> Guest: tap Draw (no offer yet)
+Guest -> Host: DrawOffer
+Host -> Host: draw = { by: black, status: pending }
+Host -> Guest: RoomState { draw }  (🤝 floats on black's king)
+Host -> Obs: RoomState { draw }
+note over W, B: a pending offer PERSISTS across moves until answered.\nthe offerer may DrawCancel (→ draw = null) while waiting.
+W -> Host: tap 🤝 / Draw → "Accept Draw?"
+alt White accepts
+  W -> Host: DrawAccept
+  Host -> Host: gameOver { draw, "Draw by agreement." } · draw = null
+  Host -> Guest: RoomState { gameOver }
+  Host -> Obs: RoomState { gameOver }
+else White declines
+  W -> Host: DrawDecline
+  Host -> Host: draw = { by: black, status: declined }  (⚔️ on white's king)
+  Host -> Guest: RoomState { draw }  (both 🤝 + ⚔️ shown)
+  note over Host: next move by either side → clearResolvedDrawOnMove\n→ draw = null → both bubbles animate out
+end
+
+== Time control (host-authoritative clocks) ==
+note over W, B: at creation the host picks a per-player clock (default from the\nlast Selena difficulty: Int=10m·Adv=5m·Exp=3m). It rides the\noffer link (tc=<sec>) so the joiner sees it before connecting.
+Host -> Host: on start: clocks = { w, b } = tc·1000 ms · turnStartAt = now
+note over Host: only the side-to-move's clock drains. On each move the host\ndeducts the mover's elapsed, hands the clock over, and ships\nclocks in MoveApplied (+ RoomState). Each peer ticks locally.
+alt a clock reaches 0 (host's 250ms watch)
+  Host -> Host: gameOver { winner = opponent, "<Loser> ran out of time." }
+  Host -> Guest: RoomState { gameOver, clocks }
+  Host -> Obs: RoomState { gameOver }
+end
+
 == Drop & reconnect (recoverable) ==
 note over Guest: phone backgrounds → RTCPeerConnection "disconnected"/"failed"
 Guest -> Guest: connectionStatus = connecting ("reconnecting…")

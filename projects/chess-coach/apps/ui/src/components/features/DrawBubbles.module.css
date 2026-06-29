@@ -1,0 +1,19 @@
+.overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.cell {
+  position: absolute;
+  width: 8.5%;
+  height: 8.5%;
+}
+
+.drawBubble {
+  width: 100%;
+  height: 100%;
+  font-size: calc(var(--square-size) * 0.32);
+  pointer-events: auto;
+}

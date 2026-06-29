@@ -1,0 +1,32 @@
+/* Per-player chess clock, coloured by its side (literal piece colours, like the
+   lobby swatches): White's clock is light, Black's is dark. The side to move is
+   lit with a ring. */
+.clock {
+  font-family: ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1;
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.4rem;
+  border: 1px solid transparent;
+  transition: box-shadow 0.2s ease;
+}
+
+.white {
+  background: #f3f3f3;
+  color: #1a1a1a;
+  border-color: #d0d0d0;
+}
+
+.black {
+  background: #222;
+  color: #f3f3f3;
+  border-color: #000;
+}
+
+/* Side to move. The idle side keeps its full colour so each stays clearly
+   black / white. */
+.active {
+  box-shadow: 0 0 0 2px var(--result-win);
+}
