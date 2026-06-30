@@ -1,0 +1,29 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Cross-Vendor Debate / Review
+' Paper: Du et al., Improving Factuality & Reasoning via Multiagent Debate, arXiv:2305.14325
+' Paper: Liang et al., Encouraging Divergent Thinking via Multi-Agent Debate, arXiv:2305.19118
+' Paper: ChatEval, arXiv:2308.07201
+' Level: 4
+' Provenance: projects/omnigent · examples/debby/
+
+component "Question"          as Q   <<app>>
+cloud     "Vendor A (Claude)" as A   <<cloud>>
+cloud     "Vendor B (GPT)"    as B   <<cloud>>
+component "Debate / critique" as DBT <<app>>
+component "Synthesis"         as SYN <<app>>
+
+Q   ARROW_CLOUD    A   : ask
+Q   ARROW_CLOUD    B   : ask
+A   ARROW_MAIN     DBT : answer
+B   ARROW_MAIN     DBT : answer
+DBT ARROW_OPTIONAL A   : rebut / refine
+DBT ARROW_OPTIONAL B   : rebut / refine
+DBT ARROW_MAIN     SYN : converge
+
+note bottom of DBT
+  Fan one question to **independent vendor models**, then have them
+  debate / critique each other — surfacing errors a single model's
+  self-critique would miss (confirmation bias).
+end note
+@enduml

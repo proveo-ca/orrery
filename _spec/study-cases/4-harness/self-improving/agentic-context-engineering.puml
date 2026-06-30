@@ -1,0 +1,24 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Agentic Context Engineering (ACE)
+' Paper: ACE — Evolving Contexts for Self-Improving Language Models, ICLR 2026, arXiv:2510.04618
+' Level: 4 (self-improving harness — weights frozen; the context/playbook evolves)
+
+database  "Context / playbook"                    as CTX <<db>>
+component "Generate\n(act with current context)"   as GEN <<app>>
+queue     "Execution feedback"                     as FB  <<async>>
+component "Reflect\n(critique the trace)"           as REF <<app>>
+component "Curate\n(update the playbook)"           as CUR <<app>>
+
+CTX ARROW_MAIN  GEN : load
+GEN ARROW_QUEUE FB  : run → outcome
+FB  ARROW_MAIN  REF : signal
+REF ARROW_MAIN  CUR : lessons
+CUR ARROW_MAIN  CTX : evolve (loop)
+
+note bottom of CTX
+  Self-improvement with **frozen weights**: a generate → reflect →
+  curate loop evolves the *context/playbook* from execution feedback —
+  no gradient updates.
+end note
+@enduml

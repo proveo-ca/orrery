@@ -1,0 +1,32 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+' Product: Aider
+' URL: https://aider.chat/
+
+package "Aider Architecture" {
+    [Coder (BaseCoder)\n(The Loop)] as CODER
+    [Repo Map\n(Tree-sitter + PageRank)] as MAP
+    [File/Git Access\n(IO Layer)] as GIT
+    [Model Registry\n(litellm abstraction)] as MODELS
+    [Active Context\n(abs_fnames)] as MEM
+    [Linter/Test\n(Verification)] as EVAL
+}
+
+CODER -> MEM : "Track Edited Files"
+CODER --> MAP : "Get Repo Context"
+CODER ---> MODELS : "Chat Completion"
+CODER --> GIT : "Read/Write/Commit"
+GIT --> EVAL : "Verify Edit"
+EVAL --> CODER : "Pass/Fail Feedback"
+
+note bottom of MAP
+  Compresses massive codebases
+  into a system prompt map.
+end note
+
+note bottom of GIT
+  Deep integration allows
+  undoing AI mistakes.
+  Commit = User Gate.
+end note
+@enduml

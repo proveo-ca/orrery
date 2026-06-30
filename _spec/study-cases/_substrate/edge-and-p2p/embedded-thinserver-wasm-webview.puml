@@ -1,0 +1,24 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Embedded Thin-Server + WASM WebView
+' Paper: WireGuard / Tailscale tsnet, NDSS 2017 — https://www.wireguard.com/papers/wireguard.pdf
+' Std:   WebRTC — https://www.w3.org/TR/webrtc/
+' Level: n/a (substrate)
+' Provenance: projects/chess-coach · android/gomobile/thinserver/
+
+node      "Android foreground service"            as SVC <<host>>
+component "Embedded Go tsnet server"               as GO  <<app>>
+component "WebView\n(WASM build over localhost)"    as WV  <<app>>
+component "COOP / COEP headers\n(SharedArrayBuffer)" as HDR <<app>>
+
+SVC ARROW_MAIN     GO  : own lifecycle
+GO  ARROW_MAIN     WV  : serve over 127.0.0.1
+HDR ARROW_OPTIONAL WV  : enable threaded WASM
+WV  ARROW_MAIN     GO  : engine / P2P calls
+
+note bottom of GO
+  An embedded `tsnet` server serves the WASM UI over `localhost`; COOP /
+  COEP headers unlock `SharedArrayBuffer` for threaded WASM. State
+  survives WebView / Activity recreation.
+end note
+@enduml

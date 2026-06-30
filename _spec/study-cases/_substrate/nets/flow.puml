@@ -1,0 +1,36 @@
+@startuml
+!theme plain
+autonumber
+
+title Generic LLM Asset Loading Flow
+
+actor User
+participant "Browser\n(Main Thread)" as Main
+participant "LLM Engine\n(Web Worker)" as Worker
+participant "CDN / Static Server" as Server
+
+User -> Main : Initialize Chat
+Main -> Worker : Load Model (model_id)
+activate Worker
+
+Worker -> Server : GET /{model_id}/model-webgpu.wasm
+Server --> Worker : 200 OK (application/wasm)
+
+Worker -> Server : GET /{model_id}/mlc-chat-config.json
+Server --> Worker : 200 OK (JSON)
+note right of Worker: Reads context window,\nvocab size, and architecture.
+
+Worker -> Server : GET /{model_id}/ndarray-cache.json
+Server --> Worker : 200 OK (JSON)
+
+loop For each weight shard (Parallelized)
+    Worker -> Server : GET /{model_id}/params_shard_X.bin
+    Server --> Worker : 200 OK (ArrayBuffer)
+    Worker -> Worker : Transfer to WebGPU VRAM
+    Worker -> Main : Progress Update (X%)
+end
+
+Worker -> Main : Engine Ready
+deactivate Worker
+
+@enduml

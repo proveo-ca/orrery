@@ -1,0 +1,23 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Test-Time RL (TTRL)
+' Paper: TTRL — Test-Time Reinforcement Learning, NeurIPS 2025, arXiv:2504.16084
+' Level: 6
+' Provenance: industry baseline
+
+component "Unlabeled test input"             as X <<app>>
+component "Model"                            as M <<app>>
+component "Sampled answers (k)"              as S <<app>>
+component "Consistency reward\n(majority vote)" as R <<async>>
+
+X ARROW_MAIN  M : prompt
+M ARROW_MAIN  S : sample k answers
+S ARROW_QUEUE R : majority-vote pseudo-label
+R ARROW_MAIN  M : RL update at inference (loop)
+
+note bottom of R
+  No labels at test time: a **majority-vote / consistency reward** over
+  sampled answers drives an RL update on the fly — the model improves on
+  the very inputs it's solving.
+end note
+@enduml

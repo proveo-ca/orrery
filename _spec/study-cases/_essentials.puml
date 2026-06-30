@@ -1,0 +1,61 @@
+@startuml
+skinparam componentStyle rectangle
+skinparam padding 5
+
+title AI Agent Harness Architecture
+
+package "1. The Interface (The Gate)" {
+  [Human-in-the-Loop (HITL)] as HITL
+  [Permission Gates\n(Binary / Draft-and-Diff)] as Gates
+  [Interruptibility & Clarification] as Interrupt
+
+  HITL --> Gates
+  HITL --> Interrupt
+}
+
+package "2. Outer Scope (Framework Layer)" {
+  [Orchestration\n(LangGraph, Semantic Kernel)] as Orchestration
+  [Compliance & Trust Boundaries\n(PII, ACL)] as Compliance
+
+  package "Context Engineering (The Fuel)" {
+    [Ingestion\n(Tree-sitter, Vector Search)] as Ingestion
+    [Steering & Pruning\n(Active Set, PageRank)] as Pruning
+    [High-Precision\n(Proposition Retrieval, CoVe)] as HighPrecision
+  }
+
+  Orchestration --> Compliance
+  Orchestration --> Ingestion
+}
+
+package "3. Inner Loop (Anti-Framework Agent)" {
+  [Stateful Memory\n(Active Files, Plan)] as Memory
+  [Direct I/O\n(PTY, Shell, File Access)] as DirectIO
+
+  package "Cognitive Architecture (The Brain)" {
+    [ReAct / Plan-and-Solve / Reflexion] as Brain
+  }
+
+  Brain <--> Memory
+  Brain --> DirectIO
+}
+
+package "4. Evaluation & Verification (Guardrails)" {
+  [Deterministic Solvers\n(Exit codes, Linters)] as Deterministic
+  [Probabilistic Engines\n(PPL, Monte Carlo)] as Probabilistic
+  [Run-Time Confidence\n(Logprobs, MAD, Self-Critique)] as Confidence
+}
+
+' Connections
+Gates --> Orchestration : "Approved Actions"
+Interrupt --> Brain : "Steer / Inject Context"
+
+Compliance --> Brain : "Sanitized Context"
+Pruning --> Brain : "Optimized Context Window"
+
+DirectIO ----> Deterministic : "Test Execution"
+Brain <---> Probabilistic : "Formalized Models (PyMC) \nMathematical Confidence"
+Brain --> Confidence : "Evaluate Risk"
+
+Deterministic --> Brain : "Ground-truth Signal"
+
+@enduml

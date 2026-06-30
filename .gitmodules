@@ -1,0 +1,20 @@
+[submodule "projects/nightfall"]
+	path = projects/nightfall
+	url = git@github.com:proveo-ca/nightfall.git
+	branch = main
+[submodule "projects/agents-of-empires"]
+	path = projects/agents-of-empires
+	url = git@github.com:proveo-ca/agents-of-empires.git
+	branch = main
+[submodule "projects/chess-coach"]
+	path = projects/chess-coach
+	url = git@github.com:proveo-ca/chess-coach.git
+	branch = main
+[submodule "projects/omnigent"]
+	path = projects/omnigent
+	url = git@github.com:proveo-ca/omnigent.git
+	branch = main
+[submodule "projects/aphelion"]
+	path = projects/aphelion
+	url = git@github.com:proveo-ca/aphelion.git
+	branch = main

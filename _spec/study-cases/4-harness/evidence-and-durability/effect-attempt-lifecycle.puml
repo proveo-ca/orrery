@@ -1,0 +1,25 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Effect-Attempt Lifecycle
+' Paper: Garcia-Molina & Salem, Sagas, ACM SIGMOD 1987 (DOI 10.1145/38713.38742)
+' Level: 4
+' Provenance: projects/aphelion · session/types_effect_attempt.go
+
+component "attempted"   as A <<app>>
+component "executed"    as E <<app>>
+component "verified"    as V <<app>>
+component "rejected"    as R <<error>>
+component "superseded"  as S <<async>>
+
+A ARROW_MAIN     E : run side effect
+E ARROW_MAIN     V : verification passes
+E ARROW_ERROR    R : verification fails
+R ARROW_OPTIONAL A : retry (only after verify clears)
+A ARROW_OPTIONAL S : replaced by a newer attempt
+
+note bottom of V
+  At-least-once **plus verification**, not exactly-once: a side effect
+  isn't "done" until verified, and retries are **blocked** until the
+  prior attempt is verified or superseded.
+end note
+@enduml

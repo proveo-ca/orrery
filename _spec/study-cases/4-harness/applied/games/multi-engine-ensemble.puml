@@ -1,0 +1,26 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Multi-Engine Ensemble — human-like + optimal + explainer
+' Paper: McIlroy-Young et al., Maia — Aligning Superhuman AI with Human Behavior, KDD 2020, arXiv:2006.01855
+' Paper: AlphaZero, arXiv:1712.01815
+' Level: 4
+' Provenance: projects/chess-coach · Orchestrator.ts, EngineBridge.ts, packages/engine-core
+
+component "Position"                   as POS  <<app>>
+component "Maia (lc0)\nhuman-like move" as MAIA <<app>>
+component "Stockfish\noptimal eval"     as SF   <<app>>
+cloud     "LLM explainer"              as LLM  <<cloud>>
+component "Grounded commentary"        as OUT  <<app>>
+
+POS  ARROW_MAIN  MAIA : predict human move
+POS  ARROW_MAIN  SF   : evaluate
+MAIA ARROW_MAIN  LLM  : move
+SF   ARROW_MAIN  LLM  : eval delta
+LLM  ARROW_CLOUD OUT  : explain (grounded)
+
+note bottom of LLM
+  Three engines, one tutor: **Maia** plays like a human at a target Elo,
+  **Stockfish** says what's optimal, and the **LLM explains the gap** —
+  grounded on engine eval, not free-form.
+end note
+@enduml

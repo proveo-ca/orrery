@@ -1,0 +1,35 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Multi-Agent Delegation
+' Paper: AutoGen: Enabling Next-Gen LLM Applications via Multi-Agent Conversation
+' URL:   https://arxiv.org/abs/2308.08155
+' Paper: MetaGPT: Meta Programming for A Multi-Agent Collaborative Framework
+' URL:   https://arxiv.org/abs/2308.00352
+' Level: 4
+' Provenance: projects/omnigent · examples/polly/
+
+actor     "Operator"                                          as OP
+component "Orchestrator\n(plans · delegates · writes no code)" as ORCH <<app>>
+component "Sub-agent A\n(git worktree)"                        as A    <<app>>
+component "Sub-agent B\n(git worktree)"                        as B    <<app>>
+component "Cross-vendor reviewer"                              as REV  <<app>>
+cloud     "Vendor models\n(Claude · GPT · …)"                  as LLM  <<cloud>>
+queue     "Pull requests"                                     as PR   <<async>>
+
+OP   ARROW_MAIN     ORCH : goal
+ORCH ARROW_QUEUE    A    : delegate task
+ORCH ARROW_QUEUE    B    : delegate task
+A    ARROW_CLOUD    LLM  : drive
+B    ARROW_CLOUD    LLM  : drive
+A    ARROW_MAIN     PR   : open PR
+B    ARROW_MAIN     PR   : open PR
+PR   ARROW_MAIN     REV  : review
+REV  ARROW_OPTIONAL ORCH : request changes
+PR   ARROW_MAIN     OP   : human merges
+
+note bottom of ORCH
+  The orchestrator writes no code — it decomposes work,
+  dispatches to parallel worktrees, and gates on cross-vendor
+  review; the human merges.
+end note
+@enduml

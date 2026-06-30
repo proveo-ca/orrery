@@ -1,0 +1,27 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Session Resumption — Snapshot + Live Tail
+' Standard: WHATWG Server-Sent Events (text/event-stream, Last-Event-ID)
+' URL:   https://html.spec.whatwg.org/multipage/server-sent-events.html
+' Level: 4
+' Provenance: projects/omnigent · server/routes/sessions.py
+
+component "Client (stateless)"            as CL   <<app>>
+component "Snapshot\n(GET items so far)"   as SNAP <<app>>
+queue     "Live SSE stream\n(text/event-stream)" as SSE <<async>>
+component "Dedup by id"                    as DD   <<app>>
+database  "Session store"                  as DB   <<db>>
+
+CL   ARROW_MAIN     SNAP : reconnect
+SNAP ARROW_MAIN     DB   : read items
+CL   ARROW_QUEUE    SSE  : open live tail
+SNAP ARROW_MAIN     DD   : merge
+SSE  ARROW_QUEUE    DD   : merge
+DD   ARROW_OPTIONAL CL   : in-order, no dupes
+
+note bottom of DD
+  Reconnect = a snapshot for catch-up **plus** a live SSE tail,
+  deduplicated by item id. Clients stay stateless; durable state lives
+  in the store.
+end note
+@enduml

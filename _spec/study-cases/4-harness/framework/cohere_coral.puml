@@ -1,0 +1,24 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+' Product: Cohere Coral / Command
+' URL: https://cohere.com/coral
+
+package "Cohere Coral" {
+    [Chat Interface\n(Citations)] as UI
+    [Orchestrator\n(Grounded QA)] as ORCH
+    [Retrieval Engine\n(Embeddings)] as RET
+    [Knowledge Base\n(Documents/Wiki)] as KB
+    [Command Model\n(Instruction Tuned)] as MDL
+}
+
+UI --> ORCH : "Question"
+ORCH --> RET : "Search"
+RET --> KB : "Fetch Chunks"
+ORCH --> MDL : "Generate w/ Citations"
+MDL --> UI : "Answer + Links"
+
+note right of UI
+  UI emphasizes citations
+  linking back to source.
+end note
+@enduml

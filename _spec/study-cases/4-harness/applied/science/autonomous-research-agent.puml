@@ -1,0 +1,23 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Autonomous Research Agent
+' Paper: Coscientist — Autonomous chemical research with LLMs, Nature 2023 (DOI 10.1038/s41586-023-06792-0)
+' Paper: ChemCrow — Augmenting LLMs with chemistry tools, arXiv:2304.05376
+' Level: 4
+' Provenance: domain: science (a domain ReAct loop)
+
+cloud     "LLM (planner)"                              as LLM  <<cloud>>
+component "Tools\n(lab robot · simulation · search)"   as TOOL <<app>>
+queue     "Observation"                                as OBS  <<async>>
+component "Hypothesis / result"                        as RES  <<app>>
+
+LLM  ARROW_CLOUD TOOL : plan + act
+TOOL ARROW_QUEUE OBS  : measure
+OBS  ARROW_MAIN  LLM  : observe (ReAct loop)
+LLM  ARROW_MAIN  RES  : conclude
+
+note bottom of LLM
+  A domain ReAct loop: plan → act through real tools (lab robotics,
+  simulation, literature) → observe → iterate toward a result.
+end note
+@enduml

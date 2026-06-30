@@ -1,0 +1,28 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Financial-Domain LLM
+' Paper: BloombergGPT: A Large Language Model for Finance
+' URL:   https://arxiv.org/abs/2303.17564
+' Paper: FinGPT: Open-Source Financial Large Language Models
+' URL:   https://arxiv.org/abs/2306.06031
+' Level: 5
+
+database  "Financial corpus\n(filings · news · market data)"                 as FIN   <<db>>
+database  "General corpus"                                                   as GEN   <<db>>
+component "Base / open weights"                                              as BASE  <<app>>
+component "Domain training\n(mixed pretrain — BloombergGPT · LoRA — FinGPT)"  as TRAIN <<app>>
+component "Financial-domain LLM"                                             as FLM   <<app>>
+component "Finance tasks\n(sentiment · NER · QA · classification)"            as TASK  <<app>>
+
+FIN   ARROW_MAIN     TRAIN : domain signal
+GEN   ARROW_OPTIONAL TRAIN : retain general ability
+BASE  ARROW_MAIN     TRAIN : adapt
+TRAIN ARROW_MAIN     FLM   : domain model
+FLM   ARROW_MAIN     TASK  : serve
+
+note bottom of TRAIN
+  Two routes, same tier: from-scratch mixed-corpus pretraining
+  (BloombergGPT) or parameter-efficient LoRA on open weights
+  (FinGPT). Either way the capability is in the weights.
+end note
+@enduml

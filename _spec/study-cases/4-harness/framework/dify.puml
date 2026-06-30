@@ -1,0 +1,27 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Dify — agentic-workflow platform
+' Product: Dify (LangGenius) — open-source LLM app / agent platform
+' URL:     https://dify.ai
+' URL:     https://github.com/langgenius/dify
+' Level:   4
+
+actor     "Builder"                          as B
+component "Visual workflow canvas"           as CANVAS <<app>>
+component "Agent + tools"                    as AGENT  <<app>>
+database  "Knowledge / RAG"                  as KB     <<db>>
+cloud     "Model gateway\n(many providers)"   as LLM    <<cloud>>
+queue     "Observability\n(trace · eval)"     as OBS    <<async>>
+
+B      ARROW_MAIN  CANVAS : compose visually
+CANVAS ARROW_MAIN  AGENT  : orchestrate
+AGENT  ARROW_MAIN  KB     : retrieve (RAG)
+AGENT  ARROW_CLOUD LLM    : call model
+AGENT  ARROW_QUEUE OBS    : trace / eval
+
+note bottom of CANVAS
+  Framework-tier platform: a **visual canvas** over RAG, tools, agents, a
+  model gateway, and observability — build/deploy agentic workflows
+  without wiring it all by hand (~140k★).
+end note
+@enduml

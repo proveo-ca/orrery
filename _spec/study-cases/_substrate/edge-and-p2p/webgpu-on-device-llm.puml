@@ -1,0 +1,22 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title WebGPU On-Device LLM
+' Paper: WebLLM — A High-Performance In-Browser LLM Inference Engine, arXiv:2412.15803
+' Level: n/a (substrate)
+' Provenance: projects/chess-coach · engine/WebLlmClient.ts (cross-links _substrate/web-llm/mlc.puml)
+
+component "Browser tab"                     as BR  <<app>>
+node      "WebGPU (VRAM)"                    as GPU <<host>>
+component "WASM runtime\n(MLC / WebLLM)"      as RT  <<app>>
+database  "Model weights\n(quantized · f32 fallback)" as W <<db>>
+
+BR  ARROW_MAIN RT  : prompt
+W   ARROW_MAIN RT  : warm-load
+RT  ARROW_MAIN GPU : compile + run
+GPU ARROW_MAIN BR  : tokens
+
+note bottom of GPU
+  A quantized model runs **entirely in the browser** on WebGPU — no
+  server. f32 fallback where f16 is unsupported; weights warm-loaded.
+end note
+@enduml

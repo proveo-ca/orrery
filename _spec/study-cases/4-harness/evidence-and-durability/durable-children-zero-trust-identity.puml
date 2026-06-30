@@ -1,0 +1,25 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Durable Children — Zero-Trust Workload Identity
+' Paper: Donenfeld, WireGuard, NDSS 2017 — https://www.wireguard.com/papers/wireguard.pdf
+' Std:   SPIFFE/SPIRE — https://spiffe.io/ ; SLSA — https://slsa.dev/
+' Level: 4
+' Provenance: projects/aphelion · durableagent/, tailnet/
+
+component "Parent agent"                            as P   <<app>>
+node      "Authenticated overlay\n(Tailscale / WireGuard)" as NET <<host>>
+component "Durable child\n(derived envelope)"        as C   <<app>>
+component "Signed control plane"                     as CP  <<app>>
+database  "Child state (durable)"                    as ST  <<db>>
+
+P   ARROW_CLOUD NET : provision over overlay
+NET ARROW_MAIN  C  : enroll (own identity)
+CP  ARROW_MAIN  C  : signed policy / relay
+C   ARROW_MAIN  ST : persist
+
+note bottom of C
+  A child's permission envelope is **derived, not ambiently inherited**.
+  Identity is the workload's own (zero-trust); a child's reports are
+  evidence until authority grants them agency.
+end note
+@enduml

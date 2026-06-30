@@ -1,0 +1,24 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Generative Competitive Agents
+' Paper: Park et al., Generative Agents — Interactive Simulacra of Human Behavior, arXiv:2304.03442
+' Level: 4
+' Provenance: projects/agents-of-empires · agent/, denier/, stalker/
+
+component "Simulated world"  as W  <<app>>
+component "Worker (economy)" as WK <<app>>
+component "Stalker (recon)"  as ST <<app>>
+component "Denier (attack)"  as DN <<app>>
+
+W  ARROW_MAIN  WK : perceive
+W  ARROW_MAIN  ST : perceive
+W  ARROW_MAIN  DN : perceive
+WK ARROW_QUEUE W  : gather
+ST ARROW_OPTIONAL W : scout
+DN ARROW_ERROR W  : attack
+
+note bottom of W
+  Many **role-specialized agents** (worker, stalker, denier) perceive and
+  act in a shared simulated world — competing and cooperating to win.
+end note
+@enduml

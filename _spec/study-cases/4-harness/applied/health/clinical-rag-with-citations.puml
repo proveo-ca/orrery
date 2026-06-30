@@ -1,0 +1,24 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Clinical RAG with Citations
+' Paper: Almanac — Retrieval-Augmented LMs for Clinical Medicine, NEJM AI 2024 (DOI 10.1056/AIoa2300068)
+' Level: 4
+' Provenance: domain: health (HITL ≈ aphelion governor)
+
+component "Clinical question"             as Q   <<app>>
+database  "Guidelines / literature"       as KB  <<db>>
+cloud     "LLM"                           as LLM <<cloud>>
+component "Answer + mandatory citations"  as ANS <<app>>
+component "Clinician sign-off"            as DOC <<host>>
+
+Q   ARROW_MAIN  KB  : retrieve
+KB  ARROW_MAIN  LLM : grounded context
+Q   ARROW_CLOUD LLM : ask
+LLM ARROW_MAIN  ANS : answer (cite-or-refuse)
+ANS ARROW_MAIN  DOC : review
+
+note bottom of ANS
+  Every claim **links to a retrieved source** (cite-or-refuse), and a
+  clinician signs off. Grounding + HITL, not free generation.
+end note
+@enduml

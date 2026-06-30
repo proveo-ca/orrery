@@ -1,0 +1,60 @@
+{
+  "$comment": "Proveo — Vega-Lite theme (light). Palette reference: colors.md. Use as the `config` of a spec, or pass to vegaEmbed: vegaEmbed(el, spec, { config: <this file> }). No font is set, so Vega's default face is used.",
+  "background": "#FAFAFA",
+  "title": {
+    "color": "#005F7F",
+    "subtitleColor": "#585858",
+    "fontSize": 16,
+    "subtitleFontSize": 12,
+    "anchor": "start",
+    "fontWeight": 700
+  },
+  "view": {
+    "stroke": "transparent",
+    "continuousWidth": 400,
+    "continuousHeight": 300
+  },
+  "arc": { "fill": "#005F7F" },
+  "area": { "fill": "#005F7F", "opacity": 0.85 },
+  "line": { "stroke": "#005F7F", "strokeWidth": 2 },
+  "path": { "stroke": "#005F7F" },
+  "trail": { "color": "#005F7F" },
+  "rect": { "fill": "#005F7F" },
+  "bar": { "fill": "#005F7F" },
+  "point": { "fill": "#005F7F", "filled": true, "size": 60 },
+  "circle": { "fill": "#005F7F" },
+  "square": { "fill": "#005F7F" },
+  "tick": { "fill": "#005F7F" },
+  "rule": { "stroke": "#585858" },
+  "symbol": { "fill": "#005F7F" },
+  "text": { "color": "#181818", "fontSize": 12 },
+  "axis": {
+    "domainColor": "#B4B3B3",
+    "gridColor": "#E5E4E4",
+    "tickColor": "#B4B3B3",
+    "labelColor": "#181818",
+    "titleColor": "#181818",
+    "labelFontSize": 12,
+    "titleFontSize": 13,
+    "titleFontWeight": 600
+  },
+  "legend": {
+    "labelColor": "#181818",
+    "titleColor": "#181818",
+    "labelFontSize": 12,
+    "titleFontSize": 13,
+    "titleFontWeight": 600,
+    "symbolType": "circle"
+  },
+  "header": {
+    "labelColor": "#181818",
+    "titleColor": "#005F7F"
+  },
+  "range": {
+    "category": ["#005F7F", "#00BAC6", "#CBDB2A", "#00769D", "#818D00", "#585858", "#009532", "#CB2000"],
+    "ordinal": ["#E5E4E4", "#00BAC6", "#00769D", "#005F7F", "#003445"],
+    "ramp": ["#E5E4E4", "#00BAC6", "#00769D", "#005F7F", "#003445"],
+    "heatmap": ["#E5E4E4", "#00BAC6", "#00769D", "#005F7F", "#003445"],
+    "diverging": ["#6E1100", "#CB2000", "#E5E4E4", "#00769D", "#005F7F"]
+  }
+}

@@ -1,0 +1,26 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Continuation Recovery
+' Paper: Ongaro & Ousterhout, Raft (replicated durable log), USENIX ATC 2014
+' URL:   https://raft.github.io/raft.pdf
+' Level: 4
+' Provenance: projects/aphelion · session/ (continuation), interpretation/service.go
+
+database  "Durable log + evidence"                    as LOG <<db>>
+component "Evidence hydration"                         as HY  <<app>>
+component "Recovery transition graph\n(typed states)"  as RTG <<app>>
+component "Operator approval\n(if consequential)"      as OP  <<async>>
+component "Resumed turn"                               as RES <<app>>
+
+LOG ARROW_MAIN     HY  : rehydrate
+HY  ARROW_MAIN     RTG : reconstruct state
+RTG ARROW_OPTIONAL OP  : gate risky resume
+RTG ARROW_MAIN     RES : continue
+RES ARROW_QUEUE    LOG : append (loop)
+
+note bottom of RTG
+  Long-horizon work resumes **deterministically** from the durable log
+  + hydrated evidence, walking a typed recovery transition graph —
+  not free-form re-prompting.
+end note
+@enduml

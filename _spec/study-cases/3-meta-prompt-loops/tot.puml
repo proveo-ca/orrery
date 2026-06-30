@@ -1,0 +1,29 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+title Tree of Thoughts (ToT)
+' Paper: Tree of Thoughts: Deliberate Problem Solving with Large Language Models
+' URL: https://arxiv.org/abs/2305.10601
+
+state "Problem Input" as Input
+state "Branch A" as A
+state "Branch B" as B
+state "Branch C" as C
+state "Evaluation" as Eval
+state "Final Solution" as Final
+
+[*] --> Input
+Input --> A : Generate
+Input --> B : Generate
+Input --> C : Generate
+
+A --> Eval : Evaluate
+B --> Eval : Evaluate
+C --> Eval : Evaluate
+
+state Eval {
+    state "Select Best Score" as Select
+}
+
+Eval --> Final : Highest Score
+Final --> [*]
+@enduml

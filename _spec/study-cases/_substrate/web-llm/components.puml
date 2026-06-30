@@ -1,0 +1,25 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+title WebLLM Component Architecture
+
+package "Web Application" {
+  component "UI Thread" as UI
+  component "Web Worker" as Worker {
+    component "WebLLM JS Runtime" as WebLLM
+    component "MLC Engine" as MLC
+  }
+}
+
+package "Browser APIs" {
+  component "WebGPU API" as WebGPU
+}
+
+package "Hardware" {
+  node "GPU (Discrete/Integrated)" as GPU
+}
+
+UI <--> WebLLM : Chat Messages / Stream
+WebLLM <--> MLC : Tokenization & Task Prep
+MLC <--> WebGPU : Shader Dispatch
+WebGPU <--> GPU : Hardware Execution
+@enduml

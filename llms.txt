@@ -1,0 +1,31 @@
+# orrery
+
+> The coordinating root for Proveo's agent projects: a constellation of independent applications
+> (attached as Git submodules) orbiting a shared `_spec/` learning surface that maps how agent / LLM
+> systems are built — a 7-level capability ladder plus sourced study-cases of the field.
+
+orrery holds no application code of its own; each `projects/*` is its own repository. The durable value
+here is the `_spec/` learning surface. Diagrams use the proveo identity theme (PlantUML, Mermaid,
+Vega-Lite); every study-case carries a `' Level:` header and a confirmed primary source.
+
+## Start here
+- [README](README.md): what orrery is, the layout, the project list, and submodule setup
+- [Capability ladder](_spec/study-cases/README.md): the organizing model — a demand-side funnel and a build-side study map (encoding depth × autonomy)
+- [Authoring & sourcing rules](_spec/CONTRIBUTING.md): conventions for diagrams and study-cases (themes, role stereotypes, `' Level:` headers, sourcing)
+
+## Overview diagrams
+- [Business-needs funnel](_spec/overview/business-needs-funnel.puml): how a request walks down the capability ladder
+- [Study map](_spec/overview/study-map.vega.json): the same tiers on a 2D plane
+
+## Study-cases (organized by capability level)
+- [Cross-cutting summary](_spec/study-cases/summary.md): the field at a glance
+- [Context & retrieval](_spec/study-cases/context-and-retrieval.md): context-engineering bibliography
+- `_spec/study-cases/4-harness/`: the richest tier — governance, evidence-and-durability, meta-orchestration, self-improving, and applied (games, health, finance, law, security, science)
+- `_spec/study-cases/5-fine-tuned/` and `_spec/study-cases/6-post-training/`: weight-changing tiers
+- `_spec/study-cases/3-meta-prompt-loops/`: prompt-loop reasoning techniques
+- `_spec/study-cases/_substrate/`: deployment & control substrate (orthogonal to the ladder)
+
+## Projects (Git submodules)
+- aphelion — audit/evidence-based personal agent runtime (public)
+- omnigent — vendor-neutral meta-harness / orchestrator-of-orchestrators (public)
+- chess-coach, nightfall, agents-of-empires — application projects (private)

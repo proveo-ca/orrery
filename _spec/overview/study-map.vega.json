@@ -1,0 +1,108 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "$comment": "Study map — capability tiers on a 2D plane: encoding depth (X) x autonomy (Y). Build-side companion to business-needs-funnel.puml. The scaffold|weights column split is the L4->L5 jump: below it the base model is frozen; at L5 the weights start changing. Render: vl2svg study-map.vega.json study-map.svg",
+  "title": {
+    "text": "Study Map — capability by encoding depth × autonomy",
+    "subtitle": "build-side companion to the funnel · the scaffold→weights split (L4→L5) is where the model's weights start changing",
+    "subtitleColor": "#585858",
+    "subtitleFontSize": 12
+  },
+  "width": 540,
+  "height": 340,
+  "resolve": { "scale": { "color": "independent" } },
+  "layer": [
+    {
+      "data": { "values": [
+        { "depth": "prompt",         "zone": "frozen workflow" },
+        { "depth": "scaffold",       "zone": "workflows change here" },
+        { "depth": "weights change", "zone": "weights change here" }
+      ] },
+      "mark": { "type": "rect", "opacity": 0.16 },
+      "encoding": {
+        "x": {
+          "field": "depth", "type": "ordinal",
+          "sort": ["prompt", "scaffold", "weights change"],
+          "axis": { "title": "encoding depth  →", "labelAngle": 0, "orient": "bottom", "labelFontWeight": 600 }
+        },
+        "color": {
+          "field": "zone", "type": "nominal",
+          "scale": { "domain": ["frozen workflow", "workflows change here", "weights change here"], "range": ["#585858", "#00BAC6", "#005F7F"] },
+          "legend": null
+        }
+      }
+    },
+    {
+      "data": { "values": [
+        { "tier": "L1",    "depth": "prompt",   "autonomy": "baseline",   "role": "host",  "label": "L1" },
+        { "tier": "L2",    "depth": "prompt",   "autonomy": "HITL",    "role": "app",   "label": "L2" },
+        { "tier": "L3",    "depth": "prompt",   "autonomy": "supervised", "role": "app",   "label": "L3" },
+        { "tier": "L4",    "depth": "scaffold", "autonomy": "supervised", "role": "app",   "label": "L4" },
+        { "tier": "L4-SI", "depth": "scaffold", "autonomy": "autonomous", "role": "app",   "label": "L4·SI" },
+        { "tier": "L5",    "depth": "weights change",  "autonomy": "HITL",    "role": "app",   "label": "L5" },
+        { "tier": "L6",    "depth": "weights change",  "autonomy": "supervised", "role": "app",   "label": "L6" },
+        { "tier": "L7",    "depth": "weights change",  "autonomy": "autonomous", "role": "cloud", "label": "L7" }
+      ] },
+      "mark": { "type": "rect", "stroke": "#FAFAFA", "strokeWidth": 2.5, "cornerRadius": 3 },
+      "encoding": {
+        "x": { "field": "depth", "type": "ordinal", "sort": ["prompt", "scaffold", "weights change"] },
+        "y": {
+          "field": "autonomy", "type": "ordinal",
+          "sort": ["autonomous", "supervised", "HITL", "baseline"],
+          "axis": { "title": "autonomy  →", "labelFontWeight": 600 }
+        },
+        "color": {
+          "field": "role", "type": "nominal",
+          "scale": { "domain": ["app", "host", "cloud"], "range": ["#005F7F", "#00BAC6", "#585858"] },
+          "legend": null
+        }
+      }
+    },
+    {
+      "data": { "values": [
+        { "depth": "prompt",   "autonomy": "baseline",   "label": "L1",     "role": "host" },
+        { "depth": "prompt",   "autonomy": "HITL",    "label": "L2",     "role": "app" },
+        { "depth": "prompt",   "autonomy": "supervised", "label": "L3",     "role": "app" },
+        { "depth": "scaffold", "autonomy": "supervised", "label": "L4",     "role": "app" },
+        { "depth": "scaffold", "autonomy": "autonomous", "label": "L4·SI", "role": "app" },
+        { "depth": "weights change",  "autonomy": "HITL",    "label": "L5",     "role": "app" },
+        { "depth": "weights change",  "autonomy": "supervised", "label": "L6",     "role": "app" },
+        { "depth": "weights change",  "autonomy": "autonomous", "label": "L7",     "role": "cloud" }
+      ] },
+      "mark": { "type": "text", "fontWeight": "bold", "fontSize": 13 },
+      "encoding": {
+        "x": { "field": "depth", "type": "ordinal", "sort": ["prompt", "scaffold", "weights change"] },
+        "y": { "field": "autonomy", "type": "ordinal", "sort": ["autonomous", "supervised", "HITL", "baseline"] },
+        "text": { "field": "label" },
+        "color": {
+          "condition": { "test": "datum.role == 'host'", "value": "#06303a" },
+          "value": "#FFFFFF"
+        }
+      }
+    },
+    {
+      "data": { "values": [
+        { "depth": "prompt",         "z": "frozen workflow" },
+        { "depth": "scaffold",       "z": "workflows change here" },
+        { "depth": "weights change", "z": "weights change here" }
+      ] },
+      "mark": { "type": "text", "fontWeight": 600, "fontSize": 11, "baseline": "bottom", "dy": -7 },
+      "encoding": {
+        "x": { "field": "depth", "type": "ordinal", "sort": ["prompt", "scaffold", "weights change"] },
+        "y": { "value": 0 },
+        "text": { "field": "z" },
+        "color": {
+          "field": "z", "type": "nominal",
+          "scale": { "domain": ["frozen workflow", "workflows change here", "weights change here"], "range": ["#585858", "#00BAC6", "#005F7F"] },
+          "legend": null
+        }
+      }
+    }
+  ],
+  "config": {
+    "background": "#FAFAFA",
+    "title": { "color": "#005F7F", "subtitleColor": "#585858", "fontSize": 16, "subtitleFontSize": 12, "anchor": "start", "fontWeight": 700 },
+    "view": { "stroke": "transparent" },
+    "axis": { "domainColor": "#B4B3B3", "gridColor": "#E5E4E4", "tickColor": "#B4B3B3", "labelColor": "#181818", "titleColor": "#181818", "labelFontSize": 12, "titleFontSize": 13, "titleFontWeight": 600 },
+    "legend": { "labelColor": "#181818", "titleColor": "#181818", "labelFontSize": 12, "symbolType": "square" }
+  }
+}

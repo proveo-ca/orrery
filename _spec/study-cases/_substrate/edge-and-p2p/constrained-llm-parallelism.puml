@@ -1,0 +1,22 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Constrained LLM Parallelism
+' Paper: Kwon et al., vLLM / PagedAttention — Efficient Memory Mgmt for LLM Serving, SOSP 2023, arXiv:2309.06180
+' Level: n/a (substrate)
+' Provenance: projects/agents-of-empires · brain/, MINIMUM_SPECS.md
+
+component "Many small agents\n(bounded context)" as AG  <<app>>
+component "Large commander model"                as CMD <<app>>
+node      "Shared GPU\n(KV-cache budget)"          as GPU <<host>>
+database  "Paged KV cache"                        as KV  <<db>>
+
+AG  ARROW_MAIN     GPU : small-model inference
+CMD ARROW_MAIN     GPU : strategic calls
+GPU ARROW_OPTIONAL KV  : page blocks (avoid thrash)
+
+note bottom of GPU
+  A fleet of small agents + one large commander share a GPU. Bounded
+  context windows + a paged KV cache keep the cache from thrashing under
+  many concurrent agents.
+end note
+@enduml

@@ -1,0 +1,23 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title LLM Strategy Agents — RTS Commander
+' Paper: CICERO — Human-level play in Diplomacy, Science 2022 (DOI 10.1126/science.ade9097)
+' Paper: Voyager — An Open-Ended Embodied Agent with LLMs, arXiv:2305.16291
+' Level: 4
+' Provenance: projects/agents-of-empires · brain/, engine/
+
+component "World state\n(resources · map · units)" as W    <<app>>
+cloud     "LLM commander"                          as CMD  <<cloud>>
+component "Strategy + allocation"                  as PLAN <<app>>
+component "Unit actions"                           as ACT  <<app>>
+
+W    ARROW_CLOUD CMD  : observe
+CMD  ARROW_MAIN  PLAN : strategy
+PLAN ARROW_MAIN  ACT  : allocate + command
+ACT  ARROW_MAIN  W    : act (loop)
+
+note bottom of CMD
+  An LLM "commander" reads world state and generates strategy, resource
+  allocation, and per-unit actions in a real-time strategy world.
+end note
+@enduml

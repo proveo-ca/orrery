@@ -1,0 +1,27 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title RL with Verifiable Rewards (RLVR)
+' Paper: Tülu 3: Pushing Frontiers in Open Language Model Post-Training (RLVR term origin)
+' URL:   https://arxiv.org/abs/2411.15124
+' Paper: DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning
+' URL:   https://arxiv.org/abs/2501.12948
+' Level: 6
+
+database  "Prompt set\n(math · code · verifiable tasks)"        as PROMPTS  <<db>>
+component "Policy LLM\n(current weights)"                        as POLICY   <<app>>
+component "Rollout sampler\n(K completions per prompt)"          as SAMPLER  <<app>>
+component "Verifier\n(unit tests · math checker · exact-match)"  as VERIFIER <<app>>
+component "RL optimizer\n(GRPO / PPO)"                           as RL       <<app>>
+
+PROMPTS  ARROW_MAIN  SAMPLER  : draw batch
+POLICY   ARROW_MAIN  SAMPLER  : sample K rollouts
+SAMPLER  ARROW_MAIN  VERIFIER : completions
+VERIFIER ARROW_QUEUE RL       : verifiable reward (1 / 0)
+RL       ARROW_MAIN  POLICY   : gradient update (loop)
+
+note bottom of VERIFIER
+  **No learned reward model.** The environment grades the
+  answer deterministically — removing the reward-hacking
+  surface, but limiting RLVR to checkable domains.
+end note
+@enduml

@@ -1,0 +1,25 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Policy Engine — allow / ask / deny
+' Paper: Saltzer & Schroeder (complete mediation / least privilege), 1975
+' URL:   https://web.mit.edu/Saltzer/www/publications/protection/
+' Level: 4
+' Provenance: projects/omnigent · policies/, runtime/policies/ ; aphelion · effectauth
+
+component "Action\n(every tool call)"                                 as ACT <<app>>
+component "Policy stack\nsession → agent → server\n(first match wins)" as PS  <<app>>
+component "Allow"             as AL <<app>>
+component "Ask (human gate)"  as AK <<async>>
+component "Deny"              as DN <<error>>
+
+ACT ARROW_MAIN  PS : check
+PS  ARROW_MAIN  AL : allow
+PS  ARROW_QUEUE AK : ask
+PS  ARROW_ERROR DN : deny
+
+note bottom of PS
+  **Complete mediation** — every action is checked. Three layers
+  (session → agent → server defaults) resolve to one verdict;
+  session rules win first.
+end note
+@enduml

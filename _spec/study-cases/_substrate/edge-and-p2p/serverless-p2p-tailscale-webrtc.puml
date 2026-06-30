@@ -1,0 +1,25 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Serverless P2P — Tailscale + WebRTC
+' Paper: Donenfeld, WireGuard, NDSS 2017 — https://www.wireguard.com/papers/wireguard.pdf
+' Std:   WebRTC — https://www.w3.org/TR/webrtc/
+' Level: n/a (substrate)
+' Provenance: projects/chess-coach · services/p2p.ts
+
+component "Host peer\n(room authority)"          as H   <<app>>
+component "Guest peer"                           as G   <<app>>
+node      "Tailscale overlay\n(100.x · WireGuard)" as NET <<host>>
+queue     "WebRTC data channel"                  as DC  <<async>>
+
+H   ARROW_CLOUD NET : join tailnet
+G   ARROW_CLOUD NET : join tailnet
+NET ARROW_MAIN  DC  : direct reachability (no STUN/TURN)
+H   ARROW_QUEUE DC  : board state + moves
+DC  ARROW_QUEUE G   : sync
+
+note bottom of NET
+  No backend: Tailscale gives direct `100.x` reachability, so peers open a
+  **WebRTC data channel** directly (no STUN/TURN/relay). The host is the
+  room authority.
+end note
+@enduml

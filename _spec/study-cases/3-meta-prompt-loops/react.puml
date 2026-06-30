@@ -1,0 +1,23 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+title ReAct Architecture (Reason + Act)
+' Paper: ReAct: Synergizing Reasoning and Acting in Language Models
+' URL: https://arxiv.org/abs/2210.03629
+
+start
+:Input Task;
+
+repeat
+  :LLM: "Thought" (Reasoning);
+  :LLM: "Action" (Tool Call);
+  if (Tool Call?) then (yes)
+    :Tool: Execute Action;
+    :Tool: "Observation" (Output);
+  else (no)
+    :LLM: Final Answer;
+    stop
+  endif
+repeat while (Task not done?)
+
+stop
+@enduml

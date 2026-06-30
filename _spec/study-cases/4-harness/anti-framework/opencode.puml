@@ -1,0 +1,28 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title opencode — open-source terminal coding agent
+' Product: opencode (SST / Anomaly) — open-source, MIT, multi-provider terminal coding agent
+' URL:     https://opencode.ai
+' URL:     https://github.com/sst/opencode
+' Level:   4
+' Note:    replaces the earlier OpenCodeInterpreter study-case (a different, 2023 project)
+
+component "Terminal UI (TUI)"                          as TUI   <<app>>
+component "opencode server\n(client/server core · agent loop)" as SRV <<app>>
+component "Tools\n(edit · read · run/PTY · LSP)"        as TOOLS <<app>>
+database  "Session store (SQLite)"                     as DB    <<db>>
+database  "Workspace (repo)"                           as REPO  <<db>>
+cloud     "75+ model providers\n(any LLM · hot-swap)"   as LLM   <<cloud>>
+
+TUI   ARROW_MAIN  SRV   : drive session
+SRV   ARROW_CLOUD LLM   : provider-agnostic calls
+SRV   ARROW_MAIN  TOOLS : tool calls
+TOOLS ARROW_MAIN  REPO  : edit / run / read
+SRV   ARROW_MAIN  DB    : persist state
+
+note bottom of SRV
+  Anti-framework coding agent: a client/server terminal agent wired to
+  **any** model provider (75+, hot-swappable), with direct file / LSP /
+  real-shell (PTY) tools. MIT, ~160k★ — a top-starred coding harness.
+end note
+@enduml

@@ -1,0 +1,25 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Self-Adapting Model (SEAL)
+' Paper: SEAL — Self-Adapting Language Models, arXiv:2506.10943
+' Level: 6
+' Provenance: industry baseline
+
+component "Model"                                    as M   <<app>>
+component "Self-edit\n(emit finetune data / directives)" as SE <<app>>
+component "Inner update\n(fine-tune on self-edit)"    as UPD <<app>>
+component "Downstream eval"                           as EV  <<async>>
+component "RL outer loop\n(reward = eval gain)"        as RL  <<app>>
+
+M   ARROW_MAIN  SE  : propose self-edit
+SE  ARROW_MAIN  UPD : apply
+UPD ARROW_MAIN  EV  : measure
+EV  ARROW_QUEUE RL  : reward
+RL  ARROW_MAIN  M   : reinforce self-edits (loop)
+
+note bottom of M
+  The model emits its **own finetune data / directives**; an inner update
+  applies them and an **RL outer loop** rewards the self-edits that raise
+  downstream eval — the model adapts its own weights.
+end note
+@enduml

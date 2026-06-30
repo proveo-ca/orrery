@@ -1,0 +1,24 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Probabilistic Risk — LLM as Formalizer
+' Paper: On the Limit of Language Models as Planning Formalizers, arXiv:2412.09879
+' Ref:   study-cases/summary.md §4 (PPL / PyMC)
+' Level: 4
+' Provenance: domain: finance
+
+cloud     "LLM (formalizer)"                   as LLM  <<cloud>>
+component "Formal model\n(PPL / PyMC script)"   as MOD  <<app>>
+component "Deterministic engine\n(runs the simulation)" as ENG <<app>>
+component "Risk result\n(confidence %)"         as RES  <<app>>
+
+LLM ARROW_CLOUD    MOD : write model (not guess)
+MOD ARROW_MAIN     ENG : execute
+ENG ARROW_MAIN     RES : hard numbers
+RES ARROW_OPTIONAL LLM : summarize for user
+
+note bottom of ENG
+  The LLM **doesn't guess** the risk — it writes a probabilistic model,
+  a deterministic engine computes it, and the result is fed back for the
+  LLM to explain.
+end note
+@enduml

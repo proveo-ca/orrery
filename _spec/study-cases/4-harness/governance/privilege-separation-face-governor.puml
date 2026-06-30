@@ -1,0 +1,23 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Privilege Separation — Face / Governor
+' Paper: Provos, Friedl, Honeyman, Preventing Privilege Escalation, USENIX Security 2003
+' URL:   https://www.usenix.org/legacy/events/sec03/tech/full_papers/provos_et_al/provos_et_al.pdf
+' Level: 4
+' Provenance: projects/aphelion · pipeline/, governorauth/, governorbackend/
+
+component "Face\n(unprivileged · conversational)" as FACE <<app>>
+component "Governor\n(privileged · authority)"     as GOV  <<error>>
+component "Effect / grant\n(governor-only)"         as EFF  <<app>>
+
+FACE ARROW_MAIN     GOV  : propose action
+GOV  ARROW_MAIN     EFF  : decide & issue
+GOV  ARROW_OPTIONAL FACE : verdict / record
+FACE ARROW_ERROR    EFF  : blocked — import-guard boundary
+
+note bottom of FACE
+  The face **cannot grant itself** authority. Enforced by a process
+  split + compile-time import guards (qmail / OpenSSH privsep), not
+  by discipline.
+end note
+@enduml

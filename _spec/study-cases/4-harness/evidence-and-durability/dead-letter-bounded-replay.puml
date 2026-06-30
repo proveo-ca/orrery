@@ -1,0 +1,24 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Dead-Letter + Bounded Replay
+' Pattern: Hohpe & Woolf, Dead Letter Channel (Enterprise Integration Patterns)
+' URL:   https://www.enterpriseintegrationpatterns.com/patterns/messaging/DeadLetterChannel.html
+' Level: 4
+' Provenance: projects/omnigent · _native_post_delivery.py
+
+component "Forwarder\n(POST mirror item)"            as FWD <<app>>
+cloud     "Coordinator server"                       as SRV <<cloud>>
+database  "dead_letter.jsonl\n(50 MB rolling)"        as DLQ <<error>>
+component "Startup replay\n(proven-undelivered only)" as RPL <<app>>
+
+FWD ARROW_CLOUD SRV : deliver
+FWD ARROW_ERROR DLQ : on failure / ambiguous
+RPL ARROW_MAIN  DLQ : read on startup
+RPL ARROW_CLOUD SRV : replay (dedup-safe)
+
+note bottom of DLQ
+  Undeliverable POSTs are persisted, not lost. On restart only
+  **proven-undelivered** records replay — a delivery-ambiguity
+  classifier prevents duplicates.
+end note
+@enduml

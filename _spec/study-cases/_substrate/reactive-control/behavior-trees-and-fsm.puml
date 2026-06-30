@@ -1,0 +1,22 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Behavior Trees & FSM
+' Paper: Colledanchise & Ögren, Behavior Trees in Robotics and AI: An Introduction, arXiv:1709.00084
+' Level: n/a (substrate)
+' Provenance: projects/nightfall · cats/catFSM.ts
+
+component "Discriminated-union state\n(stalking · hiding · fleeing …)" as ST <<app>>
+component "Pure transition fn\n(side-effect-free)"                     as TR <<app>>
+component "Per-state behavior"                                        as BH <<app>>
+component "Hysteresis\n(anti-jitter)"                                  as HY <<async>>
+
+ST ARROW_MAIN     TR : evaluate
+TR ARROW_MAIN     ST : next state
+ST ARROW_MAIN     BH : execute
+HY ARROW_OPTIONAL TR : damp rapid toggling
+
+note bottom of TR
+  A side-effect-free FSM over a discriminated-union state; transitions
+  are pure and testable. Hysteresis suppresses per-frame state chatter.
+end note
+@enduml

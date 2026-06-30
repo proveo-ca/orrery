@@ -1,0 +1,23 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Typed Execution-Events Ledger
+' Ref:   Fowler, Event Sourcing — https://martinfowler.com/eaaDev/EventSourcing.html
+' Ref:   Fowler, CQRS — https://martinfowler.com/bliki/CQRS.html
+' Level: 4
+' Provenance: projects/aphelion · session/store.go, types_runtime_records.go
+
+component "Turn / tool / effect events"        as EV   <<async>>
+database  "execution_events\nappend-only · monotonic seq" as LOG <<db>>
+component "Projections\n(transcript · views)"   as PROJ <<app>>
+actor     "Reader / audit"                      as R
+
+EV   ARROW_QUEUE    LOG  : append (never mutate)
+LOG  ARROW_MAIN     PROJ : replay / fold
+PROJ ARROW_MAIN     R    : present
+LOG  ARROW_OPTIONAL R    : canonical order
+
+note bottom of LOG
+  The **log is the truth**; the transcript is a *projection* of it.
+  A monotonic per-session seq fixes execution order for audit & replay.
+end note
+@enduml

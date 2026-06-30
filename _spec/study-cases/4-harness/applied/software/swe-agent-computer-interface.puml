@@ -1,0 +1,30 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title SWE-Agent — Agent-Computer Interface
+' Paper: SWE-bench: Can Language Models Resolve Real-World GitHub Issues?
+' URL:   https://arxiv.org/abs/2310.06770
+' Paper: SWE-agent: Agent-Computer Interfaces Enable Automated Software Engineering
+' URL:   https://arxiv.org/abs/2405.15793
+' Level: 4
+
+component "GitHub issue\n(natural-language bug)"                 as ISSUE <<host>>
+component "Agent (LLM)"                                          as AGENT <<app>>
+component "Agent-Computer Interface\n(view · edit · search · run)" as ACI <<app>>
+database  "Repository (sandbox)"                                 as REPO  <<db>>
+component "Test suite / CI"                                      as CI    <<app>>
+queue     "Patch (diff)"                                         as PATCH <<async>>
+
+ISSUE ARROW_MAIN  AGENT : task
+AGENT ARROW_MAIN  ACI   : structured commands
+ACI   ARROW_MAIN  REPO  : edit files
+ACI   ARROW_MAIN  CI    : run tests
+CI    ARROW_QUEUE AGENT : pass / fail observation
+AGENT ARROW_MAIN  PATCH : propose fix
+CI    ARROW_ERROR AGENT : on failure — iterate
+
+note bottom of ACI
+  The interface is built **for the agent** (compact,
+  error-tolerant commands), and the test suite is the
+  ground-truth reward — verifiable, like SWE-bench.
+end note
+@enduml

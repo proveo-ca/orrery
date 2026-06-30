@@ -1,0 +1,30 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+title Multi-Agent Debate (MAD)
+' Concept: Reducing Hallucinations via Adversarial Debate without Execution
+' Context: ChatEval and High-Precision Domains
+
+start
+:Input Task;
+
+:Drafter Agent: Generate Initial Plan/Draft;
+:Red-Team Judge: Critique Draft (Find Loopholes/Violations);
+
+repeat
+  :Drafter Agent: Revise Plan based on Critique;
+  :Red-Team Judge: Evaluate Revised Plan;
+repeat while (Judge Approved? or Max Loops Reached?) is (No)
+
+if (Approved by Judge?) then (yes)
+  :Output Proposal Artifact;
+else (no)
+  :Fallback / Ask Human for Clarification;
+endif
+stop
+
+note right
+  Provides run-time confidence
+  without executing real-world
+  actions (Dry-Run Verification).
+end note
+@enduml

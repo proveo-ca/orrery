@@ -1,0 +1,23 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+title Chain of Thought (CoT)
+' Paper: Chain-of-Thought Prompting Elicits Reasoning in Large Language Models
+' URL: https://arxiv.org/abs/2201.11903
+
+start
+:Input Question;
+
+:LLM: Start Generation;
+note right
+  Model produces intermediate
+  reasoning steps before answer.
+end note
+
+:Step 1: Reasoning;
+:Step 2: Reasoning;
+:Step 3: Reasoning;
+
+:LLM: Final Answer;
+
+stop
+@enduml

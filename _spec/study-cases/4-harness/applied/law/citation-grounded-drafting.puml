@@ -1,0 +1,27 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Citation-Grounded Legal Drafting
+' Paper: Large Legal Fictions — Profiling Legal Hallucinations in LLMs, arXiv:2401.01301
+' Ref:   study-cases/summary.md §5 (draft-and-diff)
+' Level: 4
+' Provenance: domain: law
+
+component "Drafting request"             as Q   <<app>>
+database  "Statutes / precedent"         as KB  <<db>>
+cloud     "LLM"                          as LLM <<cloud>>
+component "Draft + linked citations\n(hallucination-gated)" as DR <<app>>
+component "Redline\n(node-level edit)"    as RL  <<app>>
+actor     "Attorney"                     as AT
+
+Q   ARROW_MAIN  KB  : retrieve authorities
+KB  ARROW_MAIN  LLM : grounded
+LLM ARROW_MAIN  DR  : draft (cite or refuse)
+DR  ARROW_MAIN  RL  : draft-and-diff
+RL  ARROW_MAIN  AT  : edit at node level
+
+note bottom of DR
+  Mandatory citation linking + hallucination guardrails (the fabricated-
+  citation problem). Output is a draft-and-diff the attorney edits at the
+  clause / node level.
+end note
+@enduml

@@ -1,0 +1,31 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Clinical-Knowledge LLM
+' Paper: Large Language Models Encode Clinical Knowledge (Med-PaLM)
+' URL:   https://arxiv.org/abs/2212.13138
+' Paper: Towards Expert-Level Medical Question Answering with LLMs (Med-PaLM 2)
+' URL:   https://arxiv.org/abs/2305.09617
+' Paper: Capabilities of GPT-4 on Medical Challenge Problems
+' URL:   https://arxiv.org/abs/2303.13375
+' Level: 5
+
+component "Base LLM\n(open weights)"                       as BASE <<app>>
+database  "MultiMedQA\n(medical Q&A + instruction data)"   as DATA <<db>>
+component "Domain fine-tuning\n(instruction tuning · LoRA)" as FT   <<app>>
+component "Clinical-knowledge LLM"                          as CLIN <<app>>
+component "Medical-challenge eval\n(USMLE-style)"           as EVAL <<app>>
+component "Clinician sign-off"                              as DOC  <<host>>
+
+DATA ARROW_MAIN     FT   : supervised signal
+BASE ARROW_MAIN     FT   : adapt weights
+FT   ARROW_MAIN     CLIN : produce domain model
+CLIN ARROW_MAIN     EVAL : score accuracy + safety
+EVAL ARROW_OPTIONAL FT   : iterate
+CLIN ARROW_MAIN     DOC  : answer (HITL backstop)
+
+note bottom of CLIN
+  **Level 6:** capability lives in the adapted weights.
+  Eval measures accuracy **and** safety; a clinician
+  remains the final arbiter.
+end note
+@enduml

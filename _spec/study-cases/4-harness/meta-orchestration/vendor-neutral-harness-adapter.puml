@@ -1,0 +1,27 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Vendor-Neutral Harness Adapter
+' Pattern:  Adapter — Gamma, Helm, Johnson, Vlissides, Design Patterns (1994), ISBN 978-0201633610
+' Protocol: Model Context Protocol (tool layer)
+' URL:      https://modelcontextprotocol.io
+' Level:    4
+' Provenance: projects/omnigent · inner/executor.py, runtime/harnesses/
+
+component "Runtime\n(agent loop)"                                            as RT    <<app>>
+component "Executor protocol\nExecutorEvent · ToolCallRequest · TurnComplete" as PROTO <<app>>
+cloud     "Claude Code backend"                                              as B1    <<cloud>>
+cloud     "Codex backend"                                                    as B2    <<cloud>>
+cloud     "Cursor · OpenCode · Gemini · … (20+)"                             as B3    <<cloud>>
+cloud     "MCP tool servers"                                                 as MCP   <<cloud>>
+
+RT    ARROW_MAIN  PROTO : drive one turn
+PROTO ARROW_CLOUD B1    : adapt
+PROTO ARROW_CLOUD B2    : adapt
+PROTO ARROW_CLOUD B3    : adapt
+RT    ARROW_CLOUD MCP   : tool calls
+
+note bottom of PROTO
+  **One protocol, many vendors.** Backends plug in identically
+  (Adapter pattern); adding a vendor leaves the runtime unchanged.
+end note
+@enduml

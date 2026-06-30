@@ -1,0 +1,32 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+package "The Framework-Based Harness" {
+    [Adaptive UI\n(Chat/Search/Templates)] as UI
+    [Orchestrator / Engine\n(RAG/Semantic Kernel)] as ORCH
+    [Integration Layer\n(Connectors/Graph)] as INTEG
+    [Compliance / Safety\n(Trust Boundary / Eval)] as SAFE
+    [Fact Data\n(SaaS/Docs/DBs)] as FACTS
+    [Rule Data\n(Policies/Regulations)] as RULES
+    [Model Gateway] as LLM
+}
+
+UI --> ORCH : "User Intent"
+ORCH --> INTEG : "Retrieve Context (Dual-Channel)"
+INTEG <.. FACTS : "Sync Facts"
+INTEG <.. RULES : "Sync Rules"
+ORCH --> SAFE : "Pre-flight Check"
+SAFE --> LLM : "Prompt"
+LLM --> SAFE : "Content Filter / Eval"
+SAFE --> ORCH : "Validated Response"
+ORCH --> UI : "Proposal Artifact (Draft-and-Diff)"
+
+note right of SAFE
+  Critical layer for
+  enterprise adoption.
+end note
+
+note bottom of INTEG
+  Abstracts away API
+  complexity of SaaS.
+end note
+@enduml

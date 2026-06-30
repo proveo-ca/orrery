@@ -1,0 +1,29 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Capability / Effect Authorization
+' Paper: Miller, Robust Composition — Object-Capability Model (JHU 2006)
+' URL:   http://www.erights.org/talks/thesis/markm-thesis.pdf
+' Paper: Saltzer & Schroeder, The Protection of Information in Computer Systems, 1975
+' URL:   https://web.mit.edu/Saltzer/www/publications/protection/
+' Level: 4
+' Provenance: projects/aphelion · effectauth/effectauth.go, commandeffect/plan.go
+
+cloud     "Model proposal\n(command / action)"             as M    <<cloud>>
+component "Command-effect classifier"                      as CLS  <<app>>
+component "Capability check\n(granted work-mode)"          as GATE <<app>>
+component "Capability grant\n(scope · work-mode · expiry)" as CAP  <<db>>
+component "Effect executed"                                as EXE  <<app>>
+component "Denied"                                         as DEN  <<error>>
+
+M    ARROW_CLOUD    CLS  : proposes
+CLS  ARROW_MAIN     GATE : effect kind
+CAP  ARROW_OPTIONAL GATE : active grant
+GATE ARROW_MAIN     EXE  : within granted work-mode
+GATE ARROW_ERROR    DEN  : exceeds capability
+
+note bottom of CAP
+  Work-mode ladder: read_only < workspace_write < commit < deploy.
+  Authority is a **first-class object** — auditable, expirable,
+  narrowable; the proposal never widens it (least privilege).
+end note
+@enduml

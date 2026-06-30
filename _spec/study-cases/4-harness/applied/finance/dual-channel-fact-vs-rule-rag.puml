@@ -1,0 +1,26 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Dual-Channel RAG — fact vs rule
+' Paper: Dense X Retrieval (proposition retrieval), arXiv:2312.06648
+' Ref:   study-cases/context-and-retrieval.md §2
+' Level: 4
+' Provenance: domain: finance
+
+component "Query"                                       as Q   <<app>>
+database  "Pipeline A — facts\n(client state · history)" as FA  <<db>>
+database  "Pipeline B — rules\n(SEC / statutes)"         as FR  <<db>>
+cloud     "LLM"                                         as LLM <<cloud>>
+component "Compliant answer"                            as ANS <<app>>
+
+Q   ARROW_MAIN  FA  : retrieve facts
+Q   ARROW_MAIN  FR  : retrieve rules
+FA  ARROW_MAIN  LLM : conversational context
+FR  ARROW_ERROR LLM : hard guardrails (system prompt)
+LLM ARROW_CLOUD ANS : generate
+
+note bottom of FR
+  Two channels: **facts** as context, **rules/constraints** injected as
+  absolute system-prompt guardrails — enforcing compliance during
+  generation, not appended as ordinary context.
+end note
+@enduml

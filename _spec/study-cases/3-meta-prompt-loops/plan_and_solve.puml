@@ -1,0 +1,30 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+title Plan-and-Solve (Planner-Executor)
+' Paper: Plan-and-Solve Prompting: Improving Zero-Shot Chain-of-Thought Reasoning by Large Language Models
+' URL: https://arxiv.org/abs/2305.04091
+
+actor User
+participant "Planner Agent" as PLAN
+participant "Executor Agent" as EXEC
+participant "Tool Set" as TOOLS
+
+User -> PLAN : Input Task
+activate PLAN
+
+PLAN -> PLAN : Break down task\n(Generate Step 1, 2, 3...)
+PLAN -> EXEC : Submit Plan (List of Steps)
+deactivate PLAN
+activate EXEC
+
+loop Execution Loop (or Dry-Run)
+    EXEC -> TOOLS : Execute Step N (or Verify State Transition)
+    activate TOOLS
+    TOOLS --> EXEC : Result
+    deactivate TOOLS
+end
+
+EXEC -> User : Final Result
+deactivate EXEC
+
+@enduml

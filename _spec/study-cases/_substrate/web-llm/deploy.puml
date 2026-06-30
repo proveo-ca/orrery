@@ -1,0 +1,33 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+title Generic WebLLM Deployment Architecture
+
+cloud "Static Hosting (S3, GitHub Pages, Cloudflare)" as Host {
+  folder "Web Application" {
+    artifact "index.html"
+    artifact "app.bundle.js"
+  }
+  
+  folder "Model Repository (e.g., Llama-3-8B-Instruct-q4f16_1-MLC)" {
+    artifact "model-webgpu.wasm" as Wasm
+    artifact "mlc-chat-config.json" as Config
+    artifact "ndarray-cache.json" as Cache
+    artifact "params_shard_0.bin ... N.bin" as Weights
+  }
+}
+
+node "Client Device (Browser)" as Browser {
+  component "WebLLM Runtime" as Runtime
+  component "IndexedDB Cache" as IDB
+  component "GPU Memory" as VRAM
+}
+
+Runtime --> Host : Fetch Assets
+Runtime --> IDB : Cache Weights (Avoid re-download)
+Runtime --> VRAM : Load for Inference
+
+note bottom of Host
+  WebLLM requires zero backend compute.
+  All files are served as static assets (GET requests).
+end note
+@enduml

@@ -1,0 +1,24 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Legal-Reasoning Benchmark
+' Paper: LegalBench — Measuring Legal Reasoning in LLMs, arXiv:2308.11462
+' Paper: CaseHOLD — When Does Pretraining Help?, ICAIL 2021, arXiv:2104.08671
+' Level: 4
+' Provenance: domain: law (eval artifact)
+
+component "Task taxonomy\n(issue · rule · holding)"  as TAX <<app>>
+database  "Benchmark dataset\n(LegalBench · CaseHOLD)" as DS  <<db>>
+cloud     "LLM under test"                            as LLM <<cloud>>
+component "Scored reasoning\n(holding / precedent class)" as SC <<app>>
+
+TAX ARROW_MAIN     DS  : define tasks
+DS  ARROW_CLOUD    LLM : evaluate
+LLM ARROW_MAIN     SC  : classify
+SC  ARROW_OPTIONAL TAX : measure by task
+
+note bottom of DS
+  A collaboratively-built taxonomy of legal-reasoning tasks (holding
+  selection, precedent classification) — the **eval** that says whether
+  a legal agent actually reasons.
+end note
+@enduml

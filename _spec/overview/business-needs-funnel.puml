@@ -1,0 +1,52 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Capability Ladder — a business request walked through deterministic checkpoints
+skinparam componentStyle rectangle
+
+component "Business request"                            as REQ <<host>>
+component "Level 7 — Custom model"                      as L7  <<app>>
+component "Level 6 — RL post-training (reward loop)"    as L6  <<app>>
+component "Level 5 — Supervised fine-tuning (SFT)"      as L5  <<app>>
+component "Level 4 — Harness (workflow orchestration)"  as L4  <<app>>
+component "Level 3 — Meta-prompt loops"                 as L3  <<app>>
+component "Level 2 — Single prompts (skills)"           as L2  <<app>>
+component "Level 1 — Human expert"                      as L1  <<host>>
+
+REQ ARROW_MAIN     L7 : can the model one-shot it?
+L7  ARROW_OPTIONAL L6 : needs cheaper / faster / safer / more accurate outcomes
+L6  ARROW_OPTIONAL L5 : a reward loop is overkill — a labeled dataset suffices
+L5  ARROW_OPTIONAL L4 : don't retrain — ground & orchestrate a frozen model
+L4  ARROW_OPTIONAL L3 : no tools or integrations — self-contained reasoning
+L3  ARROW_OPTIONAL L2 : no reasoning loop needed
+L2  ARROW_OPTIONAL L1 : must be signed-off by a human
+
+note right of L7
+  **Market baseline:** frontier foundation models
+  trained from scratch (Opus- / GLM-class)
+end note
+note right of L6
+  **Market baseline:** RL / eval-loop post-training —
+  own the reward functions (OpenAI RFT, DeepSeek-R1)
+end note
+note right of L5
+  **Market baseline:** domain LoRA / fine-tuning on a
+  fixed owned dataset (HuggingFace domain models, Med-PaLM)
+end note
+note right of L4
+  **Market baseline:** agentic work platforms that own
+  integrations + authority + evidence (Claude Cowork,
+  Copilot Studio + Agent 365, AgentKit, LangGraph)
+end note
+note right of L3
+  **Market baseline:** general chat assistants that
+  augment the base prompt (ChatGPT)
+end note
+note right of L2
+  **Market baseline:** shared system-prompt / skill
+  libraries (community & vendor skill repos)
+end note
+note right of L1
+  **Market baseline:** domain experts
+  (financial analysts, clinicians, attorneys, SREs)
+end note
+@enduml

@@ -1,0 +1,60 @@
+{
+  "$comment": "Proveo — Vega-Lite theme (dark · Deep Teal). Matches proveo-dark.puml: dark teal canvas, palette colours brightened so series read on dark. Use as the `config` of a spec, or pass to vegaEmbed: vegaEmbed(el, spec, { config: <this file> }).",
+  "background": "#062831",
+  "title": {
+    "color": "#00BAC6",
+    "subtitleColor": "#8FB9C2",
+    "fontSize": 16,
+    "subtitleFontSize": 12,
+    "anchor": "start",
+    "fontWeight": 700
+  },
+  "view": {
+    "stroke": "transparent",
+    "continuousWidth": 400,
+    "continuousHeight": 300
+  },
+  "arc": { "fill": "#00AAE2" },
+  "area": { "fill": "#00AAE2", "opacity": 0.85 },
+  "line": { "stroke": "#00AAE2", "strokeWidth": 2 },
+  "path": { "stroke": "#00AAE2" },
+  "trail": { "color": "#00AAE2" },
+  "rect": { "fill": "#00AAE2" },
+  "bar": { "fill": "#00AAE2" },
+  "point": { "fill": "#00AAE2", "filled": true, "size": 60 },
+  "circle": { "fill": "#00AAE2" },
+  "square": { "fill": "#00AAE2" },
+  "tick": { "fill": "#00AAE2" },
+  "rule": { "stroke": "#8FB9C2" },
+  "symbol": { "fill": "#00AAE2" },
+  "text": { "color": "#EAF5F3", "fontSize": 12 },
+  "axis": {
+    "domainColor": "#8FB9C2",
+    "gridColor": "#1C5567",
+    "tickColor": "#8FB9C2",
+    "labelColor": "#EAF5F3",
+    "titleColor": "#EAF5F3",
+    "labelFontSize": 12,
+    "titleFontSize": 13,
+    "titleFontWeight": 600
+  },
+  "legend": {
+    "labelColor": "#EAF5F3",
+    "titleColor": "#EAF5F3",
+    "labelFontSize": 12,
+    "titleFontSize": 13,
+    "titleFontWeight": 600,
+    "symbolType": "circle"
+  },
+  "header": {
+    "labelColor": "#EAF5F3",
+    "titleColor": "#00BAC6"
+  },
+  "range": {
+    "category": ["#00BAC6", "#CBDB2A", "#00AAE2", "#E0ED51", "#B4B3B3", "#0CF0FB", "#009532", "#CB2000"],
+    "ordinal": ["#062831", "#00769D", "#00BAC6", "#00AAE2", "#0CF0FB"],
+    "ramp": ["#062831", "#00769D", "#00BAC6", "#00AAE2", "#0CF0FB"],
+    "heatmap": ["#062831", "#00769D", "#00BAC6", "#00AAE2", "#0CF0FB"],
+    "diverging": ["#6E1100", "#CB2000", "#1C5567", "#00AAE2", "#0CF0FB"]
+  }
+}

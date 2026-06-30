@@ -1,0 +1,23 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Native-CLI Forwarder + Transcript Mirroring
+' Pattern: Evans, Domain-Driven Design — Anticorruption Layer (2003)
+' URL:   https://learn.microsoft.com/azure/architecture/patterns/anti-corruption-layer
+' Level: 4
+' Provenance: projects/omnigent · *_native_forwarder.py
+
+cloud     "Vendor CLI (untouched)\nwrapped in tmux"        as CLI <<cloud>>
+component "Forwarder\n(tail JSONL / events)"               as FWD <<app>>
+component "Anti-corruption layer\n(map to framework items)" as ACL <<app>>
+cloud     "Coordinator server"                             as SRV <<cloud>>
+
+CLI ARROW_MAIN  FWD : emit transcript
+FWD ARROW_MAIN  ACL : normalize
+ACL ARROW_CLOUD SRV : mirror as external_conversation_item POSTs
+
+note bottom of ACL
+  The vendor CLI is **never modified**. A forwarder tails its output; an
+  anti-corruption layer maps it to framework items — bridging a foreign
+  agent into the platform without touching it.
+end note
+@enduml

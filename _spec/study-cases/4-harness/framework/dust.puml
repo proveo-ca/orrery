@@ -1,0 +1,24 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+' Product: Dust
+' URL: https://dust.tt/
+
+package "Dust Platform" {
+    [Front-End\n(Chat Interface)] as UI
+    [Assistant Registry\n(Custom Agents)] as REG
+    [Block Orchestrator\n(XP1 Runtime)] as ORCH
+    [Data Sources\n(Notion, GitHub, Slack)] as DATA
+    [Model Providers\n(OpenAI, Anthropic, Mistral)] as MODELS
+}
+
+UI -> REG : "Select Assistant"
+REG --> ORCH : "Load Config"
+ORCH --> DATA : "Retrieve Context"
+ORCH --> MODELS : "Execute Logic"
+MODELS --> UI : "Stream Result"
+
+note right of REG
+  Users define custom assistants
+  shared via workspace.
+end note
+@enduml

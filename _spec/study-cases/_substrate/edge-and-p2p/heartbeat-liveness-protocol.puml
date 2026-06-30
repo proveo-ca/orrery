@@ -1,0 +1,23 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Heartbeat Liveness Protocol
+' Paper: Chandra & Toueg, Unreliable Failure Detectors for Reliable Distributed Systems, JACM 1996 (DOI 10.1145/226643.226647)
+' Level: n/a (substrate)
+' Provenance: projects/agents-of-empires · nexus/
+
+component "Unit"                       as U  <<app>>
+component "Nexus (monitor)"            as NX <<app>>
+component "Dead\n(>1000 ms silent)"     as D  <<error>>
+component "Respawn (penalty)"          as RS <<app>>
+
+U  ARROW_QUEUE    NX : heartbeat every 100 ms
+NX ARROW_ERROR    D  : 1000 ms timeout
+D  ARROW_OPTIONAL RS : respawn with penalty
+RS ARROW_MAIN     U  : new unit
+
+note bottom of NX
+  Liveness by **periodic heartbeat + timeout** (a failure detector):
+  units report every 100 ms; silence past 1000 ms marks them dead and
+  triggers a penalized respawn.
+end note
+@enduml

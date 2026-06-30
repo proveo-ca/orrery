@@ -1,0 +1,26 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Reinforcement Fine-Tuning Pipeline (RFT)
+' Doc:   OpenAI RFT — https://platform.openai.com/docs/guides/reinforcement-fine-tuning
+' Paper: Fin-R1 (finance instance), arXiv:2503.16252
+' Level: 6
+' Provenance: industry baseline
+
+database  "Task prompts"                          as P    <<db>>
+component "Base model"                            as M    <<app>>
+component "Grader functions\n(code-based + LLM-judge)" as GR <<app>>
+component "RL optimizer"                           as RL   <<app>>
+component "Post-trained model"                     as OUT  <<app>>
+
+P  ARROW_MAIN     M   : sample rollouts
+M  ARROW_MAIN     GR  : score
+GR ARROW_QUEUE    RL  : reward
+RL ARROW_MAIN     M   : update weights (loop)
+M  ARROW_OPTIONAL OUT : converged
+
+note bottom of GR
+  Productized RL post-training: you supply **grader functions** (code
+  checks + LLM-judge); the pipeline optimizes the base model's weights
+  against them.
+end note
+@enduml

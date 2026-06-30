@@ -1,0 +1,30 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+title Reflexion (Self-Correction Loop)
+' Paper: Reflexion: Language Agents with Verbal Reinforcement Learning
+' URL: https://arxiv.org/abs/2303.11366
+
+start
+:Input Task;
+:Attempt 1;
+
+repeat
+    :Execute Task;
+    :Evaluate Result (Success/Fail);
+    if (Success?) then (yes)
+        :Final Answer;
+        stop
+    else (no)
+        :Reflect (Self-Critique);
+        note right
+          "I failed because X.
+           Next time I will do Y."
+        end note
+        :Store Reflection in Memory;
+        :Retry (Attempt N+1) with Memory;
+    endif
+repeat while (Retries < Max?)
+
+:Failure;
+stop
+@enduml

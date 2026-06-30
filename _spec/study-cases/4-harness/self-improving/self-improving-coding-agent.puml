@@ -1,0 +1,30 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Self-Improving Coding Agent
+' Paper: Darwin Gödel Machine: Open-Ended Evolution of Self-Improving Agents
+' URL:   https://arxiv.org/abs/2505.22954
+' Paper: AlphaEvolve: A coding agent for scientific and algorithmic discovery
+' URL:   https://arxiv.org/abs/2506.13131
+' Paper: A Self-Improving Coding Agent
+' URL:   https://arxiv.org/abs/2504.15228
+' Level: 4 (self-improving harness — weights frozen; the agent evolves its own code)
+
+database  "Archive of variants\n(open-ended, branching)"     as ARCHIVE <<db>>
+component "Agent scaffold\n(prompts + tools + control code)"  as AGENT   <<app>>
+component "Self-modification\n(agent rewrites its own code)"  as MUTATE  <<app>>
+component "Benchmark harness\n(SWE-bench / Polyglot)"         as BENCH   <<app>>
+component "Selection\n(keep iff measured score rises)"        as SELECT  <<app>>
+
+ARCHIVE ARROW_MAIN  AGENT   : pick a parent variant
+AGENT   ARROW_MAIN  MUTATE  : propose self-edit
+MUTATE  ARROW_MAIN  BENCH   : run modified agent
+BENCH   ARROW_QUEUE SELECT  : measured task success
+SELECT  ARROW_MAIN  ARCHIVE : add improved variant (loop)
+SELECT  ARROW_ERROR MUTATE  : discard regression
+
+note bottom of BENCH
+  **The benchmark is the reward.** A self-edit is kept only if
+  a measured eval score rises — no learned reward model, and
+  no human in the inner loop.
+end note
+@enduml

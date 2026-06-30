@@ -1,0 +1,23 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Control / Execution Plane Split
+' Paper: McKeown et al., OpenFlow, SIGCOMM CCR 2008 (DOI 10.1145/1355734.1355746)
+' Paper: Feamster, Rexford, Zegura, The Road to SDN, 2014
+' Level: 4
+' Provenance: projects/omnigent · server/ ↔ runner/
+
+component "Coordinator server\n(control plane · no agent state, no LLM)" as SRV <<app>>
+database  "Stores\n(sessions · policies · artifacts)"                    as DB  <<db>>
+component "Runner\n(execution plane · spawns harness, runs turns)"       as RUN <<app>>
+cloud     "LLM / tools"                                                  as LLM <<cloud>>
+
+SRV ARROW_MAIN  DB  : persist (truth)
+RUN ARROW_QUEUE SRV : outbound-only WS tunnel
+RUN ARROW_CLOUD LLM : run turn
+
+note bottom of SRV
+  The server holds **no agent state and runs no LLM code**; runners are
+  stateless against it (truth lives in stores). They meet only over an
+  **outbound-only** WS tunnel — no inbound ports on the runner.
+end note
+@enduml

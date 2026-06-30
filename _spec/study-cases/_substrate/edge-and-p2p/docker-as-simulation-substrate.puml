@@ -1,0 +1,24 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Docker-as-Simulation Substrate
+' Ref:  Petazzoni, "…Docker-in-Docker… Think twice" — https://jpetazzo.github.io/2015/09/03/do-not-use-docker-in-docker-for-ci/
+' Ref:  Linux cgroup v2 — https://docs.kernel.org/admin-guide/cgroup-v2.html
+' Level: n/a (substrate)
+' Provenance: projects/agents-of-empires · engine/, net/
+
+node      "Host hardware\n(CPU · RAM · disk)"        as HW  <<host>>
+component "Engine (privileged)\nmounts docker.sock"  as ENG <<app>>
+component "Unit containers\n(spawned siblings)"      as U   <<app>>
+component "cgroup limits\n= game resources"          as CG  <<app>>
+
+HW  ARROW_MAIN     ENG : Docker-out-of-Docker
+ENG ARROW_QUEUE    U   : spawn / kill units
+CG  ARROW_OPTIONAL U   : enforce CPU / RAM caps
+U   ARROW_MAIN     HW  : consume hardware
+
+note bottom of ENG
+  Host hardware **is** the game board: the engine mounts the Docker
+  socket to spawn sibling unit containers; cgroup limits become the
+  game's resource mechanics.
+end note
+@enduml

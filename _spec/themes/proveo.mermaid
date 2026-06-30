@@ -1,0 +1,58 @@
+%%{init:{
+  "theme":"base",
+  "themeVariables":{
+    "background"          : "#FAFAFA",
+
+    "primaryColor"        : "#005F7F",
+    "primaryTextColor"    : "#FAFAFA",
+    "primaryBorderColor"  : "#00BAC6",
+
+    "secondaryColor"      : "#00BAC6",
+    "secondaryTextColor"  : "#181818",
+    "secondaryBorderColor": "#006B70",
+
+    "tertiaryColor"       : "#CBDB2A",
+    "tertiaryTextColor"   : "#181818",
+    "tertiaryBorderColor" : "#818D00",
+
+    "lineColor"           : "#585858",
+    "textColor"           : "#181818",
+
+    "clusterBkg"          : "#FAFAFA",
+    "clusterBorder"       : "#005F7F",
+
+    "noteBkgColor"        : "#E5E4E4",
+    "noteTextColor"       : "#181818",
+    "noteBorderColor"     : "#B4B3B3",
+
+    "fontSize"            : "14px"
+  },
+  "themeCSS":"rect{rx:6;ry:6;}"
+}}%%
+
+%% Role classes mirror the PlantUML stereotypes (see proveo.puml):
+%%   app   MAIN  · async ALT  · host  ACCENT
+%%   cloud GRAY  · db    LIGHT · error RED
+flowchart TD
+    OP([Operator]):::host
+    WEB[apps/web Dashboard]:::app
+    API[apps/api Gateway]:::app
+    BUS([Event Bus]):::async
+    PG[(Postgres)]:::db
+    LLM{{LLM Vendor}}:::cloud
+    DLQ[Dead Letter Queue]:::error
+
+    OP  -->|opens| WEB
+    WEB -->|POST /jobs| API
+    API -.->|enqueue| BUS
+    BUS -->|consume| API
+    API -->|persist| PG
+    API -->|call model| LLM
+    API -->|on failure| DLQ
+
+    classDef app   fill:#005F7F,stroke:#00BAC6,color:#FAFAFA;
+    classDef async fill:#00BAC6,stroke:#006B70,color:#181818;
+    classDef host  fill:#CBDB2A,stroke:#818D00,color:#181818;
+    classDef cloud fill:#585858,stroke:#585858,color:#FAFAFA;
+    classDef db    fill:#E5E4E4,stroke:#585858,color:#181818;
+    classDef error fill:#CB2000,stroke:#CB2000,color:#FAFAFA;

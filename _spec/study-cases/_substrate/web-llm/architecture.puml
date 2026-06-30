@@ -1,0 +1,35 @@
+@startuml
+!theme plain
+skinparam componentStyle rectangle
+
+title Open-Weight LLM Browser Architecture
+
+package "Offline Preparation (MLC-LLM)" {
+  component "Model Compiler" as Compiler
+  artifact "HuggingFace Weights\n(PyTorch/Safetensors)" as HF
+  
+  HF --> Compiler : Input
+  Compiler --> "Quantized Weights (.bin)" : Output 1
+  Compiler --> "WebGPU Shader Engine (.wasm)" : Output 2
+}
+
+package "Runtime Environment (Browser)" {
+  component "Application UI" as UI
+  component "LLM JavaScript API" as JS_API
+  
+  node "Browser APIs" {
+    component "WebAssembly (WASM)" as WASM
+    component "WebGPU" as WebGPU
+  }
+  
+  node "Local Hardware" {
+    component "GPU" as GPU
+  }
+
+  UI <--> JS_API : Prompt / Stream
+  JS_API --> WASM : Executes Engine Logic
+  JS_API --> WebGPU : Dispatches Compute Shaders
+  WebGPU --> GPU : Matrix Multiplication
+}
+
+@enduml

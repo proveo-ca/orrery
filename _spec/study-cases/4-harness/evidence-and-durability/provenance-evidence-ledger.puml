@@ -1,0 +1,23 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Provenance / Evidence Ledger
+' Standard: W3C PROV-Overview — https://www.w3.org/TR/prov-overview/
+' Level: 4
+' Provenance: projects/aphelion · session/types_evidence.go, evidence_redaction.go
+
+component "Observation\n(tool output · model claim)"                 as OBS <<app>>
+database  "Evidence snapshot\nsource-kind · epistemic-status\npayload-hash · redaction" as EV <<db>>
+component "Hydration\n(rebuild context from evidence)"               as HY  <<app>>
+component "Transcript\n(presentation)"                               as TR  <<app>>
+
+OBS ARROW_MAIN     EV : record (immutable)
+EV  ARROW_MAIN     HY : rehydrate
+EV  ARROW_OPTIONAL TR : render
+HY  ARROW_MAIN     TR : grounded view
+
+note bottom of EV
+  Every claim is a **typed, immutable snapshot** with provenance —
+  who/what generated it, how sure, a payload hash, a redaction policy.
+  The ledger is truth; the transcript is presentation.
+end note
+@enduml

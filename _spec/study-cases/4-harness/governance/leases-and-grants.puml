@@ -1,0 +1,28 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Leases & Grants
+' Paper: Gray & Cheriton, Leases — Fault-Tolerant Distributed Cache Consistency, SOSP 1989
+' URL:   https://dl.acm.org/doi/10.1145/74850.74870
+' Paper: Burrows, The Chubby Lock Service, OSDI 2006
+' URL:   https://www.usenix.org/conference/osdi-06/chubby-lock-service-loosely-coupled-distributed-systems
+' Spec:  OAuth 2.0 (scoped delegation), RFC 6749
+' Level: 4
+' Provenance: projects/aphelion · session/types_continuation.go, capability_store.go
+
+component "Proposal\n(model asks)"             as PROP  <<app>>
+actor     "Operator approval"                  as OP
+component "Lease\n(scope · TTL · turn-budget)" as LEASE <<db>>
+component "Per-turn consumption"               as USE   <<app>>
+component "Expired / spent"                    as EXP   <<error>>
+
+PROP  ARROW_MAIN     OP    : request
+OP    ARROW_MAIN     LEASE : grant (bounded)
+LEASE ARROW_MAIN     USE   : consume one turn
+USE   ARROW_OPTIONAL LEASE : decrement budget
+LEASE ARROW_ERROR    EXP   : TTL elapsed / budget 0
+
+note bottom of LEASE
+  A grant is **consumable, time-bounded, non-self-renewing** —
+  spent per turn, never a blank check. Re-grant needs a new approval.
+end note
+@enduml

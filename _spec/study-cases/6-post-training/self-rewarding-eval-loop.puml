@@ -1,0 +1,25 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Self-Rewarding Eval Loop
+' Paper: Self-Rewarding Language Models, ICML 2024, arXiv:2401.10020
+' Paper: Rubrics as Rewards, arXiv:2507.17746 ; Meta-Rewarding, arXiv:2407.19594
+' Level: 6
+' Provenance: industry baseline
+
+component "Model\n(generator + judge)"             as M   <<app>>
+component "Self-generated responses"               as RSP <<app>>
+component "Self-judged reward\n(rubric / preference)" as J <<async>>
+component "Preference optimization\n(DPO / RL)"     as OPT <<app>>
+
+M   ARROW_MAIN  RSP : generate candidates
+M   ARROW_MAIN  J   : judge own outputs
+RSP ARROW_MAIN  J   : score
+J   ARROW_QUEUE OPT : reward signal
+OPT ARROW_MAIN  M   : update weights (loop)
+
+note bottom of M
+  The model produces **its own reward** — judging its outputs against a
+  rubric — and optimizes its weights on that signal, iterating without a
+  separate reward model.
+end note
+@enduml

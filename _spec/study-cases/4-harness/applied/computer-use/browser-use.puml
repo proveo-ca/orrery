@@ -1,0 +1,26 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title browser-use — computer-use / web-automation harness
+' Product: browser-use (YC W25) — open-source browser agent harness
+' URL:     https://browser-use.com
+' URL:     https://github.com/browser-use/browser-use
+' Level:   4
+
+cloud     "LLM agent"                              as LLM <<cloud>>
+component "browser-use harness"                    as BU  <<app>>
+component "Page → machine-readable\n(interactive elements / a11y tree)" as DOM <<app>>
+node      "Browser (Playwright)"                   as BR  <<host>>
+component "Web page"                               as WEB <<app>>
+
+BR  ARROW_MAIN  DOM : capture DOM / a11y tree
+DOM ARROW_MAIN  LLM : structured page state
+LLM ARROW_CLOUD BU  : choose action (click / type / navigate)
+BU  ARROW_MAIN  BR  : execute
+BR  ARROW_MAIN  WEB : navigate (loop)
+
+note bottom of DOM
+  Turns a web page into **machine-readable** interactive elements so an
+  LLM can reliably click / type / navigate — the canonical open-source
+  computer-use harness (~100k★, YC W25).
+end note
+@enduml

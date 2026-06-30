@@ -1,0 +1,27 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Reflective Prompt and Program Optimization
+' Paper: DSPy: Compiling Declarative Language Model Calls into Self-Improving Pipelines
+' URL:   https://arxiv.org/abs/2310.03714
+' Paper: GEPA: Reflective Prompt Evolution Can Outperform Reinforcement Learning
+' URL:   https://arxiv.org/abs/2507.19457
+' Level: 4 (self-improving harness — weights frozen; prompts/program evolve)
+
+component "LM program\n(frozen model + declarative modules)"     as PROG    <<app>>
+database  "Trainset + metric"                                    as DATA    <<db>>
+component "Reflective optimizer\n(DSPy compile · GEPA evolve)"    as OPT     <<app>>
+component "Reflection over traces\n(natural-language critique)"   as REFLECT <<app>>
+queue     "Candidate prompts / demos\n(Pareto frontier)"         as CANDS   <<async>>
+
+PROG    ARROW_MAIN  DATA    : run + score
+DATA    ARROW_QUEUE OPT     : metric + failing traces
+OPT     ARROW_MAIN  REFLECT : critique failures
+REFLECT ARROW_MAIN  CANDS   : proposed edits
+CANDS   ARROW_MAIN  PROG    : recompile (loop)
+
+note bottom of PROG
+  **Weights frozen.** Only the prompts, few-shot demonstrations,
+  and program structure change — gradient-free self-improvement
+  that can rival RL on small budgets.
+end note
+@enduml

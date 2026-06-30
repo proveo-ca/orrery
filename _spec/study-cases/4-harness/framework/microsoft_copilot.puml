@@ -1,0 +1,29 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+' Product: Microsoft Copilot (M365)
+' URL: https://www.microsoft.com/en-us/microsoft-365/copilot
+
+package "Microsoft Copilot Stack" {
+    [App Host\n(Word, Excel, Teams)] as APP
+    [User Gate\n(Ghost Text / Tab)] as GATE
+    [Copilot Orchestrator\n(Semantic Kernel)] as ORCH
+    [Microsoft Graph\n(Email, Files, Calendar)] as GRAPH
+    [LLM Gateway\n(Azure OpenAI)] as AI
+    [Trust Boundary\n(Compliance/Safety)] as SAFE
+}
+
+APP -> ORCH : "User Prompt + Context"
+ORCH --> GRAPH : "Grounding (RAG)"
+GRAPH --> ORCH : "Enterprise Data"
+ORCH --> SAFE : "Pre-Processing"
+SAFE --> AI : "Filtered Prompt"
+AI --> SAFE : "Raw Generation"
+SAFE ---> ORCH : "Post-Processing"
+ORCH --> GATE : "Suggestion"
+GATE ---> APP : "Insert (if Tab)"
+
+note right of GRAPH
+  Data retrieval respects
+  user permissions (ACLs).
+end note
+@enduml

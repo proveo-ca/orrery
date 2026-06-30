@@ -1,0 +1,24 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Autonomous Offensive Agent (sandboxed)
+' Paper: LLM Agents can Autonomously Hack Websites, arXiv:2402.06664
+' Paper: PentestGPT, USENIX Security 2024, arXiv:2308.06782
+' Level: 4
+' Provenance: domain: security (≈ omnigent sandbox / egress)
+
+cloud     "LLM agent"                  as LLM  <<cloud>>
+node      "Sandbox (egress-gated)"      as SBX  <<host>>
+component "Recon → exploit tools"      as TOOL <<app>>
+component "Target\n(authorized scope)"  as TGT  <<error>>
+
+LLM  ARROW_CLOUD TOOL : plan + invoke
+SBX  ARROW_MAIN  TOOL : contain
+TOOL ARROW_ERROR TGT  : recon / exploit
+TGT  ARROW_QUEUE LLM  : observation (loop)
+
+note bottom of SBX
+  An LLM agent runs recon/exploit **inside a sandbox with egress gating**
+  (authorized scope only) — the offensive analog of the harness's
+  sandbox + egress controls.
+end note
+@enduml
