@@ -1,4 +1,4 @@
-# orrery
+# Orrery
 
 The coordinating root for **Proveo's agent projects** — a constellation of independent applications,
 each attached as a Git submodule, orbiting a shared `_spec/` learning surface that maps how agent/LLM
