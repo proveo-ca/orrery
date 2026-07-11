@@ -1,0 +1,29 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Code-mode — executable-code action space (CodeAct)
+' Paper: Executable Code Actions Elicit Better LLM Agents (CodeAct), ICML 2024
+' URL:   https://arxiv.org/abs/2402.01030
+' URL:   https://github.com/NousResearch/hermes-agent   (embodiment — tools via RPC from a script)
+' Level: 4
+
+component "Agent (LLM)"                       as AGENT <<app>>
+component "Code action\n(one Python script)"   as CODE  <<app>>
+component "Interpreter / sandbox"              as EXEC  <<app>>
+component "Tools\n(called via RPC, in-loop)"    as TOOLS <<app>>
+database  "Context window"                     as CTX   <<db>>
+
+AGENT ARROW_MAIN  CODE  : emit executable action
+CODE  ARROW_MAIN  EXEC  : run
+EXEC  ARROW_MAIN  TOOLS : RPC calls — loops & branches;\nintermediate results stay local
+TOOLS ARROW_MAIN  EXEC  : results
+EXEC  ARROW_QUEUE CTX   : final result only
+CTX   ARROW_MAIN  AGENT : observe (one turn)
+
+note bottom of EXEC
+  A unified **code** action space instead of per-call JSON/text tool
+  invocations. A whole multi-step pipeline runs inside one script, so
+  intermediate results never re-enter the window — "zero-context-cost"
+  turns. Context **avoidance via code**, distinct from the tracked
+  context //pruning// (sliding window · active set · PageRank).
+end note
+@enduml

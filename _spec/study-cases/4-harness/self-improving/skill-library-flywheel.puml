@@ -1,0 +1,29 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Skill-library flywheel
+' Product: Hermes Agent (Nous Research) — self-authored, self-improving skills (MIT)
+' URL:     https://github.com/NousResearch/hermes-agent
+' URL:     https://agentskills.io   (open skill interoperability standard)
+' Level:   4 (self-improving harness — weights frozen; the skill library grows)
+
+component "Agent\n(frozen weights)"                    as AGENT <<app>>
+component "Task run\n(act with loaded skills)"          as RUN   <<app>>
+component "Skill authoring\n(after a complex task)"      as AUTH  <<app>>
+database  "Skill library\n(procedural memory)"           as LIB   <<db>>
+cloud     "Skills Hub\n(agentskills.io open standard)"    as HUB   <<cloud>>
+
+AGENT ARROW_MAIN     RUN  : act
+RUN   ARROW_MAIN     AUTH : distill a reusable skill
+AUTH  ARROW_MAIN     LIB  : write · version
+LIB   ARROW_MAIN     AGENT : load on future tasks (loop)
+RUN   ARROW_OPTIONAL LIB  : refine skill in use
+LIB   ARROW_CLOUD    HUB  : publish · import
+
+note bottom of LIB
+  Frozen-weight self-improvement: capability accrues as durable, named,
+  **shareable skills** (procedural memory), not gradients. Sibling to
+  ACE, which evolves a single //playbook// — here the artifact is a
+  reusable **skill library** plus an **interop standard**, giving the
+  otherwise-empty L2 "skills" rung an L4 flywheel that produces it.
+end note
+@enduml

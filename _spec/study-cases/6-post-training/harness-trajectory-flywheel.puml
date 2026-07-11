@@ -1,0 +1,31 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Harness trajectory flywheel (L4 → L6)
+' Paper: FireAct — Toward Language Agent Fine-tuning (fine-tune LMs on agent trajectories)
+' URL:   https://arxiv.org/abs/2310.05915
+' URL:   https://github.com/NousResearch/hermes-agent   (embodiment — batch trajectory generation + compression)
+' Level: 6
+' Note:  Sourcing is partly awkward. The core — agent trajectories → fine-tuning — is cleanly
+'        anchored by FireAct. The continuous "harness-as-data-source" flywheel and the trajectory
+'        *compression* step are Hermes-product-specific and composite: a stated capability of the
+'        repo, not a documented architecture, with no single canonical source.
+
+component "Harness (L4)\n(agent runs tasks with tools)"           as HARNESS <<app>>
+database  "Trajectory store\n(recorded tool-use runs)"            as TRAJ    <<db>>
+component "Batch-generate + compress\n(curate · dedup · distill)"  as CURATE  <<app>>
+component "Post-training (L6)\n(SFT / RFT on trajectories)"        as TRAIN   <<app>>
+component "Next-gen tool-calling model\n(updated weights)"         as MODEL   <<app>>
+
+HARNESS ARROW_MAIN  TRAJ   : record trajectories
+TRAJ    ARROW_QUEUE CURATE : batch · compress
+CURATE  ARROW_MAIN  TRAIN  : training set
+TRAIN   ARROW_MAIN  MODEL  : fine-tune weights
+MODEL   ARROW_MAIN  HARNESS : deploy back as new base (flywheel)
+
+note bottom of CURATE
+  The **L4 → L5/L6 bridge**: the frozen-weight harness is the //data source//
+  for post-training. Each model generation is trained on the previous
+  generation's tool-use trajectories — this is where weights start
+  changing (unlike the L4 self-improving loops, which stay frozen).
+end note
+@enduml
