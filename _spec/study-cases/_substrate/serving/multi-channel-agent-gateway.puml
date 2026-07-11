@@ -1,0 +1,33 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Multi-channel agent gateway + serverless hibernation
+' Product: Hermes Agent (Nous Research) — single-gateway multi-channel serving, scale-to-zero (MIT)
+' URL:     https://github.com/NousResearch/hermes-agent
+' URL:     https://modal.com   (serverless scale-to-zero backend exemplar)
+' Level:   n/a (substrate)
+' Note:  Sourcing is awkward. This is an engineering-composite deployment pattern — chat-platform
+'        fan-in + scale-to-zero serverless + cross-channel session continuity — documented only by
+'        the Hermes product (a stated capability), with no canonical spec or research paper. Included
+'        as substrate for completeness; lower architectural novelty than the other Hermes cases.
+
+cloud     "Channels\n(Telegram · Discord · Slack · WhatsApp · Signal · CLI)"     as CHAN  <<cloud>>
+component "Gateway (single process)\n(fan-in · cross-channel continuity)"        as GW    <<app>>
+component "Agent core"                                                           as AGENT <<app>>
+database  "Conversation store\n(per-user, cross-channel)"                        as CONV  <<db>>
+cloud     "Serverless runtime\n(Modal / Daytona — scale-to-zero, hibernates idle)" as SRV   <<cloud>>
+component "Execution backends\n(local · Docker · SSH · Singularity · Modal / Daytona)" as EXEC <<app>>
+
+CHAN  ARROW_CLOUD GW    : inbound messages
+GW    ARROW_MAIN  AGENT : route to one session
+GW    ARROW_OPTIONAL CHAN : replies
+AGENT ARROW_MAIN  CONV  : persist · resume across channels
+AGENT ARROW_CLOUD SRV   : hosted on (hibernates when idle)
+AGENT ARROW_MAIN  EXEC  : run tools / code
+
+note bottom of AGENT
+  One always-on agent reachable from any channel: a single gateway fans in
+  many chat platforms with cross-channel conversation continuity, over a
+  serverless runtime that scales to zero when idle. A serving / access
+  substrate, orthogonal to the capability ladder.
+end note
+@enduml

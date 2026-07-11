@@ -1,0 +1,30 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Cross-session user model (personalization memory)
+' Product: Honcho (Plastic Labs) — theory-of-mind user modeling for agents
+' URL:     https://github.com/plastic-labs/honcho
+' Paper:   MemGPT — Towards LLMs as Operating Systems (tiered long-term memory)
+' URL:     https://arxiv.org/abs/2310.08560
+' URL:     https://github.com/NousResearch/hermes-agent   (embodiment — Honcho + FTS5 recall)
+' Level:   4 (self-improving harness — weights frozen; the user model deepens)
+
+component "Agent\n(frozen weights)"                           as AGENT  <<app>>
+component "Sessions over time\n(multi-channel)"                as SESS   <<host>>
+database  "Episodic store\n(FTS5 sessions + LLM summaries)"     as EPI    <<db>>
+component "Background reasoning\n(build the user model)"        as REASON <<app>>
+database  "User model\n(peer representation · theory of mind)"  as MODEL  <<db>>
+
+AGENT  ARROW_MAIN     SESS   : converse
+SESS   ARROW_MAIN     EPI    : log messages & events
+EPI    ARROW_QUEUE    REASON : background distill
+REASON ARROW_MAIN     MODEL  : update representation
+MODEL  ARROW_MAIN     AGENT  : personalize next session (loop)
+EPI    ARROW_OPTIONAL AGENT  : episodic recall — search + summarize
+
+note bottom of MODEL
+  A distinct memory axis: not execution evidence (evidence-and-durability)
+  nor task-capability self-improvement, but a durable model of **the user**
+  that deepens across sessions and channels — observer→observed peer
+  representations — with weights frozen.
+end note
+@enduml

@@ -1,0 +1,29 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Serena — LSP symbolic code toolkit
+' Product: Serena — semantic code-retrieval & editing toolkit for coding agents (MIT)
+' URL:     https://github.com/oraios/serena
+' URL:     https://microsoft.github.io/language-server-protocol/   (Language Server Protocol)
+' Level:   4
+
+component "Harness + agent\n(Claude Code · Codex · OpenCode · Cursor · JetBrains)" as HOST   <<host>>
+component "Serena toolkit\n(one MCP server, mounted by many harnesses)"           as SERENA <<app>>
+cloud     "LSP language servers\n(40+ languages)"                                 as LSP    <<cloud>>
+database  "Repository (workspace)"                                                as REPO   <<db>>
+database  "Project memories\n(.serena/memories)"                                  as MEM    <<db>>
+
+HOST   ARROW_MAIN     SERENA : symbol-level tool calls (MCP)
+SERENA ARROW_CLOUD    LSP    : LSP queries — find symbol,\nreferencing symbols, type hierarchy
+LSP    ARROW_MAIN     REPO   : parse & index
+SERENA ARROW_MAIN     REPO   : symbolic edits — replace body,\ninsert after symbol, rename / move
+SERENA ARROW_OPTIONAL MEM    : onboard · recall
+
+note bottom of SERENA
+  A **semantic** agent-computer interface: the agent operates on the
+  live **LSP symbol graph** (definitions, references, type hierarchy)
+  and edits at **symbol granularity**, not text ranges — distinct from
+  the tracked tree-sitter static repo-map (Aider). One portable MCP
+  server is reused across many harnesses; the **tool layer** is the
+  portable unit — the inverse of the vendor-neutral //harness// adapter.
+end note
+@enduml
