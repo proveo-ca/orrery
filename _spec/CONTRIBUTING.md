@@ -6,10 +6,15 @@ patterns — distilled into diagrams. It is *not* coupled to any one project's c
 **field**, and our own `projects/*` are treated as reference implementations of patterns that also
 exist in the literature.
 
-Authoring and rendering follow the **`spec` skill** (`.claude/skills/spec/`): proveo identity theme,
-six `<<role>>` stereotypes, intent-carrying `ARROW_*` macros, explicit naming, current-state truth,
-and `plantuml -checkonly` before commit. Read it first. This file adds the rules that are specific to
-the **study-cases** surface — chiefly: **every file is sourced.**
+Authoring and rendering follow the **`spec` skill** (`skills/spec/`, also linked from
+`.agents/skills/spec/`): proveo identity theme, six `<<role>>` stereotypes, intent-carrying `ARROW_*`
+macros, explicit naming, current-state truth, and `plantuml -checkonly` before commit. Install into
+another checkout with `npx skills add proveo-ca/orrery --skill spec`. Read it first. This file adds
+the rules that are specific to the **study-cases** surface — chiefly: **every file is sourced.**
+
+After adding or renaming study-case sources, regenerate the scraper index and digest from the repo
+root: `bash scripts/build-llm-context.sh` (updates `llms.txt` and `llms-full.txt`). Verify with
+`bash scripts/test-build-llm-context.sh`.
 
 ---
 
