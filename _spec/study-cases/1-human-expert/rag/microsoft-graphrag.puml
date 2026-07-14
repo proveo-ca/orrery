@@ -1,0 +1,32 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Microsoft GraphRAG — Local → Global Summarization
+' Paper: From Local to Global: A Graph RAG Approach to Query-Focused Summarization
+' URL:   https://arxiv.org/abs/2404.16130
+' URL:   https://github.com/microsoft/graphrag
+' Level: 1
+
+component "Corpus chunks" as C <<app>>
+component "LLM entity/relation\nextraction" as EX <<cloud>>
+database  "Knowledge graph\nnodes + edges" as KG <<db>>
+component "Leiden communities" as COM <<async>>
+database  "Community reports\n(hierarchical summaries)" as SUM <<db>>
+component "Local search\nentity neighborhood" as LOC <<host>>
+component "Global search\nmap-reduce over reports" as GLOB <<host>>
+cloud     "LLM answer" as LLM <<cloud>>
+
+C ARROW_CLOUD EX : index
+EX ARROW_MAIN KG : write KG
+KG ARROW_QUEUE COM : cluster
+COM ARROW_MAIN SUM : community reports
+KG ARROW_OPTIONAL LOC : entity-centric
+SUM ARROW_MAIN GLOB : corpus-wide themes
+LOC ARROW_CLOUD LLM
+GLOB ARROW_CLOUD LLM
+
+note bottom of SUM
+  Strength: global / thematic queries.
+  Cost: expensive LLM indexing; later work
+  (LightRAG, LazyGraphRAG, KET-RAG) cuts that bill.
+end note
+@enduml

@@ -1,0 +1,26 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title PathRAG — Flow-Based Relational Path Pruning
+' Paper: PathRAG: Pruning Graph-based Retrieval Augmented Generation with Relational Paths
+' URL:   https://arxiv.org/abs/2502.14902
+' Level: 1
+
+database  "Indexing graph" as KG <<db>>
+component "Retrieve candidate\nrelational paths" as CAND <<app>>
+component "Flow-based pruning\nkeep reliable paths" as PRUNE <<async>>
+component "Path-based prompting\n(ordered text paths)" as PROMPT <<host>>
+cloud     "LLM generator" as LLM <<cloud>>
+component "Redundant neighbor dump" as NOISE <<error>>
+
+KG ARROW_MAIN CAND : query nodes
+CAND ARROW_ERROR NOISE : unpruned neighbors
+CAND ARROW_MAIN PRUNE : score flow
+PRUNE ARROW_MAIN PROMPT : sparse paths
+PROMPT ARROW_CLOUD LLM : coherent multi-hop context
+
+note bottom of PRUNE
+  Thesis: graph RAG fails from **redundancy**,
+  not from missing edges. Prune paths → ~40%+
+  less context while holding accuracy.
+end note
+@enduml

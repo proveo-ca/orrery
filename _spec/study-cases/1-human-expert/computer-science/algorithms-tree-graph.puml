@@ -1,0 +1,63 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Algorithms ↔ Data Types — Tree / Graph-Based
+' Primer: Algorithms (tree/graph family + DP nested primer)
+' URL:    https://github.com/proveo-ca/computer-science/blob/main/libs/algorithms/_docs/TREE_GRAPH_BASED_ALGORITHMS.puml
+' URL:    https://github.com/proveo-ca/computer-science/blob/main/libs/algorithms/src/dynamic-programming/PRIMER.md
+' Level:  1
+
+package "Containers" {
+  component "Array" as A <<db>>
+  component "Map" as M <<db>>
+  component "Stack" as ST <<db>>
+  component "Queue" as Q <<db>>
+  component "Graph" as G <<db>>
+  component "Heap" as H <<db>>
+  component "Union-Find" as UF <<db>>
+}
+
+package "Core paradigms" {
+  component "Binary Search" as BS <<host>>
+  component "Divide & Conquer" as DC <<host>>
+  component "Dynamic Programming" as DP <<host>>
+  component "Jump Search" as JS <<host>>
+}
+
+package "Tree/graph algorithms" {
+  component "Graphing" as GR <<app>>
+  component "Pathing / Dijkstra" as PATH <<app>>
+  component "Priority / top-K" as PRI <<app>>
+  component "Sorting" as SORT <<app>>
+  component "Topological Sort" as TOPO <<app>>
+}
+
+A ARROW_MAIN BS
+A ARROW_MAIN JS
+A ARROW_MAIN SORT
+M ARROW_OPTIONAL DP : memo table
+ST ARROW_OPTIONAL DC : recursion stack
+UF ARROW_OPTIONAL DC : DSU-on-tree
+G ARROW_MAIN GR
+G ARROW_MAIN PATH
+Q ARROW_OPTIONAL PATH : BFS shortest
+H ARROW_MAIN PRI
+UF ARROW_OPTIONAL PRI : Kruskal MST
+Q ARROW_OPTIONAL TOPO : Kahn
+ST ARROW_OPTIONAL TOPO : DFS sort
+
+DC ARROW_OPTIONAL BS : subdivide space
+DC ARROW_OPTIONAL SORT : merge/quick
+DC ARROW_OPTIONAL DP : overlap + memo
+JS ARROW_OPTIONAL BS : skip then seek
+PATH ARROW_MAIN GR
+PRI ARROW_OPTIONAL PATH : Dijkstra PQ
+SORT ARROW_OPTIONAL TOPO
+TOPO ARROW_OPTIONAL GR
+
+note bottom of DP
+  1) classify (overlap + optimal substructure)
+  2) minimal state params
+  3) transition relation
+  4) tabulation or memoization
+end note
+@enduml

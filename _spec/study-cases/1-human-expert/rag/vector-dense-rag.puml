@@ -1,0 +1,29 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Dense / Vector RAG (baseline pipeline)
+' Paper: Retrieval-Augmented Generation for Large Language Models: A Survey
+' URL:   https://arxiv.org/abs/2312.10997
+' Level: 1
+
+actor "User query" as U
+component "Embedder" as E <<app>>
+database  "Vector index\n(chunk embeddings)" as IX <<db>>
+component "Retriever\ntop-k ANN" as RET <<app>>
+component "Optional reranker" as RR <<async>>
+cloud     "LLM generator" as LLM <<cloud>>
+component "Answer + citations" as OUT <<host>>
+
+U ARROW_MAIN E : embed query
+E ARROW_MAIN RET : q-vector
+IX ARROW_MAIN RET : nearest chunks
+RET ARROW_OPTIONAL RR : score
+RR ARROW_CLOUD LLM : context pack
+RET ARROW_CLOUD LLM : (if no rerank)
+LLM ARROW_MAIN OUT : generate grounded answer
+
+note bottom of IX
+  Baseline Jul 2026 fact-retrieval default.
+  Fast; weak on multi-hop / global themes
+  unless augmented (graph, tree, router).
+end note
+@enduml

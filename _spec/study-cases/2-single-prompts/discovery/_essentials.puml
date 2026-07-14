@@ -1,0 +1,40 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title L2 Discovery Map — Where to Find Popular Prompts / Skills
+' Level: 2
+' Index of discovery channels; recipes in how-to-query.md
+
+actor "Human expert\n(needs current L2 baseline)" as H
+
+package "1. Agent skills (SKILL.md)" {
+  cloud "skills.sh\ninstall leaderboard" as SH <<cloud>>
+  component "npx skills find/add\n+ GET /api/search" as CLI <<app>>
+  component "anthropics/skills\n+ agentskills.io" as ANT <<host>>
+}
+
+package "2. Classic one-shots" {
+  cloud "prompts.chat\n(+ PROMPTS.md / CSV / HF)" as PC <<cloud>>
+}
+
+package "3. Product system prompts" {
+  database "Leak / extract archives\n(system_prompts_leaks, …)" as ARCH <<db>>
+}
+
+H ARROW_MAIN SH : browse all-time installs
+H ARROW_MAIN CLI : query / install
+CLI ARROW_CLOUD SH : telemetry index
+H ARROW_OPTIONAL ANT : first-party + format
+H ARROW_OPTIONAL PC : persona libraries
+H ARROW_OPTIONAL ARCH : vendor baselines
+
+note bottom of SH
+  **Correct popularity proxy for skills** =
+  install counts (anonymous CLI telemetry),
+  not GitHub stars alone.
+end note
+
+note bottom of ARCH
+  Extracted product prompts — cite archive URL;
+  freshness > star count for "what ships today."
+end note
+@enduml

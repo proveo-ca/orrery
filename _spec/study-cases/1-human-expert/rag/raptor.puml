@@ -1,0 +1,24 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title RAPTOR — Recursive Abstractive Tree Retrieval
+' Paper: RAPTOR: Recursive Abstractive Processing for Tree-Organized Retrieval
+' URL:   https://arxiv.org/abs/2401.18059
+' Level: 1
+
+component "Leaf chunks" as L <<app>>
+cloud     "Cluster + abstract\nsummarize" as SUM <<cloud>>
+database  "Summary tree\ncoarse → fine layers" as TREE <<db>>
+component "Collapsed tree search\n(any layer)" as RET <<host>>
+cloud     "LLM generator" as LLM <<cloud>>
+
+L ARROW_CLOUD SUM : recursive
+SUM ARROW_MAIN TREE : build layers
+TREE ARROW_MAIN RET : retrieve nodes
+RET ARROW_CLOUD LLM : multi-granularity context
+
+note bottom of TREE
+  Tree RAG for long documents: upper nodes
+  for thematic / sense-making queries; leaves
+  for local detail. Complementary to entity KGs.
+end note
+@enduml

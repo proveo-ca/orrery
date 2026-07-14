@@ -1,0 +1,24 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title LazyGraphRAG — Defer Graph Work to Query Time
+' Product / research blog: Microsoft LazyGraphRAG
+' URL:   https://www.microsoft.com/en-us/research/blog/lazygraphrag-setting-a-new-standard-for-quality-and-cost/
+' Level: 1
+
+component "Lightweight index\n(minimal upfront LLM)" as IDX <<db>>
+component "Query arrives" as Q <<app>>
+component "Best-first + BFS\nrelevance expansion" as EXP <<async>>
+component "Relevance-test budget\n(quality ↔ cost dial)" as BUD <<host>>
+cloud     "LLM claims / answers" as LLM <<cloud>>
+
+Q ARROW_MAIN IDX : start sparse
+IDX ARROW_QUEUE EXP : grow subgraph on demand
+BUD ARROW_OPTIONAL EXP : cap LLM tests
+EXP ARROW_CLOUD LLM : answer from induced graph
+
+note bottom of BUD
+  Contrasts eager GraphRAG indexing: pay for
+  structure **per query**, useful for one-off /
+  exploratory analytics on large corpora.
+end note
+@enduml

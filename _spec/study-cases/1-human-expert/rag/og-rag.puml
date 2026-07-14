@@ -1,0 +1,26 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title OG-RAG — Ontology-Grounded Hypergraph Retrieval
+' Paper: OG-RAG: Ontology-Grounded Retrieval-Augmented Generation For Large Language Models
+' URL:   https://arxiv.org/abs/2412.15235
+' Level: 1
+
+database  "Domain ontology\n(schema constraints)" as ONT <<db>>
+component "Ontology-guided\nextraction" as EX <<app>>
+database  "Hypergraph facts\n(schema-bound)" as HG <<db>>
+component "Constrained retrieval" as RET <<host>>
+cloud     "LLM generator" as LLM <<cloud>>
+component "Ungrounded free extract" as HALL <<error>>
+
+ONT ARROW_MAIN EX : allow types/relations
+EX ARROW_MAIN HG : write facts
+EX ARROW_ERROR HALL : off-schema claims blocked
+HG ARROW_MAIN RET : retrieve hyperedges
+RET ARROW_CLOUD LLM : high-precision domain QA
+
+note bottom of ONT
+  Best when a **known schema** exists (medical,
+  regulatory, enterprise taxonomy). Trades
+  discovery flexibility for factual discipline.
+end note
+@enduml

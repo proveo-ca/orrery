@@ -1,0 +1,57 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Cache Strategies ↔ Supporting Algorithm Families
+' Primer / diagram: apps/cache-strategies
+' URL:    https://github.com/proveo-ca/computer-science/blob/main/apps/cache-strategies/_docs/CACHE_STRATEGIES_ALGORITHMS.puml
+' Level:  1
+
+package "Algorithm building blocks" {
+  component "array_processing\nlist · queue · deque" as AP <<app>>
+  component "hashing\nmap / set" as HASH <<app>>
+  component "priority\nheap / top-K" as PRI <<app>>
+  component "sliding_window" as SW <<app>>
+}
+
+package "Classic policies" {
+  component "FIFO" as FIFO <<db>>
+  component "LRU" as LRU <<db>>
+  component "MRU" as MRU <<db>>
+  component "LFU" as LFU <<db>>
+  component "ARC" as ARC <<db>>
+  component "RandomReplace" as RR <<db>>
+}
+
+package "Modern policies" {
+  component "CLOCK / CLOCK-Pro" as CLK <<host>>
+  component "TwoQ" as TQ <<host>>
+  component "LIRS" as LIRS <<host>>
+  component "TinyLFU" as TLFU <<host>>
+  component "GDSF" as GDSF <<host>>
+}
+
+AP ARROW_MAIN FIFO : ring queue
+AP ARROW_MAIN LRU : DLL + map
+HASH ARROW_MAIN LRU
+AP ARROW_MAIN MRU
+HASH ARROW_MAIN MRU
+AP ARROW_MAIN ARC : 2 LRUs + ghosts
+HASH ARROW_MAIN ARC
+HASH ARROW_MAIN LFU
+PRI ARROW_MAIN LFU
+HASH ARROW_OPTIONAL RR
+AP ARROW_MAIN CLK : second-chance ring
+AP ARROW_MAIN TQ
+HASH ARROW_MAIN TQ
+AP ARROW_MAIN LIRS
+HASH ARROW_MAIN LIRS
+HASH ARROW_MAIN TLFU : CM-sketch
+PRI ARROW_OPTIONAL TLFU
+SW ARROW_OPTIONAL TLFU : admission window
+HASH ARROW_MAIN GDSF
+PRI ARROW_MAIN GDSF : cost/size heap
+
+note bottom of TLFU
+  TinyLFU: frequency sketch filters
+  admissions into a small window LRU.
+end note
+@enduml

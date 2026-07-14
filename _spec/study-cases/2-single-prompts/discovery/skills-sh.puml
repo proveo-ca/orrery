@@ -1,0 +1,38 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title skills.sh — Leaderboard Reach & Query Surface
+' Product: Vercel skills.sh open agent skills registry
+' URL:    https://skills.sh/
+' URL:    https://skills.sh/docs
+' URL:    https://github.com/vercel-labs/skills
+' Level:  2
+
+actor "Consumer / agent" as U
+cloud "skills.sh homepage\n(all-time leaderboard UI)" as HOME <<cloud>>
+cloud "GET /api/search?q=&limit=&owner=" as API <<cloud>>
+component "npx skills find|add|list" as CLI <<app>>
+queue "Anonymous install telemetry\n(npx skills add → index)" as TEL <<async>>
+database "Install-ranked skill index" as IX <<db>>
+component "Badge\nGET /b/{owner}/{repo}" as BADGE <<host>>
+
+U ARROW_CLOUD HOME : browse ranking
+U ARROW_MAIN CLI : find / add
+CLI ARROW_CLOUD API : search JSON
+API ARROW_MAIN IX : fuzzy + installs
+CLI ARROW_QUEUE TEL : on successful add
+TEL ARROW_MAIN IX : aggregate popularity
+U ARROW_OPTIONAL BADGE : README shield
+BADGE ARROW_MAIN IX : count
+
+note bottom of API
+  Example:
+  curl -sL 'https://skills.sh/api/search?q=frontend&limit=10'
+  → skills[].{id, skillId, name, installs, source}
+  No documented full-dump API — homepage is the board.
+end note
+
+note bottom of TEL
+  Skills enter the index **only** via install
+  telemetry — not a GitHub crawler.
+end note
+@enduml

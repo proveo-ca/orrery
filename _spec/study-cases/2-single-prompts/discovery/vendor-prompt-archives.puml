@@ -1,0 +1,33 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Vendor System-Prompt Archives — Product Baselines
+' Archives of extracted product system prompts (not authored libraries)
+' URL: https://github.com/asgeirtj/system_prompts_leaks
+' URL: https://github.com/x1xhlol/system-prompts-and-models-of-ai-tools
+' URL: https://github.com/Piebald-AI/claude-code-system-prompts
+' Level: 2
+
+actor "Analyst" as A
+cloud "GitHub Search API\nsort=stars" as GH <<cloud>>
+database "system_prompts_leaks\n(multi-vendor chat/IDE)" as SPL <<db>>
+database "system-prompts-and-models-of-ai-tools\n(coding agents)" as X1 <<db>>
+database "claude-code-system-prompts\n(versioned npm extracts)" as PB <<db>>
+component "raw.githubusercontent.com\n/{owner}/{repo}/{path}" as RAW <<host>>
+component "Stale extract" as STALE <<error>>
+
+A ARROW_CLOUD GH : find archive repos
+GH ARROW_OPTIONAL SPL
+GH ARROW_OPTIONAL X1
+GH ARROW_OPTIONAL PB
+A ARROW_MAIN RAW : fetch single prompt file
+SPL ARROW_MAIN RAW
+X1 ARROW_MAIN RAW
+PB ARROW_MAIN RAW
+RAW ARROW_ERROR STALE : if last_commit ≪ today
+
+note bottom of PB
+  Prefer dated, version-pinned extracts
+  (e.g. Claude Code changelog per release)
+  when reconstructing "what ships."
+end note
+@enduml
