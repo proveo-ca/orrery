@@ -1,0 +1,50 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title RAG Strategies (July 2026) — Selection Map
+' Synthesis of current RAG design space: vector → tree → graph → vectorless → adaptive
+' URL:    https://arxiv.org/abs/2506.05690
+' URL:    https://arxiv.org/abs/2312.10997
+' Level:  1
+
+actor "Human expert\n(query + corpus shape)" as H
+
+component "Query router\n(complexity / structure)" as R <<app>>
+
+package "Simple / factual" {
+  component "Dense vector RAG\n(+ rerank)" as V <<db>>
+  component "CRAG\nevaluator → correct" as CRAG <<async>>
+}
+
+package "Structural / long doc" {
+  component "RAPTOR\nrecursive summary tree" as RAP <<host>>
+  component "PageIndex\nvectorless tree nav" as PI <<host>>
+}
+
+package "Relational / multi-hop" {
+  component "GraphRAG\ncommunity summaries" as GR <<cloud>>
+  component "LightRAG\ndual-level + incremental" as LR <<cloud>>
+  component "HippoRAG(2)\nPPR associative memory" as HR <<cloud>>
+  component "PathRAG\nflow-pruned paths" as PR <<cloud>>
+  component "KET-RAG\ncheap multi-granular index" as KET <<cloud>>
+  component "LazyGraphRAG\nquery-time graph" as LZ <<cloud>>
+}
+
+H ARROW_MAIN R : classify need
+R ARROW_MAIN V : fact lookup
+R ARROW_OPTIONAL CRAG : weak retrieval
+R ARROW_MAIN RAP : long hierarchical text
+R ARROW_MAIN PI : structured filings / ToC
+R ARROW_OPTIONAL GR : global synthesis
+R ARROW_OPTIONAL LR : light multi-hop
+R ARROW_OPTIONAL HR : associativity + facts
+R ARROW_OPTIONAL PR : cut redundant context
+R ARROW_OPTIONAL KET : cost-bound graph index
+R ARROW_OPTIONAL LZ : one-off / explore
+
+note bottom of R
+  **Jul 2026 consensus:** graphs are not default —
+  route simple queries to vector RAG; reserve graph /
+  tree / vectorless for multi-hop, global, or
+  structure-preserving workloads (arXiv:2506.05690).
+end note
+@enduml

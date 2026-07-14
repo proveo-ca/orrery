@@ -1,0 +1,29 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title LightRAG — Dual-Level Graph + Incremental Index
+' Paper: LightRAG: Simple and Fast Retrieval-Augmented Generation
+' URL:   https://arxiv.org/abs/2410.05779
+' Level: 1
+
+component "New / updated chunks" as C <<app>>
+cloud     "LLM extract\nentities + relations\n(single pass)" as EX <<cloud>>
+database  "Graph + vectors\n(entities · edges · text)" as STORE <<db>>
+component "Low-level retrieval\nentity / detail match" as LOW <<host>>
+component "High-level retrieval\ntheme / topic match" as HIGH <<host>>
+component "Merge dual context" as MIX <<app>>
+cloud     "LLM generator" as LLM <<cloud>>
+
+C ARROW_CLOUD EX : incremental update
+EX ARROW_MAIN STORE : upsert
+STORE ARROW_MAIN LOW : local facts
+STORE ARROW_MAIN HIGH : abstract themes
+LOW ARROW_MAIN MIX
+HIGH ARROW_MAIN MIX
+MIX ARROW_CLOUD LLM : dual-level pack
+
+note bottom of STORE
+  Removes GraphRAG's heavy community
+  summarization; favors fast indexing,
+  developer UX, and incremental inserts.
+end note
+@enduml

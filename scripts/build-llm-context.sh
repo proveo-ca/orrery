@@ -53,6 +53,11 @@ section_for() {
   local rel="$1"
   case "$rel" in
     _spec/overview/*) echo overview ;;
+    */study-cases/1-human-expert/computer-science/*) echo 1-human-expert/computer-science ;;
+    */study-cases/1-human-expert/rag/*) echo 1-human-expert/rag ;;
+    */study-cases/1-human-expert/*) echo 1-human-expert ;;
+    */study-cases/2-single-prompts/discovery/*) echo 2-single-prompts/discovery ;;
+    */study-cases/2-single-prompts/*) echo 2-single-prompts ;;
     */study-cases/3-meta-prompt-loops/*) echo 3-meta-prompt-loops ;;
     */study-cases/4-harness/governance/*) echo 4-harness/governance ;;
     */study-cases/4-harness/evidence-and-durability/*) echo 4-harness/evidence-and-durability ;;
@@ -93,6 +98,7 @@ md_core=(
   _spec/study-cases/README.md
   _spec/study-cases/summary.md
   _spec/study-cases/context-and-retrieval.md
+  _spec/study-cases/2-single-prompts/discovery/how-to-query.md
   skills/spec/SKILL.md
 )
 
@@ -106,6 +112,11 @@ extra_inline=(
 
 section_order=(
   overview
+  1-human-expert/computer-science
+  1-human-expert/rag
+  1-human-expert
+  2-single-prompts/discovery
+  2-single-prompts
   3-meta-prompt-loops
   4-harness/governance
   4-harness/evidence-and-durability
@@ -122,6 +133,11 @@ section_order=(
 
 declare -A section_title=(
   [overview]='Overview diagrams'
+  [1-human-expert/computer-science]='Study-cases -- Level 1 / computer-science'
+  [1-human-expert/rag]='Study-cases -- Level 1 / rag'
+  [1-human-expert]='Study-cases -- Level 1 (human expert)'
+  [2-single-prompts/discovery]='Study-cases -- Level 2 / discovery'
+  [2-single-prompts]='Study-cases -- Level 2 (single prompts / skills)'
   [3-meta-prompt-loops]='Study-cases -- Level 3 (meta-prompt loops)'
   [4-harness/governance]='Study-cases -- Level 4 / governance'
   [4-harness/evidence-and-durability]='Study-cases -- Level 4 / evidence & durability'

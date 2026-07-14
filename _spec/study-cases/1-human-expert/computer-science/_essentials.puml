@@ -1,0 +1,38 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Level-1 Computer Science Essentials — ADTs ↔ Algorithm Families
+' Source: proveo-ca/computer-science primers (datatypes + algorithms)
+' URL:    https://github.com/proveo-ca/computer-science/blob/main/libs/datatypes/PRIMER.md
+' URL:    https://github.com/proveo-ca/computer-science/blob/main/libs/algorithms/PRIMER.md
+' Level:  1
+
+actor "Human expert" as H
+
+folder "libs/datatypes" as DT {
+  component "Linear ADTs\narray · list · stack · queue" as LIN <<app>>
+  component "Trees\nBST · heap · AVL · trie" as TREE <<app>>
+  component "Graphs\nvertices · edges · DFS/BFS" as G <<app>>
+}
+
+folder "libs/algorithms" as ALG {
+  component "Primitives-based\nhash · bits · regex · buffers" as PRIM <<host>>
+  component "Array-based\nwindow · two-pointer · backtrack" as ARR <<host>>
+  component "Tree/graph-based\nsearch · DP · pathing · sort" as TGA <<host>>
+}
+
+component "apps/cache-strategies\nLRU · LFU · ARC · TinyLFU …" as CACHE <<async>>
+
+H ARROW_MAIN DT : applies ADTs
+H ARROW_MAIN ALG : selects paradigm
+LIN ARROW_OPTIONAL ARR : containers
+TREE ARROW_OPTIONAL TGA : search structure
+G ARROW_OPTIONAL TGA : connectivity
+PRIM ARROW_OPTIONAL CACHE : hashing + heaps
+ARR ARROW_OPTIONAL CACHE : lists / windows
+
+note bottom of H
+  **Level 1 = human expert floor.** Foundational CS is
+  signed-off craft: pick the right structure and
+  algorithm family before any LLM/agent scaffolding.
+end note
+@enduml

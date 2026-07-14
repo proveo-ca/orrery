@@ -1,0 +1,45 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Algorithms ↔ Data Types — Array-Based
+' Primer: Algorithms (array family)
+' URL:    https://github.com/proveo-ca/computer-science/blob/main/libs/algorithms/_docs/ARRAY_BASED_ALGORITHMS.puml
+' Level:  1
+
+package "Data types" {
+  component "Array" as A <<db>>
+  component "String" as S <<db>>
+  component "Stack" as ST <<db>>
+  component "Deque" as DQ <<db>>
+  component "Map / Set" as M <<db>>
+}
+
+package "Array-based algorithms" {
+  component "Array Processing" as AP <<app>>
+  component "Backtracking" as BT <<app>>
+  component "Sliding Window" as SW <<app>>
+  component "String Processing" as SP <<app>>
+  component "Two Pointer" as TP <<app>>
+  component "Two Pointer Greedy" as TPG <<app>>
+}
+
+A ARROW_MAIN AP
+A ARROW_MAIN BT
+A ARROW_MAIN TP
+A ARROW_OPTIONAL SP
+S ARROW_MAIN TP
+ST ARROW_MAIN BT : recursion / path
+M ARROW_OPTIONAL SP : freq / decode
+M ARROW_OPTIONAL SW : freq-count variant
+DQ ARROW_OPTIONAL SW : window max/min
+ST ARROW_OPTIONAL SP : parentheses decode
+
+TP ARROW_OPTIONAL SW : builds on pointers
+TP ARROW_OPTIONAL TPG : greedy variant
+TPG ARROW_OPTIONAL SW : shrink/grow strategy
+SW ARROW_OPTIONAL SP : anagram window
+
+note bottom of SW
+  Maintain a [L,R] interval; grow/shrink with
+  invariant checks (unique chars, sum, freq).
+end note
+@enduml

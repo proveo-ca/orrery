@@ -1,0 +1,51 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Data Structures / Abstract Data Types
+' Primer: Proveo's Data Structures / Abstract Data Types
+' URL:    https://github.com/proveo-ca/computer-science/blob/main/libs/datatypes/PRIMER.md
+' URL:    https://www.geeksforgeeks.org/dsa/lmns-data-structures/
+' Level:  1
+
+package "Linear" {
+  component "Array\nn-dim contiguous"           as ARR <<db>>
+  component "Linked List\nsingly · doubly · circular" as LL <<db>>
+  component "Stack\nLIFO"                       as STK <<db>>
+  component "Queue\nFIFO · circular · priority · deque" as Q <<db>>
+}
+
+package "Trees" {
+  component "Binary / BST\nleft < root < right" as BST <<db>>
+  component "Balanced\nAVL · Red-Black"        as BAL <<db>>
+  component "Heap\nmin / max priority"         as HEAP <<db>>
+  component "Trie\nstring / prefix"            as TRIE <<db>>
+  component "N-ary / General"                  as NARY <<db>>
+}
+
+package "Graphs" {
+  component "Graph\nV + E"                     as G <<db>>
+  component "DFS\nstack / recursion"           as DFS <<app>>
+  component "BFS\nqueue / levels"              as BFS <<app>>
+}
+
+package "Tree traversal" {
+  component "Inorder\nL-Root-R"                as IN <<host>>
+  component "Preorder\nRoot-L-R"               as PRE <<host>>
+  component "Postorder\nL-R-Root"              as POST <<host>>
+  component "Level-order\nBFS"                 as LVL <<host>>
+}
+
+ARR ARROW_OPTIONAL LL : vs dynamic links
+STK ARROW_MAIN ARR : often on array
+Q ARROW_MAIN ARR : ring / list
+BST ARROW_MAIN BAL : self-balance when skewed
+HEAP ARROW_OPTIONAL Q : implements priority queue
+G ARROW_MAIN DFS : deep first
+G ARROW_MAIN BFS : breadth first
+BST ARROW_OPTIONAL IN : ASC on BST
+LVL ARROW_MAIN BFS : same pattern
+
+note right of BAL
+  Balance factor |hL−hR| ≤ 1 (AVL).
+  Ops target O(log n) vs O(n) skewed.
+end note
+@enduml

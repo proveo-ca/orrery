@@ -1,0 +1,30 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title prompts.chat — Classic One-Shot Prompt Library
+' Product: prompts.chat (formerly Awesome ChatGPT Prompts)
+' URL:    https://prompts.chat
+' URL:    https://github.com/f/prompts.chat
+' Level:  2
+
+actor "Prompt consumer" as U
+cloud "prompts.chat/prompts\n(browse UI)" as UI <<cloud>>
+database "PROMPTS.md" as MD <<db>>
+database "prompts.csv" as CSV <<db>>
+cloud "Hugging Face\ndatasets/fka/prompts.chat" as HF <<cloud>>
+component "Claude plugin path\nf/prompts.chat" as PLUG <<app>>
+component "GitHub stars\n(genre popularity proxy)" as STARS <<host>>
+
+U ARROW_CLOUD UI : discover personas
+U ARROW_MAIN MD : curl raw dump
+U ARROW_OPTIONAL CSV : tabular export
+U ARROW_CLOUD HF : dataset pull
+U ARROW_OPTIONAL PLUG : marketplace install
+STARS ARROW_OPTIONAL UI : attention signal
+
+note bottom of MD
+  Fetch:
+  https://raw.githubusercontent.com/f/prompts.chat/main/PROMPTS.md
+  Use for ChatGPT-era one-shots — not a
+  substitute for skills.sh install ranks.
+end note
+@enduml

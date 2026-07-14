@@ -1,0 +1,26 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title KET-RAG — Cost-Efficient Multi-Granular Graph Index
+' Paper: KET-RAG: A Cost-Efficient Multi-Granular Indexing Framework for Graph-RAG
+' URL:   https://arxiv.org/abs/2502.09304
+' Level: 1
+
+component "Corpus" as C <<app>>
+component "Skeleton / selective\nKG extraction" as SKEL <<async>>
+component "Multi-granular index\n(coarse + fine)" as IDX <<db>>
+component "Query-time retrieve" as RET <<host>>
+cloud     "LLM" as LLM <<cloud>>
+component "Full GraphRAG index\n(all chunks → LLM)" as FULL <<error>>
+
+C ARROW_ERROR FULL : $$$$ offline
+C ARROW_MAIN SKEL : index hot subset / skeleton
+SKEL ARROW_MAIN IDX : cheap multi-grain store
+IDX ARROW_MAIN RET
+RET ARROW_CLOUD LLM
+
+note bottom of SKEL
+  Targets GraphRAG's indexing tax: build
+  rich structure where it pays off; keep
+  cheaper granules elsewhere (KDD'25 line).
+end note
+@enduml

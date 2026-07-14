@@ -1,0 +1,28 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Corrective RAG (CRAG) — Retrieve, Evaluate, Correct
+' Paper: Corrective Retrieval Augmented Generation
+' URL:   https://arxiv.org/abs/2401.15884
+' Level: 1
+
+component "Initial retrieval" as RET <<app>>
+component "Retrieval evaluator\n(relevance quality)" as EVAL <<host>>
+database  "Knowledge base" as KB <<db>>
+cloud     "Web / fallback search" as WEB <<cloud>>
+component "Knowledge refinement\nstrip noise" as REF <<async>>
+cloud     "LLM generator" as LLM <<cloud>>
+component "Low-confidence path" as BAD <<error>>
+
+KB ARROW_MAIN RET : top-k
+RET ARROW_MAIN EVAL : score docs
+EVAL ARROW_MAIN REF : Correct / Ambiguous
+EVAL ARROW_ERROR BAD : Incorrect
+BAD ARROW_CLOUD WEB : correct via external
+WEB ARROW_MAIN REF : supplemental docs
+REF ARROW_CLOUD LLM : cleaned context
+
+note bottom of EVAL
+  Lightweight evaluator gates generation:
+  trust local KB, mix, or abandon and search.
+end note
+@enduml

@@ -106,13 +106,14 @@ project diagram: it doesn't belong.
   `ARROW_*` macros chosen by intent. Legacy study-cases still use `!includeurl …/proveo.iuml` with the
   old `COLOR_*`/`PATH_*` macros — **leave them as-is; modernize only a file you're already editing.**
 - **Organize by level (then topic).** The tree is **level-first**: top-level `N-name/` dirs
-  (`3-meta-prompt-loops/`, `4-harness/`, `5-fine-tuned/`, `6-post-training/`), with topic
-  subfolders inside the large `4-harness/` tier (`governance/`, `meta-orchestration/`,
-  `self-improving/`, `applied/`, …). A self-improving system with **frozen weights** is an L4
-  self-improving harness; one that **updates weights** against a reward/eval loop is L6 post-training
-  (above L5 supervised fine-tuning, which adapts to a fixed dataset).
-  Substrate that's orthogonal to the ladder lives under `_substrate/`. The capability ladder and the
-  full level map are in [`study-cases/README.md`](./study-cases/README.md).
+  (`1-human-expert/`, `2-single-prompts/`, `3-meta-prompt-loops/`, `4-harness/`, `5-fine-tuned/`,
+  `6-post-training/`), with topic subfolders inside `1-human-expert/` (`computer-science/`, `rag/`),
+  `2-single-prompts/` (`discovery/`), and the large `4-harness/` tier (`governance/`,
+  `meta-orchestration/`, `self-improving/`, `applied/`, …). A self-improving system with **frozen
+  weights** is an L4 self-improving harness; one that **updates weights** against a reward/eval loop
+  is L6 post-training (above L5 supervised fine-tuning, which adapts to a fixed dataset). Substrate
+  that's orthogonal to the ladder lives under `_substrate/`. The capability ladder and the full level
+  map are in [`study-cases/README.md`](./study-cases/README.md).
 - **One concept per file.** Give each topic subfolder an `_essentials.puml` that summarizes it (see
   `4-harness/anti-framework/_essentials.puml`). Cross-cutting narrative goes in a root-level `.md`
   (`summary.md`, `context-and-retrieval.md`).

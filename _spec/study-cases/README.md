@@ -9,8 +9,10 @@ views share the same seven tiers:
 - **The study map (build-side)** — the same tiers on a 2D plane: *encoding depth* (prompt → scaffold →
   weights) × *autonomy* (baseline → HITL → supervised → autonomous). A learning map.
 
-> **Layout.** The tree is organized **by level**: top-level `N-name/` dirs, with topic subfolders
-> inside the large `4-harness/` tier (`governance/`, `evidence-and-durability/`,
+> **Layout.** The tree is organized **by level**: top-level `N-name/` dirs — including the Level-1
+> floor `1-human-expert/` (`computer-science/` primers, `rag/` strategy map) and Level-2
+> `2-single-prompts/` (`discovery/` — how to reach market prompt/skill leaderboards) — with topic
+> subfolders inside the large `4-harness/` tier (`governance/`, `evidence-and-durability/`,
 > `meta-orchestration/`, `self-improving/`, `applied/`, plus the migrated `anti-framework/` and
 > `framework/`), and `_substrate/` for substrate that's orthogonal to the ladder. Cross-cutting
 > overviews (`summary.md`, `_essentials.puml`, `context-and-retrieval.md`) stay at the root; the two
@@ -50,8 +52,8 @@ change the *weights*.
 | **5** | Supervised fine-tuning | Adapt open weights to a **fixed dataset you own** (LoRA / SFT) | Domain models on HuggingFace; Med-PaLM; FinGPT | a reward loop is overkill — a labeled dataset suffices | `5-fine-tuned/` |
 | **4** | Harness (workflow orchestration) | **Ground the model in tools / data / integrations**, own authority + evidence, orchestrate multi-step work — incl. **self-improving harnesses** (frozen weights) | Claude Cowork; Copilot Studio + Agent 365; AgentKit; LangGraph; Devin / Factory (coding) | don't retrain — ground & orchestrate a frozen model | `4-harness/` (`governance/`, `evidence-and-durability/`, `meta-orchestration/`, `self-improving/`, `applied/`, `anti-framework/`, `framework/`) |
 | **3** | Meta-prompt loops | Augment the base prompt with reasoning / iteration loops (no tools, no weight change) | General chat assistants that augment the base prompt (ChatGPT) | no tools or integrations — self-contained reasoning | `3-meta-prompt-loops/` (CoT, ReAct, Reflexion, ToT, MAD); much of `context-and-retrieval.md` |
-| **2** | Single prompts (skills) | A crafted system prompt / reusable skill, one-shot | Shared system-prompt & skill libraries (community & vendor repos) | single-shot — no reasoning loop needed | _(existing skill libraries; none here yet)_ |
-| **1** | Human expert | A person does — or signs off — the work | Domain experts (financial analysts, clinicians, attorneys, SREs) | must be signed-off by a human | — _(the floor)_ |
+| **2** | Single prompts (skills) | A crafted system prompt / reusable skill, one-shot | Shared system-prompt & skill libraries (community & vendor repos) | single-shot — no reasoning loop needed | `2-single-prompts/` (`discovery/`) |
+| **1** | Human expert | A person does — or signs off — the work | Domain experts (financial analysts, clinicians, attorneys, SREs) | must be signed-off by a human | `1-human-expert/` (`computer-science/`, `rag/`) |
 
 **L4 → L5 is the frozen→trained line.** Everything at L1–L4 leaves the base model's weights untouched
 (you change prompts, tools, orchestration); L5 is where you first change the weights. It's the single

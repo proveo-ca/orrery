@@ -1,0 +1,29 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title PageIndex — Vectorless, Reasoning-Based Tree RAG
+' Product: PageIndex (VectifyAI) — hierarchical ToC + LLM tree search
+' URL:    https://pageindex.ai/blog/pageindex-intro
+' URL:    https://github.com/VectifyAI/PageIndex
+' Level:  1
+
+component "Structured document\n(PDF / HTML / filing)" as DOC <<app>>
+component "Hierarchical tree index\n(titles · summaries · pages)" as TREE <<db>>
+cloud     "LLM tree search\nreason where to look" as SEARCH <<cloud>>
+component "Selected node IDs\n(+ trace)" as NODES <<host>>
+component "Fetch node text" as FETCH <<app>>
+cloud     "LLM answer\nwith section citations" as LLM <<cloud>>
+
+DOC ARROW_MAIN TREE : parse structure\n(no embeddings)
+TREE ARROW_CLOUD SEARCH : tree metadata only
+SEARCH ARROW_MAIN NODES : choose sections
+NODES ARROW_MAIN FETCH : materialize text
+FETCH ARROW_CLOUD LLM : generate
+
+note bottom of SEARCH
+  **Vectorless:** no ANN index. LLM navigates
+  like a human ToC for legal/finance PDFs
+  (FinanceBench SOTA claims in product lit).
+  Hybrid often: vector for discovery, PageIndex
+  for precise section retrieval.
+end note
+@enduml

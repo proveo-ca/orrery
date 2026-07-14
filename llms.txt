@@ -26,6 +26,37 @@ Prefer the linked sources below over rendered `.svg` files. For a single pre-exp
 - [Business-needs funnel](_spec/overview/business-needs-funnel.puml): demand-side -- how a request walks down the capability ladder
 - [Study map](_spec/overview/study-map.vega.json): build-side -- same tiers on encoding depth x autonomy
 
+## Study-cases -- Level 1 / computer-science
+- [Level-1 Computer Science Essentials — ADTs ↔ Algorithm Families](_spec/study-cases/1-human-expert/computer-science/_essentials.puml): Level 1
+- [Algorithms ↔ Data Types — Array-Based](_spec/study-cases/1-human-expert/computer-science/algorithms-array.puml): Level 1
+- [Algorithms ↔ Data Types — Primitives-Based](_spec/study-cases/1-human-expert/computer-science/algorithms-primitives.puml): Level 1
+- [Algorithms ↔ Data Types — Tree / Graph-Based](_spec/study-cases/1-human-expert/computer-science/algorithms-tree-graph.puml): Level 1
+- [Cache Strategies ↔ Supporting Algorithm Families](_spec/study-cases/1-human-expert/computer-science/cache-strategies.puml): Level 1
+- [Data Structures / Abstract Data Types](_spec/study-cases/1-human-expert/computer-science/datatypes.puml): Level 1
+- [Hashing — Keys, Buckets, Collision Resolution](_spec/study-cases/1-human-expert/computer-science/hashing.puml): Level 1
+
+## Study-cases -- Level 1 / rag
+- [RAG Strategies (July 2026) — Selection Map](_spec/study-cases/1-human-expert/rag/_essentials.puml): Level 1
+- [Adaptive / Routed RAG — Match Strategy to Query Complexity](_spec/study-cases/1-human-expert/rag/adaptive-routing.puml): Level 1
+- [Corrective RAG (CRAG) — Retrieve, Evaluate, Correct](_spec/study-cases/1-human-expert/rag/crag.puml): Level 1
+- [HippoRAG / HippoRAG 2 — Associative Memory via Personalized PageRank](_spec/study-cases/1-human-expert/rag/hipporag.puml): Level 1
+- [KET-RAG — Cost-Efficient Multi-Granular Graph Index](_spec/study-cases/1-human-expert/rag/ket-rag.puml): Level 1
+- [LazyGraphRAG — Defer Graph Work to Query Time](_spec/study-cases/1-human-expert/rag/lazy-graphrag.puml): Level 1
+- [LightRAG — Dual-Level Graph + Incremental Index](_spec/study-cases/1-human-expert/rag/lightrag.puml): Level 1
+- [Microsoft GraphRAG — Local → Global Summarization](_spec/study-cases/1-human-expert/rag/microsoft-graphrag.puml): Level 1
+- [OG-RAG — Ontology-Grounded Hypergraph Retrieval](_spec/study-cases/1-human-expert/rag/og-rag.puml): Level 1
+- [PageIndex — Vectorless, Reasoning-Based Tree RAG](_spec/study-cases/1-human-expert/rag/pageindex.puml): Level 1
+- [PathRAG — Flow-Based Relational Path Pruning](_spec/study-cases/1-human-expert/rag/pathrag.puml): Level 1
+- [RAPTOR — Recursive Abstractive Tree Retrieval](_spec/study-cases/1-human-expert/rag/raptor.puml): Level 1
+- [Dense / Vector RAG (baseline pipeline)](_spec/study-cases/1-human-expert/rag/vector-dense-rag.puml): Level 1
+
+## Study-cases -- Level 2 / discovery
+- [L2 Discovery Map — Where to Find Popular Prompts / Skills](_spec/study-cases/2-single-prompts/discovery/_essentials.puml): Level 2
+- [First-Party Agent Skills — Standard + Anthropic Marketplace](_spec/study-cases/2-single-prompts/discovery/first-party-skills.puml): Level 2
+- [prompts.chat — Classic One-Shot Prompt Library](_spec/study-cases/2-single-prompts/discovery/prompts-chat.puml): Level 2
+- [skills.sh — Leaderboard Reach & Query Surface](_spec/study-cases/2-single-prompts/discovery/skills-sh.puml): Level 2
+- [Vendor System-Prompt Archives — Product Baselines](_spec/study-cases/2-single-prompts/discovery/vendor-prompt-archives.puml): Level 2
+
 ## Study-cases -- Level 3 (meta-prompt loops)
 - [Chain of Thought (CoT)](_spec/study-cases/3-meta-prompt-loops/cot.puml): study-case
 - [Multi-Agent Debate (MAD)](_spec/study-cases/3-meta-prompt-loops/mad.puml): study-case

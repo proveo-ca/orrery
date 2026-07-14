@@ -1,0 +1,33 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Adaptive / Routed RAG — Match Strategy to Query Complexity
+' Paper: Adaptive-RAG: Learning to Adapt Retrieval-Augmented Large Language Models through Question Complexity
+' URL:   https://arxiv.org/abs/2403.14403
+' Paper: When to use Graphs in RAG: A Comprehensive Analysis for Graph Retrieval-Augmented Generation
+' URL:   https://arxiv.org/abs/2506.05690
+' Level: 1
+
+actor "Query" as Q
+component "Complexity classifier\n(no / single / multi-hop)" as CLS <<app>>
+component "No retrieval\n(parametric only)" as NONE <<host>>
+component "Single-step vector RAG" as ONE <<db>>
+component "Multi-step / graph RAG" as MULTI <<cloud>>
+component "Answer" as A <<app>>
+component "Always-graph tax\n(latency · noise)" as TAX <<error>>
+
+Q ARROW_MAIN CLS
+CLS ARROW_MAIN NONE : trivial
+CLS ARROW_MAIN ONE : factual
+CLS ARROW_CLOUD MULTI : relational / global
+NONE ARROW_MAIN A
+ONE ARROW_MAIN A
+MULTI ARROW_MAIN A
+MULTI ARROW_ERROR TAX : if mis-routed simple Q
+
+note bottom of CLS
+  Empirical 2025–26 finding: basic RAG (+rerank)
+  often wins pure fact retrieval; graphs help
+  complex reasoning / synthesis — **route**,
+  don't default to GraphRAG.
+end note
+@enduml

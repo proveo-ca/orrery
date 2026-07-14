@@ -1,0 +1,42 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Algorithms ↔ Data Types — Primitives-Based
+' Primer: Algorithms (primitives family + nested primers)
+' URL:    https://github.com/proveo-ca/computer-science/blob/main/libs/algorithms/PRIMER.md
+' URL:    https://github.com/proveo-ca/computer-science/blob/main/libs/algorithms/_docs/PRIMITIVES_BASED_ALGORITHMS.puml
+' Level:  1
+
+package "Data types" {
+  component "Array" as A <<db>>
+  component "String" as S <<db>>
+  component "Stack" as ST <<db>>
+  component "Map / Set\n(hash-table)" as M <<db>>
+  component "IntegerBits\nbit vectors" as B <<db>>
+}
+
+package "Primitives-based algorithms" {
+  component "Bit Manipulation" as BIT <<app>>
+  component "Buffers\n(JS↔C++ slabs)" as BUF <<app>>
+  component "Hashing" as HASH <<app>>
+  component "Math: Geometry (simple)" as GEO <<app>>
+  component "Math: Number Theory" as NUM <<app>>
+  component "Regex" as RE <<app>>
+}
+
+B ARROW_MAIN BIT : word ops
+A ARROW_OPTIONAL BUF : byte slabs
+S ARROW_OPTIONAL BUF : encode/decode
+M ARROW_MAIN HASH : buckets
+A ARROW_OPTIONAL GEO : coordinate arrays
+A ARROW_OPTIONAL NUM : tables
+B ARROW_OPTIONAL NUM : modular bits
+S ARROW_MAIN RE : pattern text
+ST ARROW_OPTIONAL RE : balanced brackets
+
+note bottom of BUF
+  Node buffers / ArrayBuffer / SharedArrayBuffer
+  are C++ backing stores — zero-copy across the
+  JS↔native boundary (libuv / N-API).
+  Nested primer: libs/algorithms/src/buffers/PRIMER.md
+end note
+@enduml

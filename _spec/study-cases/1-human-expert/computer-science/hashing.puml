@@ -1,0 +1,31 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Hashing — Keys, Buckets, Collision Resolution
+' Primer: Algorithms § Hashing
+' URL:    https://github.com/proveo-ca/computer-science/blob/main/libs/algorithms/PRIMER.md
+' Level:  1
+
+component "Key" as K <<app>>
+component "Hash function\nh(key) → fixed-size code" as HF <<host>>
+database  "Hash table\nbuckets · load factor" as HT <<db>>
+component "Chaining\nbucket → linked list" as CH <<async>>
+component "Open addressing\nprobe for empty slot" as OA <<async>>
+component "Linear probing\n(h+i) % n" as LP <<cloud>>
+component "Quadratic probing\n(h+i²) % n" as QP <<cloud>>
+component "Double hashing\n(h1 + i·h2) % n" as DH <<cloud>>
+component "Collision" as COL <<error>>
+
+K ARROW_MAIN HF : input
+HF ARROW_MAIN HT : place / lookup
+HT ARROW_ERROR COL : same bucket
+COL ARROW_OPTIONAL CH : resolve via list
+COL ARROW_OPTIONAL OA : resolve via probe
+OA ARROW_MAIN LP
+OA ARROW_OPTIONAL QP
+OA ARROW_OPTIONAL DH
+
+note bottom of HT
+  **Load factor** = #elements / table size.
+  High load → more collisions → slower lookups.
+end note
+@enduml

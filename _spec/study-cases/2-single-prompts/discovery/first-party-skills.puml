@@ -1,0 +1,30 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title First-Party Agent Skills — Standard + Anthropic Marketplace
+' Standard: Agent Skills (SKILL.md)
+' URL:      https://agentskills.io
+' URL:      https://github.com/anthropics/skills
+' Level:    2
+
+actor "Author / operator" as OP
+cloud "agentskills.io\n(format standard)" as STD <<cloud>>
+component "anthropics/skills\n(reference + document skills)" as REPO <<host>>
+component "Claude Code plugin marketplace" as MKT <<app>>
+component "GitHub Search API\ntopic:agent-skills&sort=stars" as GH <<cloud>>
+component "SKILL.md package\n(folder + frontmatter)" as SK <<db>>
+
+STD ARROW_OPTIONAL SK : schema / conventions
+REPO ARROW_MAIN SK : ships examples
+OP ARROW_MAIN MKT : "/plugin marketplace add anthropics/skills"
+MKT ARROW_OPTIONAL REPO : browse / install plugins
+OP ARROW_CLOUD GH : discover by stars
+GH ARROW_OPTIONAL REPO : among results
+
+note bottom of MKT
+  Install path:
+  /plugin install document-skills@anthropic-agent-skills
+  /plugin install example-skills@anthropic-agent-skills
+  Stars measure repo attention; installs
+  still checked via skills.sh when available.
+end note
+@enduml

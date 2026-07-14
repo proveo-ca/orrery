@@ -311,13 +311,14 @@ project diagram: it doesn't belong.
   `ARROW_*` macros chosen by intent. Legacy study-cases still use `!includeurl …/proveo.iuml` with the
   old `COLOR_*`/`PATH_*` macros — **leave them as-is; modernize only a file you're already editing.**
 - **Organize by level (then topic).** The tree is **level-first**: top-level `N-name/` dirs
-  (`3-meta-prompt-loops/`, `4-harness/`, `5-fine-tuned/`, `6-post-training/`), with topic
-  subfolders inside the large `4-harness/` tier (`governance/`, `meta-orchestration/`,
-  `self-improving/`, `applied/`, …). A self-improving system with **frozen weights** is an L4
-  self-improving harness; one that **updates weights** against a reward/eval loop is L6 post-training
-  (above L5 supervised fine-tuning, which adapts to a fixed dataset).
-  Substrate that's orthogonal to the ladder lives under `_substrate/`. The capability ladder and the
-  full level map are in [`study-cases/README.md`](./study-cases/README.md).
+  (`1-human-expert/`, `2-single-prompts/`, `3-meta-prompt-loops/`, `4-harness/`, `5-fine-tuned/`,
+  `6-post-training/`), with topic subfolders inside `1-human-expert/` (`computer-science/`, `rag/`),
+  `2-single-prompts/` (`discovery/`), and the large `4-harness/` tier (`governance/`,
+  `meta-orchestration/`, `self-improving/`, `applied/`, …). A self-improving system with **frozen
+  weights** is an L4 self-improving harness; one that **updates weights** against a reward/eval loop
+  is L6 post-training (above L5 supervised fine-tuning, which adapts to a fixed dataset). Substrate
+  that's orthogonal to the ladder lives under `_substrate/`. The capability ladder and the full level
+  map are in [`study-cases/README.md`](./study-cases/README.md).
 - **One concept per file.** Give each topic subfolder an `_essentials.puml` that summarizes it (see
   `4-harness/anti-framework/_essentials.puml`). Cross-cutting narrative goes in a root-level `.md`
   (`summary.md`, `context-and-retrieval.md`).
@@ -371,8 +372,10 @@ views share the same seven tiers:
 - **The study map (build-side)** — the same tiers on a 2D plane: *encoding depth* (prompt → scaffold →
   weights) × *autonomy* (baseline → HITL → supervised → autonomous). A learning map.
 
-> **Layout.** The tree is organized **by level**: top-level `N-name/` dirs, with topic subfolders
-> inside the large `4-harness/` tier (`governance/`, `evidence-and-durability/`,
+> **Layout.** The tree is organized **by level**: top-level `N-name/` dirs — including the Level-1
+> floor `1-human-expert/` (`computer-science/` primers, `rag/` strategy map) and Level-2
+> `2-single-prompts/` (`discovery/` — how to reach market prompt/skill leaderboards) — with topic
+> subfolders inside the large `4-harness/` tier (`governance/`, `evidence-and-durability/`,
 > `meta-orchestration/`, `self-improving/`, `applied/`, plus the migrated `anti-framework/` and
 > `framework/`), and `_substrate/` for substrate that's orthogonal to the ladder. Cross-cutting
 > overviews (`summary.md`, `_essentials.puml`, `context-and-retrieval.md`) stay at the root; the two
@@ -412,8 +415,8 @@ change the *weights*.
 | **5** | Supervised fine-tuning | Adapt open weights to a **fixed dataset you own** (LoRA / SFT) | Domain models on HuggingFace; Med-PaLM; FinGPT | a reward loop is overkill — a labeled dataset suffices | `5-fine-tuned/` |
 | **4** | Harness (workflow orchestration) | **Ground the model in tools / data / integrations**, own authority + evidence, orchestrate multi-step work — incl. **self-improving harnesses** (frozen weights) | Claude Cowork; Copilot Studio + Agent 365; AgentKit; LangGraph; Devin / Factory (coding) | don't retrain — ground & orchestrate a frozen model | `4-harness/` (`governance/`, `evidence-and-durability/`, `meta-orchestration/`, `self-improving/`, `applied/`, `anti-framework/`, `framework/`) |
 | **3** | Meta-prompt loops | Augment the base prompt with reasoning / iteration loops (no tools, no weight change) | General chat assistants that augment the base prompt (ChatGPT) | no tools or integrations — self-contained reasoning | `3-meta-prompt-loops/` (CoT, ReAct, Reflexion, ToT, MAD); much of `context-and-retrieval.md` |
-| **2** | Single prompts (skills) | A crafted system prompt / reusable skill, one-shot | Shared system-prompt & skill libraries (community & vendor repos) | single-shot — no reasoning loop needed | _(existing skill libraries; none here yet)_ |
-| **1** | Human expert | A person does — or signs off — the work | Domain experts (financial analysts, clinicians, attorneys, SREs) | must be signed-off by a human | — _(the floor)_ |
+| **2** | Single prompts (skills) | A crafted system prompt / reusable skill, one-shot | Shared system-prompt & skill libraries (community & vendor repos) | single-shot — no reasoning loop needed | `2-single-prompts/` (`discovery/`) |
+| **1** | Human expert | A person does — or signs off — the work | Domain experts (financial analysts, clinicians, attorneys, SREs) | must be signed-off by a human | `1-human-expert/` (`computer-science/`, `rag/`) |
 
 **L4 → L5 is the frozen→trained line.** Everything at L1–L4 leaves the base model's weights untouched
 (you change prompts, tools, orchestration); L5 is where you first change the weights. It's the single
@@ -581,6 +584,8 @@ FILE: _spec/study-cases/context-and-retrieval.md
 
 This document tracks key research papers and strategies for managing the Context Window and ensuring high-precision retrieval — moving from inference-time prompting and pipelines through to systems that train or self-evolve their own retrieval.
 
+> **Level-1 RAG map (Jul 2026).** Architecture selection diagrams (vector, GraphRAG, LightRAG, HippoRAG/2, PathRAG, RAPTOR, PageIndex, CRAG, KET-RAG, LazyGraphRAG, OG-RAG, adaptive routing) live under [`1-human-expert/rag/`](./1-human-expert/rag/). Foundational CS primers distilled from [proveo-ca/computer-science](https://github.com/proveo-ca/computer-science) are in [`1-human-expert/computer-science/`](./1-human-expert/computer-science/).
+
 ## 1. Context Window Management
 
 Strategies for dealing with massive context limits (100k - 1M+ tokens) and the "Lost in the Middle" phenomenon.
@@ -652,6 +657,127 @@ Where §1–§3 engineer context at *inference* time — prompting and pipelines
     *   *URL:* https://arxiv.org/abs/2510.04618
 
 > **Bridge from §3.** *Self-RAG* (https://arxiv.org/abs/2310.11511) sits between the two halves of this document: its self-critique is a **learned** behavior — the model is *trained* to emit reflection tokens (Retrieve / IsRel / IsSup / IsUse) rather than prompted to — yet that training is supervised fine-tuning / distillation, **not** RL. A learned, but not reward-optimized, self-reflection.
+
+
+========================================================================
+FILE: _spec/study-cases/2-single-prompts/discovery/how-to-query.md
+========================================================================
+
+# How to query L2 popularity surfaces
+
+Recipes only — run these when you need a *current* snapshot. Do not bake install tables into study-cases.
+
+## A. Agent skills — [skills.sh](https://skills.sh)
+
+**What it ranks:** packages installable with `npx skills add …`, by anonymous install telemetry
+([docs](https://skills.sh/docs)). Index entry requires real installs — there is no GitHub crawler.
+
+### Leaderboard (browse)
+
+```text
+https://skills.sh/
+```
+
+Homepage leaderboard = all-time install ranking (UI). No public “dump entire board” API is
+documented; treat the HTML/RSC homepage as the canonical full ranking.
+
+### Search API (HTTP)
+
+```bash
+# Fuzzy search; results include installs, sorted by popularity in the CLI client
+curl -sL 'https://skills.sh/api/search?q=frontend&limit=10'
+
+# Scope to a GitHub owner
+curl -sL 'https://skills.sh/api/search?q=pdf&limit=10&owner=anthropics'
+```
+
+Response shape (fields): `query`, `skills[]` with `id`, `skillId`, `name`, `installs`, `source`,
+plus `count`.
+
+### CLI (same search, install path)
+
+```bash
+npx skills find frontend              # interactive / agent search
+npx skills find pdf --owner anthropics
+npx skills add anthropics/skills@frontend-design
+npx skills list                         # local installs
+```
+
+CLI source: [vercel-labs/skills](https://github.com/vercel-labs/skills). Discovery skill:
+[`find-skills`](https://github.com/vercel-labs/skills/blob/main/skills/find-skills/SKILL.md).
+
+### Install-count badge (per repo)
+
+```markdown
+[![skills.sh](https://skills.sh/b/anthropics/skills)](https://skills.sh/anthropics/skills)
+```
+
+```text
+https://skills.sh/b/{owner}/{repo}
+https://skills.sh/{owner}/{repo}
+https://skills.sh/{owner}/{repo}/{skill}
+```
+
+## B. First-party Agent Skills — Anthropic + standard
+
+| Reach | How |
+| --- | --- |
+| Format standard | https://agentskills.io |
+| Reference repo | https://github.com/anthropics/skills |
+| Claude Code marketplace | `/plugin marketplace add anthropics/skills` then Browse / `/plugin install …@anthropic-agent-skills` |
+| GitHub stars sort (any org) | `https://api.github.com/search/repositories?q=topic:agent-skills&sort=stars&order=desc` |
+
+```bash
+# List top public repos tagged agent-skills (stars ≠ install popularity)
+curl -sL 'https://api.github.com/search/repositories?q=topic:agent-skills&sort=stars&order=desc&per_page=10' \
+  | jq -r '.items[] | "\(.stargazers_count)\t\(.full_name)"'
+```
+
+## C. Classic one-shot prompts — [prompts.chat](https://prompts.chat)
+
+Formerly *Awesome ChatGPT Prompts* — [f/prompts.chat](https://github.com/f/prompts.chat) on GitHub.
+
+| Fetch | URL / command |
+| --- | --- |
+| Browse UI | https://prompts.chat/prompts |
+| Raw markdown dump | https://raw.githubusercontent.com/f/prompts.chat/main/PROMPTS.md |
+| CSV | https://github.com/f/prompts.chat/blob/main/prompts.csv |
+| Hugging Face dataset | https://huggingface.co/datasets/fka/prompts.chat |
+| Skills plugin path | `/plugin marketplace add f/prompts.chat` |
+
+Stars on the GitHub repo remain the classic popularity proxy for this genre.
+
+## D. Vendor system-prompt archives (product baselines)
+
+Extracted product prompts — not authored libraries. Rank by **stars + last-commit freshness**, then
+open the vendor folder you care about.
+
+| Archive | URL |
+| --- | --- |
+| Multi-vendor chat / IDE | https://github.com/asgeirtj/system_prompts_leaks |
+| Coding-agent teardown | https://github.com/x1xhlol/system-prompts-and-models-of-ai-tools |
+| Claude Code (versioned) | https://github.com/Piebald-AI/claude-code-system-prompts |
+
+```bash
+# Discover similar archives by stars (tune the query)
+curl -sL 'https://api.github.com/search/repositories?q=system+prompts+in:name,description&sort=stars&order=desc&per_page=10' \
+  | jq -r '.items[] | "\(.stargazers_count)\t\(.full_name)\t\(.html_url)"'
+```
+
+Clone or raw-fetch a single file (example pattern):
+
+```bash
+# raw file from an archive path — replace owner/repo/path
+curl -sL 'https://raw.githubusercontent.com/asgeirtj/system_prompts_leaks/main/README.md' | head
+```
+
+## Ranking hygiene (for study-cases)
+
+1. Prefer **skills.sh installs** when the artifact is a `SKILL.md` package.  
+2. Prefer **vendor marketplace / official repo** for first-party document skills.  
+3. Prefer **prompts.chat / HF** for persona one-shots.  
+4. Prefer **dated archive commits** for “what Cursor/Claude/ChatGPT actually ship.”  
+5. Never cite an install table without a fetch date — leaderboards move daily.
 
 
 ========================================================================
@@ -1473,6 +1599,1043 @@ end note
 note right of L1
   **Market baseline:** domain experts
   (financial analysts, clinicians, attorneys, SREs)
+end note
+@enduml
+
+
+========================================================================
+FILE: _spec/study-cases/1-human-expert/computer-science/_essentials.puml
+========================================================================
+
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Level-1 Computer Science Essentials — ADTs ↔ Algorithm Families
+' Source: proveo-ca/computer-science primers (datatypes + algorithms)
+' URL:    https://github.com/proveo-ca/computer-science/blob/main/libs/datatypes/PRIMER.md
+' URL:    https://github.com/proveo-ca/computer-science/blob/main/libs/algorithms/PRIMER.md
+' Level:  1
+
+actor "Human expert" as H
+
+folder "libs/datatypes" as DT {
+  component "Linear ADTs\narray · list · stack · queue" as LIN <<app>>
+  component "Trees\nBST · heap · AVL · trie" as TREE <<app>>
+  component "Graphs\nvertices · edges · DFS/BFS" as G <<app>>
+}
+
+folder "libs/algorithms" as ALG {
+  component "Primitives-based\nhash · bits · regex · buffers" as PRIM <<host>>
+  component "Array-based\nwindow · two-pointer · backtrack" as ARR <<host>>
+  component "Tree/graph-based\nsearch · DP · pathing · sort" as TGA <<host>>
+}
+
+component "apps/cache-strategies\nLRU · LFU · ARC · TinyLFU …" as CACHE <<async>>
+
+H ARROW_MAIN DT : applies ADTs
+H ARROW_MAIN ALG : selects paradigm
+LIN ARROW_OPTIONAL ARR : containers
+TREE ARROW_OPTIONAL TGA : search structure
+G ARROW_OPTIONAL TGA : connectivity
+PRIM ARROW_OPTIONAL CACHE : hashing + heaps
+ARR ARROW_OPTIONAL CACHE : lists / windows
+
+note bottom of H
+  **Level 1 = human expert floor.** Foundational CS is
+  signed-off craft: pick the right structure and
+  algorithm family before any LLM/agent scaffolding.
+end note
+@enduml
+
+
+========================================================================
+FILE: _spec/study-cases/1-human-expert/computer-science/algorithms-array.puml
+========================================================================
+
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Algorithms ↔ Data Types — Array-Based
+' Primer: Algorithms (array family)
+' URL:    https://github.com/proveo-ca/computer-science/blob/main/libs/algorithms/_docs/ARRAY_BASED_ALGORITHMS.puml
+' Level:  1
+
+package "Data types" {
+  component "Array" as A <<db>>
+  component "String" as S <<db>>
+  component "Stack" as ST <<db>>
+  component "Deque" as DQ <<db>>
+  component "Map / Set" as M <<db>>
+}
+
+package "Array-based algorithms" {
+  component "Array Processing" as AP <<app>>
+  component "Backtracking" as BT <<app>>
+  component "Sliding Window" as SW <<app>>
+  component "String Processing" as SP <<app>>
+  component "Two Pointer" as TP <<app>>
+  component "Two Pointer Greedy" as TPG <<app>>
+}
+
+A ARROW_MAIN AP
+A ARROW_MAIN BT
+A ARROW_MAIN TP
+A ARROW_OPTIONAL SP
+S ARROW_MAIN TP
+ST ARROW_MAIN BT : recursion / path
+M ARROW_OPTIONAL SP : freq / decode
+M ARROW_OPTIONAL SW : freq-count variant
+DQ ARROW_OPTIONAL SW : window max/min
+ST ARROW_OPTIONAL SP : parentheses decode
+
+TP ARROW_OPTIONAL SW : builds on pointers
+TP ARROW_OPTIONAL TPG : greedy variant
+TPG ARROW_OPTIONAL SW : shrink/grow strategy
+SW ARROW_OPTIONAL SP : anagram window
+
+note bottom of SW
+  Maintain a [L,R] interval; grow/shrink with
+  invariant checks (unique chars, sum, freq).
+end note
+@enduml
+
+
+========================================================================
+FILE: _spec/study-cases/1-human-expert/computer-science/algorithms-primitives.puml
+========================================================================
+
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Algorithms ↔ Data Types — Primitives-Based
+' Primer: Algorithms (primitives family + nested primers)
+' URL:    https://github.com/proveo-ca/computer-science/blob/main/libs/algorithms/PRIMER.md
+' URL:    https://github.com/proveo-ca/computer-science/blob/main/libs/algorithms/_docs/PRIMITIVES_BASED_ALGORITHMS.puml
+' Level:  1
+
+package "Data types" {
+  component "Array" as A <<db>>
+  component "String" as S <<db>>
+  component "Stack" as ST <<db>>
+  component "Map / Set\n(hash-table)" as M <<db>>
+  component "IntegerBits\nbit vectors" as B <<db>>
+}
+
+package "Primitives-based algorithms" {
+  component "Bit Manipulation" as BIT <<app>>
+  component "Buffers\n(JS↔C++ slabs)" as BUF <<app>>
+  component "Hashing" as HASH <<app>>
+  component "Math: Geometry (simple)" as GEO <<app>>
+  component "Math: Number Theory" as NUM <<app>>
+  component "Regex" as RE <<app>>
+}
+
+B ARROW_MAIN BIT : word ops
+A ARROW_OPTIONAL BUF : byte slabs
+S ARROW_OPTIONAL BUF : encode/decode
+M ARROW_MAIN HASH : buckets
+A ARROW_OPTIONAL GEO : coordinate arrays
+A ARROW_OPTIONAL NUM : tables
+B ARROW_OPTIONAL NUM : modular bits
+S ARROW_MAIN RE : pattern text
+ST ARROW_OPTIONAL RE : balanced brackets
+
+note bottom of BUF
+  Node buffers / ArrayBuffer / SharedArrayBuffer
+  are C++ backing stores — zero-copy across the
+  JS↔native boundary (libuv / N-API).
+  Nested primer: libs/algorithms/src/buffers/PRIMER.md
+end note
+@enduml
+
+
+========================================================================
+FILE: _spec/study-cases/1-human-expert/computer-science/algorithms-tree-graph.puml
+========================================================================
+
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Algorithms ↔ Data Types — Tree / Graph-Based
+' Primer: Algorithms (tree/graph family + DP nested primer)
+' URL:    https://github.com/proveo-ca/computer-science/blob/main/libs/algorithms/_docs/TREE_GRAPH_BASED_ALGORITHMS.puml
+' URL:    https://github.com/proveo-ca/computer-science/blob/main/libs/algorithms/src/dynamic-programming/PRIMER.md
+' Level:  1
+
+package "Containers" {
+  component "Array" as A <<db>>
+  component "Map" as M <<db>>
+  component "Stack" as ST <<db>>
+  component "Queue" as Q <<db>>
+  component "Graph" as G <<db>>
+  component "Heap" as H <<db>>
+  component "Union-Find" as UF <<db>>
+}
+
+package "Core paradigms" {
+  component "Binary Search" as BS <<host>>
+  component "Divide & Conquer" as DC <<host>>
+  component "Dynamic Programming" as DP <<host>>
+  component "Jump Search" as JS <<host>>
+}
+
+package "Tree/graph algorithms" {
+  component "Graphing" as GR <<app>>
+  component "Pathing / Dijkstra" as PATH <<app>>
+  component "Priority / top-K" as PRI <<app>>
+  component "Sorting" as SORT <<app>>
+  component "Topological Sort" as TOPO <<app>>
+}
+
+A ARROW_MAIN BS
+A ARROW_MAIN JS
+A ARROW_MAIN SORT
+M ARROW_OPTIONAL DP : memo table
+ST ARROW_OPTIONAL DC : recursion stack
+UF ARROW_OPTIONAL DC : DSU-on-tree
+G ARROW_MAIN GR
+G ARROW_MAIN PATH
+Q ARROW_OPTIONAL PATH : BFS shortest
+H ARROW_MAIN PRI
+UF ARROW_OPTIONAL PRI : Kruskal MST
+Q ARROW_OPTIONAL TOPO : Kahn
+ST ARROW_OPTIONAL TOPO : DFS sort
+
+DC ARROW_OPTIONAL BS : subdivide space
+DC ARROW_OPTIONAL SORT : merge/quick
+DC ARROW_OPTIONAL DP : overlap + memo
+JS ARROW_OPTIONAL BS : skip then seek
+PATH ARROW_MAIN GR
+PRI ARROW_OPTIONAL PATH : Dijkstra PQ
+SORT ARROW_OPTIONAL TOPO
+TOPO ARROW_OPTIONAL GR
+
+note bottom of DP
+  1) classify (overlap + optimal substructure)
+  2) minimal state params
+  3) transition relation
+  4) tabulation or memoization
+end note
+@enduml
+
+
+========================================================================
+FILE: _spec/study-cases/1-human-expert/computer-science/cache-strategies.puml
+========================================================================
+
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Cache Strategies ↔ Supporting Algorithm Families
+' Primer / diagram: apps/cache-strategies
+' URL:    https://github.com/proveo-ca/computer-science/blob/main/apps/cache-strategies/_docs/CACHE_STRATEGIES_ALGORITHMS.puml
+' Level:  1
+
+package "Algorithm building blocks" {
+  component "array_processing\nlist · queue · deque" as AP <<app>>
+  component "hashing\nmap / set" as HASH <<app>>
+  component "priority\nheap / top-K" as PRI <<app>>
+  component "sliding_window" as SW <<app>>
+}
+
+package "Classic policies" {
+  component "FIFO" as FIFO <<db>>
+  component "LRU" as LRU <<db>>
+  component "MRU" as MRU <<db>>
+  component "LFU" as LFU <<db>>
+  component "ARC" as ARC <<db>>
+  component "RandomReplace" as RR <<db>>
+}
+
+package "Modern policies" {
+  component "CLOCK / CLOCK-Pro" as CLK <<host>>
+  component "TwoQ" as TQ <<host>>
+  component "LIRS" as LIRS <<host>>
+  component "TinyLFU" as TLFU <<host>>
+  component "GDSF" as GDSF <<host>>
+}
+
+AP ARROW_MAIN FIFO : ring queue
+AP ARROW_MAIN LRU : DLL + map
+HASH ARROW_MAIN LRU
+AP ARROW_MAIN MRU
+HASH ARROW_MAIN MRU
+AP ARROW_MAIN ARC : 2 LRUs + ghosts
+HASH ARROW_MAIN ARC
+HASH ARROW_MAIN LFU
+PRI ARROW_MAIN LFU
+HASH ARROW_OPTIONAL RR
+AP ARROW_MAIN CLK : second-chance ring
+AP ARROW_MAIN TQ
+HASH ARROW_MAIN TQ
+AP ARROW_MAIN LIRS
+HASH ARROW_MAIN LIRS
+HASH ARROW_MAIN TLFU : CM-sketch
+PRI ARROW_OPTIONAL TLFU
+SW ARROW_OPTIONAL TLFU : admission window
+HASH ARROW_MAIN GDSF
+PRI ARROW_MAIN GDSF : cost/size heap
+
+note bottom of TLFU
+  TinyLFU: frequency sketch filters
+  admissions into a small window LRU.
+end note
+@enduml
+
+
+========================================================================
+FILE: _spec/study-cases/1-human-expert/computer-science/datatypes.puml
+========================================================================
+
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Data Structures / Abstract Data Types
+' Primer: Proveo's Data Structures / Abstract Data Types
+' URL:    https://github.com/proveo-ca/computer-science/blob/main/libs/datatypes/PRIMER.md
+' URL:    https://www.geeksforgeeks.org/dsa/lmns-data-structures/
+' Level:  1
+
+package "Linear" {
+  component "Array\nn-dim contiguous"           as ARR <<db>>
+  component "Linked List\nsingly · doubly · circular" as LL <<db>>
+  component "Stack\nLIFO"                       as STK <<db>>
+  component "Queue\nFIFO · circular · priority · deque" as Q <<db>>
+}
+
+package "Trees" {
+  component "Binary / BST\nleft < root < right" as BST <<db>>
+  component "Balanced\nAVL · Red-Black"        as BAL <<db>>
+  component "Heap\nmin / max priority"         as HEAP <<db>>
+  component "Trie\nstring / prefix"            as TRIE <<db>>
+  component "N-ary / General"                  as NARY <<db>>
+}
+
+package "Graphs" {
+  component "Graph\nV + E"                     as G <<db>>
+  component "DFS\nstack / recursion"           as DFS <<app>>
+  component "BFS\nqueue / levels"              as BFS <<app>>
+}
+
+package "Tree traversal" {
+  component "Inorder\nL-Root-R"                as IN <<host>>
+  component "Preorder\nRoot-L-R"               as PRE <<host>>
+  component "Postorder\nL-R-Root"              as POST <<host>>
+  component "Level-order\nBFS"                 as LVL <<host>>
+}
+
+ARR ARROW_OPTIONAL LL : vs dynamic links
+STK ARROW_MAIN ARR : often on array
+Q ARROW_MAIN ARR : ring / list
+BST ARROW_MAIN BAL : self-balance when skewed
+HEAP ARROW_OPTIONAL Q : implements priority queue
+G ARROW_MAIN DFS : deep first
+G ARROW_MAIN BFS : breadth first
+BST ARROW_OPTIONAL IN : ASC on BST
+LVL ARROW_MAIN BFS : same pattern
+
+note right of BAL
+  Balance factor |hL−hR| ≤ 1 (AVL).
+  Ops target O(log n) vs O(n) skewed.
+end note
+@enduml
+
+
+========================================================================
+FILE: _spec/study-cases/1-human-expert/computer-science/hashing.puml
+========================================================================
+
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Hashing — Keys, Buckets, Collision Resolution
+' Primer: Algorithms § Hashing
+' URL:    https://github.com/proveo-ca/computer-science/blob/main/libs/algorithms/PRIMER.md
+' Level:  1
+
+component "Key" as K <<app>>
+component "Hash function\nh(key) → fixed-size code" as HF <<host>>
+database  "Hash table\nbuckets · load factor" as HT <<db>>
+component "Chaining\nbucket → linked list" as CH <<async>>
+component "Open addressing\nprobe for empty slot" as OA <<async>>
+component "Linear probing\n(h+i) % n" as LP <<cloud>>
+component "Quadratic probing\n(h+i²) % n" as QP <<cloud>>
+component "Double hashing\n(h1 + i·h2) % n" as DH <<cloud>>
+component "Collision" as COL <<error>>
+
+K ARROW_MAIN HF : input
+HF ARROW_MAIN HT : place / lookup
+HT ARROW_ERROR COL : same bucket
+COL ARROW_OPTIONAL CH : resolve via list
+COL ARROW_OPTIONAL OA : resolve via probe
+OA ARROW_MAIN LP
+OA ARROW_OPTIONAL QP
+OA ARROW_OPTIONAL DH
+
+note bottom of HT
+  **Load factor** = #elements / table size.
+  High load → more collisions → slower lookups.
+end note
+@enduml
+
+
+========================================================================
+FILE: _spec/study-cases/1-human-expert/rag/_essentials.puml
+========================================================================
+
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title RAG Strategies (July 2026) — Selection Map
+' Synthesis of current RAG design space: vector → tree → graph → vectorless → adaptive
+' URL:    https://arxiv.org/abs/2506.05690
+' URL:    https://arxiv.org/abs/2312.10997
+' Level:  1
+
+actor "Human expert\n(query + corpus shape)" as H
+
+component "Query router\n(complexity / structure)" as R <<app>>
+
+package "Simple / factual" {
+  component "Dense vector RAG\n(+ rerank)" as V <<db>>
+  component "CRAG\nevaluator → correct" as CRAG <<async>>
+}
+
+package "Structural / long doc" {
+  component "RAPTOR\nrecursive summary tree" as RAP <<host>>
+  component "PageIndex\nvectorless tree nav" as PI <<host>>
+}
+
+package "Relational / multi-hop" {
+  component "GraphRAG\ncommunity summaries" as GR <<cloud>>
+  component "LightRAG\ndual-level + incremental" as LR <<cloud>>
+  component "HippoRAG(2)\nPPR associative memory" as HR <<cloud>>
+  component "PathRAG\nflow-pruned paths" as PR <<cloud>>
+  component "KET-RAG\ncheap multi-granular index" as KET <<cloud>>
+  component "LazyGraphRAG\nquery-time graph" as LZ <<cloud>>
+}
+
+H ARROW_MAIN R : classify need
+R ARROW_MAIN V : fact lookup
+R ARROW_OPTIONAL CRAG : weak retrieval
+R ARROW_MAIN RAP : long hierarchical text
+R ARROW_MAIN PI : structured filings / ToC
+R ARROW_OPTIONAL GR : global synthesis
+R ARROW_OPTIONAL LR : light multi-hop
+R ARROW_OPTIONAL HR : associativity + facts
+R ARROW_OPTIONAL PR : cut redundant context
+R ARROW_OPTIONAL KET : cost-bound graph index
+R ARROW_OPTIONAL LZ : one-off / explore
+
+note bottom of R
+  **Jul 2026 consensus:** graphs are not default —
+  route simple queries to vector RAG; reserve graph /
+  tree / vectorless for multi-hop, global, or
+  structure-preserving workloads (arXiv:2506.05690).
+end note
+@enduml
+
+
+========================================================================
+FILE: _spec/study-cases/1-human-expert/rag/adaptive-routing.puml
+========================================================================
+
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Adaptive / Routed RAG — Match Strategy to Query Complexity
+' Paper: Adaptive-RAG: Learning to Adapt Retrieval-Augmented Large Language Models through Question Complexity
+' URL:   https://arxiv.org/abs/2403.14403
+' Paper: When to use Graphs in RAG: A Comprehensive Analysis for Graph Retrieval-Augmented Generation
+' URL:   https://arxiv.org/abs/2506.05690
+' Level: 1
+
+actor "Query" as Q
+component "Complexity classifier\n(no / single / multi-hop)" as CLS <<app>>
+component "No retrieval\n(parametric only)" as NONE <<host>>
+component "Single-step vector RAG" as ONE <<db>>
+component "Multi-step / graph RAG" as MULTI <<cloud>>
+component "Answer" as A <<app>>
+component "Always-graph tax\n(latency · noise)" as TAX <<error>>
+
+Q ARROW_MAIN CLS
+CLS ARROW_MAIN NONE : trivial
+CLS ARROW_MAIN ONE : factual
+CLS ARROW_CLOUD MULTI : relational / global
+NONE ARROW_MAIN A
+ONE ARROW_MAIN A
+MULTI ARROW_MAIN A
+MULTI ARROW_ERROR TAX : if mis-routed simple Q
+
+note bottom of CLS
+  Empirical 2025–26 finding: basic RAG (+rerank)
+  often wins pure fact retrieval; graphs help
+  complex reasoning / synthesis — **route**,
+  don't default to GraphRAG.
+end note
+@enduml
+
+
+========================================================================
+FILE: _spec/study-cases/1-human-expert/rag/crag.puml
+========================================================================
+
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Corrective RAG (CRAG) — Retrieve, Evaluate, Correct
+' Paper: Corrective Retrieval Augmented Generation
+' URL:   https://arxiv.org/abs/2401.15884
+' Level: 1
+
+component "Initial retrieval" as RET <<app>>
+component "Retrieval evaluator\n(relevance quality)" as EVAL <<host>>
+database  "Knowledge base" as KB <<db>>
+cloud     "Web / fallback search" as WEB <<cloud>>
+component "Knowledge refinement\nstrip noise" as REF <<async>>
+cloud     "LLM generator" as LLM <<cloud>>
+component "Low-confidence path" as BAD <<error>>
+
+KB ARROW_MAIN RET : top-k
+RET ARROW_MAIN EVAL : score docs
+EVAL ARROW_MAIN REF : Correct / Ambiguous
+EVAL ARROW_ERROR BAD : Incorrect
+BAD ARROW_CLOUD WEB : correct via external
+WEB ARROW_MAIN REF : supplemental docs
+REF ARROW_CLOUD LLM : cleaned context
+
+note bottom of EVAL
+  Lightweight evaluator gates generation:
+  trust local KB, mix, or abandon and search.
+end note
+@enduml
+
+
+========================================================================
+FILE: _spec/study-cases/1-human-expert/rag/hipporag.puml
+========================================================================
+
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title HippoRAG / HippoRAG 2 — Associative Memory via Personalized PageRank
+' Paper: HippoRAG: Neurobiologically Inspired Long-Term Memory for Large Language Models
+' URL:   https://arxiv.org/abs/2405.14831
+' Paper: From RAG to Memory: Non-Parametric Continual Learning for Large Language Models (HippoRAG 2)
+' URL:   https://arxiv.org/abs/2502.14802
+' Level: 1
+
+component "Passages / triples" as P <<app>>
+database  "Open KG\nphrase + passage nodes" as KG <<db>>
+component "Query → seed nodes\n(linking)" as SEED <<host>>
+component "Recognition memory\n(LLM filter; HippoRAG 2)" as REC <<async>>
+component "Personalized PageRank" as PPR <<app>>
+component "Top passages" as TOP <<db>>
+cloud     "QA reader LLM" as LLM <<cloud>>
+
+P ARROW_MAIN KG : offline index
+SEED ARROW_MAIN KG : online seeds
+SEED ARROW_OPTIONAL REC : keep relevant triples
+REC ARROW_MAIN PPR : filtered seeds
+SEED ARROW_OPTIONAL PPR : (HippoRAG 1 path)
+KG ARROW_MAIN PPR : graph walk
+PPR ARROW_MAIN TOP : ranked passages
+TOP ARROW_CLOUD LLM : answer
+
+note bottom of PPR
+  Hippocampal-indexing inspiration: PPR as
+  associative recall. HippoRAG 2 adds denser
+  passage integration so multi-hop gains do
+  **not** tax simple factual RAG.
+end note
+@enduml
+
+
+========================================================================
+FILE: _spec/study-cases/1-human-expert/rag/ket-rag.puml
+========================================================================
+
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title KET-RAG — Cost-Efficient Multi-Granular Graph Index
+' Paper: KET-RAG: A Cost-Efficient Multi-Granular Indexing Framework for Graph-RAG
+' URL:   https://arxiv.org/abs/2502.09304
+' Level: 1
+
+component "Corpus" as C <<app>>
+component "Skeleton / selective\nKG extraction" as SKEL <<async>>
+component "Multi-granular index\n(coarse + fine)" as IDX <<db>>
+component "Query-time retrieve" as RET <<host>>
+cloud     "LLM" as LLM <<cloud>>
+component "Full GraphRAG index\n(all chunks → LLM)" as FULL <<error>>
+
+C ARROW_ERROR FULL : $$$$ offline
+C ARROW_MAIN SKEL : index hot subset / skeleton
+SKEL ARROW_MAIN IDX : cheap multi-grain store
+IDX ARROW_MAIN RET
+RET ARROW_CLOUD LLM
+
+note bottom of SKEL
+  Targets GraphRAG's indexing tax: build
+  rich structure where it pays off; keep
+  cheaper granules elsewhere (KDD'25 line).
+end note
+@enduml
+
+
+========================================================================
+FILE: _spec/study-cases/1-human-expert/rag/lazy-graphrag.puml
+========================================================================
+
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title LazyGraphRAG — Defer Graph Work to Query Time
+' Product / research blog: Microsoft LazyGraphRAG
+' URL:   https://www.microsoft.com/en-us/research/blog/lazygraphrag-setting-a-new-standard-for-quality-and-cost/
+' Level: 1
+
+component "Lightweight index\n(minimal upfront LLM)" as IDX <<db>>
+component "Query arrives" as Q <<app>>
+component "Best-first + BFS\nrelevance expansion" as EXP <<async>>
+component "Relevance-test budget\n(quality ↔ cost dial)" as BUD <<host>>
+cloud     "LLM claims / answers" as LLM <<cloud>>
+
+Q ARROW_MAIN IDX : start sparse
+IDX ARROW_QUEUE EXP : grow subgraph on demand
+BUD ARROW_OPTIONAL EXP : cap LLM tests
+EXP ARROW_CLOUD LLM : answer from induced graph
+
+note bottom of BUD
+  Contrasts eager GraphRAG indexing: pay for
+  structure **per query**, useful for one-off /
+  exploratory analytics on large corpora.
+end note
+@enduml
+
+
+========================================================================
+FILE: _spec/study-cases/1-human-expert/rag/lightrag.puml
+========================================================================
+
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title LightRAG — Dual-Level Graph + Incremental Index
+' Paper: LightRAG: Simple and Fast Retrieval-Augmented Generation
+' URL:   https://arxiv.org/abs/2410.05779
+' Level: 1
+
+component "New / updated chunks" as C <<app>>
+cloud     "LLM extract\nentities + relations\n(single pass)" as EX <<cloud>>
+database  "Graph + vectors\n(entities · edges · text)" as STORE <<db>>
+component "Low-level retrieval\nentity / detail match" as LOW <<host>>
+component "High-level retrieval\ntheme / topic match" as HIGH <<host>>
+component "Merge dual context" as MIX <<app>>
+cloud     "LLM generator" as LLM <<cloud>>
+
+C ARROW_CLOUD EX : incremental update
+EX ARROW_MAIN STORE : upsert
+STORE ARROW_MAIN LOW : local facts
+STORE ARROW_MAIN HIGH : abstract themes
+LOW ARROW_MAIN MIX
+HIGH ARROW_MAIN MIX
+MIX ARROW_CLOUD LLM : dual-level pack
+
+note bottom of STORE
+  Removes GraphRAG's heavy community
+  summarization; favors fast indexing,
+  developer UX, and incremental inserts.
+end note
+@enduml
+
+
+========================================================================
+FILE: _spec/study-cases/1-human-expert/rag/microsoft-graphrag.puml
+========================================================================
+
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Microsoft GraphRAG — Local → Global Summarization
+' Paper: From Local to Global: A Graph RAG Approach to Query-Focused Summarization
+' URL:   https://arxiv.org/abs/2404.16130
+' URL:   https://github.com/microsoft/graphrag
+' Level: 1
+
+component "Corpus chunks" as C <<app>>
+component "LLM entity/relation\nextraction" as EX <<cloud>>
+database  "Knowledge graph\nnodes + edges" as KG <<db>>
+component "Leiden communities" as COM <<async>>
+database  "Community reports\n(hierarchical summaries)" as SUM <<db>>
+component "Local search\nentity neighborhood" as LOC <<host>>
+component "Global search\nmap-reduce over reports" as GLOB <<host>>
+cloud     "LLM answer" as LLM <<cloud>>
+
+C ARROW_CLOUD EX : index
+EX ARROW_MAIN KG : write KG
+KG ARROW_QUEUE COM : cluster
+COM ARROW_MAIN SUM : community reports
+KG ARROW_OPTIONAL LOC : entity-centric
+SUM ARROW_MAIN GLOB : corpus-wide themes
+LOC ARROW_CLOUD LLM
+GLOB ARROW_CLOUD LLM
+
+note bottom of SUM
+  Strength: global / thematic queries.
+  Cost: expensive LLM indexing; later work
+  (LightRAG, LazyGraphRAG, KET-RAG) cuts that bill.
+end note
+@enduml
+
+
+========================================================================
+FILE: _spec/study-cases/1-human-expert/rag/og-rag.puml
+========================================================================
+
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title OG-RAG — Ontology-Grounded Hypergraph Retrieval
+' Paper: OG-RAG: Ontology-Grounded Retrieval-Augmented Generation For Large Language Models
+' URL:   https://arxiv.org/abs/2412.15235
+' Level: 1
+
+database  "Domain ontology\n(schema constraints)" as ONT <<db>>
+component "Ontology-guided\nextraction" as EX <<app>>
+database  "Hypergraph facts\n(schema-bound)" as HG <<db>>
+component "Constrained retrieval" as RET <<host>>
+cloud     "LLM generator" as LLM <<cloud>>
+component "Ungrounded free extract" as HALL <<error>>
+
+ONT ARROW_MAIN EX : allow types/relations
+EX ARROW_MAIN HG : write facts
+EX ARROW_ERROR HALL : off-schema claims blocked
+HG ARROW_MAIN RET : retrieve hyperedges
+RET ARROW_CLOUD LLM : high-precision domain QA
+
+note bottom of ONT
+  Best when a **known schema** exists (medical,
+  regulatory, enterprise taxonomy). Trades
+  discovery flexibility for factual discipline.
+end note
+@enduml
+
+
+========================================================================
+FILE: _spec/study-cases/1-human-expert/rag/pageindex.puml
+========================================================================
+
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title PageIndex — Vectorless, Reasoning-Based Tree RAG
+' Product: PageIndex (VectifyAI) — hierarchical ToC + LLM tree search
+' URL:    https://pageindex.ai/blog/pageindex-intro
+' URL:    https://github.com/VectifyAI/PageIndex
+' Level:  1
+
+component "Structured document\n(PDF / HTML / filing)" as DOC <<app>>
+component "Hierarchical tree index\n(titles · summaries · pages)" as TREE <<db>>
+cloud     "LLM tree search\nreason where to look" as SEARCH <<cloud>>
+component "Selected node IDs\n(+ trace)" as NODES <<host>>
+component "Fetch node text" as FETCH <<app>>
+cloud     "LLM answer\nwith section citations" as LLM <<cloud>>
+
+DOC ARROW_MAIN TREE : parse structure\n(no embeddings)
+TREE ARROW_CLOUD SEARCH : tree metadata only
+SEARCH ARROW_MAIN NODES : choose sections
+NODES ARROW_MAIN FETCH : materialize text
+FETCH ARROW_CLOUD LLM : generate
+
+note bottom of SEARCH
+  **Vectorless:** no ANN index. LLM navigates
+  like a human ToC for legal/finance PDFs
+  (FinanceBench SOTA claims in product lit).
+  Hybrid often: vector for discovery, PageIndex
+  for precise section retrieval.
+end note
+@enduml
+
+
+========================================================================
+FILE: _spec/study-cases/1-human-expert/rag/pathrag.puml
+========================================================================
+
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title PathRAG — Flow-Based Relational Path Pruning
+' Paper: PathRAG: Pruning Graph-based Retrieval Augmented Generation with Relational Paths
+' URL:   https://arxiv.org/abs/2502.14902
+' Level: 1
+
+database  "Indexing graph" as KG <<db>>
+component "Retrieve candidate\nrelational paths" as CAND <<app>>
+component "Flow-based pruning\nkeep reliable paths" as PRUNE <<async>>
+component "Path-based prompting\n(ordered text paths)" as PROMPT <<host>>
+cloud     "LLM generator" as LLM <<cloud>>
+component "Redundant neighbor dump" as NOISE <<error>>
+
+KG ARROW_MAIN CAND : query nodes
+CAND ARROW_ERROR NOISE : unpruned neighbors
+CAND ARROW_MAIN PRUNE : score flow
+PRUNE ARROW_MAIN PROMPT : sparse paths
+PROMPT ARROW_CLOUD LLM : coherent multi-hop context
+
+note bottom of PRUNE
+  Thesis: graph RAG fails from **redundancy**,
+  not from missing edges. Prune paths → ~40%+
+  less context while holding accuracy.
+end note
+@enduml
+
+
+========================================================================
+FILE: _spec/study-cases/1-human-expert/rag/raptor.puml
+========================================================================
+
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title RAPTOR — Recursive Abstractive Tree Retrieval
+' Paper: RAPTOR: Recursive Abstractive Processing for Tree-Organized Retrieval
+' URL:   https://arxiv.org/abs/2401.18059
+' Level: 1
+
+component "Leaf chunks" as L <<app>>
+cloud     "Cluster + abstract\nsummarize" as SUM <<cloud>>
+database  "Summary tree\ncoarse → fine layers" as TREE <<db>>
+component "Collapsed tree search\n(any layer)" as RET <<host>>
+cloud     "LLM generator" as LLM <<cloud>>
+
+L ARROW_CLOUD SUM : recursive
+SUM ARROW_MAIN TREE : build layers
+TREE ARROW_MAIN RET : retrieve nodes
+RET ARROW_CLOUD LLM : multi-granularity context
+
+note bottom of TREE
+  Tree RAG for long documents: upper nodes
+  for thematic / sense-making queries; leaves
+  for local detail. Complementary to entity KGs.
+end note
+@enduml
+
+
+========================================================================
+FILE: _spec/study-cases/1-human-expert/rag/vector-dense-rag.puml
+========================================================================
+
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Dense / Vector RAG (baseline pipeline)
+' Paper: Retrieval-Augmented Generation for Large Language Models: A Survey
+' URL:   https://arxiv.org/abs/2312.10997
+' Level: 1
+
+actor "User query" as U
+component "Embedder" as E <<app>>
+database  "Vector index\n(chunk embeddings)" as IX <<db>>
+component "Retriever\ntop-k ANN" as RET <<app>>
+component "Optional reranker" as RR <<async>>
+cloud     "LLM generator" as LLM <<cloud>>
+component "Answer + citations" as OUT <<host>>
+
+U ARROW_MAIN E : embed query
+E ARROW_MAIN RET : q-vector
+IX ARROW_MAIN RET : nearest chunks
+RET ARROW_OPTIONAL RR : score
+RR ARROW_CLOUD LLM : context pack
+RET ARROW_CLOUD LLM : (if no rerank)
+LLM ARROW_MAIN OUT : generate grounded answer
+
+note bottom of IX
+  Baseline Jul 2026 fact-retrieval default.
+  Fast; weak on multi-hop / global themes
+  unless augmented (graph, tree, router).
+end note
+@enduml
+
+
+========================================================================
+FILE: _spec/study-cases/2-single-prompts/discovery/_essentials.puml
+========================================================================
+
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title L2 Discovery Map — Where to Find Popular Prompts / Skills
+' Level: 2
+' Index of discovery channels; recipes in how-to-query.md
+
+actor "Human expert\n(needs current L2 baseline)" as H
+
+package "1. Agent skills (SKILL.md)" {
+  cloud "skills.sh\ninstall leaderboard" as SH <<cloud>>
+  component "npx skills find/add\n+ GET /api/search" as CLI <<app>>
+  component "anthropics/skills\n+ agentskills.io" as ANT <<host>>
+}
+
+package "2. Classic one-shots" {
+  cloud "prompts.chat\n(+ PROMPTS.md / CSV / HF)" as PC <<cloud>>
+}
+
+package "3. Product system prompts" {
+  database "Leak / extract archives\n(system_prompts_leaks, …)" as ARCH <<db>>
+}
+
+H ARROW_MAIN SH : browse all-time installs
+H ARROW_MAIN CLI : query / install
+CLI ARROW_CLOUD SH : telemetry index
+H ARROW_OPTIONAL ANT : first-party + format
+H ARROW_OPTIONAL PC : persona libraries
+H ARROW_OPTIONAL ARCH : vendor baselines
+
+note bottom of SH
+  **Correct popularity proxy for skills** =
+  install counts (anonymous CLI telemetry),
+  not GitHub stars alone.
+end note
+
+note bottom of ARCH
+  Extracted product prompts — cite archive URL;
+  freshness > star count for "what ships today."
+end note
+@enduml
+
+
+========================================================================
+FILE: _spec/study-cases/2-single-prompts/discovery/first-party-skills.puml
+========================================================================
+
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title First-Party Agent Skills — Standard + Anthropic Marketplace
+' Standard: Agent Skills (SKILL.md)
+' URL:      https://agentskills.io
+' URL:      https://github.com/anthropics/skills
+' Level:    2
+
+actor "Author / operator" as OP
+cloud "agentskills.io\n(format standard)" as STD <<cloud>>
+component "anthropics/skills\n(reference + document skills)" as REPO <<host>>
+component "Claude Code plugin marketplace" as MKT <<app>>
+component "GitHub Search API\ntopic:agent-skills&sort=stars" as GH <<cloud>>
+component "SKILL.md package\n(folder + frontmatter)" as SK <<db>>
+
+STD ARROW_OPTIONAL SK : schema / conventions
+REPO ARROW_MAIN SK : ships examples
+OP ARROW_MAIN MKT : "/plugin marketplace add anthropics/skills"
+MKT ARROW_OPTIONAL REPO : browse / install plugins
+OP ARROW_CLOUD GH : discover by stars
+GH ARROW_OPTIONAL REPO : among results
+
+note bottom of MKT
+  Install path:
+  /plugin install document-skills@anthropic-agent-skills
+  /plugin install example-skills@anthropic-agent-skills
+  Stars measure repo attention; installs
+  still checked via skills.sh when available.
+end note
+@enduml
+
+
+========================================================================
+FILE: _spec/study-cases/2-single-prompts/discovery/prompts-chat.puml
+========================================================================
+
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title prompts.chat — Classic One-Shot Prompt Library
+' Product: prompts.chat (formerly Awesome ChatGPT Prompts)
+' URL:    https://prompts.chat
+' URL:    https://github.com/f/prompts.chat
+' Level:  2
+
+actor "Prompt consumer" as U
+cloud "prompts.chat/prompts\n(browse UI)" as UI <<cloud>>
+database "PROMPTS.md" as MD <<db>>
+database "prompts.csv" as CSV <<db>>
+cloud "Hugging Face\ndatasets/fka/prompts.chat" as HF <<cloud>>
+component "Claude plugin path\nf/prompts.chat" as PLUG <<app>>
+component "GitHub stars\n(genre popularity proxy)" as STARS <<host>>
+
+U ARROW_CLOUD UI : discover personas
+U ARROW_MAIN MD : curl raw dump
+U ARROW_OPTIONAL CSV : tabular export
+U ARROW_CLOUD HF : dataset pull
+U ARROW_OPTIONAL PLUG : marketplace install
+STARS ARROW_OPTIONAL UI : attention signal
+
+note bottom of MD
+  Fetch:
+  https://raw.githubusercontent.com/f/prompts.chat/main/PROMPTS.md
+  Use for ChatGPT-era one-shots — not a
+  substitute for skills.sh install ranks.
+end note
+@enduml
+
+
+========================================================================
+FILE: _spec/study-cases/2-single-prompts/discovery/skills-sh.puml
+========================================================================
+
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title skills.sh — Leaderboard Reach & Query Surface
+' Product: Vercel skills.sh open agent skills registry
+' URL:    https://skills.sh/
+' URL:    https://skills.sh/docs
+' URL:    https://github.com/vercel-labs/skills
+' Level:  2
+
+actor "Consumer / agent" as U
+cloud "skills.sh homepage\n(all-time leaderboard UI)" as HOME <<cloud>>
+cloud "GET /api/search?q=&limit=&owner=" as API <<cloud>>
+component "npx skills find|add|list" as CLI <<app>>
+queue "Anonymous install telemetry\n(npx skills add → index)" as TEL <<async>>
+database "Install-ranked skill index" as IX <<db>>
+component "Badge\nGET /b/{owner}/{repo}" as BADGE <<host>>
+
+U ARROW_CLOUD HOME : browse ranking
+U ARROW_MAIN CLI : find / add
+CLI ARROW_CLOUD API : search JSON
+API ARROW_MAIN IX : fuzzy + installs
+CLI ARROW_QUEUE TEL : on successful add
+TEL ARROW_MAIN IX : aggregate popularity
+U ARROW_OPTIONAL BADGE : README shield
+BADGE ARROW_MAIN IX : count
+
+note bottom of API
+  Example:
+  curl -sL 'https://skills.sh/api/search?q=frontend&limit=10'
+  → skills[].{id, skillId, name, installs, source}
+  No documented full-dump API — homepage is the board.
+end note
+
+note bottom of TEL
+  Skills enter the index **only** via install
+  telemetry — not a GitHub crawler.
+end note
+@enduml
+
+
+========================================================================
+FILE: _spec/study-cases/2-single-prompts/discovery/vendor-prompt-archives.puml
+========================================================================
+
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Vendor System-Prompt Archives — Product Baselines
+' Archives of extracted product system prompts (not authored libraries)
+' URL: https://github.com/asgeirtj/system_prompts_leaks
+' URL: https://github.com/x1xhlol/system-prompts-and-models-of-ai-tools
+' URL: https://github.com/Piebald-AI/claude-code-system-prompts
+' Level: 2
+
+actor "Analyst" as A
+cloud "GitHub Search API\nsort=stars" as GH <<cloud>>
+database "system_prompts_leaks\n(multi-vendor chat/IDE)" as SPL <<db>>
+database "system-prompts-and-models-of-ai-tools\n(coding agents)" as X1 <<db>>
+database "claude-code-system-prompts\n(versioned npm extracts)" as PB <<db>>
+component "raw.githubusercontent.com\n/{owner}/{repo}/{path}" as RAW <<host>>
+component "Stale extract" as STALE <<error>>
+
+A ARROW_CLOUD GH : find archive repos
+GH ARROW_OPTIONAL SPL
+GH ARROW_OPTIONAL X1
+GH ARROW_OPTIONAL PB
+A ARROW_MAIN RAW : fetch single prompt file
+SPL ARROW_MAIN RAW
+X1 ARROW_MAIN RAW
+PB ARROW_MAIN RAW
+RAW ARROW_ERROR STALE : if last_commit ≪ today
+
+note bottom of PB
+  Prefer dated, version-pinned extracts
+  (e.g. Claude Code changelog per release)
+  when reconstructing "what ships."
 end note
 @enduml
 
