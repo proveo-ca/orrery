@@ -1,0 +1,54 @@
+# orrery
+
+> The coordinating root for Proveo's agent projects: a constellation of independent applications
+> (attached as Git submodules) orbiting a shared `_spec/` learning surface that maps how agent / LLM
+> systems are built -- a 7-level capability ladder plus sourced study-cases of the field.
+
+orrery holds no application code of its own; each `projects/*` is its own repository. The durable value
+here is the `_spec/` learning surface. Diagram sources are PlantUML (`.puml`), Mermaid (`.mmd`), and
+Vega-Lite (`.vega.json`); every study-case carries a `' Level:` header and a confirmed primary source.
+Prefer the linked sources below over rendered `.svg` files. For a single pre-expanded digest, use
+[llms-full.txt](llms-full.txt) (regenerate with `bash scripts/build-llm-context.sh`).
+
+## Start here
+- [README](README.md): what orrery is, the layout, the project list, submodule setup, and how to consume this repo as context
+- [Capability ladder](_spec/study-cases/README.md): organizing model -- demand-side funnel and build-side study map (encoding depth x autonomy)
+- [Authoring & sourcing rules](_spec/CONTRIBUTING.md): diagram conventions, themes, role stereotypes, `' Level:` headers, sourcing
+- [Cross-cutting summary](_spec/study-cases/summary.md): the field at a glance
+- [Context & retrieval](_spec/study-cases/context-and-retrieval.md): context-engineering bibliography
+- [Agent workflow](AGENTS.md): team / agent operating rules when working inside this checkout (also mirrored as `CLAUDE.md`)
+
+## Consume as context
+- [Full LLM digest](llms-full.txt): inline `_spec/` + core Markdown for scrapers that do not follow links (gitingest, custom agents, paste-into-prompt)
+- [spec skill](skills/spec/SKILL.md): procedural conventions for authoring / rendering proveo diagrams -- install with `npx skills add proveo-ca/orrery --skill spec` (or `npx skills add proveo-ca/spec --skill spec`)
+
+## Overview diagrams
+- [Business-needs funnel](_spec/overview/business-needs-funnel.puml): demand-side -- how a request walks down the capability ladder
+- [Study map](_spec/overview/study-map.vega.json): build-side -- same tiers on encoding depth x autonomy
+
+## Study-cases -- Level 3 (meta-prompt loops)
+- [Alpha Case](_spec/study-cases/3-meta-prompt-loops/alpha.puml): Level 3
+- [No Trailing NL](_spec/study-cases/3-meta-prompt-loops/no-nl.puml): Level 3
+
+## Study-cases -- Level 4 / governance
+- [Beta With Spaces](_spec/study-cases/4-harness/governance/beta.puml): Level 4 (governance)
+
+## Study-cases -- Level 4 / applied
+- [Gamma Tool](_spec/study-cases/4-harness/applied/software/gamma.puml): Level 4
+
+## Study-cases -- substrate (orthogonal to the ladder)
+- [Delta Gateway](_spec/study-cases/_substrate/serving/delta.puml): n/a (substrate)
+
+## Study-cases -- other
+- [Epsilon → special](_spec/study-cases/unmapped-bucket/epsilon.puml): experimental
+- [orphan](_spec/study-cases/unmapped-bucket/orphan.puml): study-case
+
+## Optional
+- [Proveo Vega theme (light)](_spec/themes/proveo.vega.json): vendored identity theme for `.vega.json` charts
+- [Proveo Vega theme (dark)](_spec/themes/proveo-dark.vega.json): dark-canvas Vega theme
+- [PlantUML reference (skill)](skills/spec/references/plantuml.md): stereotype / ARROW_* detail
+- [Mermaid reference (skill)](skills/spec/references/mermaid.md): class theming
+- [Vega-Lite reference (skill)](skills/spec/references/vega-lite.md): config theming
+- [Rendering reference (skill)](skills/spec/references/rendering.md): install + validate + render commands
+- Projects under `projects/` are Git submodules (aphelion, omnigent public; others may be private) -- scrape `_spec/` unless you explicitly need an application checkout
+

@@ -1,0 +1,27 @@
+{
+  "generated_at": "2026-07-09T03:30:00Z",
+  "project": "orrery",
+  "deployable": {
+    "status": false,
+    "live_target": null,
+    "notes": "Coordinating root + _spec learning surface; projects/* are submodules (deployed from their own repos)."
+  },
+  "last_commit": {
+    "date": "2026-06-30T13:18:02-07:00",
+    "source": "git"
+  },
+  "roadmap_or_todo": {
+    "available": false,
+    "files": []
+  },
+  "e2e": {
+    "available": false,
+    "path": null
+  },
+  "spec_coverage": {
+    "available": true,
+    "path": "_spec",
+    "file_count": 135,
+    "notes": "Primary artifact: capability ladder + study-cases across agent/LLM field. Highest _spec volume in the workspace."
+  }
+}

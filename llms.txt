@@ -2,30 +2,141 @@
 
 > The coordinating root for Proveo's agent projects: a constellation of independent applications
 > (attached as Git submodules) orbiting a shared `_spec/` learning surface that maps how agent / LLM
-> systems are built — a 7-level capability ladder plus sourced study-cases of the field.
+> systems are built -- a 7-level capability ladder plus sourced study-cases of the field.
 
 orrery holds no application code of its own; each `projects/*` is its own repository. The durable value
-here is the `_spec/` learning surface. Diagrams use the proveo identity theme (PlantUML, Mermaid,
-Vega-Lite); every study-case carries a `' Level:` header and a confirmed primary source.
+here is the `_spec/` learning surface. Diagram sources are PlantUML (`.puml`), Mermaid (`.mmd`), and
+Vega-Lite (`.vega.json`); every study-case carries a `' Level:` header and a confirmed primary source.
+Prefer the linked sources below over rendered `.svg` files. For a single pre-expanded digest, use
+[llms-full.txt](llms-full.txt) (regenerate with `bash scripts/build-llm-context.sh`).
 
 ## Start here
-- [README](README.md): what orrery is, the layout, the project list, and submodule setup
-- [Capability ladder](_spec/study-cases/README.md): the organizing model — a demand-side funnel and a build-side study map (encoding depth × autonomy)
-- [Authoring & sourcing rules](_spec/CONTRIBUTING.md): conventions for diagrams and study-cases (themes, role stereotypes, `' Level:` headers, sourcing)
-
-## Overview diagrams
-- [Business-needs funnel](_spec/overview/business-needs-funnel.puml): how a request walks down the capability ladder
-- [Study map](_spec/overview/study-map.vega.json): the same tiers on a 2D plane
-
-## Study-cases (organized by capability level)
+- [README](README.md): what orrery is, the layout, the project list, submodule setup, and how to consume this repo as context
+- [Capability ladder](_spec/study-cases/README.md): organizing model -- demand-side funnel and build-side study map (encoding depth x autonomy)
+- [Authoring & sourcing rules](_spec/CONTRIBUTING.md): diagram conventions, themes, role stereotypes, `' Level:` headers, sourcing
 - [Cross-cutting summary](_spec/study-cases/summary.md): the field at a glance
 - [Context & retrieval](_spec/study-cases/context-and-retrieval.md): context-engineering bibliography
-- `_spec/study-cases/4-harness/`: the richest tier — governance, evidence-and-durability, meta-orchestration, self-improving, and applied (games, health, finance, law, security, science)
-- `_spec/study-cases/5-fine-tuned/` and `_spec/study-cases/6-post-training/`: weight-changing tiers
-- `_spec/study-cases/3-meta-prompt-loops/`: prompt-loop reasoning techniques
-- `_spec/study-cases/_substrate/`: deployment & control substrate (orthogonal to the ladder)
+- [Agent workflow](AGENTS.md): team / agent operating rules when working inside this checkout (also mirrored as `CLAUDE.md`)
 
-## Projects (Git submodules)
-- aphelion — audit/evidence-based personal agent runtime (public)
-- omnigent — vendor-neutral meta-harness / orchestrator-of-orchestrators (public)
-- chess-coach, nightfall, agents-of-empires — application projects (private)
+## Consume as context
+- [Full LLM digest](llms-full.txt): inline `_spec/` + core Markdown for scrapers that do not follow links (gitingest, custom agents, paste-into-prompt)
+- [spec skill](skills/spec/SKILL.md): procedural conventions for authoring / rendering proveo diagrams -- install with `npx skills add proveo-ca/orrery --skill spec` (or `npx skills add proveo-ca/spec --skill spec`)
+
+## Overview diagrams
+- [Business-needs funnel](_spec/overview/business-needs-funnel.puml): demand-side -- how a request walks down the capability ladder
+- [Study map](_spec/overview/study-map.vega.json): build-side -- same tiers on encoding depth x autonomy
+
+## Study-cases -- Level 3 (meta-prompt loops)
+- [Chain of Thought (CoT)](_spec/study-cases/3-meta-prompt-loops/cot.puml): study-case
+- [Multi-Agent Debate (MAD)](_spec/study-cases/3-meta-prompt-loops/mad.puml): study-case
+- [Plan-and-Solve (Planner-Executor)](_spec/study-cases/3-meta-prompt-loops/plan_and_solve.puml): study-case
+- [ReAct Architecture (Reason + Act)](_spec/study-cases/3-meta-prompt-loops/react.puml): study-case
+- [Reflexion (Self-Correction Loop)](_spec/study-cases/3-meta-prompt-loops/reflexion.puml): study-case
+- [Tree of Thoughts (ToT)](_spec/study-cases/3-meta-prompt-loops/tot.puml): study-case
+
+## Study-cases -- Level 4 / governance
+- [Capability / Effect Authorization](_spec/study-cases/4-harness/governance/capability-effect-authorization.puml): Level 4
+- [Leases & Grants](_spec/study-cases/4-harness/governance/leases-and-grants.puml): Level 4
+- [Policy Engine — allow / ask / deny](_spec/study-cases/4-harness/governance/policy-engine-allow-ask-deny.puml): Level 4
+- [Privilege Separation — Face / Governor](_spec/study-cases/4-harness/governance/privilege-separation-face-governor.puml): Level 4
+
+## Study-cases -- Level 4 / evidence & durability
+- [Continuation Recovery](_spec/study-cases/4-harness/evidence-and-durability/continuation-recovery.puml): Level 4
+- [Dead-Letter + Bounded Replay](_spec/study-cases/4-harness/evidence-and-durability/dead-letter-bounded-replay.puml): Level 4
+- [Durable Children — Zero-Trust Workload Identity](_spec/study-cases/4-harness/evidence-and-durability/durable-children-zero-trust-identity.puml): Level 4
+- [Effect-Attempt Lifecycle](_spec/study-cases/4-harness/evidence-and-durability/effect-attempt-lifecycle.puml): Level 4
+- [Provenance / Evidence Ledger](_spec/study-cases/4-harness/evidence-and-durability/provenance-evidence-ledger.puml): Level 4
+- [Typed Execution-Events Ledger](_spec/study-cases/4-harness/evidence-and-durability/typed-execution-events-ledger.puml): Level 4
+
+## Study-cases -- Level 4 / meta-orchestration
+- [Code-mode — executable-code action space (CodeAct)](_spec/study-cases/4-harness/meta-orchestration/code-mode-executable-actions.puml): Level 4
+- [Control / Execution Plane Split](_spec/study-cases/4-harness/meta-orchestration/control-execution-plane-split.puml): Level 4
+- [Cross-Vendor Debate / Review](_spec/study-cases/4-harness/meta-orchestration/cross-vendor-debate-review.puml): Level 4
+- [Multi-Agent Delegation](_spec/study-cases/4-harness/meta-orchestration/multi-agent-delegation.puml): Level 4
+- [Native-CLI Forwarder + Transcript Mirroring](_spec/study-cases/4-harness/meta-orchestration/native-cli-forwarder-transcript-mirroring.puml): Level 4
+- [Sandbox + Egress + Secretless Credentials](_spec/study-cases/4-harness/meta-orchestration/sandbox-egress-secretless-credentials.puml): Level 4
+- [Session Resumption — Snapshot + Live Tail](_spec/study-cases/4-harness/meta-orchestration/session-resumption-snapshot-live-tail.puml): Level 4
+- [Vendor-Neutral Harness Adapter](_spec/study-cases/4-harness/meta-orchestration/vendor-neutral-harness-adapter.puml): Level 4
+
+## Study-cases -- Level 4 / self-improving
+- [Agentic Context Engineering (ACE)](_spec/study-cases/4-harness/self-improving/agentic-context-engineering.puml): Level 4 (self-improving harness — weights frozen; the context/playbook evolves)
+- [Cross-session user model (personalization memory)](_spec/study-cases/4-harness/self-improving/cross-session-user-model.puml): Level 4 (self-improving harness — weights frozen; the user model deepens)
+- [Reflective Prompt and Program Optimization](_spec/study-cases/4-harness/self-improving/reflective-prompt-optimization.puml): Level 4 (self-improving harness — weights frozen; prompts/program evolve)
+- [Self-Improving Coding Agent](_spec/study-cases/4-harness/self-improving/self-improving-coding-agent.puml): Level 4 (self-improving harness — weights frozen; the agent evolves its own code)
+- [Skill-library flywheel](_spec/study-cases/4-harness/self-improving/skill-library-flywheel.puml): Level 4 (self-improving harness — weights frozen; the skill library grows)
+
+## Study-cases -- Level 4 / applied
+- [browser-use — computer-use / web-automation harness](_spec/study-cases/4-harness/applied/computer-use/browser-use.puml): Level 4
+- [Dual-Channel RAG — fact vs rule](_spec/study-cases/4-harness/applied/finance/dual-channel-fact-vs-rule-rag.puml): Level 4
+- [Probabilistic Risk — LLM as Formalizer](_spec/study-cases/4-harness/applied/finance/probabilistic-risk-formalizer.puml): Level 4
+- [Generative Competitive Agents](_spec/study-cases/4-harness/applied/games/generative-competitive-agents.puml): Level 4
+- [LLM Strategy Agents — RTS Commander](_spec/study-cases/4-harness/applied/games/llm-strategy-agents.puml): Level 4
+- [Multi-Engine Ensemble — human-like + optimal + explainer](_spec/study-cases/4-harness/applied/games/multi-engine-ensemble.puml): Level 4
+- [Clinical RAG with Citations](_spec/study-cases/4-harness/applied/health/clinical-rag-with-citations.puml): Level 4
+- [Citation-Grounded Legal Drafting](_spec/study-cases/4-harness/applied/law/citation-grounded-drafting.puml): Level 4
+- [Legal-Reasoning Benchmark](_spec/study-cases/4-harness/applied/law/legal-reasoning-benchmark.puml): Level 4
+- [Autonomous Research Agent](_spec/study-cases/4-harness/applied/science/autonomous-research-agent.puml): Level 4
+- [Autonomous Offensive Agent (sandboxed)](_spec/study-cases/4-harness/applied/security/autonomous-offensive-agent.puml): Level 4
+- [Serena — LSP symbolic code toolkit](_spec/study-cases/4-harness/applied/software/lsp-symbolic-code-toolkit.puml): Level 4
+- [SWE-Agent — Agent-Computer Interface](_spec/study-cases/4-harness/applied/software/swe-agent-computer-interface.puml): Level 4
+
+## Study-cases -- Level 4 / anti-framework
+- [_essentials](_spec/study-cases/4-harness/anti-framework/_essentials.puml): study-case
+- [aider](_spec/study-cases/4-harness/anti-framework/aider.puml): study-case
+- [continue](_spec/study-cases/4-harness/anti-framework/continue.puml): study-case
+- [hands](_spec/study-cases/4-harness/anti-framework/hands.puml): study-case
+- [mentat](_spec/study-cases/4-harness/anti-framework/mentat.puml): study-case
+- [opencode — open-source terminal coding agent](_spec/study-cases/4-harness/anti-framework/opencode.puml): Level 4
+- [sweep](_spec/study-cases/4-harness/anti-framework/sweep.puml): study-case
+
+## Study-cases -- Level 4 / framework
+- [_essentials](_spec/study-cases/4-harness/framework/_essentials.puml): study-case
+- [cohere_coral](_spec/study-cases/4-harness/framework/cohere_coral.puml): study-case
+- [Dify — agentic-workflow platform](_spec/study-cases/4-harness/framework/dify.puml): Level 4
+- [dust](_spec/study-cases/4-harness/framework/dust.puml): study-case
+- [glean](_spec/study-cases/4-harness/framework/glean.puml): study-case
+- [microsoft_copilot](_spec/study-cases/4-harness/framework/microsoft_copilot.puml): study-case
+- [typeface](_spec/study-cases/4-harness/framework/typeface.puml): study-case
+
+## Study-cases -- Level 5 (fine-tuned)
+- [Financial-Domain LLM](_spec/study-cases/5-fine-tuned/finance/financial-domain-llm.puml): Level 5
+- [Clinical-Knowledge LLM](_spec/study-cases/5-fine-tuned/health/clinical-knowledge-llm.puml): Level 5
+
+## Study-cases -- Level 6 (post-training)
+- [Harness trajectory flywheel (L4 → L6)](_spec/study-cases/6-post-training/harness-trajectory-flywheel.puml): Level 6
+- [Reinforcement Fine-Tuning Pipeline (RFT)](_spec/study-cases/6-post-training/reinforcement-fine-tuning-pipeline.puml): Level 6
+- [RL with Verifiable Rewards (RLVR)](_spec/study-cases/6-post-training/rl-verifiable-rewards.puml): Level 6
+- [Self-Adapting Model (SEAL)](_spec/study-cases/6-post-training/self-adapting-model.puml): Level 6
+- [Self-Rewarding Eval Loop](_spec/study-cases/6-post-training/self-rewarding-eval-loop.puml): Level 6
+- [Test-Time RL (TTRL)](_spec/study-cases/6-post-training/test-time-rl.puml): Level 6
+
+## Study-cases -- substrate (orthogonal to the ladder)
+- [Constrained LLM Parallelism](_spec/study-cases/_substrate/edge-and-p2p/constrained-llm-parallelism.puml): n/a (substrate)
+- [Docker-as-Simulation Substrate](_spec/study-cases/_substrate/edge-and-p2p/docker-as-simulation-substrate.puml): n/a (substrate)
+- [Embedded Thin-Server + WASM WebView](_spec/study-cases/_substrate/edge-and-p2p/embedded-thinserver-wasm-webview.puml): n/a (substrate)
+- [Heartbeat Liveness Protocol](_spec/study-cases/_substrate/edge-and-p2p/heartbeat-liveness-protocol.puml): n/a (substrate)
+- [Serverless P2P — Tailscale + WebRTC](_spec/study-cases/_substrate/edge-and-p2p/serverless-p2p-tailscale-webrtc.puml): n/a (substrate)
+- [WebGPU On-Device LLM](_spec/study-cases/_substrate/edge-and-p2p/webgpu-on-device-llm.puml): n/a (substrate)
+- [Generic LLM Asset Loading Flow](_spec/study-cases/_substrate/nets/flow.puml): study-case
+- [Neural Network Inference Flow (WebLLM)](_spec/study-cases/_substrate/nets/neural.puml): study-case
+- [WebLLM Weights Loading & Sharding](_spec/study-cases/_substrate/nets/weights.puml): study-case
+- [Behavior Trees & FSM](_spec/study-cases/_substrate/reactive-control/behavior-trees-and-fsm.puml): n/a (substrate)
+- [Steering Behaviors](_spec/study-cases/_substrate/reactive-control/steering-behaviors.puml): n/a (substrate)
+- [Multi-channel agent gateway + serverless hibernation](_spec/study-cases/_substrate/serving/multi-channel-agent-gateway.puml): n/a (substrate)
+- [Open-Weight LLM Browser Architecture](_spec/study-cases/_substrate/web-llm/architecture.puml): study-case
+- [WebLLM Component Architecture](_spec/study-cases/_substrate/web-llm/components.puml): study-case
+- [Generic WebLLM Deployment Architecture](_spec/study-cases/_substrate/web-llm/deploy.puml): study-case
+- [MLC-LLM Compilation Pipeline](_spec/study-cases/_substrate/web-llm/mlc.puml): study-case
+
+## Study-cases -- other
+- [AI Agent Harness Architecture](_spec/study-cases/_essentials.puml): study-case
+
+## Optional
+- [Proveo Vega theme (light)](_spec/themes/proveo.vega.json): vendored identity theme for `.vega.json` charts
+- [Proveo Vega theme (dark)](_spec/themes/proveo-dark.vega.json): dark-canvas Vega theme
+- [PlantUML reference (skill)](skills/spec/references/plantuml.md): stereotype / ARROW_* detail
+- [Mermaid reference (skill)](skills/spec/references/mermaid.md): class theming
+- [Vega-Lite reference (skill)](skills/spec/references/vega-lite.md): config theming
+- [Rendering reference (skill)](skills/spec/references/rendering.md): install + validate + render commands
+- Projects under `projects/` are Git submodules (aphelion, omnigent public; others may be private) -- scrape `_spec/` unless you explicitly need an application checkout
+
