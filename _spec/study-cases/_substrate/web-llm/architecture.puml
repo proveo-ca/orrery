@@ -1,8 +1,12 @@
 @startuml
-!theme plain
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
 skinparam componentStyle rectangle
 
 title Open-Weight LLM Browser Architecture
+' URL:   https://webllm.mlc.ai/
+' URL:   https://llm.mlc.ai/
+' URL:   https://arxiv.org/abs/2412.15803
+' Level: n/a (substrate)
 
 package "Offline Preparation (MLC-LLM)" {
   component "Model Compiler" as Compiler

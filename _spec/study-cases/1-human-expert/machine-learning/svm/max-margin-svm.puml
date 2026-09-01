@@ -1,0 +1,38 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Support-Vector Networks — Max-Margin Classification
+' Paper: Support-vector networks
+' URL:   https://doi.org/10.1007/BF00994018
+' Level: 1
+
+component "Training pairs\nx_i with label y_i" as X <<app>>
+component "Kernel map φ\nimplicit via K(x_i, x_j)" as PHI <<host>>
+component "Quadratic program\nmaximize the margin" as QP <<app>>
+database  "Support vectors\nnon-zero multipliers α_i" as SV <<db>>
+component "Slack ξ_i, penalty C\nsoft margin" as SOFT <<async>>
+component "Decision function\nsign of Σ α_i y_i K(x_i, x) + b" as DEC <<app>>
+
+X ARROW_OPTIONAL PHI : lift to higher dimension
+X ARROW_MAIN QP : separable case
+PHI ARROW_MAIN QP : only inner products needed
+SOFT ARROW_MAIN QP : allow violations\nwhen classes overlap
+QP ARROW_MAIN SV : optimum is sparse
+SV ARROW_MAIN DEC : prediction touches\nonly the support vectors
+
+note bottom of QP
+  The separating hyperplane is chosen to **maximize
+  the geometric margin** (width 2/||w||), not merely
+  to separate — that choice is what bounds
+  generalization rather than training error.
+  The //kernel trick// is the second idea: K supplies
+  inner products in φ's space, so φ is never
+  computed and may be infinite-dimensional.
+  C trades margin width against violations.
+  ----
+  **Not fitted by gradient descent.** The kernelized
+  dual is a //constrained// quadratic program, solved by
+  QP — classically SMO — not by SGD. Subgradient
+  methods (Pegasos) apply to the linear primal only.
+  Contrast ""../optimization/gradient-descent.puml"".
+end note
+@enduml

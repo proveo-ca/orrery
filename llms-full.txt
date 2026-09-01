@@ -36,7 +36,7 @@ systems are built.
 ```
 _spec/             Shared learning surface (the root owns this)
   overview/          The two ladder diagrams: business-needs-funnel.puml + study-map.vega.json → .svg
-  study-cases/       The field, organized by capability level (3-meta-prompt-loops/ … 6-post-training/, _substrate/)
+  study-cases/       The field, organized by capability level (1-human-expert/ … 6-post-training/, _substrate/)
   themes/            Vendored proveo identity themes (Mermaid, Vega-Lite); PlantUML is remote-included
   CONTRIBUTING.md    Diagram + sourcing conventions
 skills/spec/       Agent Skill (SKILL.md) for proveo diagram authoring — also linked from .agents/skills/spec
@@ -110,11 +110,11 @@ Trending third-party projects studied here — **not** Proveo code and **not** s
 
 | Project | What it is | Repo | Study-case |
 | --- | --- | --- | --- |
-| **opencode** | Open-source terminal coding agent, multi-provider (MIT) | [sst/opencode](https://github.com/sst/opencode) · [opencode.ai](https://opencode.ai) | [`anti-framework/opencode.puml`](_spec/study-cases/4-harness/anti-framework/opencode.puml) |
+| **opencode** | Open-source terminal coding agent, multi-provider (MIT) | [anomalyco/opencode](https://github.com/anomalyco/opencode) · [opencode.ai](https://opencode.ai) | [`anti-framework/opencode.puml`](_spec/study-cases/4-harness/anti-framework/opencode.puml) |
 | **browser-use** | Computer-use / web-automation harness (YC W25) | [browser-use/browser-use](https://github.com/browser-use/browser-use) · [browser-use.com](https://browser-use.com) | [`applied/computer-use/browser-use.puml`](_spec/study-cases/4-harness/applied/computer-use/browser-use.puml) |
 | **Dify** | Visual agentic-workflow platform | [langgenius/dify](https://github.com/langgenius/dify) · [dify.ai](https://dify.ai) | [`framework/dify.puml`](_spec/study-cases/4-harness/framework/dify.puml) |
 | **Serena** | LSP-backed semantic-code MCP toolkit — symbol-level retrieval, editing & refactoring across 40+ languages; plugs into Claude Code, Codex, OpenCode, Cursor, JetBrains (MIT) | [oraios/serena](https://github.com/oraios/serena) | [`applied/software/lsp-symbolic-code-toolkit.puml`](_spec/study-cases/4-harness/applied/software/lsp-symbolic-code-toolkit.puml) |
-| **Hermes Agent** | Self-improving personal agent (formerly OpenClaw) — closed learning loop, self-authored skills, cross-session memory; model-agnostic, multi-channel (MIT) | [NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent) | [`self-improving/skill-library-flywheel.puml`](_spec/study-cases/4-harness/self-improving/skill-library-flywheel.puml) ✳ |
+| **Hermes Agent** | Self-improving personal agent — closed learning loop, self-authored skills, cross-session memory; model-agnostic, multi-channel (MIT). *Not* a rename of OpenClaw: the two are distinct live projects, and hermes-agent merely offers a "Migrating from OpenClaw" import path for settings/skills (OpenClaw is studied separately at [`anti-framework/openclaw.puml`](_spec/study-cases/4-harness/anti-framework/openclaw.puml)) | [NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent) | [`self-improving/skill-library-flywheel.puml`](_spec/study-cases/4-harness/self-improving/skill-library-flywheel.puml) ✳ |
 
 > **✳ Hermes maps to several new cases.** It surfaced patterns the map didn't track, now authored: the [skill-library flywheel](_spec/study-cases/4-harness/self-improving/skill-library-flywheel.puml) (an L4 loop that fills the empty L2 "skills" rung, via [agentskills.io](https://agentskills.io)), a [cross-session user model](_spec/study-cases/4-harness/self-improving/cross-session-user-model.puml) (Honcho/MemGPT personalization memory), and [code-mode / executable-code actions](_spec/study-cases/4-harness/meta-orchestration/code-mode-executable-actions.puml) (CodeAct). Serena's [LSP symbolic toolkit](_spec/study-cases/4-harness/applied/software/lsp-symbolic-code-toolkit.puml) case (which also folds in its portable-MCP-server angle) was authored the same way. Two thinner-sourced patterns were also added (each flags its sourcing caveat in-file): the [harness trajectory flywheel](_spec/study-cases/6-post-training/harness-trajectory-flywheel.puml) (L4→L6 data flywheel; anchored by FireAct) and the [multi-channel agent gateway](_spec/study-cases/_substrate/serving/multi-channel-agent-gateway.puml) serving substrate.
 
@@ -260,10 +260,22 @@ title ReAct Architecture (Reason + Act)
 ```
 
 - `' Paper:` — the title line. Use it for research-method files; omit for bare product/standard files.
-- `' URL:` — **required on every file.** The arXiv/DOI/product/spec link per the table above.
-- `' Level:` — **required on every file.** The capability-ladder tier `1`–`7`, or `n/a (substrate)` —
-  see [`study-cases/README.md`](./study-cases/README.md). The file's directory must agree (e.g. a file
-  in `4-harness/governance/` declares `Level: 4`).
+- `' URL:` — **required on every content file.** The arXiv/DOI/product/spec link per the table above.
+  Metafiles (leading `_`, e.g. `_primer.puml`) and `README.md` are exempt — see §3.
+- `' Level:` — **required on every content file.** The capability-ladder tier `1`–`7`, or
+  `n/a (substrate)` — see [`study-cases/README.md`](./study-cases/README.md). The file's directory must
+  agree (e.g. a file in `4-harness/governance/` declares `Level: 4`). A metafile spanning tiers may
+  omit it.
+- `' Formerly:` — the file's previous path and/or the subject's previous name, after a rename or fold
+  (see §3, "Renames and folds").
+- `' Status:` — **required when the subject is no longer current**: a product renamed, archived,
+  pivoted or discontinued, or an architecture that is now a dated snapshot. State the date you
+  checked, what changed, and the current equivalent. Pair it with `OUTDATED` in the `title` when the
+  whole diagram is historical (see `4-harness/framework/cohere-coral.puml`).
+- Optional, and used where they earn their place: `' Synthesis:` (what a primer distills),
+  `' Source:` (an upstream repo a primer was distilled from), `' Note:` (a caveat a reader needs
+  before trusting the diagram), `' Concept:` / `' Context:` (framing for a pattern with no single
+  canonical paper).
 - Products use `' URL:` alone (see `study-cases/4-harness/anti-framework/aider.puml`).
 - In Markdown study-cases, use the per-entry `*Abstract:* … *URL:* …` form (see
   `study-cases/context-and-retrieval.md`).
@@ -312,19 +324,45 @@ project diagram: it doesn't belong.
   old `COLOR_*`/`PATH_*` macros — **leave them as-is; modernize only a file you're already editing.**
 - **Organize by level (then topic).** The tree is **level-first**: top-level `N-name/` dirs
   (`1-human-expert/`, `2-single-prompts/`, `3-meta-prompt-loops/`, `4-harness/`, `5-fine-tuned/`,
-  `6-post-training/`), with topic subfolders inside `1-human-expert/` (`computer-science/`, `rag/`),
+  `6-post-training/`), with topic subfolders inside `1-human-expert/` (`computer-science/`,
+  `machine-learning/`, `rag/`),
   `2-single-prompts/` (`discovery/`), and the large `4-harness/` tier (`governance/`,
   `meta-orchestration/`, `self-improving/`, `applied/`, …). A self-improving system with **frozen
   weights** is an L4 self-improving harness; one that **updates weights** against a reward/eval loop
   is L6 post-training (above L5 supervised fine-tuning, which adapts to a fixed dataset). Substrate
   that's orthogonal to the ladder lives under `_substrate/`. The capability ladder and the full level
   map are in [`study-cases/README.md`](./study-cases/README.md).
-- **One concept per file.** Give each topic subfolder an `_essentials.puml` that summarizes it (see
-  `4-harness/anti-framework/_essentials.puml`). Cross-cutting narrative goes in a root-level `.md`
+- **`_plans/` is not a study-case directory.** `_spec/_plans/*.md` holds forward-looking
+  implementation plans for the learning surface itself (tooling, automation, ladder amendments). They
+  are Markdown, carry no `' Level:` / `' URL:` headers, and are deliberately outside the `.puml`
+  conventions below and outside the generated `llms.txt` index. A plan describes work not yet done —
+  so unlike a study-case, it is *expected* to go stale, and should be deleted or marked `DONE` once
+  its phases land.
+- **One concept per file.** Give each topic subfolder a `_primer.puml` that summarizes it (see
+  `4-harness/anti-framework/_primer.puml`). Cross-cutting narrative goes in a root-level `.md`
   (`summary.md`, `context-and-retrieval.md`).
-- **Index files are source-exempt.** `README.md`, `_essentials.puml`, and other summary/index files
-  synthesize their already-sourced children, so they need no `' URL:` of their own (they may still
-  carry a `' Level:`). The no-sourceless rule in §1 applies to *content* study-cases.
+- **Leading-underscore files are metafiles.** A filename starting with `_` — canonically
+  `_primer.puml` — is an index for reading convenience, not a study-case: it synthesizes its
+  already-sourced siblings so a reader can get oriented in one file. Metafiles are **source-exempt**
+  (no `' URL:` of their own) and need no `' Level:` when they span tiers; a single-tier primer may
+  still declare one. `README.md` is exempt on the same grounds. The no-sourceless rule in §1 applies
+  to *content* study-cases.
+
+  > **A metafile is never a citation anchor.** A primer may *name* methods it has no content file for
+  > — that is what makes it a useful selection map. What it may not do is serve as the **target** of a
+  > citation: never point a reader at a primer for a source (that inverts §2), and never let a
+  > cross-reference promise a discussion the target file does not contain. When a named method starts
+  > carrying real weight — someone would cite it — promote it to its own content file with a `' URL:`.
+
+- **Renames and folds — leave a breadcrumb.** The staleness rule below covers a *superseded*
+  study-case; this one covers a *moved* one, so a later reader can still find what a citation used to
+  point at. Two cases, deliberately different:
+  - **An individual file or folder moves** (a fold, a retitle, a subject that changed name): add a
+    `' Formerly:` header to each moved file naming its old path and old subject name, **and** record
+    the move in the affected `README.md`.
+  - **A repo-wide convention rename** (e.g. every `_essentials.puml` → `_primer.puml`): record it
+    **once**, here and in `study-cases/README.md`. Per-file breadcrumbs on a mechanical sweep are
+    noise, and git already carries the rename.
 - **Naming:** kebab-case filenames; explicit node names (`apps/api Session Routes`, not `Backend`).
 - **Validate before commit:** `plantuml -checkonly file.puml` (empty output + exit 0 = clean).
 - **Staleness — append, don't silently rewrite.** Study-cases drift as the field moves. Cite the
@@ -339,7 +377,8 @@ project diagram: it doesn't belong.
 Before committing a new study-case:
 
 - [ ] One concept, in the right **level** directory (`N-name/…`), kebab-case filename.
-- [ ] **`' Level:` header present** and matching the directory.
+- [ ] **`' Level:` header present** and matching the directory (metafiles spanning tiers may omit it).
+- [ ] Cross-references in notes resolve **from the containing file** — sibling folders need `../`.
 - [ ] Theme included; nodes tagged by `<<role>>`; arrows chosen by intent (`ARROW_*`).
 - [ ] **`' URL:` source present** and verified against the real abstract/venue/product page.
 - [ ] Source *kind* matches the conditional table in §1 (arXiv only for on-arXiv research methods).
@@ -373,12 +412,13 @@ views share the same seven tiers:
   weights) × *autonomy* (baseline → HITL → supervised → autonomous). A learning map.
 
 > **Layout.** The tree is organized **by level**: top-level `N-name/` dirs — including the Level-1
-> floor `1-human-expert/` (`computer-science/` primers, `rag/` strategy map) and Level-2
+> floor `1-human-expert/` (`computer-science/` primers, `machine-learning/` pre-LLM ML primers, `rag/`
+> strategy map) and Level-2
 > `2-single-prompts/` (`discovery/` — how to reach market prompt/skill leaderboards) — with topic
 > subfolders inside the large `4-harness/` tier (`governance/`, `evidence-and-durability/`,
 > `meta-orchestration/`, `self-improving/`, `applied/`, plus the migrated `anti-framework/` and
 > `framework/`), and `_substrate/` for substrate that's orthogonal to the ladder. Cross-cutting
-> overviews (`summary.md`, `_essentials.puml`, `context-and-retrieval.md`) stay at the root; the two
+> overviews (`summary.md`, `_primer.puml`, `context-and-retrieval.md`) stay at the root; the two
 > ladder diagrams live in [`../overview/`](../overview/). Each file also declares its tier in a
 > `' Level:` header (see [`../CONTRIBUTING.md`](../CONTRIBUTING.md)).
 
@@ -414,13 +454,26 @@ change the *weights*.
 | **6** | RL post-training | Update weights against a **reward / eval loop you own** — RLVR, RFT, or SFT on loop-generated data | OpenAI RFT; DeepSeek-R1; Tülu 3 | needs cheaper / faster / safer / more accurate | `6-post-training/` |
 | **5** | Supervised fine-tuning | Adapt open weights to a **fixed dataset you own** (LoRA / SFT) | Domain models on HuggingFace; Med-PaLM; FinGPT | a reward loop is overkill — a labeled dataset suffices | `5-fine-tuned/` |
 | **4** | Harness (workflow orchestration) | **Ground the model in tools / data / integrations**, own authority + evidence, orchestrate multi-step work — incl. **self-improving harnesses** (frozen weights) | Claude Cowork; Copilot Studio + Agent 365; AgentKit; LangGraph; Devin / Factory (coding) | don't retrain — ground & orchestrate a frozen model | `4-harness/` (`governance/`, `evidence-and-durability/`, `meta-orchestration/`, `self-improving/`, `applied/`, `anti-framework/`, `framework/`) |
-| **3** | Meta-prompt loops | Augment the base prompt with reasoning / iteration loops (no tools, no weight change) | General chat assistants that augment the base prompt (ChatGPT) | no tools or integrations — self-contained reasoning | `3-meta-prompt-loops/` (CoT, ReAct, Reflexion, ToT, MAD); much of `context-and-retrieval.md` |
+| **3** | Meta-prompt loops | Augment the base prompt with reasoning / iteration loops (no tools, no weight change) | General chat assistants that augment the base prompt (ChatGPT) | no tools or integrations — self-contained reasoning | `3-meta-prompt-loops/` (CoT, Plan-and-Solve, ReAct, Reflexion, ToT, MAD); much of `context-and-retrieval.md` |
 | **2** | Single prompts (skills) | A crafted system prompt / reusable skill, one-shot | Shared system-prompt & skill libraries (community & vendor repos) | single-shot — no reasoning loop needed | `2-single-prompts/` (`discovery/`) |
-| **1** | Human expert | A person does — or signs off — the work | Domain experts (financial analysts, clinicians, attorneys, SREs) | must be signed-off by a human | `1-human-expert/` (`computer-science/`, `rag/`) |
+| **1** | Human expert | A person does — or signs off — the work; **and**, on the build side, the craft a practitioner brings to it | Domain experts (financial analysts, clinicians, attorneys, SREs) | must be signed-off by a human | `1-human-expert/` (`computer-science/`, `machine-learning/`, `rag/`) |
+
+**L1 is deliberately two-natured.** On the *demand* side it is a **terminus**: the funnel stops here
+when a request must be signed off by a person. On the *build* side it is the **craft floor** — what the
+practitioner has to know, which is why `computer-science/` and `machine-learning/` primers live here.
+The two readings do not compete; they answer different questions about the same rung. One consequence:
+**L1 sits off the encoding-depth axis** of the study map, and the cell it is plotted in there is a
+rendering convenience, not a claim that L1 is prompt-depth work.
 
 **L4 → L5 is the frozen→trained line.** Everything at L1–L4 leaves the base model's weights untouched
 (you change prompts, tools, orchestration); L5 is where you first change the weights. It's the single
 most consequential boundary on the ladder — both diagrams mark it.
+
+> **What "weights" means here.** Rungs 2–7 are defined *relative to a pretrained, general-purpose
+> model*: "the weights" are **that** model's. So a Level-1 primer may describe training a model from
+> scratch — backprop, SGD, a TD-learned value function — without contradicting the frozen→trained line.
+> Fitting your own small model is craft; updating a pretrained model's weights is the L5/L6 climb. Read
+> `1-human-expert/machine-learning/` with that scoping in mind.
 
 **Tools & retrieval grounding** isn't a separate rung — it's the defining capability of **Level 4**
 (the "integrations + evidence" in its definition) and the boundary between L4 and L3. **Evaluation**
@@ -430,8 +483,19 @@ that licenses every climb; **authority/HITL** is the study map's Y axis and inte
 **Orthogonal to the ladder.** Some study-cases describe *deployment / control substrate* rather than a
 capability tier — `_substrate/edge-and-p2p/` (on-device inference, P2P transport, embedded servers,
 liveness), `_substrate/reactive-control/` (classical `steering-behaviors`, `behavior-trees-and-fsm`),
-and the migrated `_substrate/web-llm/` and `_substrate/nets/`. These are tagged
-`' Level: n/a (substrate)`.
+`_substrate/serving/` (the multi-channel agent gateway), and the migrated `_substrate/web-llm/`. These
+are tagged `' Level: n/a (substrate)`.
+
+> **Metafile rename (repo-wide).** Every folder index formerly named `_essentials.puml` is now
+> `_primer.puml` — a leading underscore marks a *metafile*: an index or primer for reading
+> convenience, source-exempt, and free to omit `' Level:` when it spans tiers. Recorded once here per
+> [`../CONTRIBUTING.md`](../CONTRIBUTING.md) §3 rather than as a breadcrumb in each of the 16 files.
+
+> The former `_substrate/nets/` was **folded into `_substrate/web-llm/`**: its three files documented
+> WebLLM asset loading, inference and weight sharding — not neural-network fundamentals — so the name
+> misdescribed them and collided with the Level-1 `machine-learning/neural-networks/` primers. They are
+> now `web-llm/asset-loading.puml`, `web-llm/inference.puml` and `web-llm/weight-sharding.puml`, each
+> carrying the `' URL:` and `' Level:` headers they previously lacked.
 
 ## Where the focus is
 
@@ -584,7 +648,7 @@ FILE: _spec/study-cases/context-and-retrieval.md
 
 This document tracks key research papers and strategies for managing the Context Window and ensuring high-precision retrieval — moving from inference-time prompting and pipelines through to systems that train or self-evolve their own retrieval.
 
-> **Level-1 RAG map (Jul 2026).** Architecture selection diagrams (vector, GraphRAG, LightRAG, HippoRAG/2, PathRAG, RAPTOR, PageIndex, CRAG, KET-RAG, LazyGraphRAG, OG-RAG, adaptive routing) live under [`1-human-expert/rag/`](./1-human-expert/rag/). Foundational CS primers distilled from [proveo-ca/computer-science](https://github.com/proveo-ca/computer-science) are in [`1-human-expert/computer-science/`](./1-human-expert/computer-science/).
+> **Level-1 RAG map (Jul 2026).** Architecture selection diagrams (vector, GraphRAG, LightRAG, HippoRAG/2, PathRAG, RAPTOR, PageIndex, CRAG, KET-RAG, LazyGraphRAG, OG-RAG, adaptive routing) live under [`1-human-expert/rag/`](./1-human-expert/rag/). Foundational CS primers distilled from [proveo-ca/computer-science](https://github.com/proveo-ca/computer-science) are in [`1-human-expert/computer-science/`](./1-human-expert/computer-science/), and pre-LLM ML primers — including the embedding/clustering machinery these retrieval architectures rest on — are in [`1-human-expert/machine-learning/`](./1-human-expert/machine-learning/).
 
 ## 1. Context Window Management
 
@@ -930,7 +994,7 @@ FILE: _spec/overview/study-map.vega.json
 
 {
   "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-  "$comment": "Study map — capability tiers on a 2D plane: encoding depth (X) x autonomy (Y). Build-side companion to business-needs-funnel.puml. The scaffold|weights column split is the L4->L5 jump: below it the base model is frozen; at L5 the weights start changing. Render: vl2svg study-map.vega.json study-map.svg",
+  "$comment": "Study map — capability tiers on a 2D plane: encoding depth (X) x autonomy (Y). Build-side companion to business-needs-funnel.puml. The scaffold|weights column split is the L4->L5 jump: below it the base model is frozen; at L5 the weights start changing. NOTE on L1: it is plotted at depth='prompt' as a RENDERING CONVENIENCE only — L1 sits off the encoding-depth axis. On the demand side L1 is a terminus (work a human must sign off); on the build side it is the craft floor (1-human-expert/computer-science/, machine-learning/, rag/), which is not prompt-depth work. See study-cases/README.md, 'L1 is deliberately two-natured'. Render: vl2svg study-map.vega.json study-map.svg",
   "title": {
     "text": "Study Map — capability by encoding depth × autonomy",
     "subtitle": "build-side companion to the funnel · the scaffold→weights split (L4→L5) is where the model's weights start changing",
@@ -1604,7 +1668,7 @@ end note
 
 
 ========================================================================
-FILE: _spec/study-cases/1-human-expert/computer-science/_essentials.puml
+FILE: _spec/study-cases/1-human-expert/computer-science/_primer.puml
 ========================================================================
 
 @startuml
@@ -1973,7 +2037,986 @@ end note
 
 
 ========================================================================
-FILE: _spec/study-cases/1-human-expert/rag/_essentials.puml
+FILE: _spec/study-cases/1-human-expert/machine-learning/_primer.puml
+========================================================================
+
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Machine Learning — Level-1 Primer Map (pre-LLM foundations)
+' Index of the machine-learning families; each child carries its own confirmed source
+' Level:  1
+
+actor "Human expert" as H
+
+package "Supervised — fit a function to labels" {
+  component "svm/\nmargins + kernels" as SVM <<app>>
+  component "trees-and-ensembles/\nbagging, boosting" as TREE <<app>>
+  component "neural-networks/\ndepth + backprop" as NN <<app>>
+}
+
+package "Unsupervised — no labels" {
+  component "clustering-and-dimred/\nk-means, PCA, embeddings" as UNS <<host>>
+}
+
+package "Learning from outcomes" {
+  component "reinforcement-learning/\nTD, Q-learning, self-play" as RL <<host>>
+}
+
+package "Decide under uncertainty" {
+  component "game-search/\nminimax, MCTS / UCT" as GS <<host>>
+  component "imperfect-information-games/\nbelief, CFR, determinization" as III <<cloud>>
+}
+
+package "Machinery every family needs" {
+  component "optimization/\ngradient + black-box search" as OPT <<async>>
+  component "rating-systems/\nElo, Glicko, error bars" as RATE <<db>>
+}
+
+H ARROW_MAIN SVM
+H ARROW_MAIN TREE
+H ARROW_MAIN NN
+H ARROW_MAIN UNS
+H ARROW_MAIN RL
+H ARROW_MAIN GS
+H ARROW_MAIN III
+H ARROW_MAIN RATE : start here — nothing else\nis falsifiable without it
+H ARROW_MAIN OPT : then make the constants\na searchable vector
+
+SVM ARROW_OPTIONAL OPT
+NN ARROW_MAIN OPT : gradients
+RL ARROW_MAIN OPT
+GS ARROW_OPTIONAL III : tree assumption breaks
+RL ARROW_OPTIONAL RATE : is the new policy stronger?
+RATE ARROW_MAIN OPT : supplies the fitness signal\nblack-box search needs
+
+note bottom of RATE
+  **Why Level 1.** These are the practitioner's own
+  craft — the same slot as ""../computer-science/"" —
+  not prompts (L2), not a scaffold around a frozen
+  model (L4), not weight updates to a pretrained one
+  (L5-L6). Authored as primers, so they sit on the
+  ladder floor.
+  ----
+  **Reading order for a measured build:**
+  ""rating-systems/"" first (nothing else is
+  falsifiable without it), then ""optimization/"" to
+  make hand-tuned constants a searchable vector,
+  then ""game-search/"" and
+  ""imperfect-information-games/"" for lookahead, and
+  only then a learned evaluator from
+  ""neural-networks/"" + ""reinforcement-learning/"".
+  ----
+  ""../rag/"" is a sibling, not a child: those are
+  LLM-era retrieval architectures, not pre-LLM ML.
+end note
+@enduml
+
+
+========================================================================
+FILE: _spec/study-cases/1-human-expert/machine-learning/clustering-and-dimred/_primer.puml
+========================================================================
+
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Clustering & Dimensionality Reduction — Selection Map (no labels)
+' Synthesis of the unsupervised half: partition the data, or re-coordinate it
+' Level:  1
+
+actor "Human expert\nunlabeled data" as H
+
+component "k-means\nhard partition into k groups" as KM <<app>>
+component "PCA\nlinear axes of maximum variance" as PCA <<host>>
+component "Non-linear embedding\nt-SNE / UMAP" as EMB <<host>>
+database  "Downstream use\nfeatures, or a picture" as USE <<db>>
+
+H ARROW_MAIN KM : want group assignments
+H ARROW_MAIN PCA : want fewer, uncorrelated features
+H ARROW_OPTIONAL EMB : want a 2-D picture\nfor human eyes
+KM ARROW_MAIN USE
+PCA ARROW_MAIN USE
+EMB ARROW_OPTIONAL USE : inspect only — distances\nare not faithful to the input
+
+note bottom of USE
+  **Partition vs re-coordinate.** k-means answers
+  "which group?"; PCA answers "which directions
+  carry the variance?". They compose — PCA first,
+  then cluster, is a standard pipeline.
+  ----
+  **A warning about the pictures.** t-SNE and UMAP
+  preserve neighbourhoods, not global distances or
+  cluster sizes, so apparent gaps between blobs are
+  not evidence. Use them to look, not to conclude.
+  ----
+  In retrieval systems the same embedding machinery
+  becomes an index rather than a plot — see
+  ""_spec/study-cases/1-human-expert/rag/vector-dense-rag.puml"".
+end note
+@enduml
+
+
+========================================================================
+FILE: _spec/study-cases/1-human-expert/machine-learning/clustering-and-dimred/k-means.puml
+========================================================================
+
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title k-Means (Lloyd's Algorithm) — Least-Squares Quantization
+' Paper: Least squares quantization in PCM
+' URL:   https://doi.org/10.1109/TIT.1982.1056489
+' Level: 1
+
+component "Choose k\nand initial centroids" as INIT <<app>>
+component "Assign step\neach point to its nearest centroid" as ASSIGN <<app>>
+component "Update step\ncentroid becomes the cluster mean" as UPDATE <<async>>
+database  "Partition\nk clusters" as PART <<db>>
+component "Local optimum\nassignments stop changing" as CONV <<host>>
+
+INIT ARROW_MAIN ASSIGN
+ASSIGN ARROW_MAIN UPDATE : partition fixed,\nminimize over centroids
+UPDATE ARROW_MAIN ASSIGN : centroids fixed,\nminimize over assignments
+UPDATE ARROW_OPTIONAL CONV : no reassignment this pass
+CONV ARROW_MAIN PART
+
+note bottom of UPDATE
+  Lloyd's algorithm alternates two steps that each
+  **monotonically decrease** the within-cluster sum
+  of squares, so it always converges — but to a
+  **local** optimum that depends on initialization.
+  Standard practice is several restarts, or a spread
+  seeding rule, and keeping the best objective.
+  ----
+  **k is not learned.** It is chosen by the analyst;
+  the objective decreases monotonically in k, so it
+  cannot select k for you.
+  ----
+  **Two lineages, often conflated.** The cited Lloyd
+  paper (published 1982, circulated 1957) derives this
+  alternation as //quantizer// design for PCM —
+  minimizing signal distortion under the same
+  least-squares criterion. The //name// "k-means" is
+  MacQueen's (1967), for a related sequential
+  procedure. This file documents Lloyd's algorithm,
+  which is what implementations actually run.
+end note
+@enduml
+
+
+========================================================================
+FILE: _spec/study-cases/1-human-expert/machine-learning/game-search/_primer.puml
+========================================================================
+
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Game Search — Selection Map (what kind of game is it?)
+' Synthesis: which search applies, and when the usual tree assumption breaks
+' Level:  1
+
+actor "Human expert\ngame structure?" as H
+
+component "Minimax + alpha-beta\nalternating, perfect information" as MM <<app>>
+component "MCTS / UCT\nsampled rollouts, huge branching" as MCTS <<host>>
+component "Matrix game per node\nsimultaneous moves" as SIM <<error>>
+component "Belief sampling\nhidden state" as BEL <<async>>
+
+H ARROW_MAIN MM : turns alternate,\nboard fully visible
+H ARROW_MAIN MCTS : branching too wide\nto enumerate
+H ARROW_ERROR SIM : both sides commit at once
+H ARROW_QUEUE BEL : some state is hidden
+
+note bottom of SIM
+  **The tree assumption is load-bearing.** Minimax
+  and vanilla MCTS both assume "my move, then
+  yours". If both sides commit simultaneously,
+  there is no such tree — each decision point is a
+  matrix game needing an equilibrium or a
+  regret-minimizing policy, not a max.
+  ----
+  If state is also hidden, the object you evaluate
+  is a **belief, not a position** — that is the
+  Stratego/poker family, handled in
+  ""../imperfect-information-games/"".
+  ----
+  ""mcts-uct.puml"" covers the sampling engine;
+  reactive alternatives that skip search entirely
+  live at ""_spec/study-cases/_substrate/reactive-control/"".
+end note
+@enduml
+
+
+========================================================================
+FILE: _spec/study-cases/1-human-expert/machine-learning/game-search/mcts-uct.puml
+========================================================================
+
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title UCT — Bandit-Based Monte-Carlo Tree Search
+' Paper: Bandit Based Monte-Carlo Planning
+' URL:   https://doi.org/10.1007/11871842_29
+' Level: 1
+
+component "Selection\nUCB1 down the known tree" as SEL <<app>>
+component "Expansion\nadd one child node" as EXP <<app>>
+cloud     "Simulation\nplay out to a result" as SIM <<cloud>>
+component "Backpropagation\nupdate visits and value" as BACK <<async>>
+database  "Search tree\nasymmetric, grows where it matters" as TREE <<db>>
+
+SEL ARROW_MAIN EXP : reached a leaf
+EXP ARROW_CLOUD SIM : from the new node
+SIM ARROW_MAIN BACK : outcome
+BACK ARROW_QUEUE TREE : statistics per node
+TREE ARROW_MAIN SEL : next iteration
+
+note bottom of SEL
+  **The idea is to treat each node as a bandit.**
+  UCB1 balances exploiting the child with the best
+  observed value against exploring the one with few
+  visits, so the tree grows **asymmetrically** —
+  deep along promising lines, shallow elsewhere. No
+  evaluation function is required: a random playout
+  supplies the signal, and the estimate improves
+  with samples.
+  ----
+  **Two assumptions to check before reaching for it.**
+  The cited paper analyses UCT for **MDP planning**;
+  the familiar game-tree form adds the assumption that
+  turns //alternate//. Simultaneous moves break that
+  added assumption. Separately, a playout must start
+  from the //true// state — hidden state breaks that, and
+  playouts must then run in sampled worlds
+  (""../imperfect-information-games/determinization.puml"").
+end note
+@enduml
+
+
+========================================================================
+FILE: _spec/study-cases/1-human-expert/machine-learning/imperfect-information-games/_primer.puml
+========================================================================
+
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Imperfect-Information Games — Selection Map (you evaluate a belief)
+' Synthesis: what replaces minimax when the true state is not observable
+' Level:  1
+
+actor "Human expert\nhidden state, maybe simultaneous" as H
+
+component "Determinization\nsample K worlds, solve each" as DET <<host>>
+component "Counterfactual regret\nCFR / CFR+" as CFR <<app>>
+component "Search + learned value\nReBeL-style" as RB <<cloud>>
+database  "Belief over states\nposterior, not a position" as BEL <<db>>
+
+H ARROW_MAIN BEL : what can this side know?
+BEL ARROW_MAIN DET : cheap, reuses a\nperfect-information solver
+BEL ARROW_MAIN CFR : want an equilibrium policy\n(guaranteed only 2-player zero-sum)
+BEL ARROW_OPTIONAL RB : scale beyond tabular
+
+note bottom of BEL
+  **The evaluated object changes.** With hidden state
+  there is no single position to score — you hold a
+  distribution, and a policy that reads the true state
+  is unimplementable //at execution time//.
+  ----
+  Training on privileged state is fine and standard
+  (centralised training, decentralised execution: a
+  critic may see everything while the actor sees only
+  its observation). The constraint binds the
+  **deployed policy**, not the training signal — so
+  "never show the model the hidden state" is too
+  strong; "the acting policy must consume only what
+  its side can know" is the real rule.
+  ----
+  **Cheapest first.** Determinization needs only a
+  world sampler and an existing evaluator
+  (""determinization.puml""); CFR converges toward
+  equilibrium but wants an abstraction and many
+  iterations (""counterfactual-regret-minimization.puml"").
+  ----
+  Simultaneous-move games belong here too: each
+  decision is a matrix game, so there is no
+  alternating tree for minimax to walk
+  (""../game-search/"").
+end note
+@enduml
+
+
+========================================================================
+FILE: _spec/study-cases/1-human-expert/machine-learning/imperfect-information-games/counterfactual-regret-minimization.puml
+========================================================================
+
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Counterfactual Regret Minimization — Equilibrium by Self-Play
+' Paper: Regret Minimization in Games with Incomplete Information
+' URL:   https://papers.nips.cc/paper_files/paper/2007/hash/08d98638c6fcd194a4b1e6992063e944-Abstract.html
+' Level: 1
+
+database  "Information sets\nwhat a player cannot distinguish" as INFO <<db>>
+component "Current strategy profile\nprobability per action" as STRAT <<app>>
+component "Counterfactual value\nreach-weighted: opponent + chance reach,\nown reach factored out" as CFV <<app>>
+component "Regret per action\nwhat not playing it cost" as REG <<async>>
+component "Regret matching\nnext strategy from positive regret" as RM <<host>>
+database  "Average strategy\napproaches equilibrium" as AVG <<db>>
+
+INFO ARROW_MAIN STRAT : one policy per infoset
+STRAT ARROW_MAIN CFV : traverse via self-play
+CFV ARROW_MAIN REG : accumulate per action
+REG ARROW_QUEUE RM
+RM ARROW_MAIN STRAT : next iteration
+STRAT ARROW_MAIN AVG : it is the //average//, not the last,\nthat converges
+
+note bottom of REG
+  **Decompose regret per information set.** The
+  insight is that minimizing regret locally at each
+  infoset bounds overall regret, which makes an
+  otherwise intractable equilibrium computation
+  decomposable and iterative.
+  ----
+  **The convergence guarantee is narrower than it
+  looks.** Average strategies converge to a Nash
+  equilibrium in **two-player zero-sum** games. Outside
+  that class — more players, or general-sum — CFR
+  still minimizes regret, but its average is not a
+  Nash equilibrium and carries no such guarantee.
+  ----
+  **Two things practitioners get wrong.** The
+  converging object is the //average// strategy over
+  iterations, not the current one; and a mixed
+  (randomized) strategy is not a hedge — it is the
+  solution, because a deterministic policy in a
+  hidden-information game is exploitable.
+  ----
+  Tabular CFR needs an abstraction to fit real state
+  spaces; scaling it with learned values is the ReBeL
+  line — Brown, Bakhtin, Lerer & Gong,
+  ""arXiv:2007.13544"".
+end note
+@enduml
+
+
+========================================================================
+FILE: _spec/study-cases/1-human-expert/machine-learning/imperfect-information-games/determinization.puml
+========================================================================
+
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Determinization — Perfect-Information Monte-Carlo over Sampled Worlds
+' Paper: GIB: Imperfect Information in a Computationally Challenging Game
+' URL:   https://doi.org/10.1613/jair.820
+' Level: 1
+
+database  "Belief\nposterior over hidden state" as BEL <<db>>
+component "Sample K worlds\neach consistent with the belief" as SAMPLE <<async>>
+component "Perfect-information solve\nexisting evaluator per world" as SOLVE <<app>>
+component "Aggregate per candidate\naverage across worlds" as AGG <<host>>
+component "Chosen action\nbest expected value" as ACT <<app>>
+
+BEL ARROW_QUEUE SAMPLE : the sampler //is// the belief model
+SAMPLE ARROW_MAIN SOLVE : world 1..K
+SOLVE ARROW_MAIN AGG : score every legal candidate
+AGG ARROW_MAIN ACT
+
+note bottom of SAMPLE
+  **Why it is the cheapest first experiment.** It
+  reuses a perfect-information evaluator unchanged;
+  the only new machinery is a sampler that draws
+  worlds consistent with what this side can actually
+  know. A system already tracking possible-piece
+  sets and posteriors has that sampler.
+  ----
+  **Its known blind spots, by their literature names.**
+  //Strategy fusion//: the search may pick a different
+  action in each sampled world, implicitly assuming it
+  can behave differently in states it cannot actually
+  distinguish. //Non-locality//: values propagated from
+  a fully-observable solve ignore that the opponent's
+  play depends on information the agent does not have.
+  (Both named by Frank & Basin.) Consequently the
+  agent plans neither to //gather// information nor to
+  //conceal// it — in every sampled world it already
+  knows everything. Where that matters, the
+  equilibrium methods in
+  ""counterfactual-regret-minimization.puml"" are the
+  honest answer.
+end note
+@enduml
+
+
+========================================================================
+FILE: _spec/study-cases/1-human-expert/machine-learning/neural-networks/_primer.puml
+========================================================================
+
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Neural Networks — Selection Map (depth, weight sharing, credit assignment)
+' Synthesis of the pre-transformer neural family; the LLM tiers sit at L5-L7 of the ladder
+' Level:  1
+
+actor "Human expert\ninput structure?" as H
+
+component "Perceptron\nsingle linear threshold" as P <<app>>
+component "MLP\nhidden layers + non-linearity" as MLP <<app>>
+component "CNN\nweight sharing over a grid" as CNN <<host>>
+component "Backpropagation\nreverse-mode credit assignment" as BP <<async>>
+
+H ARROW_OPTIONAL P : historical floor —\nlinearly separable only
+H ARROW_MAIN MLP : unstructured feature vector
+H ARROW_MAIN CNN : local structure and\ntranslation invariance
+MLP ARROW_MAIN BP : how the weights are learned
+CNN ARROW_MAIN BP
+
+note bottom of BP
+  **Backprop is the enabling idea, not a topology:**
+  it makes credit assignment through hidden layers
+  cheap, which is what let depth become useful
+  (""backpropagation.puml"").
+  It computes gradients; the update rule that
+  consumes them is ""../optimization/"".
+  ----
+  **Ladder note.** These are the pre-LLM primers.
+  Adapting a pretrained network's //weights// is
+  Level 5 (""_spec/study-cases/5-fine-tuned/""); doing it against a
+  reward loop is Level 6 (""_spec/study-cases/6-post-training/"").
+end note
+@enduml
+
+
+========================================================================
+FILE: _spec/study-cases/1-human-expert/machine-learning/neural-networks/backpropagation.puml
+========================================================================
+
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Backpropagation — Learning Representations by Propagating Errors
+' Paper: Learning representations by back-propagating errors
+' URL:   https://doi.org/10.1038/323533a0
+' Level: 1
+
+component "Input layer\nx" as IN <<app>>
+component "Hidden layers\nnon-linear units" as HID <<app>>
+component "Output layer\nprediction ŷ" as OUT <<app>>
+component "Loss\ncompare ŷ to target y" as LOSS <<error>>
+component "Backward pass\n∂Loss/∂w by chain rule" as BACK <<async>>
+database  "Weights w\nshared state" as W <<db>>
+
+IN ARROW_MAIN HID : forward pass
+HID ARROW_MAIN OUT
+OUT ARROW_MAIN LOSS : compare to target
+LOSS ARROW_MAIN BACK : error signal,\npropagated backwards
+BACK ARROW_QUEUE W : gradient per weight
+W ARROW_OPTIONAL HID : updated parameters\nfeed the next forward pass
+
+note bottom of BACK
+  The contribution is **cheap credit assignment**:
+  one backward sweep yields ∂Loss/∂w for //every//
+  weight at roughly the cost of one forward pass,
+  by reusing each layer's intermediate derivative.
+  That is why hidden layers became trainable — and
+  why "hidden units learn useful internal
+  representations" is the paper's actual claim.
+  ----
+  Backprop produces the **gradient only**. Turning
+  a gradient into a step is a separate choice:
+  ""../optimization/gradient-descent.puml"".
+end note
+@enduml
+
+
+========================================================================
+FILE: _spec/study-cases/1-human-expert/machine-learning/optimization/_primer.puml
+========================================================================
+
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Optimization — Selection Map (is there a gradient?)
+' Synthesis: the fitting engine shared by every other family in this folder
+' Level:  1
+
+actor "Human expert\nobjective to minimize" as H
+
+component "Gradient available\nSGD, momentum, Adam" as GRAD <<app>>
+component "No gradient\nCMA-ES, hill-climbing" as BB <<host>>
+database  "Parameter vector θ" as THETA <<db>>
+
+H ARROW_MAIN GRAD : loss is differentiable\nand cheap to evaluate
+H ARROW_MAIN BB : objective is a simulation,\na match result, or a ranking
+GRAD ARROW_MAIN THETA : many small steps
+BB ARROW_QUEUE THETA : few expensive evaluations
+
+note bottom of THETA
+  **The dividing question is a gradient, not scale.**
+  A neural net exposes ∂Loss/∂θ, so it takes
+  gradient steps (""gradient-descent.puml"").
+  A hand-tuned weight vector scored by //playing
+  games// exposes no derivative — the objective is a
+  noisy black box, so it needs population search
+  (""cma-es.puml"").
+  ----
+  This is the seam where a heuristic evaluator stops
+  being argued about and starts being measured: make
+  the weights a vector, define a fitness signal
+  (""../rating-systems/""), then search.
+end note
+@enduml
+
+
+========================================================================
+FILE: _spec/study-cases/1-human-expert/machine-learning/optimization/cma-es.puml
+========================================================================
+
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title CMA-ES — Derandomized Self-Adaptation for Black-Box Objectives
+' Paper: Completely Derandomized Self-Adaptation in Evolution Strategies
+' URL:   https://doi.org/10.1162/106365601750190398
+' Level: 1
+
+database  "Distribution over θ\nmean m, covariance C" as DIST <<db>>
+component "Sample a population\nλ candidate vectors" as POP <<async>>
+cloud     "Evaluate fitness\nnoisy, no derivative" as FIT <<cloud>>
+component "Select the best μ\nrank only, values discarded" as SEL <<app>>
+component "Adapt m and C\nfrom the successful steps" as ADAPT <<host>>
+
+DIST ARROW_QUEUE POP : draw λ samples
+POP ARROW_CLOUD FIT : run the simulation / match
+FIT ARROW_MAIN SEL : ranking is enough
+SEL ARROW_MAIN ADAPT : which directions worked
+ADAPT ARROW_MAIN DIST : shift mean, reshape covariance
+
+note bottom of ADAPT
+  **Rank-based, so the objective may be anything.**
+  CMA-ES needs only an ordering of candidates — no
+  gradient, no continuity, not even a stable scale.
+  A win rate over played matches qualifies.
+  ----
+  The covariance matrix is the point: it **learns
+  which directions in parameter space matter** and
+  how they correlate, so it handles ill-conditioned
+  and rotated objectives that coordinate-wise
+  hill-climbing stalls on. "Derandomized" refers to
+  adapting step size from the actual successful
+  steps rather than from separately mutated
+  strategy parameters.
+  ----
+  Requires a fitness signal with real confidence
+  bounds, or it optimizes noise — see
+  ""../rating-systems/paired-comparison-rating.puml"".
+end note
+@enduml
+
+
+========================================================================
+FILE: _spec/study-cases/1-human-expert/machine-learning/optimization/gradient-descent.puml
+========================================================================
+
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Stochastic Gradient Descent — From Robbins-Monro to Adam
+' Paper: A Stochastic Approximation Method (Robbins & Monro, 1951 — the convergence licence)
+' URL:   https://doi.org/10.1214/aoms/1177729586
+' Paper: Adam: A Method for Stochastic Optimization (Kingma & Ba, ICLR 2015 — the adaptive step)
+' URL:   https://arxiv.org/abs/1412.6980
+' Level: 1
+
+component "Minibatch\nnoisy estimate of the gradient" as BATCH <<async>>
+component "Stochastic approximation\nstep size schedule a_t" as SA <<app>>
+component "Momentum\naccumulate a velocity term" as MOM <<app>>
+component "Adam\nbias-corrected 1st + 2nd moments,\nper-parameter step" as ADAM <<host>>
+database  "Parameters θ" as THETA <<db>>
+
+BATCH ARROW_MAIN SA : one step per batch
+SA ARROW_MAIN THETA : θ ← θ - a_t · ∇Loss
+SA ARROW_OPTIONAL MOM : damp oscillation\nacross ravines
+MOM ARROW_OPTIONAL ADAM : plus per-parameter scaling
+ADAM ARROW_MAIN THETA
+THETA ARROW_OPTIONAL BATCH : next minibatch
+
+note bottom of SA
+  **Robbins-Monro (1951) is the licence:** a noisy
+  gradient still converges, provided the step sizes
+  shrink neither too fast nor too slowly — Σa_t
+  diverges while Σa_t² converges. Every minibatch
+  method inherits that guarantee; the batch is a
+  cheap unbiased estimate, not an approximation to
+  apologize for.
+  ----
+  **Adam (2015)** keeps running estimates of the
+  first and second moments of the gradient and scales
+  each parameter's step by them, which is why it
+  tolerates badly-scaled features and sparse
+  gradients with little tuning. Its distinctive
+  component is **bias correction**: both moment
+  estimates start at zero and are therefore biased
+  toward zero early on, so each is divided by
+  1 − β^t before use. The two are biased by different
+  amounts (β₂ is nearer 1), and the second moment sits
+  under a square root, so //uncorrected// the first step
+  is far too **large** — about (1−β₁)/√(1−β₂) ≈ 3.2×
+  the intended size at the defaults, worse as β₂ → 1.
+  ----
+  Consumes the gradients produced by
+  ""../neural-networks/backpropagation.puml"".
+end note
+@enduml
+
+
+========================================================================
+FILE: _spec/study-cases/1-human-expert/machine-learning/rating-systems/_primer.puml
+========================================================================
+
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Rating Systems — Selection Map (is version B stronger than A?)
+' Synthesis: turning match outcomes into a comparable strength estimate with error bars
+' Level:  1
+
+actor "Human expert\npaired outcomes only" as H
+
+component "Bradley-Terry\nlatent strength from pairings" as BT <<app>>
+component "Elo\nincremental online update" as ELO <<app>>
+component "Glicko\nstrength plus uncertainty" as GL <<host>>
+database  "Rating with an interval\nnot a bare win rate" as R <<db>>
+
+H ARROW_MAIN BT : batch of results,\nfit all players at once
+H ARROW_OPTIONAL ELO : streaming updates,\none game at a time
+H ARROW_MAIN GL : few games per player,\nuncertainty matters
+BT ARROW_MAIN R
+ELO ARROW_OPTIONAL R : point estimate only
+GL ARROW_MAIN R : interval comes for free
+
+note bottom of R
+  **A win rate is not a verdict.** 55% over 40 games
+  and 55% over 4000 games are different claims; only
+  the second can gate a change. Report an interval,
+  and pair seeds so colour and opening luck cancel.
+  ----
+  **Draws must be scored, not discarded.** In games
+  with a turn cap, draws are common and dropping them
+  biases the estimate. Note that plain Bradley-Terry
+  has **no tie term**: scoring a draw as half a win is
+  the Elo/Glicko convention, and modelling ties
+  properly needs an extension (Rao-Kupper, Davidson)
+  — see ""paired-comparison-rating.puml"".
+  ----
+  This is the measurement that licenses every other
+  climb in this folder: without it, weight tuning
+  optimizes an unmeasured guess (""../optimization/"").
+end note
+@enduml
+
+
+========================================================================
+FILE: _spec/study-cases/1-human-expert/machine-learning/rating-systems/paired-comparison-rating.puml
+========================================================================
+
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Paired-Comparison Rating — Bradley-Terry to Glicko
+' Paper: Parameter Estimation in Large Dynamic Paired Comparison Experiments (Glickman, 1999)
+' URL:   https://doi.org/10.1111/1467-9876.00159
+'        author copy (publisher page is bot-gated): https://www.glicko.net/research/glicko.pdf
+' Paper: Rank Analysis of Incomplete Block Designs: I. The Method of Paired Comparisons
+'        (Bradley & Terry, 1952 — the underlying model; page range unverified, so pages omitted)
+' URL:   https://doi.org/10.2307/2334029
+' Level: 1
+
+component "Match outcomes\nwin / loss / draw pairs" as OUT <<app>>
+component "Bradley-Terry model\nP(A beats B) from strengths" as BT <<app>>
+component "Elo update\nmove by prediction error" as ELO <<async>>
+component "Glicko\nrating + rating deviation RD" as GL <<host>>
+database  "Strength estimate\nwith a confidence interval" as EST <<db>>
+component "Decision gate\nis B stronger than A?" as GATE <<error>>
+
+OUT ARROW_MAIN BT : fit latent strengths
+BT ARROW_MAIN ELO : approximate online update\non the same likelihood
+BT ARROW_MAIN GL : add per-player uncertainty
+ELO ARROW_OPTIONAL EST
+GL ARROW_MAIN EST
+EST ARROW_MAIN GATE : compare intervals,\nnot point estimates
+GATE ARROW_ERROR OUT : errorLabel(inconclusive - play more games)
+
+note bottom of GL
+  **Bradley-Terry (1952)** is the underlying model: a
+  latent strength per player, with the probability of
+  each pairwise outcome a logistic function of the
+  difference. Elo is an //approximate online// update on
+  that likelihood — a stochastic-gradient step, not a
+  special case of the model (and Elo's original
+  formulation used a normal, not logistic,
+  distribution). Cheap, but it reports a number with
+  no stated precision.
+  ----
+  **Ties.** Plain Bradley-Terry has no tie term at
+  all. Scoring a draw as half a win is the Elo/Glicko
+  convention, not a property of the model; modelling
+  ties inside the paired-comparison framework needs an
+  extension — Rao-Kupper (a tie threshold) or Davidson
+  (an explicit tie parameter). This matters wherever a
+  turn cap makes draws common.
+  ----
+  **Glicko's addition is the error bar.** It tracks a
+  //rating deviation// alongside the rating, so a
+  provisional player moves fast and a well-measured
+  one moves slowly, and two ratings can be compared
+  honestly. That is exactly what a regression gate
+  needs: "B beats A" is only a claim once the
+  intervals separate.
+end note
+@enduml
+
+
+========================================================================
+FILE: _spec/study-cases/1-human-expert/machine-learning/reinforcement-learning/_primer.puml
+========================================================================
+
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Reinforcement Learning — Selection Map (learning from outcomes)
+' Synthesis of the classical RL primers; the LLM-era application sits at Level 6
+' Level:  1
+
+actor "Human expert\nreward, not labels" as H
+
+component "Temporal difference\nlearn a value function" as TD <<app>>
+component "Q-learning\nlearn action values, off-policy" as Q <<app>>
+component "Policy gradient\noptimize the policy directly" as PG <<host>>
+component "Behaviour cloning\nimitate an existing script" as BC <<async>>
+database  "Policy\nstate to action" as POL <<db>>
+
+H ARROW_OPTIONAL BC : a decent teacher already exists —\ncheap cold start
+H ARROW_MAIN TD : credit a long game to\nintermediate states
+TD ARROW_MAIN Q
+H ARROW_MAIN PG : stochastic or continuous actions
+BC ARROW_MAIN POL
+Q ARROW_MAIN POL
+PG ARROW_MAIN POL
+
+note bottom of POL
+  **The problem RL solves is delayed credit:** a game
+  won in 60 moves gives one number, and TD's answer
+  is to bootstrap — predict from the next prediction
+  (""temporal-difference-learning.puml"").
+  ----
+  **Start by cloning, not exploring.** If a scripted
+  heuristic already plays adequately, behaviour
+  cloning gives a warm start for a fraction of the
+  self-play budget, and the script remains available
+  as an explainer afterwards.
+  ----
+  **Ladder note.** These primers are Level 1. Running
+  a reward loop against a pretrained model's weights
+  is Level 6 — ""_spec/study-cases/6-post-training/rl-verifiable-rewards.puml""
+  and ""_spec/study-cases/6-post-training/reinforcement-fine-tuning-pipeline.puml"".
+end note
+@enduml
+
+
+========================================================================
+FILE: _spec/study-cases/1-human-expert/machine-learning/reinforcement-learning/temporal-difference-learning.puml
+========================================================================
+
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Temporal-Difference Learning — Predict from the Next Prediction
+' Paper: Learning to predict by the methods of temporal differences
+' URL:   https://doi.org/10.1007/BF00115009
+' Level: 1
+
+component "State s_t\nobservation at time t" as S <<app>>
+database  "Value function V\nparameters, updated online" as VF <<db>>
+component "Observed step\nreward r_t, next state s_t+1" as STEP <<async>>
+component "TD target\nr_t + γ·V(s_t+1)" as TGT <<app>>
+component "TD error\ntarget − V(s_t)" as ERR <<error>>
+
+S ARROW_MAIN STEP : act, observe
+S ARROW_MAIN VF : predict V(s_t)
+STEP ARROW_MAIN TGT : reward r_t
+STEP ARROW_MAIN VF : next state s_t+1
+VF ARROW_MAIN TGT : bootstrap — V(s_t+1) comes\nfrom the function being learned
+TGT ARROW_MAIN ERR
+VF ARROW_MAIN ERR : current estimate V(s_t)
+ERR ARROW_MAIN VF : adjust V(s_t)\ntoward the target
+
+note bottom of ERR
+  **The move is to stop waiting for the outcome.**
+  A supervised method would update against the final
+  result — win or loss, many moves later. TD updates
+  against its //own next prediction// plus the observed
+  reward, so credit flows backwards one step per
+  experience and learning happens **during** the
+  episode. The final outcome is therefore absent from
+  this diagram on purpose: TD never consumes it
+  directly.
+  ----
+  That is also the catch: the target contains the
+  estimate being learned (note ""V"" feeds both the
+  target and the error), so TD is a bootstrapping
+  method whose stability depends on the step size
+  (""../optimization/gradient-descent.puml"") and on γ,
+  which sets how far credit reaches.
+end note
+@enduml
+
+
+========================================================================
+FILE: _spec/study-cases/1-human-expert/machine-learning/svm/_primer.puml
+========================================================================
+
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title SVM — Selection Map (margin, kernel, slack)
+' Synthesis of the support-vector family: when a margin classifier beats a tree or a net
+' Level:  1
+
+actor "Human expert\nn samples, d features" as H
+
+component "Linear SVM\nw·x + b = 0" as LIN <<app>>
+component "Kernel SVM\nRBF / polynomial" as KER <<host>>
+component "Soft margin\nslack + penalty C" as SOFT <<async>>
+database  "Support vectors\nthe only points that matter" as SV <<db>>
+
+H ARROW_MAIN LIN : linearly separable,\nd large vs n
+H ARROW_OPTIONAL KER : non-linear boundary,\nn small enough for the Gram matrix
+H ARROW_MAIN SOFT : real data — overlap\nand label noise
+LIN ARROW_MAIN SV : solution is defined by\nactive constraints only
+KER ARROW_MAIN SV
+SOFT ARROW_MAIN SV
+
+note bottom of SV
+  **Reach for an SVM when** d is large relative to n,
+  the decision boundary matters more than a
+  probability, and the dataset fits in memory.
+  **Reach elsewhere when** n is large (kernel cost is
+  superlinear), features are heterogeneous and
+  tabular (""../trees-and-ensembles/""), or you need
+  representation learning (""../neural-networks/"").
+end note
+@enduml
+
+
+========================================================================
+FILE: _spec/study-cases/1-human-expert/machine-learning/svm/max-margin-svm.puml
+========================================================================
+
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Support-Vector Networks — Max-Margin Classification
+' Paper: Support-vector networks
+' URL:   https://doi.org/10.1007/BF00994018
+' Level: 1
+
+component "Training pairs\nx_i with label y_i" as X <<app>>
+component "Kernel map φ\nimplicit via K(x_i, x_j)" as PHI <<host>>
+component "Quadratic program\nmaximize the margin" as QP <<app>>
+database  "Support vectors\nnon-zero multipliers α_i" as SV <<db>>
+component "Slack ξ_i, penalty C\nsoft margin" as SOFT <<async>>
+component "Decision function\nsign of Σ α_i y_i K(x_i, x) + b" as DEC <<app>>
+
+X ARROW_OPTIONAL PHI : lift to higher dimension
+X ARROW_MAIN QP : separable case
+PHI ARROW_MAIN QP : only inner products needed
+SOFT ARROW_MAIN QP : allow violations\nwhen classes overlap
+QP ARROW_MAIN SV : optimum is sparse
+SV ARROW_MAIN DEC : prediction touches\nonly the support vectors
+
+note bottom of QP
+  The separating hyperplane is chosen to **maximize
+  the geometric margin** (width 2/||w||), not merely
+  to separate — that choice is what bounds
+  generalization rather than training error.
+  The //kernel trick// is the second idea: K supplies
+  inner products in φ's space, so φ is never
+  computed and may be infinite-dimensional.
+  C trades margin width against violations.
+  ----
+  **Not fitted by gradient descent.** The kernelized
+  dual is a //constrained// quadratic program, solved by
+  QP — classically SMO — not by SGD. Subgradient
+  methods (Pegasos) apply to the linear primal only.
+  Contrast ""../optimization/gradient-descent.puml"".
+end note
+@enduml
+
+
+========================================================================
+FILE: _spec/study-cases/1-human-expert/machine-learning/trees-and-ensembles/_primer.puml
+========================================================================
+
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Trees & Ensembles — Selection Map (bias, variance, correlation)
+' Synthesis of the tree family: why one tree is weak and why averaging fixes it
+' Level:  1
+
+actor "Human expert\ntabular, mixed-type features" as H
+
+component "Single decision tree\naxis-aligned splits" as T <<app>>
+component "Bagging\naverage over bootstrap samples" as BAG <<async>>
+component "Random forest\nbagging + feature subsampling" as RF <<host>>
+component "Gradient boosting\nfit each tree to the residual" as GB <<host>>
+
+H ARROW_OPTIONAL T : need an explainable rule set
+H ARROW_MAIN RF : strong default,\nlittle tuning
+H ARROW_MAIN GB : squeeze out accuracy,\naccept tuning
+T ARROW_MAIN BAG : variance is the problem
+BAG ARROW_MAIN RF : decorrelate the trees
+
+note bottom of RF
+  A single deep tree has **low bias and high
+  variance** — it memorizes. Averaging cuts
+  variance, but only to the extent the trees are
+  //independent//, which is why a random forest also
+  subsamples features at each split
+  (""random-forests.puml"").
+  ----
+  **Bagging vs boosting:** bagging fits trees in
+  parallel to reduce variance; boosting fits them
+  sequentially to reduce bias, each tree correcting
+  its predecessors' residuals.
+end note
+@enduml
+
+
+========================================================================
+FILE: _spec/study-cases/1-human-expert/machine-learning/trees-and-ensembles/random-forests.puml
+========================================================================
+
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Random Forests — Decorrelated Tree Averaging
+' Paper: Random Forests
+' URL:   https://doi.org/10.1023/A:1010933404324
+' Level: 1
+
+database  "Training set\nn rows" as DATA <<db>>
+component "Bootstrap sample k\nn rows drawn with replacement" as BOOT <<async>>
+component "Tree k\nsplit on a random feature subset" as TREE <<app>>
+component "Aggregate\nvote or average" as AGG <<host>>
+component "Out-of-bag estimate\nrows this tree never saw" as OOB <<db>>
+
+DATA ARROW_QUEUE BOOT : repeat for k = 1..K
+BOOT ARROW_MAIN TREE : grow deep, no pruning
+TREE ARROW_MAIN AGG : one prediction each
+BOOT ARROW_OPTIONAL OOB : ~37% of rows excluded
+OOB ARROW_OPTIONAL AGG : free generalization estimate
+
+note bottom of AGG
+  **Two sources of randomness, not one.** Bootstrap
+  rows alone leave trees correlated, and averaging
+  correlated predictors barely reduces variance.
+  Drawing a **random subset of features at every
+  split** is what decorrelates them — the step that
+  makes the ensemble work.
+  ----
+  Because each bootstrap omits roughly a third of
+  the rows, the out-of-bag rows give a held-out
+  error estimate without a separate validation
+  split — useful when data is scarce.
+end note
+@enduml
+
+
+========================================================================
+FILE: _spec/study-cases/1-human-expert/rag/_primer.puml
 ========================================================================
 
 @startuml
@@ -2440,7 +3483,7 @@ end note
 
 
 ========================================================================
-FILE: _spec/study-cases/2-single-prompts/discovery/_essentials.puml
+FILE: _spec/study-cases/2-single-prompts/discovery/_primer.puml
 ========================================================================
 
 @startuml
@@ -2649,6 +3692,7 @@ FILE: _spec/study-cases/3-meta-prompt-loops/cot.puml
 title Chain of Thought (CoT)
 ' Paper: Chain-of-Thought Prompting Elicits Reasoning in Large Language Models
 ' URL: https://arxiv.org/abs/2201.11903
+' Level: 3
 
 start
 :Input Question;
@@ -2676,8 +3720,17 @@ FILE: _spec/study-cases/3-meta-prompt-loops/mad.puml
 @startuml
 !includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
 title Multi-Agent Debate (MAD)
+' Paper: Improving Factuality and Reasoning in Language Models through Multiagent Debate
+' URL:   https://arxiv.org/abs/2305.14325
+' Paper: Encouraging Divergent Thinking in Large Language Models through Multi-Agent Debate
+' URL:   https://arxiv.org/abs/2305.19118
+' Level: 3
 ' Concept: Reducing Hallucinations via Adversarial Debate without Execution
 ' Context: ChatEval and High-Precision Domains
+' Note:    The canonical papers debate *symmetrically* — several peer agents argue over rounds and
+'          converge. This diagram draws the asymmetric variant used in review workflows: one drafter
+'          plus an adversarial judge holding an approval gate. Cite it as a MAD derivative, not as a
+'          faithful rendering of either paper.
 
 start
 :Input Task;
@@ -2706,38 +3759,52 @@ end note
 
 
 ========================================================================
-FILE: _spec/study-cases/3-meta-prompt-loops/plan_and_solve.puml
+FILE: _spec/study-cases/3-meta-prompt-loops/plan-and-solve.puml
 ========================================================================
 
 @startuml
-!includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
-title Plan-and-Solve (Planner-Executor)
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Plan-and-Solve (zero-shot: devise a plan, then carry it out)
 ' Paper: Plan-and-Solve Prompting: Improving Zero-Shot Chain-of-Thought Reasoning by Large Language Models
-' URL: https://arxiv.org/abs/2305.04091
+' URL:   https://arxiv.org/abs/2305.04091
+' Level: 3
+' Formerly: 3-meta-prompt-loops/plan_and_solve.puml (kebab-case rename). The earlier diagram drew a
+'           Planner agent, an Executor agent and a Tool Set with an execution loop — an L4 harness
+'           shape. The cited paper is prompt-only: no tools, no agents, no weight change. Redrawn to
+'           match its citation; the tool-executing variant belongs at L4 if it is wanted.
 
 actor User
-participant "Planner Agent" as PLAN
-participant "Executor Agent" as EXEC
-participant "Tool Set" as TOOLS
+participant "LLM (single model)" as LLM <<app>>
 
-User -> PLAN : Input Task
-activate PLAN
+User ARROW_MAIN LLM : task + trigger prompt\n'let's first understand the problem\nand devise a plan'
+activate LLM
 
-PLAN -> PLAN : Break down task\n(Generate Step 1, 2, 3...)
-PLAN -> EXEC : Submit Plan (List of Steps)
-deactivate PLAN
-activate EXEC
+LLM ARROW_MAIN LLM : **Phase 1 — plan**\nextract variables, state the sub-tasks
+note right of LLM
+  Still one completion. The "plan" is
+  generated //text//, not a data structure
+  handed to another component.
+end note
 
-loop Execution Loop (or Dry-Run)
-    EXEC -> TOOLS : Execute Step N (or Verify State Transition)
-    activate TOOLS
-    TOOLS --> EXEC : Result
-    deactivate TOOLS
-end
+LLM ARROW_MAIN LLM : **Phase 2 — solve**\ncarry out the sub-tasks in order,\nshowing intermediate results
 
-EXEC -> User : Final Result
-deactivate EXEC
+LLM ARROW_MAIN User : final answer
+deactivate LLM
 
+note over LLM
+  **Why this is Level 3 and not Level 4.** The whole
+  method is a better //trigger prompt// than "let's
+  think step by step": it addresses zero-shot CoT's
+  missing-step and calculation errors by forcing an
+  explicit plan first. Weights are frozen, and
+  nothing outside the model is called — no tools, no
+  retrieval, no orchestrator. That is exactly the
+  L3/L4 boundary.
+  ----
+  Contrast ""cot.puml"" (no planning phase) and
+  ""react.puml"" (L3 reasoning that //does// interleave
+  tool calls, which is why ReAct straddles the line).
+end note
 @enduml
 
 
@@ -2750,6 +3817,7 @@ FILE: _spec/study-cases/3-meta-prompt-loops/react.puml
 title ReAct Architecture (Reason + Act)
 ' Paper: ReAct: Synergizing Reasoning and Acting in Language Models
 ' URL: https://arxiv.org/abs/2210.03629
+' Level: 3
 
 start
 :Input Task;
@@ -2779,6 +3847,7 @@ FILE: _spec/study-cases/3-meta-prompt-loops/reflexion.puml
 title Reflexion (Self-Correction Loop)
 ' Paper: Reflexion: Language Agents with Verbal Reinforcement Learning
 ' URL: https://arxiv.org/abs/2303.11366
+' Level: 3
 
 start
 :Input Task;
@@ -2815,6 +3884,7 @@ FILE: _spec/study-cases/3-meta-prompt-loops/tot.puml
 title Tree of Thoughts (ToT)
 ' Paper: Tree of Thoughts: Deliberate Problem Solving with Large Language Models
 ' URL: https://arxiv.org/abs/2305.10601
+' Level: 3
 
 state "Problem Input" as Input
 state "Branch A" as A
@@ -2842,11 +3912,14 @@ Final --> [*]
 
 
 ========================================================================
-FILE: _spec/study-cases/4-harness/anti-framework/_essentials.puml
+FILE: _spec/study-cases/4-harness/anti-framework/_primer.puml
 ========================================================================
 
 @startuml
 !includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+title Anti-framework harness — the essential loop
+' Synthesis of the anti-framework study-cases in this folder (aider, continue, mentat, sweep, opencode)
+' Level: 4
 
 package "The Anti-Framework Harness" {
     [Orchestrator\n(The Infinite Loop)] as ORCH
@@ -2885,8 +3958,10 @@ FILE: _spec/study-cases/4-harness/anti-framework/aider.puml
 
 @startuml
 !includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+title Aider — repo-map terminal coding agent
 ' Product: Aider
 ' URL: https://aider.chat/
+' Level: 4
 
 package "Aider Architecture" {
     [Coder (BaseCoder)\n(The Loop)] as CODER
@@ -2923,8 +3998,12 @@ FILE: _spec/study-cases/4-harness/anti-framework/continue.puml
 
 @startuml
 !includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+title Continue — IDE-embedded coding assistant
 ' Product: Continue
 ' URL: https://www.continue.dev/
+' Level: 4
+' Status: Site live as of 2026-09, but the homepage states Continue "has joined Cursor" — cite it as
+'         acquired-by-Cursor, not as an independent project.
 
 package "Continue (IDE Extension)" {
     [Core Logic\n(Harness)] as CORE
@@ -2945,15 +4024,58 @@ end note
 
 
 ========================================================================
-FILE: _spec/study-cases/4-harness/anti-framework/hands.puml
+FILE: _spec/study-cases/4-harness/anti-framework/mentat.puml
 ========================================================================
 
 @startuml
 !includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+title Mentat — context-pruning coding assistant (OUTDATED)
+' Product: Mentat (AbanteAI CLI)
+' URL: https://github.com/AbanteAI/archive-old-cli-mentat
+' Level: 4
+' Status: OUTDATED as of 2026-09. AbanteAI marks the CLI drawn here "ARCHIVED / no longer maintained
+'         or supported", and states the Mentat name is now used by a different project — a hosted
+'         GitHub bot. mentat.ai was unreachable when checked, so the archived repo is cited instead
+'         as the verifiable source for the architecture actually depicted.
+
+package "Mentat Architecture" {
+    [Conversation Manager] as MGR
+    [Code Context] as CTX
+    [LLM API] as API
+    [Git Interface] as GIT
+    [Parser/Diff Engine] as DIFF
+}
+
+MGR --> CTX : "Prune Context (Token Limit)"
+MGR ---> API : "Stream Response"
+MGR --> GIT : "Apply Changes"
+CTX --> DIFF : "Parse/Rank Files"
+
+note right of MGR
+  Dynamically prunes context
+  based on token limits.
+end note
+@enduml
+
+
+========================================================================
+FILE: _spec/study-cases/4-harness/anti-framework/openclaw.puml
+========================================================================
+
+@startuml
+!includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+title OpenClaw — local persistent personal agent
 ' Product: OpenClaw
 ' URL: https://openclaw.ai/
+' Level: 4
+' Formerly: 4-harness/anti-framework/hands.puml — the old filename named an approach ("hands"), not the
+'           subject, which made a file about OpenClaw the least findable one in the tree.
+' Note: openclaw.ai verified live 2026-09, still under its own name, with no rename language. It is a
+'       DISTINCT project from Hermes Agent (NousResearch) — the hermes-agent README offers a
+'       "Migrating from OpenClaw" import path for settings/skills, which is a migration route, not a
+'       rebrand. Hermes has its own study-case at 4-harness/self-improving/skill-library-flywheel.puml.
 
-package "OpenClaw Architecture (Hands Approach)" {
+package "OpenClaw Architecture" {
     [Chat Interface\n(Slack/Gmail/Browser/HuggingFace)] as UI
     [OpenClaw Core\n(Persistent Memory & Loop)] as CORE
     [LLM Provider\n(Anthropic/OpenAI/Local)] as LLM
@@ -2987,35 +4109,6 @@ end note
 
 
 ========================================================================
-FILE: _spec/study-cases/4-harness/anti-framework/mentat.puml
-========================================================================
-
-@startuml
-!includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
-' Product: Mentat
-' URL: https://www.mentat.ai/
-
-package "Mentat Architecture" {
-    [Conversation Manager] as MGR
-    [Code Context] as CTX
-    [LLM API] as API
-    [Git Interface] as GIT
-    [Parser/Diff Engine] as DIFF
-}
-
-MGR --> CTX : "Prune Context (Token Limit)"
-MGR ---> API : "Stream Response"
-MGR --> GIT : "Apply Changes"
-CTX --> DIFF : "Parse/Rank Files"
-
-note right of MGR
-  Dynamically prunes context
-  based on token limits.
-end note
-@enduml
-
-
-========================================================================
 FILE: _spec/study-cases/4-harness/anti-framework/opencode.puml
 ========================================================================
 
@@ -3024,8 +4117,12 @@ FILE: _spec/study-cases/4-harness/anti-framework/opencode.puml
 title opencode — open-source terminal coding agent
 ' Product: opencode (SST / Anomaly) — open-source, MIT, multi-provider terminal coding agent
 ' URL:     https://opencode.ai
-' URL:     https://github.com/sst/opencode
+' URL:     https://github.com/anomalyco/opencode
 ' Level:   4
+' Formerly: repo cited as https://github.com/sst/opencode — SST rebranded to Anomaly and moved the
+'           repository; the old path still 302-redirects, which is why a status-only link check reports
+'           it healthy. Verified 2026-09-01. opencode.ai remains the canonical product site (linked as
+'           such from the upstream README); note open-code.ai is a third-party docs mirror, not official.
 ' Note:    replaces the earlier OpenCodeInterpreter study-case (a different, 2023 project)
 
 component "Terminal UI (TUI)"                          as TUI   <<app>>
@@ -3055,8 +4152,14 @@ FILE: _spec/study-cases/4-harness/anti-framework/sweep.puml
 
 @startuml
 !includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+title Sweep — async issue-to-PR worker (OUTDATED shape)
 ' Product: Sweep
 ' URL: https://sweep.dev/
+' Level: 4
+' Status: The issue-to-PR architecture drawn here is the 2023-24 product. As of 2026-09 sweep.dev
+'         sells a JetBrains IDE plugin (autocomplete + inline agent) and the GitHub-bot positioning
+'         is gone from the homepage. Kept as a dated snapshot of the webhook-driven async-worker
+'         pattern, which is the reason this study-case exists; do not cite it as Sweep's current shape.
 
 package "Sweep (Async Worker)" {
     [GitHub Webhook Handler] as HOOK
@@ -3670,11 +4773,15 @@ end note
 
 
 ========================================================================
-FILE: _spec/study-cases/4-harness/framework/_essentials.puml
+FILE: _spec/study-cases/4-harness/framework/_primer.puml
 ========================================================================
 
 @startuml
 !includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+title Framework-based harness — the essential shape
+' Synthesis of the framework study-cases in this folder (dify, dust, glean, microsoft_copilot, typeface, cohere_coral)
+' Level: 4
+
 package "The Framework-Based Harness" {
     [Adaptive UI\n(Chat/Search/Templates)] as UI
     [Orchestrator / Engine\n(RAG/Semantic Kernel)] as ORCH
@@ -3708,13 +4815,21 @@ end note
 
 
 ========================================================================
-FILE: _spec/study-cases/4-harness/framework/cohere_coral.puml
+FILE: _spec/study-cases/4-harness/framework/cohere-coral.puml
 ========================================================================
 
 @startuml
 !includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+title Cohere Coral — grounded QA with citations (OUTDATED)
 ' Product: Cohere Coral / Command
 ' URL: https://cohere.com/coral
+' Level: 4
+' Formerly: 4-harness/framework/cohere_coral.puml (kebab-case rename)
+' Status: OUTDATED as of 2026-09. "Coral" is no longer a product name on Cohere's site — a fetch of
+'         cohere.com finds no product by that name (every "coral" occurrence is a CSS colour class).
+'         The current enterprise agent/workspace equivalent is North: https://cohere.com/north
+'         The diagram is kept as a dated snapshot of the Coral-era grounded-QA architecture; it has
+'         NOT been redrawn for North, whose architecture is unverified here.
 
 package "Cohere Coral" {
     [Chat Interface\n(Citations)] as UI
@@ -3776,8 +4891,10 @@ FILE: _spec/study-cases/4-harness/framework/dust.puml
 
 @startuml
 !includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+title Dust — workspace assistant platform
 ' Product: Dust
 ' URL: https://dust.tt/
+' Level: 4
 
 package "Dust Platform" {
     [Front-End\n(Chat Interface)] as UI
@@ -3806,8 +4923,10 @@ FILE: _spec/study-cases/4-harness/framework/glean.puml
 
 @startuml
 !includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+title Glean — enterprise search + grounded assistant
 ' Product: Glean
 ' URL: https://www.glean.com/
+' Level: 4
 
 package "Glean Architecture" {
     [Unified Search UI\n(Chat + Search)] as UI
@@ -3833,13 +4952,15 @@ end note
 
 
 ========================================================================
-FILE: _spec/study-cases/4-harness/framework/microsoft_copilot.puml
+FILE: _spec/study-cases/4-harness/framework/microsoft-copilot.puml
 ========================================================================
 
 @startuml
 !includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+title Microsoft 365 Copilot — grounded in-app assistant
 ' Product: Microsoft Copilot (M365)
 ' URL: https://www.microsoft.com/en-us/microsoft-365/copilot
+' Level: 4
 
 package "Microsoft Copilot Stack" {
     [App Host\n(Word, Excel, Teams)] as APP
@@ -3873,8 +4994,10 @@ FILE: _spec/study-cases/4-harness/framework/typeface.puml
 
 @startuml
 !includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+title Typeface — brand-guarded content generation
 ' Product: Typeface
 ' URL: https://www.typeface.ai/
+' Level: 4
 
 package "Typeface Architecture" {
     [Adaptive UI\n(Templates/Sliders)] as UI
@@ -3905,7 +5028,13 @@ FILE: _spec/study-cases/4-harness/governance/capability-effect-authorization.pum
 !include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
 title Capability / Effect Authorization
 ' Paper: Miller, Robust Composition — Object-Capability Model (JHU 2006)
-' URL:   http://www.erights.org/talks/thesis/markm-thesis.pdf
+' URL:   https://papers.agoric.com/assets/pdf/papers/robust-composition.pdf
+' URL:   http://web.archive.org/web/20260423141335/http://www.erights.org/talks/thesis/markm-thesis.pdf
+' Formerly: cited as http://www.erights.org/talks/thesis/markm-thesis.pdf — dead as of 2026-09-01
+'           (HTTP 500 on three tries; the whole of erights.org is down, root included). Replaced with
+'           the author-affiliated host — Agoric, where Miller is Chief Scientist — verified to be the
+'           same JHU dissertation, May 2006. The Wayback snapshot above is the last known-good copy of
+'           the original URL (captured 2026-04-23).
 ' Paper: Saltzer & Schroeder, The Protection of Information in Computer Systems, 1975
 ' URL:   https://web.mit.edu/Saltzer/www/publications/protection/
 ' Level: 4
@@ -4727,14 +5856,18 @@ end note
 
 
 ========================================================================
-FILE: _spec/study-cases/_essentials.puml
+FILE: _spec/study-cases/_primer.puml
 ========================================================================
 
 @startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
 skinparam componentStyle rectangle
 skinparam padding 5
 
 title AI Agent Harness Architecture
+' Metafile: cross-cutting primer spanning every tier — source-exempt, and it declares no tier header
+'           because it deliberately crosses the ladder (see ../CONTRIBUTING.md §3, "metafiles").
+' Formerly: _spec/study-cases/_essentials.puml
 
 package "1. The Interface (The Gate)" {
   [Human-in-the-Loop (HITL)] as HITL
@@ -4970,102 +6103,6 @@ end note
 
 
 ========================================================================
-FILE: _spec/study-cases/_substrate/nets/flow.puml
-========================================================================
-
-@startuml
-!theme plain
-autonumber
-
-title Generic LLM Asset Loading Flow
-
-actor User
-participant "Browser\n(Main Thread)" as Main
-participant "LLM Engine\n(Web Worker)" as Worker
-participant "CDN / Static Server" as Server
-
-User -> Main : Initialize Chat
-Main -> Worker : Load Model (model_id)
-activate Worker
-
-Worker -> Server : GET /{model_id}/model-webgpu.wasm
-Server --> Worker : 200 OK (application/wasm)
-
-Worker -> Server : GET /{model_id}/mlc-chat-config.json
-Server --> Worker : 200 OK (JSON)
-note right of Worker: Reads context window,\nvocab size, and architecture.
-
-Worker -> Server : GET /{model_id}/ndarray-cache.json
-Server --> Worker : 200 OK (JSON)
-
-loop For each weight shard (Parallelized)
-    Worker -> Server : GET /{model_id}/params_shard_X.bin
-    Server --> Worker : 200 OK (ArrayBuffer)
-    Worker -> Worker : Transfer to WebGPU VRAM
-    Worker -> Main : Progress Update (X%)
-end
-
-Worker -> Main : Engine Ready
-deactivate Worker
-
-@enduml
-
-
-========================================================================
-FILE: _spec/study-cases/_substrate/nets/neural.puml
-========================================================================
-
-@startuml
-!includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
-title Neural Network Inference Flow (WebLLM)
-
-actor User
-component "Tokenizer" as Tokenizer
-component "Prefill Phase\n(Process Prompt)" as Prefill
-component "Decode Phase\n(Generate Tokens)" as Decode
-component "Detokenizer" as Detokenizer
-
-User -> Tokenizer : Raw Text Prompt
-Tokenizer -> Prefill : Token IDs
-Prefill -> Decode : KV Cache & Context
-Decode -> Decode : Autoregressive Generation\n(Token by Token)
-Decode -> Detokenizer : New Token ID
-Detokenizer -> User : Streamed Text
-@enduml
-
-
-========================================================================
-FILE: _spec/study-cases/_substrate/nets/weights.puml
-========================================================================
-
-@startuml
-!includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
-title WebLLM Weights Loading & Sharding
-
-node "Browser Memory" {
-  component "WebLLM Engine" as Engine
-  component "WebGPU VRAM" as VRAM
-}
-
-node "Static Server" {
-  artifact "tensor-cache.json" as CacheMap
-  artifact "params_shard_0.bin" as Shard0
-  artifact "params_shard_1.bin" as Shard1
-  artifact "params_shard_N.bin" as ShardN
-}
-
-Engine --> CacheMap : 1. Fetch mapping
-note right of CacheMap: Maps tensor names to byte offsets\nand specific shard files.
-
-Engine --> Shard0 : 2. Fetch Shard 0
-Engine --> Shard1 : 2. Fetch Shard 1
-Engine --> ShardN : 2. Fetch Shard N
-
-Engine --> VRAM : 3. Load Tensors into GPU
-@enduml
-
-
-========================================================================
 FILE: _spec/study-cases/_substrate/reactive-control/behavior-trees-and-fsm.puml
 ========================================================================
 
@@ -5167,10 +6204,14 @@ FILE: _spec/study-cases/_substrate/web-llm/architecture.puml
 ========================================================================
 
 @startuml
-!theme plain
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
 skinparam componentStyle rectangle
 
 title Open-Weight LLM Browser Architecture
+' URL:   https://webllm.mlc.ai/
+' URL:   https://llm.mlc.ai/
+' URL:   https://arxiv.org/abs/2412.15803
+' Level: n/a (substrate)
 
 package "Offline Preparation (MLC-LLM)" {
   component "Model Compiler" as Compiler
@@ -5204,12 +6245,60 @@ package "Runtime Environment (Browser)" {
 
 
 ========================================================================
+FILE: _spec/study-cases/_substrate/web-llm/asset-loading.puml
+========================================================================
+
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+autonumber
+
+title WebLLM Asset Loading Flow (wasm → config → weight shards)
+' URL:   https://webllm.mlc.ai/
+' URL:   https://arxiv.org/abs/2412.15803
+' Level: n/a (substrate)
+
+actor User
+participant "Browser\n(Main Thread)" as Main
+participant "LLM Engine\n(Web Worker)" as Worker
+participant "CDN / Static Server" as Server
+
+User -> Main : Initialize Chat
+Main -> Worker : Load Model (model_id)
+activate Worker
+
+Worker -> Server : GET /{model_id}/model-webgpu.wasm
+Server --> Worker : 200 OK (application/wasm)
+
+Worker -> Server : GET /{model_id}/mlc-chat-config.json
+Server --> Worker : 200 OK (JSON)
+note right of Worker: Reads context window,\nvocab size, and architecture.
+
+Worker -> Server : GET /{model_id}/ndarray-cache.json
+Server --> Worker : 200 OK (JSON)
+
+loop For each weight shard (Parallelized)
+    Worker -> Server : GET /{model_id}/params_shard_X.bin
+    Server --> Worker : 200 OK (ArrayBuffer)
+    Worker -> Worker : Transfer to WebGPU VRAM
+    Worker -> Main : Progress Update (X%)
+end
+
+Worker -> Main : Engine Ready
+deactivate Worker
+
+@enduml
+
+
+========================================================================
 FILE: _spec/study-cases/_substrate/web-llm/components.puml
 ========================================================================
 
 @startuml
 !includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
 title WebLLM Component Architecture
+' URL:   https://webllm.mlc.ai/
+' URL:   https://arxiv.org/abs/2412.15803
+' Level: n/a (substrate)
 
 package "Web Application" {
   component "UI Thread" as UI
@@ -5241,6 +6330,9 @@ FILE: _spec/study-cases/_substrate/web-llm/deploy.puml
 @startuml
 !includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
 title Generic WebLLM Deployment Architecture
+' URL:   https://webllm.mlc.ai/
+' URL:   https://arxiv.org/abs/2412.15803
+' Level: n/a (substrate)
 
 cloud "Static Hosting (S3, GitHub Pages, Cloudflare)" as Host {
   folder "Web Application" {
@@ -5274,12 +6366,47 @@ end note
 
 
 ========================================================================
+FILE: _spec/study-cases/_substrate/web-llm/inference.puml
+========================================================================
+
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title WebLLM Inference Flow (Prefill → Decode)
+' URL:   https://webllm.mlc.ai/
+' URL:   https://arxiv.org/abs/2412.15803
+' Level: n/a (substrate)
+
+actor User
+component "Tokenizer" as Tokenizer <<app>>
+component "Prefill Phase\n(Process Prompt)" as Prefill <<host>>
+component "Decode Phase\n(Generate Tokens)" as Decode <<host>>
+component "Detokenizer" as Detokenizer <<app>>
+
+User ARROW_MAIN Tokenizer : Raw Text Prompt
+Tokenizer ARROW_MAIN Prefill : Token IDs
+Prefill ARROW_MAIN Decode : KV Cache & Context
+Decode ARROW_OPTIONAL Decode : Autoregressive Generation\n(Token by Token)
+Decode ARROW_MAIN Detokenizer : New Token ID
+Detokenizer ARROW_MAIN User : Streamed Text
+
+note bottom of Decode
+  Two-phase transformer inference: **prefill**
+  processes the whole prompt in one pass and fills
+  the KV cache; **decode** then emits one token per
+  step, reusing that cache. WebGPU runs both.
+end note
+@enduml
+
+
+========================================================================
 FILE: _spec/study-cases/_substrate/web-llm/mlc.puml
 ========================================================================
 
 @startuml
 !includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
 title MLC-LLM Compilation Pipeline
+' URL:   https://llm.mlc.ai/
+' Level: n/a (substrate)
 
 node "HuggingFace / Local" {
   artifact "Raw Model Weights\n(FP16/FP32)" as RawModel
@@ -5300,4 +6427,45 @@ Quantizer --> QuantWeights : mlc_llm convert_weight
 
 RawModel --> TVM : Model Architecture
 TVM --> WasmEngine : mlc_llm compile\n(Injects wasm_runtime.bc)
+@enduml
+
+
+========================================================================
+FILE: _spec/study-cases/_substrate/web-llm/weight-sharding.puml
+========================================================================
+
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title WebLLM Weights Loading & Sharding
+' URL:   https://webllm.mlc.ai/
+' URL:   https://arxiv.org/abs/2412.15803
+' Level: n/a (substrate)
+
+node "Browser Memory" <<host>> {
+  component "WebLLM Engine" as Engine <<app>>
+  component "WebGPU VRAM" as VRAM <<db>>
+}
+
+node "Static Server" <<cloud>> {
+  artifact "ndarray-cache.json" as CacheMap
+  artifact "params_shard_0.bin" as Shard0
+  artifact "params_shard_1.bin" as Shard1
+  artifact "params_shard_N.bin" as ShardN
+}
+
+Engine ARROW_CLOUD CacheMap : 1. Fetch mapping
+note right of CacheMap: Maps tensor names to byte offsets\nand specific shard files.
+
+Engine ARROW_CLOUD Shard0 : 2. Fetch Shard 0
+Engine ARROW_CLOUD Shard1 : 2. Fetch Shard 1
+Engine ARROW_CLOUD ShardN : 2. Fetch Shard N
+
+Engine ARROW_MAIN VRAM : 3. Load Tensors into GPU
+
+note bottom of Engine
+  Weights ship as many small shards so a browser
+  can fetch them in parallel and stream each into
+  VRAM — no single multi-GB download, and progress
+  is reportable per shard.
+end note
 @enduml

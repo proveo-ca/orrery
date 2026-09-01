@@ -1,0 +1,45 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Imperfect-Information Games — Selection Map (you evaluate a belief)
+' Synthesis: what replaces minimax when the true state is not observable
+' Level:  1
+
+actor "Human expert\nhidden state, maybe simultaneous" as H
+
+component "Determinization\nsample K worlds, solve each" as DET <<host>>
+component "Counterfactual regret\nCFR / CFR+" as CFR <<app>>
+component "Search + learned value\nReBeL-style" as RB <<cloud>>
+database  "Belief over states\nposterior, not a position" as BEL <<db>>
+
+H ARROW_MAIN BEL : what can this side know?
+BEL ARROW_MAIN DET : cheap, reuses a\nperfect-information solver
+BEL ARROW_MAIN CFR : want an equilibrium policy\n(guaranteed only 2-player zero-sum)
+BEL ARROW_OPTIONAL RB : scale beyond tabular
+
+note bottom of BEL
+  **The evaluated object changes.** With hidden state
+  there is no single position to score — you hold a
+  distribution, and a policy that reads the true state
+  is unimplementable //at execution time//.
+  ----
+  Training on privileged state is fine and standard
+  (centralised training, decentralised execution: a
+  critic may see everything while the actor sees only
+  its observation). The constraint binds the
+  **deployed policy**, not the training signal — so
+  "never show the model the hidden state" is too
+  strong; "the acting policy must consume only what
+  its side can know" is the real rule.
+  ----
+  **Cheapest first.** Determinization needs only a
+  world sampler and an existing evaluator
+  (""determinization.puml""); CFR converges toward
+  equilibrium but wants an abstraction and many
+  iterations (""counterfactual-regret-minimization.puml"").
+  ----
+  Simultaneous-move games belong here too: each
+  decision is a matrix game, so there is no
+  alternating tree for minimax to walk
+  (""../game-search/"").
+end note
+@enduml

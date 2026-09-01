@@ -1,9 +1,17 @@
 @startuml
 !includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+title OpenClaw — local persistent personal agent
 ' Product: OpenClaw
 ' URL: https://openclaw.ai/
+' Level: 4
+' Formerly: 4-harness/anti-framework/hands.puml — the old filename named an approach ("hands"), not the
+'           subject, which made a file about OpenClaw the least findable one in the tree.
+' Note: openclaw.ai verified live 2026-09, still under its own name, with no rename language. It is a
+'       DISTINCT project from Hermes Agent (NousResearch) — the hermes-agent README offers a
+'       "Migrating from OpenClaw" import path for settings/skills, which is a migration route, not a
+'       rebrand. Hermes has its own study-case at 4-harness/self-improving/skill-library-flywheel.puml.
 
-package "OpenClaw Architecture (Hands Approach)" {
+package "OpenClaw Architecture" {
     [Chat Interface\n(Slack/Gmail/Browser/HuggingFace)] as UI
     [OpenClaw Core\n(Persistent Memory & Loop)] as CORE
     [LLM Provider\n(Anthropic/OpenAI/Local)] as LLM

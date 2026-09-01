@@ -1,7 +1,15 @@
 @startuml
 !includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+title Cohere Coral — grounded QA with citations (OUTDATED)
 ' Product: Cohere Coral / Command
 ' URL: https://cohere.com/coral
+' Level: 4
+' Formerly: 4-harness/framework/cohere_coral.puml (kebab-case rename)
+' Status: OUTDATED as of 2026-09. "Coral" is no longer a product name on Cohere's site — a fetch of
+'         cohere.com finds no product by that name (every "coral" occurrence is a CSS colour class).
+'         The current enterprise agent/workspace equivalent is North: https://cohere.com/north
+'         The diagram is kept as a dated snapshot of the Coral-era grounded-QA architecture; it has
+'         NOT been redrawn for North, whose architecture is unverified here.
 
 package "Cohere Coral" {
     [Chat Interface\n(Citations)] as UI

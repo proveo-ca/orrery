@@ -1,0 +1,33 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Random Forests — Decorrelated Tree Averaging
+' Paper: Random Forests
+' URL:   https://doi.org/10.1023/A:1010933404324
+' Level: 1
+
+database  "Training set\nn rows" as DATA <<db>>
+component "Bootstrap sample k\nn rows drawn with replacement" as BOOT <<async>>
+component "Tree k\nsplit on a random feature subset" as TREE <<app>>
+component "Aggregate\nvote or average" as AGG <<host>>
+component "Out-of-bag estimate\nrows this tree never saw" as OOB <<db>>
+
+DATA ARROW_QUEUE BOOT : repeat for k = 1..K
+BOOT ARROW_MAIN TREE : grow deep, no pruning
+TREE ARROW_MAIN AGG : one prediction each
+BOOT ARROW_OPTIONAL OOB : ~37% of rows excluded
+OOB ARROW_OPTIONAL AGG : free generalization estimate
+
+note bottom of AGG
+  **Two sources of randomness, not one.** Bootstrap
+  rows alone leave trees correlated, and averaging
+  correlated predictors barely reduces variance.
+  Drawing a **random subset of features at every
+  split** is what decorrelates them — the step that
+  makes the ensemble work.
+  ----
+  Because each bootstrap omits roughly a third of
+  the rows, the out-of-bag rows give a held-out
+  error estimate without a separate validation
+  split — useful when data is scarce.
+end note
+@enduml

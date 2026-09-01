@@ -1,0 +1,36 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Clustering & Dimensionality Reduction — Selection Map (no labels)
+' Synthesis of the unsupervised half: partition the data, or re-coordinate it
+' Level:  1
+
+actor "Human expert\nunlabeled data" as H
+
+component "k-means\nhard partition into k groups" as KM <<app>>
+component "PCA\nlinear axes of maximum variance" as PCA <<host>>
+component "Non-linear embedding\nt-SNE / UMAP" as EMB <<host>>
+database  "Downstream use\nfeatures, or a picture" as USE <<db>>
+
+H ARROW_MAIN KM : want group assignments
+H ARROW_MAIN PCA : want fewer, uncorrelated features
+H ARROW_OPTIONAL EMB : want a 2-D picture\nfor human eyes
+KM ARROW_MAIN USE
+PCA ARROW_MAIN USE
+EMB ARROW_OPTIONAL USE : inspect only — distances\nare not faithful to the input
+
+note bottom of USE
+  **Partition vs re-coordinate.** k-means answers
+  "which group?"; PCA answers "which directions
+  carry the variance?". They compose — PCA first,
+  then cluster, is a standard pipeline.
+  ----
+  **A warning about the pictures.** t-SNE and UMAP
+  preserve neighbourhoods, not global distances or
+  cluster sizes, so apparent gaps between blobs are
+  not evidence. Use them to look, not to conclude.
+  ----
+  In retrieval systems the same embedding machinery
+  becomes an index rather than a plot — see
+  ""_spec/study-cases/1-human-expert/rag/vector-dense-rag.puml"".
+end note
+@enduml

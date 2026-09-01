@@ -1,0 +1,30 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title SVM — Selection Map (margin, kernel, slack)
+' Synthesis of the support-vector family: when a margin classifier beats a tree or a net
+' Level:  1
+
+actor "Human expert\nn samples, d features" as H
+
+component "Linear SVM\nw·x + b = 0" as LIN <<app>>
+component "Kernel SVM\nRBF / polynomial" as KER <<host>>
+component "Soft margin\nslack + penalty C" as SOFT <<async>>
+database  "Support vectors\nthe only points that matter" as SV <<db>>
+
+H ARROW_MAIN LIN : linearly separable,\nd large vs n
+H ARROW_OPTIONAL KER : non-linear boundary,\nn small enough for the Gram matrix
+H ARROW_MAIN SOFT : real data — overlap\nand label noise
+LIN ARROW_MAIN SV : solution is defined by\nactive constraints only
+KER ARROW_MAIN SV
+SOFT ARROW_MAIN SV
+
+note bottom of SV
+  **Reach for an SVM when** d is large relative to n,
+  the decision boundary matters more than a
+  probability, and the dataset fits in memory.
+  **Reach elsewhere when** n is large (kernel cost is
+  superlinear), features are heterogeneous and
+  tabular (""../trees-and-ensembles/""), or you need
+  representation learning (""../neural-networks/"").
+end note
+@enduml

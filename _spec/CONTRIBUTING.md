@@ -55,10 +55,22 @@ title ReAct Architecture (Reason + Act)
 ```
 
 - `' Paper:` — the title line. Use it for research-method files; omit for bare product/standard files.
-- `' URL:` — **required on every file.** The arXiv/DOI/product/spec link per the table above.
-- `' Level:` — **required on every file.** The capability-ladder tier `1`–`7`, or `n/a (substrate)` —
-  see [`study-cases/README.md`](./study-cases/README.md). The file's directory must agree (e.g. a file
-  in `4-harness/governance/` declares `Level: 4`).
+- `' URL:` — **required on every content file.** The arXiv/DOI/product/spec link per the table above.
+  Metafiles (leading `_`, e.g. `_primer.puml`) and `README.md` are exempt — see §3.
+- `' Level:` — **required on every content file.** The capability-ladder tier `1`–`7`, or
+  `n/a (substrate)` — see [`study-cases/README.md`](./study-cases/README.md). The file's directory must
+  agree (e.g. a file in `4-harness/governance/` declares `Level: 4`). A metafile spanning tiers may
+  omit it.
+- `' Formerly:` — the file's previous path and/or the subject's previous name, after a rename or fold
+  (see §3, "Renames and folds").
+- `' Status:` — **required when the subject is no longer current**: a product renamed, archived,
+  pivoted or discontinued, or an architecture that is now a dated snapshot. State the date you
+  checked, what changed, and the current equivalent. Pair it with `OUTDATED` in the `title` when the
+  whole diagram is historical (see `4-harness/framework/cohere-coral.puml`).
+- Optional, and used where they earn their place: `' Synthesis:` (what a primer distills),
+  `' Source:` (an upstream repo a primer was distilled from), `' Note:` (a caveat a reader needs
+  before trusting the diagram), `' Concept:` / `' Context:` (framing for a pattern with no single
+  canonical paper).
 - Products use `' URL:` alone (see `study-cases/4-harness/anti-framework/aider.puml`).
 - In Markdown study-cases, use the per-entry `*Abstract:* … *URL:* …` form (see
   `study-cases/context-and-retrieval.md`).
@@ -107,19 +119,45 @@ project diagram: it doesn't belong.
   old `COLOR_*`/`PATH_*` macros — **leave them as-is; modernize only a file you're already editing.**
 - **Organize by level (then topic).** The tree is **level-first**: top-level `N-name/` dirs
   (`1-human-expert/`, `2-single-prompts/`, `3-meta-prompt-loops/`, `4-harness/`, `5-fine-tuned/`,
-  `6-post-training/`), with topic subfolders inside `1-human-expert/` (`computer-science/`, `rag/`),
+  `6-post-training/`), with topic subfolders inside `1-human-expert/` (`computer-science/`,
+  `machine-learning/`, `rag/`),
   `2-single-prompts/` (`discovery/`), and the large `4-harness/` tier (`governance/`,
   `meta-orchestration/`, `self-improving/`, `applied/`, …). A self-improving system with **frozen
   weights** is an L4 self-improving harness; one that **updates weights** against a reward/eval loop
   is L6 post-training (above L5 supervised fine-tuning, which adapts to a fixed dataset). Substrate
   that's orthogonal to the ladder lives under `_substrate/`. The capability ladder and the full level
   map are in [`study-cases/README.md`](./study-cases/README.md).
-- **One concept per file.** Give each topic subfolder an `_essentials.puml` that summarizes it (see
-  `4-harness/anti-framework/_essentials.puml`). Cross-cutting narrative goes in a root-level `.md`
+- **`_plans/` is not a study-case directory.** `_spec/_plans/*.md` holds forward-looking
+  implementation plans for the learning surface itself (tooling, automation, ladder amendments). They
+  are Markdown, carry no `' Level:` / `' URL:` headers, and are deliberately outside the `.puml`
+  conventions below and outside the generated `llms.txt` index. A plan describes work not yet done —
+  so unlike a study-case, it is *expected* to go stale, and should be deleted or marked `DONE` once
+  its phases land.
+- **One concept per file.** Give each topic subfolder a `_primer.puml` that summarizes it (see
+  `4-harness/anti-framework/_primer.puml`). Cross-cutting narrative goes in a root-level `.md`
   (`summary.md`, `context-and-retrieval.md`).
-- **Index files are source-exempt.** `README.md`, `_essentials.puml`, and other summary/index files
-  synthesize their already-sourced children, so they need no `' URL:` of their own (they may still
-  carry a `' Level:`). The no-sourceless rule in §1 applies to *content* study-cases.
+- **Leading-underscore files are metafiles.** A filename starting with `_` — canonically
+  `_primer.puml` — is an index for reading convenience, not a study-case: it synthesizes its
+  already-sourced siblings so a reader can get oriented in one file. Metafiles are **source-exempt**
+  (no `' URL:` of their own) and need no `' Level:` when they span tiers; a single-tier primer may
+  still declare one. `README.md` is exempt on the same grounds. The no-sourceless rule in §1 applies
+  to *content* study-cases.
+
+  > **A metafile is never a citation anchor.** A primer may *name* methods it has no content file for
+  > — that is what makes it a useful selection map. What it may not do is serve as the **target** of a
+  > citation: never point a reader at a primer for a source (that inverts §2), and never let a
+  > cross-reference promise a discussion the target file does not contain. When a named method starts
+  > carrying real weight — someone would cite it — promote it to its own content file with a `' URL:`.
+
+- **Renames and folds — leave a breadcrumb.** The staleness rule below covers a *superseded*
+  study-case; this one covers a *moved* one, so a later reader can still find what a citation used to
+  point at. Two cases, deliberately different:
+  - **An individual file or folder moves** (a fold, a retitle, a subject that changed name): add a
+    `' Formerly:` header to each moved file naming its old path and old subject name, **and** record
+    the move in the affected `README.md`.
+  - **A repo-wide convention rename** (e.g. every `_essentials.puml` → `_primer.puml`): record it
+    **once**, here and in `study-cases/README.md`. Per-file breadcrumbs on a mechanical sweep are
+    noise, and git already carries the rename.
 - **Naming:** kebab-case filenames; explicit node names (`apps/api Session Routes`, not `Backend`).
 - **Validate before commit:** `plantuml -checkonly file.puml` (empty output + exit 0 = clean).
 - **Staleness — append, don't silently rewrite.** Study-cases drift as the field moves. Cite the
@@ -134,7 +172,8 @@ project diagram: it doesn't belong.
 Before committing a new study-case:
 
 - [ ] One concept, in the right **level** directory (`N-name/…`), kebab-case filename.
-- [ ] **`' Level:` header present** and matching the directory.
+- [ ] **`' Level:` header present** and matching the directory (metafiles spanning tiers may omit it).
+- [ ] Cross-references in notes resolve **from the containing file** — sibling folders need `../`.
 - [ ] Theme included; nodes tagged by `<<role>>`; arrows chosen by intent (`ARROW_*`).
 - [ ] **`' URL:` source present** and verified against the real abstract/venue/product page.
 - [ ] Source *kind* matches the conditional table in §1 (arXiv only for on-arXiv research methods).

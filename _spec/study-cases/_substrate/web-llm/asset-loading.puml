@@ -1,8 +1,11 @@
 @startuml
-!theme plain
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
 autonumber
 
-title Generic LLM Asset Loading Flow
+title WebLLM Asset Loading Flow (wasm → config → weight shards)
+' URL:   https://webllm.mlc.ai/
+' URL:   https://arxiv.org/abs/2412.15803
+' Level: n/a (substrate)
 
 actor User
 participant "Browser\n(Main Thread)" as Main

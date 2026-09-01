@@ -1,5 +1,9 @@
 @startuml
 !includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+title Framework-based harness — the essential shape
+' Synthesis of the framework study-cases in this folder (dify, dust, glean, microsoft_copilot, typeface, cohere_coral)
+' Level: 4
+
 package "The Framework-Based Harness" {
     [Adaptive UI\n(Chat/Search/Templates)] as UI
     [Orchestrator / Engine\n(RAG/Semantic Kernel)] as ORCH

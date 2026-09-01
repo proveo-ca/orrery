@@ -1,0 +1,48 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Counterfactual Regret Minimization — Equilibrium by Self-Play
+' Paper: Regret Minimization in Games with Incomplete Information
+' URL:   https://papers.nips.cc/paper_files/paper/2007/hash/08d98638c6fcd194a4b1e6992063e944-Abstract.html
+' Level: 1
+
+database  "Information sets\nwhat a player cannot distinguish" as INFO <<db>>
+component "Current strategy profile\nprobability per action" as STRAT <<app>>
+component "Counterfactual value\nreach-weighted: opponent + chance reach,\nown reach factored out" as CFV <<app>>
+component "Regret per action\nwhat not playing it cost" as REG <<async>>
+component "Regret matching\nnext strategy from positive regret" as RM <<host>>
+database  "Average strategy\napproaches equilibrium" as AVG <<db>>
+
+INFO ARROW_MAIN STRAT : one policy per infoset
+STRAT ARROW_MAIN CFV : traverse via self-play
+CFV ARROW_MAIN REG : accumulate per action
+REG ARROW_QUEUE RM
+RM ARROW_MAIN STRAT : next iteration
+STRAT ARROW_MAIN AVG : it is the //average//, not the last,\nthat converges
+
+note bottom of REG
+  **Decompose regret per information set.** The
+  insight is that minimizing regret locally at each
+  infoset bounds overall regret, which makes an
+  otherwise intractable equilibrium computation
+  decomposable and iterative.
+  ----
+  **The convergence guarantee is narrower than it
+  looks.** Average strategies converge to a Nash
+  equilibrium in **two-player zero-sum** games. Outside
+  that class — more players, or general-sum — CFR
+  still minimizes regret, but its average is not a
+  Nash equilibrium and carries no such guarantee.
+  ----
+  **Two things practitioners get wrong.** The
+  converging object is the //average// strategy over
+  iterations, not the current one; and a mixed
+  (randomized) strategy is not a hedge — it is the
+  solution, because a deterministic policy in a
+  hidden-information game is exploitable.
+  ----
+  Tabular CFR needs an abstraction to fit real state
+  spaces; scaling it with learned values is the ReBeL
+  line — Brown, Bakhtin, Lerer & Gong,
+  ""arXiv:2007.13544"".
+end note
+@enduml

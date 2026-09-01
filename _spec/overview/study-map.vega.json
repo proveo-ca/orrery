@@ -1,6 +1,6 @@
 {
   "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-  "$comment": "Study map — capability tiers on a 2D plane: encoding depth (X) x autonomy (Y). Build-side companion to business-needs-funnel.puml. The scaffold|weights column split is the L4->L5 jump: below it the base model is frozen; at L5 the weights start changing. Render: vl2svg study-map.vega.json study-map.svg",
+  "$comment": "Study map — capability tiers on a 2D plane: encoding depth (X) x autonomy (Y). Build-side companion to business-needs-funnel.puml. The scaffold|weights column split is the L4->L5 jump: below it the base model is frozen; at L5 the weights start changing. NOTE on L1: it is plotted at depth='prompt' as a RENDERING CONVENIENCE only — L1 sits off the encoding-depth axis. On the demand side L1 is a terminus (work a human must sign off); on the build side it is the craft floor (1-human-expert/computer-science/, machine-learning/, rag/), which is not prompt-depth work. See study-cases/README.md, 'L1 is deliberately two-natured'. Render: vl2svg study-map.vega.json study-map.svg",
   "title": {
     "text": "Study Map — capability by encoding depth × autonomy",
     "subtitle": "build-side companion to the funnel · the scaffold→weights split (L4→L5) is where the model's weights start changing",

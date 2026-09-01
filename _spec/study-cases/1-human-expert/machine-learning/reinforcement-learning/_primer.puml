@@ -1,0 +1,40 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Reinforcement Learning — Selection Map (learning from outcomes)
+' Synthesis of the classical RL primers; the LLM-era application sits at Level 6
+' Level:  1
+
+actor "Human expert\nreward, not labels" as H
+
+component "Temporal difference\nlearn a value function" as TD <<app>>
+component "Q-learning\nlearn action values, off-policy" as Q <<app>>
+component "Policy gradient\noptimize the policy directly" as PG <<host>>
+component "Behaviour cloning\nimitate an existing script" as BC <<async>>
+database  "Policy\nstate to action" as POL <<db>>
+
+H ARROW_OPTIONAL BC : a decent teacher already exists —\ncheap cold start
+H ARROW_MAIN TD : credit a long game to\nintermediate states
+TD ARROW_MAIN Q
+H ARROW_MAIN PG : stochastic or continuous actions
+BC ARROW_MAIN POL
+Q ARROW_MAIN POL
+PG ARROW_MAIN POL
+
+note bottom of POL
+  **The problem RL solves is delayed credit:** a game
+  won in 60 moves gives one number, and TD's answer
+  is to bootstrap — predict from the next prediction
+  (""temporal-difference-learning.puml"").
+  ----
+  **Start by cloning, not exploring.** If a scripted
+  heuristic already plays adequately, behaviour
+  cloning gives a warm start for a fraction of the
+  self-play budget, and the script remains available
+  as an explainer afterwards.
+  ----
+  **Ladder note.** These primers are Level 1. Running
+  a reward loop against a pretrained model's weights
+  is Level 6 — ""_spec/study-cases/6-post-training/rl-verifiable-rewards.puml""
+  and ""_spec/study-cases/6-post-training/reinforcement-fine-tuning-pipeline.puml"".
+end note
+@enduml

@@ -1,0 +1,54 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Paired-Comparison Rating — Bradley-Terry to Glicko
+' Paper: Parameter Estimation in Large Dynamic Paired Comparison Experiments (Glickman, 1999)
+' URL:   https://doi.org/10.1111/1467-9876.00159
+'        author copy (publisher page is bot-gated): https://www.glicko.net/research/glicko.pdf
+' Paper: Rank Analysis of Incomplete Block Designs: I. The Method of Paired Comparisons
+'        (Bradley & Terry, 1952 — the underlying model; page range unverified, so pages omitted)
+' URL:   https://doi.org/10.2307/2334029
+' Level: 1
+
+component "Match outcomes\nwin / loss / draw pairs" as OUT <<app>>
+component "Bradley-Terry model\nP(A beats B) from strengths" as BT <<app>>
+component "Elo update\nmove by prediction error" as ELO <<async>>
+component "Glicko\nrating + rating deviation RD" as GL <<host>>
+database  "Strength estimate\nwith a confidence interval" as EST <<db>>
+component "Decision gate\nis B stronger than A?" as GATE <<error>>
+
+OUT ARROW_MAIN BT : fit latent strengths
+BT ARROW_MAIN ELO : approximate online update\non the same likelihood
+BT ARROW_MAIN GL : add per-player uncertainty
+ELO ARROW_OPTIONAL EST
+GL ARROW_MAIN EST
+EST ARROW_MAIN GATE : compare intervals,\nnot point estimates
+GATE ARROW_ERROR OUT : errorLabel(inconclusive - play more games)
+
+note bottom of GL
+  **Bradley-Terry (1952)** is the underlying model: a
+  latent strength per player, with the probability of
+  each pairwise outcome a logistic function of the
+  difference. Elo is an //approximate online// update on
+  that likelihood — a stochastic-gradient step, not a
+  special case of the model (and Elo's original
+  formulation used a normal, not logistic,
+  distribution). Cheap, but it reports a number with
+  no stated precision.
+  ----
+  **Ties.** Plain Bradley-Terry has no tie term at
+  all. Scoring a draw as half a win is the Elo/Glicko
+  convention, not a property of the model; modelling
+  ties inside the paired-comparison framework needs an
+  extension — Rao-Kupper (a tie threshold) or Davidson
+  (an explicit tie parameter). This matters wherever a
+  turn cap makes draws common.
+  ----
+  **Glicko's addition is the error bar.** It tracks a
+  //rating deviation// alongside the rating, so a
+  provisional player moves fast and a well-measured
+  one moves slowly, and two ratings can be compared
+  honestly. That is exactly what a regression gate
+  needs: "B beats A" is only a claim once the
+  intervals separate.
+end note
+@enduml

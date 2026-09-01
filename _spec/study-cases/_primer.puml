@@ -1,8 +1,12 @@
 @startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
 skinparam componentStyle rectangle
 skinparam padding 5
 
 title AI Agent Harness Architecture
+' Metafile: cross-cutting primer spanning every tier — source-exempt, and it declares no tier header
+'           because it deliberately crosses the ladder (see ../CONTRIBUTING.md §3, "metafiles").
+' Formerly: _spec/study-cases/_essentials.puml
 
 package "1. The Interface (The Gate)" {
   [Human-in-the-Loop (HITL)] as HITL

@@ -1,0 +1,33 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Trees & Ensembles — Selection Map (bias, variance, correlation)
+' Synthesis of the tree family: why one tree is weak and why averaging fixes it
+' Level:  1
+
+actor "Human expert\ntabular, mixed-type features" as H
+
+component "Single decision tree\naxis-aligned splits" as T <<app>>
+component "Bagging\naverage over bootstrap samples" as BAG <<async>>
+component "Random forest\nbagging + feature subsampling" as RF <<host>>
+component "Gradient boosting\nfit each tree to the residual" as GB <<host>>
+
+H ARROW_OPTIONAL T : need an explainable rule set
+H ARROW_MAIN RF : strong default,\nlittle tuning
+H ARROW_MAIN GB : squeeze out accuracy,\naccept tuning
+T ARROW_MAIN BAG : variance is the problem
+BAG ARROW_MAIN RF : decorrelate the trees
+
+note bottom of RF
+  A single deep tree has **low bias and high
+  variance** — it memorizes. Averaging cuts
+  variance, but only to the extent the trees are
+  //independent//, which is why a random forest also
+  subsamples features at each split
+  (""random-forests.puml"").
+  ----
+  **Bagging vs boosting:** bagging fits trees in
+  parallel to reduce variance; boosting fits them
+  sequentially to reduce bias, each tree correcting
+  its predecessors' residuals.
+end note
+@enduml

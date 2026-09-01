@@ -2,7 +2,13 @@
 !include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
 title Capability / Effect Authorization
 ' Paper: Miller, Robust Composition — Object-Capability Model (JHU 2006)
-' URL:   http://www.erights.org/talks/thesis/markm-thesis.pdf
+' URL:   https://papers.agoric.com/assets/pdf/papers/robust-composition.pdf
+' URL:   http://web.archive.org/web/20260423141335/http://www.erights.org/talks/thesis/markm-thesis.pdf
+' Formerly: cited as http://www.erights.org/talks/thesis/markm-thesis.pdf — dead as of 2026-09-01
+'           (HTTP 500 on three tries; the whole of erights.org is down, root included). Replaced with
+'           the author-affiliated host — Agoric, where Miller is Chief Scientist — verified to be the
+'           same JHU dissertation, May 2006. The Wayback snapshot above is the last known-good copy of
+'           the original URL (captured 2026-04-23).
 ' Paper: Saltzer & Schroeder, The Protection of Information in Computer Systems, 1975
 ' URL:   https://web.mit.edu/Saltzer/www/publications/protection/
 ' Level: 4

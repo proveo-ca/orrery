@@ -1,0 +1,42 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Determinization — Perfect-Information Monte-Carlo over Sampled Worlds
+' Paper: GIB: Imperfect Information in a Computationally Challenging Game
+' URL:   https://doi.org/10.1613/jair.820
+' Level: 1
+
+database  "Belief\nposterior over hidden state" as BEL <<db>>
+component "Sample K worlds\neach consistent with the belief" as SAMPLE <<async>>
+component "Perfect-information solve\nexisting evaluator per world" as SOLVE <<app>>
+component "Aggregate per candidate\naverage across worlds" as AGG <<host>>
+component "Chosen action\nbest expected value" as ACT <<app>>
+
+BEL ARROW_QUEUE SAMPLE : the sampler //is// the belief model
+SAMPLE ARROW_MAIN SOLVE : world 1..K
+SOLVE ARROW_MAIN AGG : score every legal candidate
+AGG ARROW_MAIN ACT
+
+note bottom of SAMPLE
+  **Why it is the cheapest first experiment.** It
+  reuses a perfect-information evaluator unchanged;
+  the only new machinery is a sampler that draws
+  worlds consistent with what this side can actually
+  know. A system already tracking possible-piece
+  sets and posteriors has that sampler.
+  ----
+  **Its known blind spots, by their literature names.**
+  //Strategy fusion//: the search may pick a different
+  action in each sampled world, implicitly assuming it
+  can behave differently in states it cannot actually
+  distinguish. //Non-locality//: values propagated from
+  a fully-observable solve ignore that the opponent's
+  play depends on information the agent does not have.
+  (Both named by Frank & Basin.) Consequently the
+  agent plans neither to //gather// information nor to
+  //conceal// it — in every sampled world it already
+  knows everything. Where that matters, the
+  equilibrium methods in
+  ""counterfactual-regret-minimization.puml"" are the
+  honest answer.
+end note
+@enduml

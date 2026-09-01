@@ -1,6 +1,8 @@
 @startuml
 !includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
 title MLC-LLM Compilation Pipeline
+' URL:   https://llm.mlc.ai/
+' Level: n/a (substrate)
 
 node "HuggingFace / Local" {
   artifact "Raw Model Weights\n(FP16/FP32)" as RawModel

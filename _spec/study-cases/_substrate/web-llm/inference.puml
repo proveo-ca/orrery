@@ -1,0 +1,27 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title WebLLM Inference Flow (Prefill → Decode)
+' URL:   https://webllm.mlc.ai/
+' URL:   https://arxiv.org/abs/2412.15803
+' Level: n/a (substrate)
+
+actor User
+component "Tokenizer" as Tokenizer <<app>>
+component "Prefill Phase\n(Process Prompt)" as Prefill <<host>>
+component "Decode Phase\n(Generate Tokens)" as Decode <<host>>
+component "Detokenizer" as Detokenizer <<app>>
+
+User ARROW_MAIN Tokenizer : Raw Text Prompt
+Tokenizer ARROW_MAIN Prefill : Token IDs
+Prefill ARROW_MAIN Decode : KV Cache & Context
+Decode ARROW_OPTIONAL Decode : Autoregressive Generation\n(Token by Token)
+Decode ARROW_MAIN Detokenizer : New Token ID
+Detokenizer ARROW_MAIN User : Streamed Text
+
+note bottom of Decode
+  Two-phase transformer inference: **prefill**
+  processes the whole prompt in one pass and fills
+  the KV cache; **decode** then emits one token per
+  step, reusing that cache. WebGPU runs both.
+end note
+@enduml

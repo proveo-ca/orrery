@@ -3,8 +3,12 @@
 title opencode — open-source terminal coding agent
 ' Product: opencode (SST / Anomaly) — open-source, MIT, multi-provider terminal coding agent
 ' URL:     https://opencode.ai
-' URL:     https://github.com/sst/opencode
+' URL:     https://github.com/anomalyco/opencode
 ' Level:   4
+' Formerly: repo cited as https://github.com/sst/opencode — SST rebranded to Anomaly and moved the
+'           repository; the old path still 302-redirects, which is why a status-only link check reports
+'           it healthy. Verified 2026-09-01. opencode.ai remains the canonical product site (linked as
+'           such from the upstream README); note open-code.ai is a third-party docs mirror, not official.
 ' Note:    replaces the earlier OpenCodeInterpreter study-case (a different, 2023 project)
 
 component "Terminal UI (TUI)"                          as TUI   <<app>>

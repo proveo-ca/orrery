@@ -1,0 +1,44 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Plan-and-Solve (zero-shot: devise a plan, then carry it out)
+' Paper: Plan-and-Solve Prompting: Improving Zero-Shot Chain-of-Thought Reasoning by Large Language Models
+' URL:   https://arxiv.org/abs/2305.04091
+' Level: 3
+' Formerly: 3-meta-prompt-loops/plan_and_solve.puml (kebab-case rename). The earlier diagram drew a
+'           Planner agent, an Executor agent and a Tool Set with an execution loop — an L4 harness
+'           shape. The cited paper is prompt-only: no tools, no agents, no weight change. Redrawn to
+'           match its citation; the tool-executing variant belongs at L4 if it is wanted.
+
+actor User
+participant "LLM (single model)" as LLM <<app>>
+
+User ARROW_MAIN LLM : task + trigger prompt\n'let's first understand the problem\nand devise a plan'
+activate LLM
+
+LLM ARROW_MAIN LLM : **Phase 1 — plan**\nextract variables, state the sub-tasks
+note right of LLM
+  Still one completion. The "plan" is
+  generated //text//, not a data structure
+  handed to another component.
+end note
+
+LLM ARROW_MAIN LLM : **Phase 2 — solve**\ncarry out the sub-tasks in order,\nshowing intermediate results
+
+LLM ARROW_MAIN User : final answer
+deactivate LLM
+
+note over LLM
+  **Why this is Level 3 and not Level 4.** The whole
+  method is a better //trigger prompt// than "let's
+  think step by step": it addresses zero-shot CoT's
+  missing-step and calculation errors by forcing an
+  explicit plan first. Weights are frozen, and
+  nothing outside the model is called — no tools, no
+  retrieval, no orchestrator. That is exactly the
+  L3/L4 boundary.
+  ----
+  Contrast ""cot.puml"" (no planning phase) and
+  ""react.puml"" (L3 reasoning that //does// interleave
+  tool calls, which is why ReAct straddles the line).
+end note
+@enduml

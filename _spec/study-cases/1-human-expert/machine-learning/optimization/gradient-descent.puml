@@ -1,0 +1,49 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Stochastic Gradient Descent — From Robbins-Monro to Adam
+' Paper: A Stochastic Approximation Method (Robbins & Monro, 1951 — the convergence licence)
+' URL:   https://doi.org/10.1214/aoms/1177729586
+' Paper: Adam: A Method for Stochastic Optimization (Kingma & Ba, ICLR 2015 — the adaptive step)
+' URL:   https://arxiv.org/abs/1412.6980
+' Level: 1
+
+component "Minibatch\nnoisy estimate of the gradient" as BATCH <<async>>
+component "Stochastic approximation\nstep size schedule a_t" as SA <<app>>
+component "Momentum\naccumulate a velocity term" as MOM <<app>>
+component "Adam\nbias-corrected 1st + 2nd moments,\nper-parameter step" as ADAM <<host>>
+database  "Parameters θ" as THETA <<db>>
+
+BATCH ARROW_MAIN SA : one step per batch
+SA ARROW_MAIN THETA : θ ← θ - a_t · ∇Loss
+SA ARROW_OPTIONAL MOM : damp oscillation\nacross ravines
+MOM ARROW_OPTIONAL ADAM : plus per-parameter scaling
+ADAM ARROW_MAIN THETA
+THETA ARROW_OPTIONAL BATCH : next minibatch
+
+note bottom of SA
+  **Robbins-Monro (1951) is the licence:** a noisy
+  gradient still converges, provided the step sizes
+  shrink neither too fast nor too slowly — Σa_t
+  diverges while Σa_t² converges. Every minibatch
+  method inherits that guarantee; the batch is a
+  cheap unbiased estimate, not an approximation to
+  apologize for.
+  ----
+  **Adam (2015)** keeps running estimates of the
+  first and second moments of the gradient and scales
+  each parameter's step by them, which is why it
+  tolerates badly-scaled features and sparse
+  gradients with little tuning. Its distinctive
+  component is **bias correction**: both moment
+  estimates start at zero and are therefore biased
+  toward zero early on, so each is divided by
+  1 − β^t before use. The two are biased by different
+  amounts (β₂ is nearer 1), and the second moment sits
+  under a square root, so //uncorrected// the first step
+  is far too **large** — about (1−β₁)/√(1−β₂) ≈ 3.2×
+  the intended size at the defaults, worse as β₂ → 1.
+  ----
+  Consumes the gradients produced by
+  ""../neural-networks/backpropagation.puml"".
+end note
+@enduml

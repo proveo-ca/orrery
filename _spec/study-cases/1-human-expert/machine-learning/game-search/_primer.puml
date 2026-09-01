@@ -1,0 +1,36 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Game Search — Selection Map (what kind of game is it?)
+' Synthesis: which search applies, and when the usual tree assumption breaks
+' Level:  1
+
+actor "Human expert\ngame structure?" as H
+
+component "Minimax + alpha-beta\nalternating, perfect information" as MM <<app>>
+component "MCTS / UCT\nsampled rollouts, huge branching" as MCTS <<host>>
+component "Matrix game per node\nsimultaneous moves" as SIM <<error>>
+component "Belief sampling\nhidden state" as BEL <<async>>
+
+H ARROW_MAIN MM : turns alternate,\nboard fully visible
+H ARROW_MAIN MCTS : branching too wide\nto enumerate
+H ARROW_ERROR SIM : both sides commit at once
+H ARROW_QUEUE BEL : some state is hidden
+
+note bottom of SIM
+  **The tree assumption is load-bearing.** Minimax
+  and vanilla MCTS both assume "my move, then
+  yours". If both sides commit simultaneously,
+  there is no such tree — each decision point is a
+  matrix game needing an equilibrium or a
+  regret-minimizing policy, not a max.
+  ----
+  If state is also hidden, the object you evaluate
+  is a **belief, not a position** — that is the
+  Stratego/poker family, handled in
+  ""../imperfect-information-games/"".
+  ----
+  ""mcts-uct.puml"" covers the sampling engine;
+  reactive alternatives that skip search entirely
+  live at ""_spec/study-cases/_substrate/reactive-control/"".
+end note
+@enduml

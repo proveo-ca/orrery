@@ -23,7 +23,7 @@ systems are built.
 ```
 _spec/             Shared learning surface (the root owns this)
   overview/          The two ladder diagrams: business-needs-funnel.puml + study-map.vega.json → .svg
-  study-cases/       The field, organized by capability level (3-meta-prompt-loops/ … 6-post-training/, _substrate/)
+  study-cases/       The field, organized by capability level (1-human-expert/ … 6-post-training/, _substrate/)
   themes/            Vendored proveo identity themes (Mermaid, Vega-Lite); PlantUML is remote-included
   CONTRIBUTING.md    Diagram + sourcing conventions
 skills/spec/       Agent Skill (SKILL.md) for proveo diagram authoring — also linked from .agents/skills/spec
@@ -97,11 +97,11 @@ Trending third-party projects studied here — **not** Proveo code and **not** s
 
 | Project | What it is | Repo | Study-case |
 | --- | --- | --- | --- |
-| **opencode** | Open-source terminal coding agent, multi-provider (MIT) | [sst/opencode](https://github.com/sst/opencode) · [opencode.ai](https://opencode.ai) | [`anti-framework/opencode.puml`](_spec/study-cases/4-harness/anti-framework/opencode.puml) |
+| **opencode** | Open-source terminal coding agent, multi-provider (MIT) | [anomalyco/opencode](https://github.com/anomalyco/opencode) · [opencode.ai](https://opencode.ai) | [`anti-framework/opencode.puml`](_spec/study-cases/4-harness/anti-framework/opencode.puml) |
 | **browser-use** | Computer-use / web-automation harness (YC W25) | [browser-use/browser-use](https://github.com/browser-use/browser-use) · [browser-use.com](https://browser-use.com) | [`applied/computer-use/browser-use.puml`](_spec/study-cases/4-harness/applied/computer-use/browser-use.puml) |
 | **Dify** | Visual agentic-workflow platform | [langgenius/dify](https://github.com/langgenius/dify) · [dify.ai](https://dify.ai) | [`framework/dify.puml`](_spec/study-cases/4-harness/framework/dify.puml) |
 | **Serena** | LSP-backed semantic-code MCP toolkit — symbol-level retrieval, editing & refactoring across 40+ languages; plugs into Claude Code, Codex, OpenCode, Cursor, JetBrains (MIT) | [oraios/serena](https://github.com/oraios/serena) | [`applied/software/lsp-symbolic-code-toolkit.puml`](_spec/study-cases/4-harness/applied/software/lsp-symbolic-code-toolkit.puml) |
-| **Hermes Agent** | Self-improving personal agent (formerly OpenClaw) — closed learning loop, self-authored skills, cross-session memory; model-agnostic, multi-channel (MIT) | [NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent) | [`self-improving/skill-library-flywheel.puml`](_spec/study-cases/4-harness/self-improving/skill-library-flywheel.puml) ✳ |
+| **Hermes Agent** | Self-improving personal agent — closed learning loop, self-authored skills, cross-session memory; model-agnostic, multi-channel (MIT). *Not* a rename of OpenClaw: the two are distinct live projects, and hermes-agent merely offers a "Migrating from OpenClaw" import path for settings/skills (OpenClaw is studied separately at [`anti-framework/openclaw.puml`](_spec/study-cases/4-harness/anti-framework/openclaw.puml)) | [NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent) | [`self-improving/skill-library-flywheel.puml`](_spec/study-cases/4-harness/self-improving/skill-library-flywheel.puml) ✳ |
 
 > **✳ Hermes maps to several new cases.** It surfaced patterns the map didn't track, now authored: the [skill-library flywheel](_spec/study-cases/4-harness/self-improving/skill-library-flywheel.puml) (an L4 loop that fills the empty L2 "skills" rung, via [agentskills.io](https://agentskills.io)), a [cross-session user model](_spec/study-cases/4-harness/self-improving/cross-session-user-model.puml) (Honcho/MemGPT personalization memory), and [code-mode / executable-code actions](_spec/study-cases/4-harness/meta-orchestration/code-mode-executable-actions.puml) (CodeAct). Serena's [LSP symbolic toolkit](_spec/study-cases/4-harness/applied/software/lsp-symbolic-code-toolkit.puml) case (which also folds in its portable-MCP-server angle) was authored the same way. Two thinner-sourced patterns were also added (each flags its sourcing caveat in-file): the [harness trajectory flywheel](_spec/study-cases/6-post-training/harness-trajectory-flywheel.puml) (L4→L6 data flywheel; anchored by FireAct) and the [multi-channel agent gateway](_spec/study-cases/_substrate/serving/multi-channel-agent-gateway.puml) serving substrate.
 

@@ -1,7 +1,13 @@
 @startuml
 !includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
-' Product: Mentat
-' URL: https://www.mentat.ai/
+title Mentat — context-pruning coding assistant (OUTDATED)
+' Product: Mentat (AbanteAI CLI)
+' URL: https://github.com/AbanteAI/archive-old-cli-mentat
+' Level: 4
+' Status: OUTDATED as of 2026-09. AbanteAI marks the CLI drawn here "ARCHIVED / no longer maintained
+'         or supported", and states the Mentat name is now used by a different project — a hosted
+'         GitHub bot. mentat.ai was unreachable when checked, so the archived repo is cited instead
+'         as the verifiable source for the architecture actually depicted.
 
 package "Mentat Architecture" {
     [Conversation Manager] as MGR

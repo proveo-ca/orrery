@@ -1,7 +1,9 @@
 @startuml
 !includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+title Microsoft 365 Copilot — grounded in-app assistant
 ' Product: Microsoft Copilot (M365)
 ' URL: https://www.microsoft.com/en-us/microsoft-365/copilot
+' Level: 4
 
 package "Microsoft Copilot Stack" {
     [App Host\n(Word, Excel, Teams)] as APP

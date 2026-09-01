@@ -1,7 +1,9 @@
 @startuml
 !includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+title Dust — workspace assistant platform
 ' Product: Dust
 ' URL: https://dust.tt/
+' Level: 4
 
 package "Dust Platform" {
     [Front-End\n(Chat Interface)] as UI

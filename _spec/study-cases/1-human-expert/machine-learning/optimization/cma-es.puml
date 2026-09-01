@@ -1,0 +1,39 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title CMA-ES — Derandomized Self-Adaptation for Black-Box Objectives
+' Paper: Completely Derandomized Self-Adaptation in Evolution Strategies
+' URL:   https://doi.org/10.1162/106365601750190398
+' Level: 1
+
+database  "Distribution over θ\nmean m, covariance C" as DIST <<db>>
+component "Sample a population\nλ candidate vectors" as POP <<async>>
+cloud     "Evaluate fitness\nnoisy, no derivative" as FIT <<cloud>>
+component "Select the best μ\nrank only, values discarded" as SEL <<app>>
+component "Adapt m and C\nfrom the successful steps" as ADAPT <<host>>
+
+DIST ARROW_QUEUE POP : draw λ samples
+POP ARROW_CLOUD FIT : run the simulation / match
+FIT ARROW_MAIN SEL : ranking is enough
+SEL ARROW_MAIN ADAPT : which directions worked
+ADAPT ARROW_MAIN DIST : shift mean, reshape covariance
+
+note bottom of ADAPT
+  **Rank-based, so the objective may be anything.**
+  CMA-ES needs only an ordering of candidates — no
+  gradient, no continuity, not even a stable scale.
+  A win rate over played matches qualifies.
+  ----
+  The covariance matrix is the point: it **learns
+  which directions in parameter space matter** and
+  how they correlate, so it handles ill-conditioned
+  and rotated objectives that coordinate-wise
+  hill-climbing stalls on. "Derandomized" refers to
+  adapting step size from the actual successful
+  steps rather than from separately mutated
+  strategy parameters.
+  ----
+  Requires a fitness signal with real confidence
+  bounds, or it optimizes noise — see
+  ""../rating-systems/paired-comparison-rating.puml"".
+end note
+@enduml

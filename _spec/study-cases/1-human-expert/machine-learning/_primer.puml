@@ -1,0 +1,70 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Machine Learning — Level-1 Primer Map (pre-LLM foundations)
+' Index of the machine-learning families; each child carries its own confirmed source
+' Level:  1
+
+actor "Human expert" as H
+
+package "Supervised — fit a function to labels" {
+  component "svm/\nmargins + kernels" as SVM <<app>>
+  component "trees-and-ensembles/\nbagging, boosting" as TREE <<app>>
+  component "neural-networks/\ndepth + backprop" as NN <<app>>
+}
+
+package "Unsupervised — no labels" {
+  component "clustering-and-dimred/\nk-means, PCA, embeddings" as UNS <<host>>
+}
+
+package "Learning from outcomes" {
+  component "reinforcement-learning/\nTD, Q-learning, self-play" as RL <<host>>
+}
+
+package "Decide under uncertainty" {
+  component "game-search/\nminimax, MCTS / UCT" as GS <<host>>
+  component "imperfect-information-games/\nbelief, CFR, determinization" as III <<cloud>>
+}
+
+package "Machinery every family needs" {
+  component "optimization/\ngradient + black-box search" as OPT <<async>>
+  component "rating-systems/\nElo, Glicko, error bars" as RATE <<db>>
+}
+
+H ARROW_MAIN SVM
+H ARROW_MAIN TREE
+H ARROW_MAIN NN
+H ARROW_MAIN UNS
+H ARROW_MAIN RL
+H ARROW_MAIN GS
+H ARROW_MAIN III
+H ARROW_MAIN RATE : start here — nothing else\nis falsifiable without it
+H ARROW_MAIN OPT : then make the constants\na searchable vector
+
+SVM ARROW_OPTIONAL OPT
+NN ARROW_MAIN OPT : gradients
+RL ARROW_MAIN OPT
+GS ARROW_OPTIONAL III : tree assumption breaks
+RL ARROW_OPTIONAL RATE : is the new policy stronger?
+RATE ARROW_MAIN OPT : supplies the fitness signal\nblack-box search needs
+
+note bottom of RATE
+  **Why Level 1.** These are the practitioner's own
+  craft — the same slot as ""../computer-science/"" —
+  not prompts (L2), not a scaffold around a frozen
+  model (L4), not weight updates to a pretrained one
+  (L5-L6). Authored as primers, so they sit on the
+  ladder floor.
+  ----
+  **Reading order for a measured build:**
+  ""rating-systems/"" first (nothing else is
+  falsifiable without it), then ""optimization/"" to
+  make hand-tuned constants a searchable vector,
+  then ""game-search/"" and
+  ""imperfect-information-games/"" for lookahead, and
+  only then a learned evaluator from
+  ""neural-networks/"" + ""reinforcement-learning/"".
+  ----
+  ""../rag/"" is a sibling, not a child: those are
+  LLM-era retrieval architectures, not pre-LLM ML.
+end note
+@enduml

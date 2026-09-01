@@ -1,0 +1,41 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title k-Means (Lloyd's Algorithm) — Least-Squares Quantization
+' Paper: Least squares quantization in PCM
+' URL:   https://doi.org/10.1109/TIT.1982.1056489
+' Level: 1
+
+component "Choose k\nand initial centroids" as INIT <<app>>
+component "Assign step\neach point to its nearest centroid" as ASSIGN <<app>>
+component "Update step\ncentroid becomes the cluster mean" as UPDATE <<async>>
+database  "Partition\nk clusters" as PART <<db>>
+component "Local optimum\nassignments stop changing" as CONV <<host>>
+
+INIT ARROW_MAIN ASSIGN
+ASSIGN ARROW_MAIN UPDATE : partition fixed,\nminimize over centroids
+UPDATE ARROW_MAIN ASSIGN : centroids fixed,\nminimize over assignments
+UPDATE ARROW_OPTIONAL CONV : no reassignment this pass
+CONV ARROW_MAIN PART
+
+note bottom of UPDATE
+  Lloyd's algorithm alternates two steps that each
+  **monotonically decrease** the within-cluster sum
+  of squares, so it always converges — but to a
+  **local** optimum that depends on initialization.
+  Standard practice is several restarts, or a spread
+  seeding rule, and keeping the best objective.
+  ----
+  **k is not learned.** It is chosen by the analyst;
+  the objective decreases monotonically in k, so it
+  cannot select k for you.
+  ----
+  **Two lineages, often conflated.** The cited Lloyd
+  paper (published 1982, circulated 1957) derives this
+  alternation as //quantizer// design for PCM —
+  minimizing signal distortion under the same
+  least-squares criterion. The //name// "k-means" is
+  MacQueen's (1967), for a related sequential
+  procedure. This file documents Lloyd's algorithm,
+  which is what implementations actually run.
+end note
+@enduml

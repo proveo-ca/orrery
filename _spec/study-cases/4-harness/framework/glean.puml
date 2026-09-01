@@ -1,7 +1,9 @@
 @startuml
 !includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+title Glean — enterprise search + grounded assistant
 ' Product: Glean
 ' URL: https://www.glean.com/
+' Level: 4
 
 package "Glean Architecture" {
     [Unified Search UI\n(Chat + Search)] as UI

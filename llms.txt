@@ -27,7 +27,7 @@ Prefer the linked sources below over rendered `.svg` files. For a single pre-exp
 - [Study map](_spec/overview/study-map.vega.json): build-side -- same tiers on encoding depth x autonomy
 
 ## Study-cases -- Level 1 / computer-science
-- [Level-1 Computer Science Essentials — ADTs ↔ Algorithm Families](_spec/study-cases/1-human-expert/computer-science/_essentials.puml): Level 1
+- [Level-1 Computer Science Essentials — ADTs ↔ Algorithm Families](_spec/study-cases/1-human-expert/computer-science/_primer.puml): Level 1
 - [Algorithms ↔ Data Types — Array-Based](_spec/study-cases/1-human-expert/computer-science/algorithms-array.puml): Level 1
 - [Algorithms ↔ Data Types — Primitives-Based](_spec/study-cases/1-human-expert/computer-science/algorithms-primitives.puml): Level 1
 - [Algorithms ↔ Data Types — Tree / Graph-Based](_spec/study-cases/1-human-expert/computer-science/algorithms-tree-graph.puml): Level 1
@@ -35,8 +35,31 @@ Prefer the linked sources below over rendered `.svg` files. For a single pre-exp
 - [Data Structures / Abstract Data Types](_spec/study-cases/1-human-expert/computer-science/datatypes.puml): Level 1
 - [Hashing — Keys, Buckets, Collision Resolution](_spec/study-cases/1-human-expert/computer-science/hashing.puml): Level 1
 
+## Study-cases -- Level 1 / machine-learning
+- [Machine Learning — Level-1 Primer Map (pre-LLM foundations)](_spec/study-cases/1-human-expert/machine-learning/_primer.puml): Level 1
+- [Clustering & Dimensionality Reduction — Selection Map (no labels)](_spec/study-cases/1-human-expert/machine-learning/clustering-and-dimred/_primer.puml): Level 1
+- [k-Means (Lloyd's Algorithm) — Least-Squares Quantization](_spec/study-cases/1-human-expert/machine-learning/clustering-and-dimred/k-means.puml): Level 1
+- [Game Search — Selection Map (what kind of game is it?)](_spec/study-cases/1-human-expert/machine-learning/game-search/_primer.puml): Level 1
+- [UCT — Bandit-Based Monte-Carlo Tree Search](_spec/study-cases/1-human-expert/machine-learning/game-search/mcts-uct.puml): Level 1
+- [Imperfect-Information Games — Selection Map (you evaluate a belief)](_spec/study-cases/1-human-expert/machine-learning/imperfect-information-games/_primer.puml): Level 1
+- [Counterfactual Regret Minimization — Equilibrium by Self-Play](_spec/study-cases/1-human-expert/machine-learning/imperfect-information-games/counterfactual-regret-minimization.puml): Level 1
+- [Determinization — Perfect-Information Monte-Carlo over Sampled Worlds](_spec/study-cases/1-human-expert/machine-learning/imperfect-information-games/determinization.puml): Level 1
+- [Neural Networks — Selection Map (depth, weight sharing, credit assignment)](_spec/study-cases/1-human-expert/machine-learning/neural-networks/_primer.puml): Level 1
+- [Backpropagation — Learning Representations by Propagating Errors](_spec/study-cases/1-human-expert/machine-learning/neural-networks/backpropagation.puml): Level 1
+- [Optimization — Selection Map (is there a gradient?)](_spec/study-cases/1-human-expert/machine-learning/optimization/_primer.puml): Level 1
+- [CMA-ES — Derandomized Self-Adaptation for Black-Box Objectives](_spec/study-cases/1-human-expert/machine-learning/optimization/cma-es.puml): Level 1
+- [Stochastic Gradient Descent — From Robbins-Monro to Adam](_spec/study-cases/1-human-expert/machine-learning/optimization/gradient-descent.puml): Level 1
+- [Rating Systems — Selection Map (is version B stronger than A?)](_spec/study-cases/1-human-expert/machine-learning/rating-systems/_primer.puml): Level 1
+- [Paired-Comparison Rating — Bradley-Terry to Glicko](_spec/study-cases/1-human-expert/machine-learning/rating-systems/paired-comparison-rating.puml): Level 1
+- [Reinforcement Learning — Selection Map (learning from outcomes)](_spec/study-cases/1-human-expert/machine-learning/reinforcement-learning/_primer.puml): Level 1
+- [Temporal-Difference Learning — Predict from the Next Prediction](_spec/study-cases/1-human-expert/machine-learning/reinforcement-learning/temporal-difference-learning.puml): Level 1
+- [SVM — Selection Map (margin, kernel, slack)](_spec/study-cases/1-human-expert/machine-learning/svm/_primer.puml): Level 1
+- [Support-Vector Networks — Max-Margin Classification](_spec/study-cases/1-human-expert/machine-learning/svm/max-margin-svm.puml): Level 1
+- [Trees & Ensembles — Selection Map (bias, variance, correlation)](_spec/study-cases/1-human-expert/machine-learning/trees-and-ensembles/_primer.puml): Level 1
+- [Random Forests — Decorrelated Tree Averaging](_spec/study-cases/1-human-expert/machine-learning/trees-and-ensembles/random-forests.puml): Level 1
+
 ## Study-cases -- Level 1 / rag
-- [RAG Strategies (July 2026) — Selection Map](_spec/study-cases/1-human-expert/rag/_essentials.puml): Level 1
+- [RAG Strategies (July 2026) — Selection Map](_spec/study-cases/1-human-expert/rag/_primer.puml): Level 1
 - [Adaptive / Routed RAG — Match Strategy to Query Complexity](_spec/study-cases/1-human-expert/rag/adaptive-routing.puml): Level 1
 - [Corrective RAG (CRAG) — Retrieve, Evaluate, Correct](_spec/study-cases/1-human-expert/rag/crag.puml): Level 1
 - [HippoRAG / HippoRAG 2 — Associative Memory via Personalized PageRank](_spec/study-cases/1-human-expert/rag/hipporag.puml): Level 1
@@ -51,19 +74,19 @@ Prefer the linked sources below over rendered `.svg` files. For a single pre-exp
 - [Dense / Vector RAG (baseline pipeline)](_spec/study-cases/1-human-expert/rag/vector-dense-rag.puml): Level 1
 
 ## Study-cases -- Level 2 / discovery
-- [L2 Discovery Map — Where to Find Popular Prompts / Skills](_spec/study-cases/2-single-prompts/discovery/_essentials.puml): Level 2
+- [L2 Discovery Map — Where to Find Popular Prompts / Skills](_spec/study-cases/2-single-prompts/discovery/_primer.puml): Level 2
 - [First-Party Agent Skills — Standard + Anthropic Marketplace](_spec/study-cases/2-single-prompts/discovery/first-party-skills.puml): Level 2
 - [prompts.chat — Classic One-Shot Prompt Library](_spec/study-cases/2-single-prompts/discovery/prompts-chat.puml): Level 2
 - [skills.sh — Leaderboard Reach & Query Surface](_spec/study-cases/2-single-prompts/discovery/skills-sh.puml): Level 2
 - [Vendor System-Prompt Archives — Product Baselines](_spec/study-cases/2-single-prompts/discovery/vendor-prompt-archives.puml): Level 2
 
 ## Study-cases -- Level 3 (meta-prompt loops)
-- [Chain of Thought (CoT)](_spec/study-cases/3-meta-prompt-loops/cot.puml): study-case
-- [Multi-Agent Debate (MAD)](_spec/study-cases/3-meta-prompt-loops/mad.puml): study-case
-- [Plan-and-Solve (Planner-Executor)](_spec/study-cases/3-meta-prompt-loops/plan_and_solve.puml): study-case
-- [ReAct Architecture (Reason + Act)](_spec/study-cases/3-meta-prompt-loops/react.puml): study-case
-- [Reflexion (Self-Correction Loop)](_spec/study-cases/3-meta-prompt-loops/reflexion.puml): study-case
-- [Tree of Thoughts (ToT)](_spec/study-cases/3-meta-prompt-loops/tot.puml): study-case
+- [Chain of Thought (CoT)](_spec/study-cases/3-meta-prompt-loops/cot.puml): Level 3
+- [Multi-Agent Debate (MAD)](_spec/study-cases/3-meta-prompt-loops/mad.puml): Level 3
+- [Plan-and-Solve (zero-shot: devise a plan, then carry it out)](_spec/study-cases/3-meta-prompt-loops/plan-and-solve.puml): Level 3
+- [ReAct Architecture (Reason + Act)](_spec/study-cases/3-meta-prompt-loops/react.puml): Level 3
+- [Reflexion (Self-Correction Loop)](_spec/study-cases/3-meta-prompt-loops/reflexion.puml): Level 3
+- [Tree of Thoughts (ToT)](_spec/study-cases/3-meta-prompt-loops/tot.puml): Level 3
 
 ## Study-cases -- Level 4 / governance
 - [Capability / Effect Authorization](_spec/study-cases/4-harness/governance/capability-effect-authorization.puml): Level 4
@@ -112,22 +135,22 @@ Prefer the linked sources below over rendered `.svg` files. For a single pre-exp
 - [SWE-Agent — Agent-Computer Interface](_spec/study-cases/4-harness/applied/software/swe-agent-computer-interface.puml): Level 4
 
 ## Study-cases -- Level 4 / anti-framework
-- [_essentials](_spec/study-cases/4-harness/anti-framework/_essentials.puml): study-case
-- [aider](_spec/study-cases/4-harness/anti-framework/aider.puml): study-case
-- [continue](_spec/study-cases/4-harness/anti-framework/continue.puml): study-case
-- [hands](_spec/study-cases/4-harness/anti-framework/hands.puml): study-case
-- [mentat](_spec/study-cases/4-harness/anti-framework/mentat.puml): study-case
+- [Anti-framework harness — the essential loop](_spec/study-cases/4-harness/anti-framework/_primer.puml): Level 4
+- [Aider — repo-map terminal coding agent](_spec/study-cases/4-harness/anti-framework/aider.puml): Level 4
+- [Continue — IDE-embedded coding assistant](_spec/study-cases/4-harness/anti-framework/continue.puml): Level 4
+- [Mentat — context-pruning coding assistant (OUTDATED)](_spec/study-cases/4-harness/anti-framework/mentat.puml): Level 4
+- [OpenClaw — local persistent personal agent](_spec/study-cases/4-harness/anti-framework/openclaw.puml): Level 4
 - [opencode — open-source terminal coding agent](_spec/study-cases/4-harness/anti-framework/opencode.puml): Level 4
-- [sweep](_spec/study-cases/4-harness/anti-framework/sweep.puml): study-case
+- [Sweep — async issue-to-PR worker (OUTDATED shape)](_spec/study-cases/4-harness/anti-framework/sweep.puml): Level 4
 
 ## Study-cases -- Level 4 / framework
-- [_essentials](_spec/study-cases/4-harness/framework/_essentials.puml): study-case
-- [cohere_coral](_spec/study-cases/4-harness/framework/cohere_coral.puml): study-case
+- [Framework-based harness — the essential shape](_spec/study-cases/4-harness/framework/_primer.puml): Level 4
+- [Cohere Coral — grounded QA with citations (OUTDATED)](_spec/study-cases/4-harness/framework/cohere-coral.puml): Level 4
 - [Dify — agentic-workflow platform](_spec/study-cases/4-harness/framework/dify.puml): Level 4
-- [dust](_spec/study-cases/4-harness/framework/dust.puml): study-case
-- [glean](_spec/study-cases/4-harness/framework/glean.puml): study-case
-- [microsoft_copilot](_spec/study-cases/4-harness/framework/microsoft_copilot.puml): study-case
-- [typeface](_spec/study-cases/4-harness/framework/typeface.puml): study-case
+- [Dust — workspace assistant platform](_spec/study-cases/4-harness/framework/dust.puml): Level 4
+- [Glean — enterprise search + grounded assistant](_spec/study-cases/4-harness/framework/glean.puml): Level 4
+- [Microsoft 365 Copilot — grounded in-app assistant](_spec/study-cases/4-harness/framework/microsoft-copilot.puml): Level 4
+- [Typeface — brand-guarded content generation](_spec/study-cases/4-harness/framework/typeface.puml): Level 4
 
 ## Study-cases -- Level 5 (fine-tuned)
 - [Financial-Domain LLM](_spec/study-cases/5-fine-tuned/finance/financial-domain-llm.puml): Level 5
@@ -148,19 +171,19 @@ Prefer the linked sources below over rendered `.svg` files. For a single pre-exp
 - [Heartbeat Liveness Protocol](_spec/study-cases/_substrate/edge-and-p2p/heartbeat-liveness-protocol.puml): n/a (substrate)
 - [Serverless P2P — Tailscale + WebRTC](_spec/study-cases/_substrate/edge-and-p2p/serverless-p2p-tailscale-webrtc.puml): n/a (substrate)
 - [WebGPU On-Device LLM](_spec/study-cases/_substrate/edge-and-p2p/webgpu-on-device-llm.puml): n/a (substrate)
-- [Generic LLM Asset Loading Flow](_spec/study-cases/_substrate/nets/flow.puml): study-case
-- [Neural Network Inference Flow (WebLLM)](_spec/study-cases/_substrate/nets/neural.puml): study-case
-- [WebLLM Weights Loading & Sharding](_spec/study-cases/_substrate/nets/weights.puml): study-case
 - [Behavior Trees & FSM](_spec/study-cases/_substrate/reactive-control/behavior-trees-and-fsm.puml): n/a (substrate)
 - [Steering Behaviors](_spec/study-cases/_substrate/reactive-control/steering-behaviors.puml): n/a (substrate)
 - [Multi-channel agent gateway + serverless hibernation](_spec/study-cases/_substrate/serving/multi-channel-agent-gateway.puml): n/a (substrate)
-- [Open-Weight LLM Browser Architecture](_spec/study-cases/_substrate/web-llm/architecture.puml): study-case
-- [WebLLM Component Architecture](_spec/study-cases/_substrate/web-llm/components.puml): study-case
-- [Generic WebLLM Deployment Architecture](_spec/study-cases/_substrate/web-llm/deploy.puml): study-case
-- [MLC-LLM Compilation Pipeline](_spec/study-cases/_substrate/web-llm/mlc.puml): study-case
+- [Open-Weight LLM Browser Architecture](_spec/study-cases/_substrate/web-llm/architecture.puml): n/a (substrate)
+- [WebLLM Asset Loading Flow (wasm → config → weight shards)](_spec/study-cases/_substrate/web-llm/asset-loading.puml): n/a (substrate)
+- [WebLLM Component Architecture](_spec/study-cases/_substrate/web-llm/components.puml): n/a (substrate)
+- [Generic WebLLM Deployment Architecture](_spec/study-cases/_substrate/web-llm/deploy.puml): n/a (substrate)
+- [WebLLM Inference Flow (Prefill → Decode)](_spec/study-cases/_substrate/web-llm/inference.puml): n/a (substrate)
+- [MLC-LLM Compilation Pipeline](_spec/study-cases/_substrate/web-llm/mlc.puml): n/a (substrate)
+- [WebLLM Weights Loading & Sharding](_spec/study-cases/_substrate/web-llm/weight-sharding.puml): n/a (substrate)
 
 ## Study-cases -- other
-- [AI Agent Harness Architecture](_spec/study-cases/_essentials.puml): study-case
+- [AI Agent Harness Architecture](_spec/study-cases/_primer.puml): metafile (index)
 
 ## Optional
 - [Proveo Vega theme (light)](_spec/themes/proveo.vega.json): vendored identity theme for `.vega.json` charts

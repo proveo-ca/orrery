@@ -1,5 +1,8 @@
 @startuml
 !includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+title Anti-framework harness — the essential loop
+' Synthesis of the anti-framework study-cases in this folder (aider, continue, mentat, sweep, opencode)
+' Level: 4
 
 package "The Anti-Framework Harness" {
     [Orchestrator\n(The Infinite Loop)] as ORCH

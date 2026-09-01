@@ -1,6 +1,9 @@
 @startuml
 !includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
 title WebLLM Component Architecture
+' URL:   https://webllm.mlc.ai/
+' URL:   https://arxiv.org/abs/2412.15803
+' Level: n/a (substrate)
 
 package "Web Application" {
   component "UI Thread" as UI

@@ -1,7 +1,13 @@
 @startuml
 !includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+title Sweep — async issue-to-PR worker (OUTDATED shape)
 ' Product: Sweep
 ' URL: https://sweep.dev/
+' Level: 4
+' Status: The issue-to-PR architecture drawn here is the 2023-24 product. As of 2026-09 sweep.dev
+'         sells a JetBrains IDE plugin (autocomplete + inline agent) and the GitHub-bot positioning
+'         is gone from the homepage. Kept as a dated snapshot of the webhook-driven async-worker
+'         pattern, which is the reason this study-case exists; do not cite it as Sweep's current shape.
 
 package "Sweep (Async Worker)" {
     [GitHub Webhook Handler] as HOOK

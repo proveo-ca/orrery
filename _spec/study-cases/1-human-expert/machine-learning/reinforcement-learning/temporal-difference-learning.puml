@@ -1,0 +1,41 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Temporal-Difference Learning — Predict from the Next Prediction
+' Paper: Learning to predict by the methods of temporal differences
+' URL:   https://doi.org/10.1007/BF00115009
+' Level: 1
+
+component "State s_t\nobservation at time t" as S <<app>>
+database  "Value function V\nparameters, updated online" as VF <<db>>
+component "Observed step\nreward r_t, next state s_t+1" as STEP <<async>>
+component "TD target\nr_t + γ·V(s_t+1)" as TGT <<app>>
+component "TD error\ntarget − V(s_t)" as ERR <<error>>
+
+S ARROW_MAIN STEP : act, observe
+S ARROW_MAIN VF : predict V(s_t)
+STEP ARROW_MAIN TGT : reward r_t
+STEP ARROW_MAIN VF : next state s_t+1
+VF ARROW_MAIN TGT : bootstrap — V(s_t+1) comes\nfrom the function being learned
+TGT ARROW_MAIN ERR
+VF ARROW_MAIN ERR : current estimate V(s_t)
+ERR ARROW_MAIN VF : adjust V(s_t)\ntoward the target
+
+note bottom of ERR
+  **The move is to stop waiting for the outcome.**
+  A supervised method would update against the final
+  result — win or loss, many moves later. TD updates
+  against its //own next prediction// plus the observed
+  reward, so credit flows backwards one step per
+  experience and learning happens **during** the
+  episode. The final outcome is therefore absent from
+  this diagram on purpose: TD never consumes it
+  directly.
+  ----
+  That is also the catch: the target contains the
+  estimate being learned (note ""V"" feeds both the
+  target and the error), so TD is a bootstrapping
+  method whose stability depends on the step size
+  (""../optimization/gradient-descent.puml"") and on γ,
+  which sets how far credit reaches.
+end note
+@enduml

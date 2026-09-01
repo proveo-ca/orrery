@@ -1,6 +1,9 @@
 @startuml
 !includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
 title Generic WebLLM Deployment Architecture
+' URL:   https://webllm.mlc.ai/
+' URL:   https://arxiv.org/abs/2412.15803
+' Level: n/a (substrate)
 
 cloud "Static Hosting (S3, GitHub Pages, Cloudflare)" as Host {
   folder "Web Application" {

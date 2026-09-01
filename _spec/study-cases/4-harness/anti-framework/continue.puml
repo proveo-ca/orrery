@@ -1,7 +1,11 @@
 @startuml
 !includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+title Continue — IDE-embedded coding assistant
 ' Product: Continue
 ' URL: https://www.continue.dev/
+' Level: 4
+' Status: Site live as of 2026-09, but the homepage states Continue "has joined Cursor" — cite it as
+'         acquired-by-Cursor, not as an independent project.
 
 package "Continue (IDE Extension)" {
     [Core Logic\n(Harness)] as CORE

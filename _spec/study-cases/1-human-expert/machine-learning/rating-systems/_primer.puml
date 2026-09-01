@@ -1,0 +1,39 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Rating Systems — Selection Map (is version B stronger than A?)
+' Synthesis: turning match outcomes into a comparable strength estimate with error bars
+' Level:  1
+
+actor "Human expert\npaired outcomes only" as H
+
+component "Bradley-Terry\nlatent strength from pairings" as BT <<app>>
+component "Elo\nincremental online update" as ELO <<app>>
+component "Glicko\nstrength plus uncertainty" as GL <<host>>
+database  "Rating with an interval\nnot a bare win rate" as R <<db>>
+
+H ARROW_MAIN BT : batch of results,\nfit all players at once
+H ARROW_OPTIONAL ELO : streaming updates,\none game at a time
+H ARROW_MAIN GL : few games per player,\nuncertainty matters
+BT ARROW_MAIN R
+ELO ARROW_OPTIONAL R : point estimate only
+GL ARROW_MAIN R : interval comes for free
+
+note bottom of R
+  **A win rate is not a verdict.** 55% over 40 games
+  and 55% over 4000 games are different claims; only
+  the second can gate a change. Report an interval,
+  and pair seeds so colour and opening luck cancel.
+  ----
+  **Draws must be scored, not discarded.** In games
+  with a turn cap, draws are common and dropping them
+  biases the estimate. Note that plain Bradley-Terry
+  has **no tie term**: scoring a draw as half a win is
+  the Elo/Glicko convention, and modelling ties
+  properly needs an extension (Rao-Kupper, Davidson)
+  — see ""paired-comparison-rating.puml"".
+  ----
+  This is the measurement that licenses every other
+  climb in this folder: without it, weight tuning
+  optimizes an unmeasured guess (""../optimization/"").
+end note
+@enduml

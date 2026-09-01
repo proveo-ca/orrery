@@ -3,6 +3,7 @@
 title Chain of Thought (CoT)
 ' Paper: Chain-of-Thought Prompting Elicits Reasoning in Large Language Models
 ' URL: https://arxiv.org/abs/2201.11903
+' Level: 3
 
 start
 :Input Question;

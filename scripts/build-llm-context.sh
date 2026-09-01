@@ -54,6 +54,7 @@ section_for() {
   case "$rel" in
     _spec/overview/*) echo overview ;;
     */study-cases/1-human-expert/computer-science/*) echo 1-human-expert/computer-science ;;
+    */study-cases/1-human-expert/machine-learning/*) echo 1-human-expert/machine-learning ;;
     */study-cases/1-human-expert/rag/*) echo 1-human-expert/rag ;;
     */study-cases/1-human-expert/*) echo 1-human-expert ;;
     */study-cases/2-single-prompts/discovery/*) echo 2-single-prompts/discovery ;;
@@ -77,7 +78,7 @@ level_note() {
   local lv="$1"
   if [[ "$lv" == "?" ]]; then
     printf '%s\n' 'study-case'
-  elif [[ "$lv" =~ ^[nN]/[aA]/ ]]; then
+  elif [[ "$lv" =~ ^[nN]/[aA]([[:space:]]|$) ]]; then
     printf '%s\n' "$lv"
   elif [[ "$lv" =~ ^[0-9] ]]; then
     printf 'Level %s\n' "$lv"
@@ -113,6 +114,7 @@ extra_inline=(
 section_order=(
   overview
   1-human-expert/computer-science
+  1-human-expert/machine-learning
   1-human-expert/rag
   1-human-expert
   2-single-prompts/discovery
@@ -134,6 +136,7 @@ section_order=(
 declare -A section_title=(
   [overview]='Overview diagrams'
   [1-human-expert/computer-science]='Study-cases -- Level 1 / computer-science'
+  [1-human-expert/machine-learning]='Study-cases -- Level 1 / machine-learning'
   [1-human-expert/rag]='Study-cases -- Level 1 / rag'
   [1-human-expert]='Study-cases -- Level 1 (human expert)'
   [2-single-prompts/discovery]='Study-cases -- Level 2 / discovery'
@@ -203,6 +206,12 @@ for key in "${section_order[@]}"; do
   while IFS=$'\t' read -r path title level; do
     [[ -z "${path:-}" ]] && continue
     note="$(level_note "$level")"
+    # Leading-underscore files are metafiles (indexes/primers). They are source-exempt and may omit
+    # ' Level: when they span tiers (see _spec/CONTRIBUTING.md §3), so label them as such rather than
+    # letting them fall through to the bare "study-case" placeholder.
+    if [[ "$level" == "?" && "$(basename "$path")" == _* ]]; then
+      note='metafile (index)'
+    fi
     llms+="- [${title}](${path}): ${note}"$'\n'
   done <<<"$items"
   llms+=$'\n'

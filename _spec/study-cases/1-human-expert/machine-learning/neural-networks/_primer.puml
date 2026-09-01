@@ -1,0 +1,33 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Neural Networks — Selection Map (depth, weight sharing, credit assignment)
+' Synthesis of the pre-transformer neural family; the LLM tiers sit at L5-L7 of the ladder
+' Level:  1
+
+actor "Human expert\ninput structure?" as H
+
+component "Perceptron\nsingle linear threshold" as P <<app>>
+component "MLP\nhidden layers + non-linearity" as MLP <<app>>
+component "CNN\nweight sharing over a grid" as CNN <<host>>
+component "Backpropagation\nreverse-mode credit assignment" as BP <<async>>
+
+H ARROW_OPTIONAL P : historical floor —\nlinearly separable only
+H ARROW_MAIN MLP : unstructured feature vector
+H ARROW_MAIN CNN : local structure and\ntranslation invariance
+MLP ARROW_MAIN BP : how the weights are learned
+CNN ARROW_MAIN BP
+
+note bottom of BP
+  **Backprop is the enabling idea, not a topology:**
+  it makes credit assignment through hidden layers
+  cheap, which is what let depth become useful
+  (""backpropagation.puml"").
+  It computes gradients; the update rule that
+  consumes them is ""../optimization/"".
+  ----
+  **Ladder note.** These are the pre-LLM primers.
+  Adapting a pretrained network's //weights// is
+  Level 5 (""_spec/study-cases/5-fine-tuned/""); doing it against a
+  reward loop is Level 6 (""_spec/study-cases/6-post-training/"").
+end note
+@enduml

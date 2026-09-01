@@ -1,0 +1,32 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Optimization — Selection Map (is there a gradient?)
+' Synthesis: the fitting engine shared by every other family in this folder
+' Level:  1
+
+actor "Human expert\nobjective to minimize" as H
+
+component "Gradient available\nSGD, momentum, Adam" as GRAD <<app>>
+component "No gradient\nCMA-ES, hill-climbing" as BB <<host>>
+database  "Parameter vector θ" as THETA <<db>>
+
+H ARROW_MAIN GRAD : loss is differentiable\nand cheap to evaluate
+H ARROW_MAIN BB : objective is a simulation,\na match result, or a ranking
+GRAD ARROW_MAIN THETA : many small steps
+BB ARROW_QUEUE THETA : few expensive evaluations
+
+note bottom of THETA
+  **The dividing question is a gradient, not scale.**
+  A neural net exposes ∂Loss/∂θ, so it takes
+  gradient steps (""gradient-descent.puml"").
+  A hand-tuned weight vector scored by //playing
+  games// exposes no derivative — the objective is a
+  noisy black box, so it needs population search
+  (""cma-es.puml"").
+  ----
+  This is the seam where a heuristic evaluator stops
+  being argued about and starts being measured: make
+  the weights a vector, define a fitness signal
+  (""../rating-systems/""), then search.
+end note
+@enduml

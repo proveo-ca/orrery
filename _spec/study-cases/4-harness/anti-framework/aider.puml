@@ -1,7 +1,9 @@
 @startuml
 !includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+title Aider — repo-map terminal coding agent
 ' Product: Aider
 ' URL: https://aider.chat/
+' Level: 4
 
 package "Aider Architecture" {
     [Coder (BaseCoder)\n(The Loop)] as CODER

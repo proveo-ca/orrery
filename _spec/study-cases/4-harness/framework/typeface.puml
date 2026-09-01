@@ -1,7 +1,9 @@
 @startuml
 !includeurl https://raw.githubusercontent.com/proveo-ca/identity/refs/heads/main/proveo.iuml
+title Typeface — brand-guarded content generation
 ' Product: Typeface
 ' URL: https://www.typeface.ai/
+' Level: 4
 
 package "Typeface Architecture" {
     [Adaptive UI\n(Templates/Sliders)] as UI

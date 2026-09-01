@@ -1,0 +1,35 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title WebLLM Weights Loading & Sharding
+' URL:   https://webllm.mlc.ai/
+' URL:   https://arxiv.org/abs/2412.15803
+' Level: n/a (substrate)
+
+node "Browser Memory" <<host>> {
+  component "WebLLM Engine" as Engine <<app>>
+  component "WebGPU VRAM" as VRAM <<db>>
+}
+
+node "Static Server" <<cloud>> {
+  artifact "ndarray-cache.json" as CacheMap
+  artifact "params_shard_0.bin" as Shard0
+  artifact "params_shard_1.bin" as Shard1
+  artifact "params_shard_N.bin" as ShardN
+}
+
+Engine ARROW_CLOUD CacheMap : 1. Fetch mapping
+note right of CacheMap: Maps tensor names to byte offsets\nand specific shard files.
+
+Engine ARROW_CLOUD Shard0 : 2. Fetch Shard 0
+Engine ARROW_CLOUD Shard1 : 2. Fetch Shard 1
+Engine ARROW_CLOUD ShardN : 2. Fetch Shard N
+
+Engine ARROW_MAIN VRAM : 3. Load Tensors into GPU
+
+note bottom of Engine
+  Weights ship as many small shards so a browser
+  can fetch them in parallel and stream each into
+  VRAM — no single multi-GB download, and progress
+  is reportable per shard.
+end note
+@enduml

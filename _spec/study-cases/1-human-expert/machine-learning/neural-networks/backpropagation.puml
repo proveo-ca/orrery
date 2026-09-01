@@ -1,0 +1,35 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Backpropagation — Learning Representations by Propagating Errors
+' Paper: Learning representations by back-propagating errors
+' URL:   https://doi.org/10.1038/323533a0
+' Level: 1
+
+component "Input layer\nx" as IN <<app>>
+component "Hidden layers\nnon-linear units" as HID <<app>>
+component "Output layer\nprediction ŷ" as OUT <<app>>
+component "Loss\ncompare ŷ to target y" as LOSS <<error>>
+component "Backward pass\n∂Loss/∂w by chain rule" as BACK <<async>>
+database  "Weights w\nshared state" as W <<db>>
+
+IN ARROW_MAIN HID : forward pass
+HID ARROW_MAIN OUT
+OUT ARROW_MAIN LOSS : compare to target
+LOSS ARROW_MAIN BACK : error signal,\npropagated backwards
+BACK ARROW_QUEUE W : gradient per weight
+W ARROW_OPTIONAL HID : updated parameters\nfeed the next forward pass
+
+note bottom of BACK
+  The contribution is **cheap credit assignment**:
+  one backward sweep yields ∂Loss/∂w for //every//
+  weight at roughly the cost of one forward pass,
+  by reusing each layer's intermediate derivative.
+  That is why hidden layers became trainable — and
+  why "hidden units learn useful internal
+  representations" is the paper's actual claim.
+  ----
+  Backprop produces the **gradient only**. Turning
+  a gradient into a step is a separate choice:
+  ""../optimization/gradient-descent.puml"".
+end note
+@enduml

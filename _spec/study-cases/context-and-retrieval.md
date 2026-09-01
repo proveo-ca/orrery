@@ -2,7 +2,7 @@
 
 This document tracks key research papers and strategies for managing the Context Window and ensuring high-precision retrieval — moving from inference-time prompting and pipelines through to systems that train or self-evolve their own retrieval.
 
-> **Level-1 RAG map (Jul 2026).** Architecture selection diagrams (vector, GraphRAG, LightRAG, HippoRAG/2, PathRAG, RAPTOR, PageIndex, CRAG, KET-RAG, LazyGraphRAG, OG-RAG, adaptive routing) live under [`1-human-expert/rag/`](./1-human-expert/rag/). Foundational CS primers distilled from [proveo-ca/computer-science](https://github.com/proveo-ca/computer-science) are in [`1-human-expert/computer-science/`](./1-human-expert/computer-science/).
+> **Level-1 RAG map (Jul 2026).** Architecture selection diagrams (vector, GraphRAG, LightRAG, HippoRAG/2, PathRAG, RAPTOR, PageIndex, CRAG, KET-RAG, LazyGraphRAG, OG-RAG, adaptive routing) live under [`1-human-expert/rag/`](./1-human-expert/rag/). Foundational CS primers distilled from [proveo-ca/computer-science](https://github.com/proveo-ca/computer-science) are in [`1-human-expert/computer-science/`](./1-human-expert/computer-science/), and pre-LLM ML primers — including the embedding/clustering machinery these retrieval architectures rest on — are in [`1-human-expert/machine-learning/`](./1-human-expert/machine-learning/).
 
 ## 1. Context Window Management
 

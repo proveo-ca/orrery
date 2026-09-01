@@ -1,0 +1,39 @@
+@startuml
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title UCT — Bandit-Based Monte-Carlo Tree Search
+' Paper: Bandit Based Monte-Carlo Planning
+' URL:   https://doi.org/10.1007/11871842_29
+' Level: 1
+
+component "Selection\nUCB1 down the known tree" as SEL <<app>>
+component "Expansion\nadd one child node" as EXP <<app>>
+cloud     "Simulation\nplay out to a result" as SIM <<cloud>>
+component "Backpropagation\nupdate visits and value" as BACK <<async>>
+database  "Search tree\nasymmetric, grows where it matters" as TREE <<db>>
+
+SEL ARROW_MAIN EXP : reached a leaf
+EXP ARROW_CLOUD SIM : from the new node
+SIM ARROW_MAIN BACK : outcome
+BACK ARROW_QUEUE TREE : statistics per node
+TREE ARROW_MAIN SEL : next iteration
+
+note bottom of SEL
+  **The idea is to treat each node as a bandit.**
+  UCB1 balances exploiting the child with the best
+  observed value against exploring the one with few
+  visits, so the tree grows **asymmetrically** —
+  deep along promising lines, shallow elsewhere. No
+  evaluation function is required: a random playout
+  supplies the signal, and the estimate improves
+  with samples.
+  ----
+  **Two assumptions to check before reaching for it.**
+  The cited paper analyses UCT for **MDP planning**;
+  the familiar game-tree form adds the assumption that
+  turns //alternate//. Simultaneous moves break that
+  added assumption. Separately, a playout must start
+  from the //true// state — hidden state breaks that, and
+  playouts must then run in sampled worlds
+  (""../imperfect-information-games/determinization.puml"").
+end note
+@enduml

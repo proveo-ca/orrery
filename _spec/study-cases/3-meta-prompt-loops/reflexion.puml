@@ -3,6 +3,7 @@
 title Reflexion (Self-Correction Loop)
 ' Paper: Reflexion: Language Agents with Verbal Reinforcement Learning
 ' URL: https://arxiv.org/abs/2303.11366
+' Level: 3
 
 start
 :Input Task;
