@@ -181,4 +181,36 @@ cmp -s "$TMP/llms.txt" "$TMP/llms.first" || die "curated index regeneration chan
 cmp -s "$TMP/llms-full.txt" "$TMP/llms-full.first" || die "digest regeneration changed bytes"
 pass "study guide discovery, exact embedding, and deterministic regeneration"
 
+# Contribution workflow coverage.
+contribution='CONTRIBUTING.md'
+grep -q '^## Contribute$' "$TMP/llms.txt" && die "absent contribution guide must not emit a section" || true
+grep -F -q "](CONTRIBUTING.md)" "$TMP/llms.txt" && die "absent contribution guide must not emit a link" || true
+grep -q '^FILE: CONTRIBUTING.md$' "$TMP/llms-full.txt" && die "absent contribution guide must not be embedded" || true
+cp "$TMP/llms.txt" "$TMP/llms.without-contribution"
+cp "$TMP/llms-full.txt" "$TMP/llms-full.without-contribution"
+printf '# Contributing to Orrery\n\nfixture: α + contribution workflow\nverify before publishing\n\n' >"$TMP/$contribution"
+bash "$SUT" >/dev/null
+contribution_hits="$(grep -F -c "](CONTRIBUTING.md)" "$TMP/llms.txt" || true)"
+[[ "$contribution_hits" -eq 1 ]] || die "contribution guide must appear once in curated index"
+contribution_sections="$(grep -c '^## Contribute$' "$TMP/llms.txt" || true)"
+[[ "$contribution_sections" -eq 1 ]] || die "contribution section must appear once"
+awk '/^## Contribute$/ { contribution = NR } /^## Consume as context$/ { consume = NR } END { exit(contribution > 0 && consume > contribution ? 0 : 1) }' "$TMP/llms.txt" || die "contribution workflow must precede context consumption"
+contribution_file_hits="$(grep -c '^FILE: CONTRIBUTING.md$' "$TMP/llms-full.txt" || true)"
+[[ "$contribution_file_hits" -eq 1 ]] || die "contribution body must be embedded once"
+body_start="$(awk '$0 == "FILE: CONTRIBUTING.md" { print NR + 3; exit }' "$TMP/llms-full.txt")"
+body_end="$(awk -v start="$body_start" 'NR >= start && length($0) == 72 && $0 ~ /^=+$/ { print NR - 3; exit }' "$TMP/llms-full.txt")"
+[[ -n "$body_end" ]] || die "contribution body has no following digest boundary"
+sed -n "${body_start},${body_end}p" "$TMP/llms-full.txt" >"$TMP/contribution.embedded"
+cmp -s "$TMP/$contribution" "$TMP/contribution.embedded" || die "contribution body bytes or trailing newlines changed"
+cp "$TMP/llms.txt" "$TMP/llms.with-contribution"
+cp "$TMP/llms-full.txt" "$TMP/llms-full.with-contribution"
+bash "$SUT" >/dev/null
+cmp -s "$TMP/llms.txt" "$TMP/llms.with-contribution" || die "contribution index regeneration changed bytes"
+cmp -s "$TMP/llms-full.txt" "$TMP/llms-full.with-contribution" || die "contribution digest regeneration changed bytes"
+rm "$TMP/$contribution"
+bash "$SUT" >/dev/null
+cmp -s "$TMP/llms.txt" "$TMP/llms.without-contribution" || die "removing the contribution guide changed other index content"
+cmp -s "$TMP/llms-full.txt" "$TMP/llms-full.without-contribution" || die "removing the contribution guide changed other digest content"
+pass "contribution discovery, exact embedding, ordering, regeneration, and removal"
+
 printf 'ALL PASSED (SUT=%s)\n' "$SUT"

@@ -93,6 +93,7 @@ mapfile -t pumls < <(find _spec -type f -name '*.puml' | sed 's|^\./||' | LC_ALL
 md_core=(
   README.md
   AGENTS.md
+  CONTRIBUTING.md
   llms.txt
   _spec/CONTRIBUTING.md
   _spec/study-cases/README.md
@@ -186,6 +187,14 @@ Prefer the linked sources below over rendered `.svg` files. For a single pre-exp
 - [Context & retrieval](_spec/study-cases/context-and-retrieval.md): context-engineering bibliography
 - [Agent workflow](AGENTS.md): team / agent operating rules when working inside this checkout (also mirrored as `CLAUDE.md`)
 
+HDR
+
+if [[ -f CONTRIBUTING.md ]]; then
+  llms+='## Contribute'$'\n'
+  llms+='- [Contribution workflow](CONTRIBUTING.md): sourced learning material, verification, generated context, and authorized pull requests'$'\n\n'
+fi
+
+IFS= read -r -d '' context_navigation <<'HDR' || true
 ## Consume as context
 - [Full LLM digest](llms-full.txt): inline `_spec/` + core Markdown for scrapers that do not follow links (gitingest, custom agents, paste-into-prompt)
 - [spec skill](skills/spec/SKILL.md): procedural conventions for authoring / rendering proveo diagrams -- install with `npx skills add proveo-ca/orrery --skill spec` (or `npx skills add proveo-ca/spec --skill spec`)
@@ -195,6 +204,8 @@ Prefer the linked sources below over rendered `.svg` files. For a single pre-exp
 - [Study map](_spec/overview/study-map.vega.json): build-side -- same tiers on encoding depth x autonomy
 
 HDR
+
+llms+="$context_navigation"
 
 if [[ -f _spec/study-cases/auditable-policy-learning.md ]]; then
   llms+='## Study guides'$'\n'
