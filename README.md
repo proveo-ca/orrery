@@ -81,6 +81,9 @@ baseline up to a custom-trained model. Full write-up in
 | **Demand-side funnel** | "which rung do we build/buy?" — business needs walk a request down from the aspirational top to the rung that clears the bar | [`business-needs-funnel.svg`](_spec/overview/business-needs-funnel.svg) |
 | **Build-side study map** | "what do I go learn, and how do the tiers differ?" — the same tiers on a 2D plane: **encoding depth × autonomy** | [`study-map.svg`](_spec/overview/study-map.svg) |
 
+For a practical study guide, read [Auditable Policy Learning](_spec/study-cases/auditable-policy-learning.md):
+execution contracts, observation boundaries, trainable features, and auditable evaluation.
+
 ## Projects
 
 | Project | What it is |

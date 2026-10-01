@@ -98,6 +98,7 @@ md_core=(
   _spec/study-cases/README.md
   _spec/study-cases/summary.md
   _spec/study-cases/context-and-retrieval.md
+  _spec/study-cases/auditable-policy-learning.md
   _spec/study-cases/2-single-prompts/discovery/how-to-query.md
   skills/spec/SKILL.md
 )
@@ -194,6 +195,11 @@ Prefer the linked sources below over rendered `.svg` files. For a single pre-exp
 - [Study map](_spec/overview/study-map.vega.json): build-side -- same tiers on encoding depth x autonomy
 
 HDR
+
+if [[ -f _spec/study-cases/auditable-policy-learning.md ]]; then
+  llms+='## Study guides'$'\n'
+  llms+='- [Auditable Policy Learning](_spec/study-cases/auditable-policy-learning.md): execution authority, authorized inputs, feature design, learning, and evaluation evidence'$'\n\n'
+fi
 
 for key in "${section_order[@]}"; do
   [[ "$key" == overview ]] && continue

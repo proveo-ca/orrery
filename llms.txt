@@ -26,6 +26,9 @@ Prefer the linked sources below over rendered `.svg` files. For a single pre-exp
 - [Business-needs funnel](_spec/overview/business-needs-funnel.puml): demand-side -- how a request walks down the capability ladder
 - [Study map](_spec/overview/study-map.vega.json): build-side -- same tiers on encoding depth x autonomy
 
+## Study guides
+- [Auditable Policy Learning](_spec/study-cases/auditable-policy-learning.md): execution authority, authorized inputs, feature design, learning, and evaluation evidence
+
 ## Study-cases -- Level 1 / computer-science
 - [Level-1 Computer Science Essentials — ADTs ↔ Algorithm Families](_spec/study-cases/1-human-expert/computer-science/_essentials.puml): Level 1
 - [Algorithms ↔ Data Types — Array-Based](_spec/study-cases/1-human-expert/computer-science/algorithms-array.puml): Level 1
@@ -134,6 +137,7 @@ Prefer the linked sources below over rendered `.svg` files. For a single pre-exp
 - [Clinical-Knowledge LLM](_spec/study-cases/5-fine-tuned/health/clinical-knowledge-llm.puml): Level 5
 
 ## Study-cases -- Level 6 (post-training)
+- [Auditable Policy Learning — Execution, Information, and Evidence](_spec/study-cases/6-post-training/auditable-policy-learning.puml): Level 6
 - [Harness trajectory flywheel (L4 → L6)](_spec/study-cases/6-post-training/harness-trajectory-flywheel.puml): Level 6
 - [Reinforcement Fine-Tuning Pipeline (RFT)](_spec/study-cases/6-post-training/reinforcement-fine-tuning-pipeline.puml): Level 6
 - [RL with Verifiable Rewards (RLVR)](_spec/study-cases/6-post-training/rl-verifiable-rewards.puml): Level 6

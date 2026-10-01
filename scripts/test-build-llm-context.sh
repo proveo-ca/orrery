@@ -155,4 +155,30 @@ file_count="$(grep -c '^FILE: ' "$TMP/llms-full.txt" || true)"
 [[ "$file_count" -eq 20 ]] || die "expected 20 FILE banners (got $file_count)"
 pass "digest FILE count"
 
+# Optional study guide coverage.
+guide='_spec/study-cases/auditable-policy-learning.md'
+diagram='_spec/study-cases/6-post-training/auditable-policy-learning.puml'
+mkdir -p "$TMP/_spec/study-cases/6-post-training"
+printf '# Auditable Policy Learning\n\nfixture: α + beta\nordered intents remain ordered\n' >"$TMP/$guide"
+printf '@startuml\ntitle Auditable Policy Learning\n\047 Level: 6\n@enduml\n' >"$TMP/$diagram"
+bash "$SUT" >/dev/null
+guide_hits="$(grep -F -c "]($guide)" "$TMP/llms.txt" || true)"
+[[ "$guide_hits" -eq 1 ]] || die "study guide must appear once in curated index (got $guide_hits)"
+grep -q '^## Study guides$' "$TMP/llms.txt" || die "study guide section missing"
+grep -F -q "]($diagram): Level 6" "$TMP/llms.txt" || die "learning diagram discovery failed"
+grep -F -q "FILE: $guide" "$TMP/llms-full.txt" || die "study guide body missing from digest"
+body_start="$(awk -v marker="FILE: $guide" '$0 == marker { print NR + 3; exit }' "$TMP/llms-full.txt")"
+guide_lines="$(wc -l <"$TMP/$guide")"
+body_end="$((body_start + guide_lines - 1))"
+sed -n "${body_start},${body_end}p" "$TMP/llms-full.txt" >"$TMP/guide.embedded"
+cmp -s "$TMP/$guide" "$TMP/guide.embedded" || die "study guide bytes changed during embedding"
+guide_file_hits="$(grep -F -c "FILE: $guide" "$TMP/llms-full.txt" || true)"
+[[ "$guide_file_hits" -eq 1 ]] || die "study guide body must be embedded once"
+cp "$TMP/llms.txt" "$TMP/llms.first"
+cp "$TMP/llms-full.txt" "$TMP/llms-full.first"
+bash "$SUT" >/dev/null
+cmp -s "$TMP/llms.txt" "$TMP/llms.first" || die "curated index regeneration changed bytes"
+cmp -s "$TMP/llms-full.txt" "$TMP/llms-full.first" || die "digest regeneration changed bytes"
+pass "study guide discovery, exact embedding, and deterministic regeneration"
+
 printf 'ALL PASSED (SUT=%s)\n' "$SUT"

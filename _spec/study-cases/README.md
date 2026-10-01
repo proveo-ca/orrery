@@ -72,6 +72,12 @@ and the migrated `_substrate/web-llm/` and `_substrate/nets/`. These are tagged
 
 ## Where the focus is
 
+### Auditable policy learning
+
+[Auditable Policy Learning](auditable-policy-learning.md) connects execution authority,
+authorized observations, candidate coverage, feature design, outcome-driven updates, and
+reproducible evaluation. It includes a sourced architecture and exercises with expected evidence.
+
 The harness's own projects cluster at **Level 4** (aphelion's authority/evidence, omnigent's
 orchestration, plus the frozen-weight self-improvers in `4-harness/self-improving/`) — so `4-harness/`
 is the richest tier. **Level 6** (`6-post-training/`) is the deliberately-expanded tier: weight updates
