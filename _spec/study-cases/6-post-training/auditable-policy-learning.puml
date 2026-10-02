@@ -1,0 +1,103 @@
+@startuml auditable-policy-learning
+!include https://raw.githubusercontent.com/proveo-ca/identity/main/proveo.puml
+title Auditable Policy Learning — Execution, Information, and Evidence
+' Purpose: Illustrative outcome-driven learning and frozen evaluation architecture.
+' URL: https://papers.nips.cc/paper/1713-policy-gradient-methods-for-reinforcement-learning-with-function-approximation
+' URL: https://arxiv.org/abs/1709.06560v3
+' URL: https://www.w3.org/TR/prov-overview/
+' Level: 6
+' Scope: Study architecture and learning experiment; no implementation or measured improvement claim.
+' Related: ../auditable-policy-learning.md
+
+left to right direction
+skinparam packageStyle rectangle
+
+package "Trusted execution host" {
+  database "Authoritative state\nResource ledger" as STATE <<db>>
+  component "Authorized projection\nPrecommit inputs" as OBSERVE <<host>>
+  component "Whole-queue admission\nAtomic debit / rollback" as ADMIT <<host>>
+  component "Simultaneous resolution\nTerminal-first outcome" as ENGINE <<host>>
+}
+
+package "Observation-only policy" {
+  database "Authorized memory\nFacts / unknowns / age" as MEMORY <<db>>
+  component "Bounded candidate generator\nOrdered intents / canonical keys" as GENERATOR <<app>>
+  component "Versioned feature encoder\nCandidate-context interactions" as ENCODE <<app>>
+  component "Shared-weight scorer\nOne selected queue" as SCORE <<app>>
+}
+
+package "Training only — illustrative experiment" {
+  component "Outcome reward\nAuthorized trajectory" as REWARD <<app>>
+  component "Seeded softmax / gradient update\nDeclared optimizer and recipe" as LEARN <<app>>
+  database "Versioned finite weights\nNames / dimensions / provenance" as WEIGHTS <<db>>
+}
+
+component "Frozen evaluation runner\nExact suite / seeds / watchdogs" as RUNNER <<host>>
+database "Captured source / configs / tests\nToolchain / installed store / inputs" as CAPTURE <<db>>
+database "Semantic traces / outcomes\nAll expected trials / failures / logs" as REPORT <<db>>
+component "Lineage and integrity verification\nNo-overwrite bundle publication" as PUBLISH <<host>>
+
+STATE ARROW_MAIN OBSERVE : allowed facts only
+OBSERVE ARROW_MAIN MEMORY : witnessed updates
+OBSERVE ARROW_MAIN GENERATOR : detached authorized input
+MEMORY ARROW_MAIN GENERATOR : side-authorized history
+GENERATOR ARROW_MAIN ENCODE : proposals, not legality masks
+OBSERVE ARROW_MAIN ENCODE : known and unknown context
+MEMORY ARROW_MAIN ENCODE : historical evidence
+ENCODE ARROW_MAIN SCORE : named finite vectors
+WEIGHTS ARROW_MAIN SCORE : frozen during evaluation
+SCORE ARROW_MAIN ADMIT : select once
+STATE ARROW_MAIN ADMIT : private authority
+ADMIT ARROW_MAIN ENGINE : successful queue pair
+ADMIT ARROW_ERROR REPORT : reject entire queue
+ENGINE ARROW_MAIN STATE : settle and account
+ENGINE ARROW_MAIN REPORT : actual outcome and records
+ENGINE ARROW_MAIN REWARD : outcome signal
+OBSERVE ARROW_MAIN REWARD : authorized trajectory
+REWARD ARROW_QUEUE LEARN : sampled experience
+LEARN ARROW_OPTIONAL WEIGHTS : updates outside evaluation
+CAPTURE ARROW_MAIN RUNNER : content-addressed inputs
+RUNNER ARROW_MAIN ENGINE : complete frozen schedule
+REPORT ARROW_MAIN PUBLISH : retain every trial
+CAPTURE ARROW_MAIN PUBLISH : identities and captured bytes
+WEIGHTS ARROW_MAIN PUBLISH : external artifact hash
+
+note bottom of OBSERVE
+  Every participant chooses from one precommit
+  state. Other current queues and hidden facts
+  never enter the policy-facing channels.
+end note
+
+note bottom of ENCODE
+  Encodable queues need not be generated or
+  admitted. Shared observation-only terms
+  cancel in same-observation linear ranking.
+end note
+
+note bottom of LEARN
+  This branch specifies an experiment.
+  It claims no trained artifact, convergence,
+  improvement, or successful acceptance gate.
+end note
+
+note bottom of RUNNER
+  Seeds control declared random streams.
+  They do not freeze host scheduling.
+end note
+
+note bottom of REPORT
+  Bound raw frames before parsing.
+  After-parse checks cannot bound that allocation.
+end note
+
+note bottom of CAPTURE
+  Images freeze selected userland bytes.
+  Host kernel and scheduling remain external.
+end note
+
+note bottom of PUBLISH
+  Digests identify bytes, not trusted authors.
+  Capture tests and inputs, validate complete
+  lineage, and never overwrite older evidence.
+end note
+@enduml

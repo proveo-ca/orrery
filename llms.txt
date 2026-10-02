@@ -18,6 +18,9 @@ Prefer the linked sources below over rendered `.svg` files. For a single pre-exp
 - [Context & retrieval](_spec/study-cases/context-and-retrieval.md): context-engineering bibliography
 - [Agent workflow](AGENTS.md): team / agent operating rules when working inside this checkout (also mirrored as `CLAUDE.md`)
 
+## Contribute
+- [Contribution workflow](CONTRIBUTING.md): sourced learning material, verification, generated context, and authorized pull requests
+
 ## Consume as context
 - [Full LLM digest](llms-full.txt): inline `_spec/` + core Markdown for scrapers that do not follow links (gitingest, custom agents, paste-into-prompt)
 - [spec skill](skills/spec/SKILL.md): procedural conventions for authoring / rendering proveo diagrams -- install with `npx skills add proveo-ca/orrery --skill spec` (or `npx skills add proveo-ca/spec --skill spec`)
@@ -25,6 +28,10 @@ Prefer the linked sources below over rendered `.svg` files. For a single pre-exp
 ## Overview diagrams
 - [Business-needs funnel](_spec/overview/business-needs-funnel.puml): demand-side -- how a request walks down the capability ladder
 - [Study map](_spec/overview/study-map.vega.json): build-side -- same tiers on encoding depth x autonomy
+
+## Study guides
+- [Auditable Policy Learning](_spec/study-cases/auditable-policy-learning.md): execution authority, authorized inputs, feature design, learning, and evaluation evidence
+- [Policy Learning Decision Workbook](_spec/study-cases/auditable-policy-learning-decisions.md): legitimate alternatives, parameter domains, illustrative recipes, and evidence obligations
 
 ## Study-cases -- Level 1 / computer-science
 - [Level-1 Computer Science Essentials — ADTs ↔ Algorithm Families](_spec/study-cases/1-human-expert/computer-science/_essentials.puml): Level 1
@@ -134,6 +141,7 @@ Prefer the linked sources below over rendered `.svg` files. For a single pre-exp
 - [Clinical-Knowledge LLM](_spec/study-cases/5-fine-tuned/health/clinical-knowledge-llm.puml): Level 5
 
 ## Study-cases -- Level 6 (post-training)
+- [Auditable Policy Learning — Execution, Information, and Evidence](_spec/study-cases/6-post-training/auditable-policy-learning.puml): Level 6
 - [Harness trajectory flywheel (L4 → L6)](_spec/study-cases/6-post-training/harness-trajectory-flywheel.puml): Level 6
 - [Reinforcement Fine-Tuning Pipeline (RFT)](_spec/study-cases/6-post-training/reinforcement-fine-tuning-pipeline.puml): Level 6
 - [RL with Verifiable Rewards (RLVR)](_spec/study-cases/6-post-training/rl-verifiable-rewards.puml): Level 6

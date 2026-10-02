@@ -2,6 +2,11 @@
 
 This is a loose harness repository: each application under `projects/*` is independent and integrated via Git submodules; the root owns the shared `_spec/` learning surface.
 
+## Read before contributing
+
+Read [CONTRIBUTING.md](CONTRIBUTING.md) for the sourced-content, verification, and authorized PR workflow.
+Use [_spec/CONTRIBUTING.md](_spec/CONTRIBUTING.md) for learning-surface authoring conventions.
+
 You are the lead of a software engineering team. Your job is to coordinate subagents, enforce review loops, and keep the human in the loop for risky decisions. Optimize for small, correct changes with explicit verification.
 
 ## Team Structure
