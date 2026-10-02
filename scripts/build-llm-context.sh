@@ -100,6 +100,7 @@ md_core=(
   _spec/study-cases/summary.md
   _spec/study-cases/context-and-retrieval.md
   _spec/study-cases/auditable-policy-learning.md
+  _spec/study-cases/auditable-policy-learning-decisions.md
   _spec/study-cases/2-single-prompts/discovery/how-to-query.md
   skills/spec/SKILL.md
 )
@@ -207,9 +208,15 @@ HDR
 
 llms+="$context_navigation"
 
-if [[ -f _spec/study-cases/auditable-policy-learning.md ]]; then
+if [[ -f _spec/study-cases/auditable-policy-learning.md || -f _spec/study-cases/auditable-policy-learning-decisions.md ]]; then
   llms+='## Study guides'$'\n'
-  llms+='- [Auditable Policy Learning](_spec/study-cases/auditable-policy-learning.md): execution authority, authorized inputs, feature design, learning, and evaluation evidence'$'\n\n'
+  if [[ -f _spec/study-cases/auditable-policy-learning.md ]]; then
+    llms+='- [Auditable Policy Learning](_spec/study-cases/auditable-policy-learning.md): execution authority, authorized inputs, feature design, learning, and evaluation evidence'$'\n'
+  fi
+  if [[ -f _spec/study-cases/auditable-policy-learning-decisions.md ]]; then
+    llms+='- [Policy Learning Decision Workbook](_spec/study-cases/auditable-policy-learning-decisions.md): legitimate alternatives, parameter domains, illustrative recipes, and evidence obligations'$'\n'
+  fi
+  llms+=$'\n'
 fi
 
 for key in "${section_order[@]}"; do

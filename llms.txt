@@ -31,6 +31,7 @@ Prefer the linked sources below over rendered `.svg` files. For a single pre-exp
 
 ## Study guides
 - [Auditable Policy Learning](_spec/study-cases/auditable-policy-learning.md): execution authority, authorized inputs, feature design, learning, and evaluation evidence
+- [Policy Learning Decision Workbook](_spec/study-cases/auditable-policy-learning-decisions.md): legitimate alternatives, parameter domains, illustrative recipes, and evidence obligations
 
 ## Study-cases -- Level 1 / computer-science
 - [Level-1 Computer Science Essentials — ADTs ↔ Algorithm Families](_spec/study-cases/1-human-expert/computer-science/_essentials.puml): Level 1

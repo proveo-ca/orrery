@@ -181,6 +181,42 @@ cmp -s "$TMP/llms.txt" "$TMP/llms.first" || die "curated index regeneration chan
 cmp -s "$TMP/llms-full.txt" "$TMP/llms-full.first" || die "digest regeneration changed bytes"
 pass "study guide discovery, exact embedding, and deterministic regeneration"
 
+# Optional companion workbook coverage.
+workbook='_spec/study-cases/auditable-policy-learning-decisions.md'
+cp "$TMP/llms.txt" "$TMP/llms.without-workbook"
+cp "$TMP/llms-full.txt" "$TMP/llms-full.without-workbook"
+printf '# Policy Learning Decision Workbook\n\nfixture: α + decisions\nchoose evidence before execution\n\n' >"$TMP/$workbook"
+bash "$SUT" >/dev/null
+workbook_hits="$(grep -F -c "]($workbook)" "$TMP/llms.txt" || true)"
+[[ "$workbook_hits" -eq 1 ]] || die "workbook must appear once in curated index"
+[[ "$(grep -c '^## Study guides$' "$TMP/llms.txt")" -eq 1 ]] || die "guides must share one heading"
+awk -v guide="]($guide)" -v workbook="]($workbook)" 'index($0, guide) { g=NR } index($0, workbook) { w=NR } END { exit(g > 0 && w > g ? 0 : 1) }' "$TMP/llms.txt" || die "workbook index must follow study guide"
+[[ "$(grep -F -c "FILE: $workbook" "$TMP/llms-full.txt")" -eq 1 ]] || die "workbook must be embedded once"
+awk -v guide="FILE: $guide" -v workbook="FILE: $workbook" '$0 == guide { g=NR } $0 == workbook { w=NR } END { exit(g > 0 && w > g ? 0 : 1) }' "$TMP/llms-full.txt" || die "workbook digest must follow study guide"
+body_start="$(awk -v marker="FILE: $workbook" '$0 == marker { print NR + 3; exit }' "$TMP/llms-full.txt")"
+body_end="$(awk -v start="$body_start" 'NR >= start && length($0) == 72 && $0 ~ /^=+$/ { print NR - 3; exit }' "$TMP/llms-full.txt")"
+[[ -n "$body_end" ]] || die "workbook has no following digest boundary"
+sed -n "${body_start},${body_end}p" "$TMP/llms-full.txt" >"$TMP/workbook.embedded"
+cmp -s "$TMP/$workbook" "$TMP/workbook.embedded" || die "workbook bytes or trailing newlines changed"
+cp "$TMP/llms.txt" "$TMP/llms.with-workbook"
+cp "$TMP/llms-full.txt" "$TMP/llms-full.with-workbook"
+bash "$SUT" >/dev/null
+cmp -s "$TMP/llms.txt" "$TMP/llms.with-workbook" || die "workbook index regeneration changed bytes"
+cmp -s "$TMP/llms-full.txt" "$TMP/llms-full.with-workbook" || die "workbook digest regeneration changed bytes"
+rm "$TMP/$guide"
+bash "$SUT" >/dev/null
+[[ "$(grep -c '^## Study guides$' "$TMP/llms.txt")" -eq 1 ]] || die "workbook alone must retain guide heading"
+grep -F -q "]($guide)" "$TMP/llms.txt" && die "absent guide must not emit link" || true
+grep -F -q "FILE: $guide" "$TMP/llms-full.txt" && die "absent guide must not be embedded" || true
+[[ "$(grep -F -c "]($workbook)" "$TMP/llms.txt")" -eq 1 ]] || die "workbook alone must retain link"
+[[ "$(grep -F -c "FILE: $workbook" "$TMP/llms-full.txt")" -eq 1 ]] || die "workbook alone must remain embedded"
+printf '# Auditable Policy Learning\n\nfixture: α + beta\nordered intents remain ordered\n' >"$TMP/$guide"
+rm "$TMP/$workbook"
+bash "$SUT" >/dev/null
+cmp -s "$TMP/llms.txt" "$TMP/llms.without-workbook" || die "workbook removal changed other index content"
+cmp -s "$TMP/llms-full.txt" "$TMP/llms-full.without-workbook" || die "workbook removal changed other digest content"
+pass "workbook discovery, exact embedding, ordering, regeneration, standalone presence, and removal"
+
 # Contribution workflow coverage.
 contribution='CONTRIBUTING.md'
 grep -q '^## Contribute$' "$TMP/llms.txt" && die "absent contribution guide must not emit a section" || true

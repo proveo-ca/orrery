@@ -90,6 +90,8 @@ baseline up to a custom-trained model. Full write-up in
 
 For a practical study guide, read [Auditable Policy Learning](_spec/study-cases/auditable-policy-learning.md):
 execution contracts, observation boundaries, trainable features, and auditable evaluation.
+Its [decision workbook](_spec/study-cases/auditable-policy-learning-decisions.md) compares options,
+when to prefer them, and the evidence needed to accept each contract.
 
 ## Projects
 

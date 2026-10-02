@@ -12,6 +12,8 @@ The contracts below describe a teaching architecture. The learning recipe is an 
 
 [Diagram source](6-post-training/auditable-policy-learning.puml) · [Capability ladder](README.md) · [Authoring conventions](../CONTRIBUTING.md)
 
+Use the [decision workbook](auditable-policy-learning-decisions.md) to compare ownership, quota, provenance, optimizer, curriculum, supervision, and publication options with their evidence obligations.
+
 ## Execution contract: a policy proposes; the host authorizes
 
 Keep the authoritative state and resource ledger outside the policy. The policy returns an ordered sequence of intents, not a replacement state or a trusted debit amount.
